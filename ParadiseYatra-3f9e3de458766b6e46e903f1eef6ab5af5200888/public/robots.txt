@@ -1,0 +1,22 @@
+User-agent: *
+Allow: /
+
+# Sitemap location
+Sitemap: https://paradiseyatra.com/sitemap.xml
+
+# Disallow admin and private areas
+Disallow: /admin/
+Disallow: /api/
+Disallow: /_next/
+Disallow: /uploads/
+
+# Allow important pages
+Allow: /packages/
+Allow: /destinations/
+Allow: /blog/
+Allow: /fixed-departures/
+Allow: /holiday-types/
+Allow: /itinerary/
+
+# Crawl delay for better server performance
+Crawl-delay: 1

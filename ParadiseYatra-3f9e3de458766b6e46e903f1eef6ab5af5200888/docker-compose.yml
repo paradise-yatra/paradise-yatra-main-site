@@ -1,0 +1,24 @@
+version: '3.8'
+
+services:
+  nextjs-app:
+    image: ritik0420/paradise-yatra-frontend:latest
+    build:
+      context: .
+      dockerfile: Dockerfile
+      tags:
+        - ritik0420/paradise-yatra-frontend:latest
+    ports:
+      - "3001:3001"
+    environment:
+      - NODE_ENV=production
+      - PORT=3001
+      - HOSTNAME=0.0.0.0
+      - NEXT_PUBLIC_BACKEND_URL=https://backendparadise-backend.glwcvg.easypanel.host
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:3001/api/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
