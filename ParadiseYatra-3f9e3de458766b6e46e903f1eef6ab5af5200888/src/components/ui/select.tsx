@@ -1,7 +1,7 @@
 "use client";
 
-import React, { useState, useRef, useEffect } from 'react';
-import { ChevronDown } from 'lucide-react';
+import React, { useState, useRef, useEffect } from "react";
+import { ChevronDown } from "lucide-react";
 
 interface SelectProps {
   children: React.ReactNode;
@@ -16,13 +16,19 @@ const Select = React.forwardRef<HTMLDivElement, SelectProps>(
 
     useEffect(() => {
       const handleClickOutside = (event: MouseEvent) => {
-        if (ref && typeof ref === 'object' && ref.current && !ref.current.contains(event.target as Node)) {
+        if (
+          ref &&
+          typeof ref === "object" &&
+          ref.current &&
+          !ref.current.contains(event.target as Node)
+        ) {
           setIsOpen(false);
         }
       };
 
-      document.addEventListener('mousedown', handleClickOutside);
-      return () => document.removeEventListener('mousedown', handleClickOutside);
+      document.addEventListener("mousedown", handleClickOutside);
+      return () =>
+        document.removeEventListener("mousedown", handleClickOutside);
     }, []);
 
     const handleSelect = (selectedValue: string) => {
@@ -32,15 +38,18 @@ const Select = React.forwardRef<HTMLDivElement, SelectProps>(
 
     // Filter out non-DOM props to avoid React warnings
     const domProps = Object.fromEntries(
-      Object.entries(props).filter(([key]) => 
-        !key.startsWith('on') && 
-        !['isOpen', 'setIsOpen', 'onSelect', 'handleSelect'].includes(key)
+      Object.entries(props).filter(
+        ([key]) =>
+          !key.startsWith("on") &&
+          !["isOpen", "setIsOpen", "onSelect", "handleSelect"].includes(key)
       )
     );
 
     return (
       <div
-        className={`relative ${disabled ? 'opacity-50 cursor-not-allowed' : ''}`}
+        className={`relative ${
+          disabled ? "opacity-50 cursor-not-allowed" : ""
+        }`}
         ref={ref}
         {...domProps}
       >
@@ -48,20 +57,26 @@ const Select = React.forwardRef<HTMLDivElement, SelectProps>(
           if (React.isValidElement(child)) {
             // Only pass setIsOpen to SelectTrigger components
             if (child.type === SelectTrigger) {
-              return React.cloneElement(child as React.ReactElement<SelectTriggerProps>, {
-                isOpen,
-                setIsOpen,
-                handleSelect: handleSelect,
-                value,
-                disabled
-              });
+              return React.cloneElement(
+                child as React.ReactElement<SelectTriggerProps>,
+                {
+                  isOpen,
+                  setIsOpen,
+                  handleSelect: handleSelect,
+                  value,
+                  disabled,
+                }
+              );
             }
             // For other components, only pass necessary props
             if (child.type === SelectContent) {
-              return React.cloneElement(child as React.ReactElement<SelectContentProps>, {
-                isOpen,
-                handleSelect: handleSelect
-              });
+              return React.cloneElement(
+                child as React.ReactElement<SelectContentProps>,
+                {
+                  isOpen,
+                  handleSelect: handleSelect,
+                }
+              );
             }
             // For other components, don't pass any additional props
             return child;
@@ -73,9 +88,10 @@ const Select = React.forwardRef<HTMLDivElement, SelectProps>(
   }
 );
 
-Select.displayName = 'Select';
+Select.displayName = "Select";
 
-interface SelectTriggerProps extends Omit<React.ButtonHTMLAttributes<HTMLButtonElement>, 'onClick'> {
+interface SelectTriggerProps
+  extends Omit<React.ButtonHTMLAttributes<HTMLButtonElement>, "onClick"> {
   children: React.ReactNode;
   isOpen?: boolean;
   setIsOpen?: (open: boolean) => void;
@@ -85,9 +101,21 @@ interface SelectTriggerProps extends Omit<React.ButtonHTMLAttributes<HTMLButtonE
 }
 
 const SelectTrigger = React.forwardRef<HTMLButtonElement, SelectTriggerProps>(
-  ({ className = '', children, isOpen, setIsOpen, disabled, handleSelect, ...props }, ref) => {
-    const baseClasses = 'flex h-10 w-full items-center justify-between rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50';
-    
+  (
+    {
+      className = "",
+      children,
+      isOpen,
+      setIsOpen,
+      disabled,
+      handleSelect,
+      ...props
+    },
+    ref
+  ) => {
+    const baseClasses =
+      "flex h-10 w-full items-center justify-between rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50";
+
     return (
       <button
         className={`${baseClasses} ${className}`}
@@ -101,21 +129,28 @@ const SelectTrigger = React.forwardRef<HTMLButtonElement, SelectTriggerProps>(
           if (React.isValidElement(child)) {
             // Pass the value prop to SelectValue components
             if (child.type === SelectValue) {
-              return React.cloneElement(child as React.ReactElement<SelectValueProps>, {
-                value: props.value
-              });
+              return React.cloneElement(
+                child as React.ReactElement<SelectValueProps>,
+                {
+                  value: props.value,
+                }
+              );
             }
             return child;
           }
           return child;
         })}
-        <ChevronDown className={`h-4 w-4 opacity-50 transition-transform ${isOpen ? 'rotate-180' : ''}`} />
+        <ChevronDown
+          className={`h-4 w-4 opacity-50 transition-transform ${
+            isOpen ? "rotate-180" : ""
+          }`}
+        />
       </button>
     );
   }
 );
 
-SelectTrigger.displayName = 'SelectTrigger';
+SelectTrigger.displayName = "SelectTrigger";
 
 interface SelectValueProps {
   placeholder?: string;
@@ -125,20 +160,15 @@ interface SelectValueProps {
 
 const SelectValue = React.forwardRef<HTMLSpanElement, SelectValueProps>(
   ({ placeholder, children, value, ...props }, ref) => {
-    
     return (
-      <span
-        className="block truncate"
-        ref={ref}
-        {...props}
-      >
+      <span className="block truncate" ref={ref} {...props}>
         {value || children || placeholder}
       </span>
     );
   }
 );
 
-SelectValue.displayName = 'SelectValue';
+SelectValue.displayName = "SelectValue";
 
 interface SelectContentProps {
   children: React.ReactNode;
@@ -148,12 +178,12 @@ interface SelectContentProps {
 }
 
 const SelectContent = React.forwardRef<HTMLDivElement, SelectContentProps>(
-  ({ className = '', children, isOpen, handleSelect, ...props }, ref) => {
+  ({ className = "", children, isOpen, handleSelect, ...props }, ref) => {
     if (!isOpen) return null;
 
-    
-    const baseClasses = 'absolute top-full left-0 right-0 z-50 min-w-[8rem] overflow-hidden rounded-md border bg-popover text-popover-foreground shadow-md mt-1 max-h-60 overflow-auto';
-    
+    const baseClasses =
+      "absolute top-full left-0 right-0 z-50 min-w-[8rem] overflow-hidden rounded-md border bg-popover text-popover-foreground shadow-md mt-1 max-h-60 overflow-auto";
+
     return (
       <div
         className={`${baseClasses} ${className}`}
@@ -166,9 +196,12 @@ const SelectContent = React.forwardRef<HTMLDivElement, SelectContentProps>(
           if (React.isValidElement(child)) {
             // Only pass handleSelect to SelectItem components
             if (child.type === SelectItem) {
-              return React.cloneElement(child as React.ReactElement<SelectItemProps>, {
-                handleSelect
-              });
+              return React.cloneElement(
+                child as React.ReactElement<SelectItemProps>,
+                {
+                  handleSelect,
+                }
+              );
             }
             // For other components, don't pass handleSelect
             return child;
@@ -180,7 +213,7 @@ const SelectContent = React.forwardRef<HTMLDivElement, SelectContentProps>(
   }
 );
 
-SelectContent.displayName = 'SelectContent';
+SelectContent.displayName = "SelectContent";
 
 interface SelectItemProps {
   children: React.ReactNode;
@@ -190,16 +223,16 @@ interface SelectItemProps {
 }
 
 const SelectItem = React.forwardRef<HTMLDivElement, SelectItemProps>(
-  ({ className = '', children, value, handleSelect, ...props }, ref) => {
-    
-    const baseClasses = 'relative flex w-full cursor-pointer select-none items-center rounded-sm px-2 py-1.5 text-sm outline-none hover:bg-accent hover:text-accent-foreground data-[disabled]:pointer-events-none data-[disabled]:opacity-50';
-    
+  ({ className = "", children, value, handleSelect, ...props }, ref) => {
+    const baseClasses =
+      "relative flex w-full cursor-pointer select-none items-center rounded-sm px-2 py-1.5 text-sm outline-none hover:bg-accent hover:text-accent-foreground data-[disabled]:pointer-events-none data-[disabled]:opacity-50";
+
     const handleItemSelect = (e: React.MouseEvent | React.TouchEvent) => {
       e.preventDefault();
       e.stopPropagation();
       handleSelect?.(value);
     };
-    
+
     return (
       <div
         className={`${baseClasses} ${className}`}
@@ -211,7 +244,7 @@ const SelectItem = React.forwardRef<HTMLDivElement, SelectItemProps>(
         aria-selected={false}
         tabIndex={0}
         onKeyDown={(e) => {
-          if (e.key === 'Enter' || e.key === ' ') {
+          if (e.key === "Enter" || e.key === " ") {
             e.preventDefault();
             handleSelect?.(value);
           }
@@ -224,6 +257,6 @@ const SelectItem = React.forwardRef<HTMLDivElement, SelectItemProps>(
   }
 );
 
-SelectItem.displayName = 'SelectItem';
+SelectItem.displayName = "SelectItem";
 
 export { Select, SelectTrigger, SelectValue, SelectContent, SelectItem };

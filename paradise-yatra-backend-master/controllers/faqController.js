@@ -1,18 +1,18 @@
-const FAQ = require('../models/FAQ');
+const FAQ = require("../models/FAQ");
 
 // Get all FAQs with optional filtering
 const getAllFAQs = async (req, res) => {
   try {
     const { location, isActive, limit = 50, skip = 0 } = req.query;
-    
+
     let query = {};
-    
+
     if (location) {
       query.location = location.toLowerCase().trim();
     }
-    
+
     if (isActive !== undefined) {
-      query.isActive = isActive === 'true';
+      query.isActive = isActive === "true";
     }
 
     const faqs = await FAQ.find(query)
@@ -23,14 +23,14 @@ const getAllFAQs = async (req, res) => {
     res.json({
       success: true,
       faqs,
-      total: await FAQ.countDocuments(query)
+      total: await FAQ.countDocuments(query),
     });
   } catch (error) {
-    console.error('Error fetching FAQs:', error);
+    console.error("Error fetching FAQs:", error);
     res.status(500).json({
       success: false,
-      message: 'Error fetching FAQs',
-      error: error.message
+      message: "Error fetching FAQs",
+      error: error.message,
     });
   }
 };
@@ -39,26 +39,26 @@ const getAllFAQs = async (req, res) => {
 const getFAQById = async (req, res) => {
   try {
     const { id } = req.params;
-    
+
     const faq = await FAQ.findById(id);
-    
+
     if (!faq) {
       return res.status(404).json({
         success: false,
-        message: 'FAQ not found'
+        message: "FAQ not found",
       });
     }
 
     res.json({
       success: true,
-      faq
+      faq,
     });
   } catch (error) {
-    console.error('Error fetching FAQ:', error);
+    console.error("Error fetching FAQ:", error);
     res.status(500).json({
       success: false,
-      message: 'Error fetching FAQ',
-      error: error.message
+      message: "Error fetching FAQ",
+      error: error.message,
     });
   }
 };
@@ -71,7 +71,7 @@ const createFAQ = async (req, res) => {
     if (!question || !answer || !location) {
       return res.status(400).json({
         success: false,
-        message: 'Question, answer, and location are required'
+        message: "Question, answer, and location are required",
       });
     }
 
@@ -80,22 +80,22 @@ const createFAQ = async (req, res) => {
       answer: answer.trim(),
       location: location.toLowerCase().trim(),
       isActive,
-      order
+      order,
     });
 
     await faq.save();
 
     res.status(201).json({
       success: true,
-      message: 'FAQ created successfully',
-      faq
+      message: "FAQ created successfully",
+      faq,
     });
   } catch (error) {
-    console.error('Error creating FAQ:', error);
+    console.error("Error creating FAQ:", error);
     res.status(500).json({
       success: false,
-      message: 'Error creating FAQ',
-      error: error.message
+      message: "Error creating FAQ",
+      error: error.message,
     });
   }
 };
@@ -107,37 +107,37 @@ const updateFAQ = async (req, res) => {
     const { question, answer, location, isActive, order } = req.body;
 
     const updateData = {};
-    
+
     if (question !== undefined) updateData.question = question.trim();
     if (answer !== undefined) updateData.answer = answer.trim();
-    if (location !== undefined) updateData.location = location.toLowerCase().trim();
+    if (location !== undefined)
+      updateData.location = location.toLowerCase().trim();
     if (isActive !== undefined) updateData.isActive = isActive;
     if (order !== undefined) updateData.order = order;
 
-    const faq = await FAQ.findByIdAndUpdate(
-      id,
-      updateData,
-      { new: true, runValidators: true }
-    );
+    const faq = await FAQ.findByIdAndUpdate(id, updateData, {
+      new: true,
+      runValidators: true,
+    });
 
     if (!faq) {
       return res.status(404).json({
         success: false,
-        message: 'FAQ not found'
+        message: "FAQ not found",
       });
     }
 
     res.json({
       success: true,
-      message: 'FAQ updated successfully',
-      faq
+      message: "FAQ updated successfully",
+      faq,
     });
   } catch (error) {
-    console.error('Error updating FAQ:', error);
+    console.error("Error updating FAQ:", error);
     res.status(500).json({
       success: false,
-      message: 'Error updating FAQ',
-      error: error.message
+      message: "Error updating FAQ",
+      error: error.message,
     });
   }
 };
@@ -152,20 +152,20 @@ const deleteFAQ = async (req, res) => {
     if (!faq) {
       return res.status(404).json({
         success: false,
-        message: 'FAQ not found'
+        message: "FAQ not found",
       });
     }
 
     res.json({
       success: true,
-      message: 'FAQ deleted successfully'
+      message: "FAQ deleted successfully",
     });
   } catch (error) {
-    console.error('Error deleting FAQ:', error);
+    console.error("Error deleting FAQ:", error);
     res.status(500).json({
       success: false,
-      message: 'Error deleting FAQ',
-      error: error.message
+      message: "Error deleting FAQ",
+      error: error.message,
     });
   }
 };
@@ -178,7 +178,7 @@ const reorderFAQ = async (req, res) => {
     if (!id || !newOrder) {
       return res.status(400).json({
         success: false,
-        message: 'ID and new order are required'
+        message: "ID and new order are required",
       });
     }
 
@@ -191,21 +191,21 @@ const reorderFAQ = async (req, res) => {
     if (!faq) {
       return res.status(404).json({
         success: false,
-        message: 'FAQ not found'
+        message: "FAQ not found",
       });
     }
 
     res.json({
       success: true,
-      message: 'FAQ reordered successfully',
-      faq
+      message: "FAQ reordered successfully",
+      faq,
     });
   } catch (error) {
-    console.error('Error reordering FAQ:', error);
+    console.error("Error reordering FAQ:", error);
     res.status(500).json({
       success: false,
-      message: 'Error reordering FAQ',
-      error: error.message
+      message: "Error reordering FAQ",
+      error: error.message,
     });
   }
 };
@@ -213,18 +213,18 @@ const reorderFAQ = async (req, res) => {
 // Get all unique locations
 const getLocations = async (req, res) => {
   try {
-    const locations = await FAQ.distinct('location');
-    
+    const locations = await FAQ.distinct("location");
+
     res.json({
       success: true,
-      locations: locations.sort()
+      locations: locations.sort(),
     });
   } catch (error) {
-    console.error('Error fetching FAQ locations:', error);
+    console.error("Error fetching FAQ locations:", error);
     res.status(500).json({
       success: false,
-      message: 'Error fetching FAQ locations',
-      error: error.message
+      message: "Error fetching FAQ locations",
+      error: error.message,
     });
   }
 };
@@ -235,21 +235,21 @@ const getFAQStats = async (req, res) => {
     const totalFAQs = await FAQ.countDocuments();
     const activeFAQs = await FAQ.countDocuments({ isActive: true });
     const inactiveFAQs = await FAQ.countDocuments({ isActive: false });
-    const uniqueLocations = await FAQ.distinct('location');
+    const uniqueLocations = await FAQ.distinct("location");
 
     const locationStats = await FAQ.aggregate([
       {
         $group: {
-          _id: '$location',
+          _id: "$location",
           count: { $sum: 1 },
           activeCount: {
-            $sum: { $cond: ['$isActive', 1, 0] }
-          }
-        }
+            $sum: { $cond: ["$isActive", 1, 0] },
+          },
+        },
       },
       {
-        $sort: { count: -1 }
-      }
+        $sort: { count: -1 },
+      },
     ]);
 
     res.json({
@@ -259,15 +259,15 @@ const getFAQStats = async (req, res) => {
         active: activeFAQs,
         inactive: inactiveFAQs,
         locations: uniqueLocations.length,
-        locationBreakdown: locationStats
-      }
+        locationBreakdown: locationStats,
+      },
     });
   } catch (error) {
-    console.error('Error fetching FAQ stats:', error);
+    console.error("Error fetching FAQ stats:", error);
     res.status(500).json({
       success: false,
-      message: 'Error fetching FAQ stats',
-      error: error.message
+      message: "Error fetching FAQ stats",
+      error: error.message,
     });
   }
 };
@@ -280,5 +280,5 @@ module.exports = {
   deleteFAQ,
   reorderFAQ,
   getLocations,
-  getFAQStats
+  getFAQStats,
 };

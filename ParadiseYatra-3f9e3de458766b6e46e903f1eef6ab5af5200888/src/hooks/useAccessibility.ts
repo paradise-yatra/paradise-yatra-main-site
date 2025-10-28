@@ -35,7 +35,7 @@ export function useAccessibility(options: UseAccessibilityOptions = {}) {
     announcement.textContent = message;
 
     document.body.appendChild(announcement);
-    
+
     // Remove after announcement
     setTimeout(() => {
       document.body.removeChild(announcement);
@@ -218,7 +218,7 @@ export function useAccessibility(options: UseAccessibilityOptions = {}) {
 
     const currentIndex = focusableElements.indexOf(document.activeElement as HTMLElement);
     const nextIndex = (currentIndex + 1) % focusableElements.length;
-    
+
     focusableElements[nextIndex]?.focus();
   }, []);
 
@@ -231,7 +231,7 @@ export function useAccessibility(options: UseAccessibilityOptions = {}) {
 
     const currentIndex = focusableElements.indexOf(document.activeElement as HTMLElement);
     const previousIndex = currentIndex === 0 ? focusableElements.length - 1 : currentIndex - 1;
-    
+
     focusableElements[previousIndex]?.focus();
   }, []);
 
@@ -252,7 +252,7 @@ export function useAriaLive() {
 
   const announce = useCallback((message: string) => {
     setAnnouncements(prev => [...prev, message]);
-    
+
     // Remove announcement after a delay
     setTimeout(() => {
       setAnnouncements(prev => prev.filter(announcement => announcement !== message));

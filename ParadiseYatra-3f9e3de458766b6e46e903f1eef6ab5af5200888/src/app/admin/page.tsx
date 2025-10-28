@@ -24,7 +24,7 @@ import {
 } from "@/components/lazy-admin-components";
 import AdminFAQ from "@/components/admin/AdminFAQ";
 
-type AdminSection = 
+type AdminSection =
   | "dashboard"
   | "hero-section"
   | "header"
@@ -43,12 +43,13 @@ type AdminSection =
   | "holiday-types"
   | "fixed-departures"
   | "itinerary"
-  | "faq"
-
+  | "faq";
 
 const AdminPage = () => {
   const [activeSection, setActiveSection] = useState<AdminSection>("dashboard");
-  const [expandedSections, setExpandedSections] = useState<Set<string>>(new Set(["blogs"]));
+  const [expandedSections, setExpandedSections] = useState<Set<string>>(
+    new Set(["blogs"])
+  );
   const [blogAction, setBlogAction] = useState<string | null>(null);
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
@@ -66,7 +67,7 @@ const AdminPage = () => {
 
       try {
         const user = JSON.parse(userStr);
-        
+
         // Check if user is admin
         if (user.role !== "admin") {
           localStorage.removeItem("adminToken");
@@ -107,10 +108,13 @@ const AdminPage = () => {
       setBlogAction(event.detail);
     };
 
-    window.addEventListener('blogAction', handleBlogAction as EventListener);
-    
+    window.addEventListener("blogAction", handleBlogAction as EventListener);
+
     return () => {
-      window.removeEventListener('blogAction', handleBlogAction as EventListener);
+      window.removeEventListener(
+        "blogAction",
+        handleBlogAction as EventListener
+      );
     };
   }, []);
 
@@ -152,7 +156,12 @@ const AdminPage = () => {
       case "seo":
         return <LazyAdminSEO />;
       case "blogs":
-        return <LazyAdminBlogs initialAction={blogAction} onActionComplete={() => setBlogAction(null)} />;
+        return (
+          <LazyAdminBlogs
+            initialAction={blogAction}
+            onActionComplete={() => setBlogAction(null)}
+          />
+        );
       case "trending-destinations":
         return <LazyAdminTrendingDestinations />;
       case "recently-booked":
@@ -200,12 +209,10 @@ const AdminPage = () => {
         onLogout={handleLogout}
       />
       <main className="flex-1 overflow-auto">
-        <div className="p-6">
-          {renderActiveSection()}
-        </div>
+        <div className="p-6">{renderActiveSection()}</div>
       </main>
     </div>
   );
 };
 
-export default AdminPage; 
+export default AdminPage;

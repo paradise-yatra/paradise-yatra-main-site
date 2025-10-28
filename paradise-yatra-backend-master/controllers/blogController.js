@@ -1,5 +1,6 @@
-const Blog = require('../models/Blog');
-const { processSingleImage } = require('../utils/imageUtils');
+const Blog = require("../models/Blog");
+const { processSingleImage } = require("../utils/imageUtils");
+const cloudinary = require("../config/cloudinary");
 
 // Helper function to transform image paths to full URLs
 const transformBlogImageUrl = (blog) => {
@@ -13,18 +14,18 @@ const transformBlogImageUrl = (blog) => {
 const getAllBlogs = async (req, res) => {
   try {
     const { category, featured, published, limit = 10, page = 1 } = req.query;
-    
+
     let query = {};
-    
+
     if (category) {
       query.category = category;
     }
-    
-    if (featured === 'true') {
+
+    if (featured === "true") {
       query.isFeatured = true;
     }
-    
-    if (published === 'true') {
+
+    if (published === "true") {
       query.isPublished = true;
     }
 
@@ -36,7 +37,7 @@ const getAllBlogs = async (req, res) => {
     const total = await Blog.countDocuments(query);
 
     // Transform image URLs
-    const transformedBlogs = blogs.map(blog => transformBlogImageUrl(blog));
+    const transformedBlogs = blogs.map((blog) => transformBlogImageUrl(blog));
 
     res.json({
       blogs: transformedBlogs,
@@ -44,12 +45,12 @@ const getAllBlogs = async (req, res) => {
         current: parseInt(page),
         total: Math.ceil(total / parseInt(limit)),
         hasNext: parseInt(page) * parseInt(limit) < total,
-        hasPrev: parseInt(page) > 1
-      }
+        hasPrev: parseInt(page) > 1,
+      },
     });
   } catch (error) {
-    console.error('Get blogs error:', error);
-    res.status(500).json({ message: 'Server error.' });
+    console.error("Get blogs error:", error);
+    res.status(500).json({ message: "Server error." });
   }
 };
 
@@ -57,9 +58,9 @@ const getAllBlogs = async (req, res) => {
 const getBlog = async (req, res) => {
   try {
     const blog = await Blog.findById(req.params.id);
-    
+
     if (!blog) {
-      return res.status(404).json({ message: 'Blog not found.' });
+      return res.status(404).json({ message: "Blog not found." });
     }
 
     // Increment views
@@ -71,53 +72,80 @@ const getBlog = async (req, res) => {
 
     res.json(transformedBlog);
   } catch (error) {
-    console.error('Get blog error:', error);
-    res.status(500).json({ message: 'Server error.' });
+    console.error("Get blog error:", error);
+    res.status(500).json({ message: "Server error." });
   }
 };
 
 // Create blog (Admin only)
 const createBlog = async (req, res) => {
   try {
+    // Handle image upload
+    if (req.files && req.files.image) {
+      const file = req.files.image;
+
+      // Upload to Cloudinary
+      const result = await cloudinary.uploader.upload(file.filepath, {
+        folder: "paradise-yatra/blogs",
+        resource_type: "auto",
+      });
+
+      // Add Cloudinary URL to req.body
+      req.body.image = result.secure_url;
+    }
+
     const blog = new Blog(req.body);
     await blog.save();
-    
+
     // Transform image URL
     const transformedBlog = transformBlogImageUrl(blog);
-    
+
     res.status(201).json({
-      message: 'Blog created successfully',
-      blog: transformedBlog
+      message: "Blog created successfully",
+      blog: transformedBlog,
     });
   } catch (error) {
-    console.error('Create blog error:', error);
-    res.status(500).json({ message: 'Server error during blog creation.' });
+    console.error("Create blog error:", error);
+    res.status(500).json({ message: "Server error during blog creation." });
   }
 };
 
 // Update blog (Admin only)
 const updateBlog = async (req, res) => {
   try {
-    const blog = await Blog.findByIdAndUpdate(
-      req.params.id,
-      req.body,
-      { new: true, runValidators: true }
-    );
+    // Handle image upload if provided
+    if (req.files && req.files.image) {
+      const file = req.files.image;
+
+      // Upload to Cloudinary
+      const result = await cloudinary.uploader.upload(file.filepath, {
+        folder: "paradise-yatra/blogs",
+        resource_type: "auto",
+      });
+
+      // Add Cloudinary URL to req.body
+      req.body.image = result.secure_url;
+    }
+
+    const blog = await Blog.findByIdAndUpdate(req.params.id, req.body, {
+      new: true,
+      runValidators: true,
+    });
 
     if (!blog) {
-      return res.status(404).json({ message: 'Blog not found.' });
+      return res.status(404).json({ message: "Blog not found." });
     }
 
     // Transform image URL
     const transformedBlog = transformBlogImageUrl(blog);
 
     res.json({
-      message: 'Blog updated successfully',
-      blog: transformedBlog
+      message: "Blog updated successfully",
+      blog: transformedBlog,
     });
   } catch (error) {
-    console.error('Update blog error:', error);
-    res.status(500).json({ message: 'Server error during blog update.' });
+    console.error("Update blog error:", error);
+    res.status(500).json({ message: "Server error during blog update." });
   }
 };
 
@@ -125,15 +153,15 @@ const updateBlog = async (req, res) => {
 const deleteBlog = async (req, res) => {
   try {
     const blog = await Blog.findByIdAndDelete(req.params.id);
-    
+
     if (!blog) {
-      return res.status(404).json({ message: 'Blog not found.' });
+      return res.status(404).json({ message: "Blog not found." });
     }
 
-    res.json({ message: 'Blog deleted successfully' });
+    res.json({ message: "Blog deleted successfully" });
   } catch (error) {
-    console.error('Delete blog error:', error);
-    res.status(500).json({ message: 'Server error during blog deletion.' });
+    console.error("Delete blog error:", error);
+    res.status(500).json({ message: "Server error during blog deletion." });
   }
 };
 
@@ -148,12 +176,12 @@ const getFeaturedBlogs = async (req, res) => {
       .limit(parseInt(limit));
 
     // Transform image URLs
-    const transformedBlogs = blogs.map(blog => transformBlogImageUrl(blog));
+    const transformedBlogs = blogs.map((blog) => transformBlogImageUrl(blog));
 
     res.json(transformedBlogs);
   } catch (error) {
-    console.error('Get featured blogs error:', error);
-    res.status(500).json({ message: 'Server error.' });
+    console.error("Get featured blogs error:", error);
+    res.status(500).json({ message: "Server error." });
   }
 };
 
@@ -161,34 +189,34 @@ const getFeaturedBlogs = async (req, res) => {
 const searchBlogs = async (req, res) => {
   try {
     const { q, category, author } = req.query;
-    
+
     let query = { isPublished: true };
-    
+
     if (q) {
       query.$or = [
-        { title: { $regex: q, $options: 'i' } },
-        { content: { $regex: q, $options: 'i' } },
-        { excerpt: { $regex: q, $options: 'i' } }
+        { title: { $regex: q, $options: "i" } },
+        { content: { $regex: q, $options: "i" } },
+        { excerpt: { $regex: q, $options: "i" } },
       ];
     }
-    
+
     if (category) {
       query.category = category;
     }
-    
+
     if (author) {
-      query.author = { $regex: author, $options: 'i' };
+      query.author = { $regex: author, $options: "i" };
     }
 
     const blogs = await Blog.find(query).sort({ views: -1, createdAt: -1 });
-    
+
     // Transform image URLs
-    const transformedBlogs = blogs.map(blog => transformBlogImageUrl(blog));
-    
+    const transformedBlogs = blogs.map((blog) => transformBlogImageUrl(blog));
+
     res.json(transformedBlogs);
   } catch (error) {
-    console.error('Search blogs error:', error);
-    res.status(500).json({ message: 'Server error.' });
+    console.error("Search blogs error:", error);
+    res.status(500).json({ message: "Server error." });
   }
 };
 
@@ -196,21 +224,21 @@ const searchBlogs = async (req, res) => {
 const likeBlog = async (req, res) => {
   try {
     const blog = await Blog.findById(req.params.id);
-    
+
     if (!blog) {
-      return res.status(404).json({ message: 'Blog not found.' });
+      return res.status(404).json({ message: "Blog not found." });
     }
 
     blog.likes += 1;
     await blog.save();
 
     res.json({
-      message: 'Blog liked successfully',
-      likes: blog.likes
+      message: "Blog liked successfully",
+      likes: blog.likes,
     });
   } catch (error) {
-    console.error('Like blog error:', error);
-    res.status(500).json({ message: 'Server error during blog like.' });
+    console.error("Like blog error:", error);
+    res.status(500).json({ message: "Server error during blog like." });
   }
 };
 
@@ -222,5 +250,5 @@ module.exports = {
   deleteBlog,
   getFeaturedBlogs,
   searchBlogs,
-  likeBlog
-}; 
+  likeBlog,
+};

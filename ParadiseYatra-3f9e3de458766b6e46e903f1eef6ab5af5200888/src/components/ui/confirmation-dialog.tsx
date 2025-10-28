@@ -1,4 +1,4 @@
-import { } from "react";
+import {} from "react";
 import { Button } from "./button";
 import { X, AlertTriangle } from "lucide-react";
 
@@ -21,7 +21,7 @@ const ConfirmationDialog = ({
   message,
   confirmText = "Confirm",
   cancelText = "Cancel",
-  variant = "danger"
+  variant = "danger",
 }: ConfirmationDialogProps) => {
   if (!isOpen) return null;
 
@@ -36,25 +36,25 @@ const ConfirmationDialog = ({
         return {
           icon: "text-red-600",
           button: "bg-red-600 hover:bg-red-700 text-white",
-          border: "border-red-200"
+          border: "border-red-200",
         };
       case "warning":
         return {
           icon: "text-yellow-600",
           button: "bg-yellow-600 hover:bg-yellow-700 text-white",
-          border: "border-yellow-200"
+          border: "border-yellow-200",
         };
       case "info":
         return {
           icon: "text-blue-600",
           button: "bg-blue-600 hover:bg-blue-700 text-white",
-          border: "border-blue-200"
+          border: "border-blue-200",
         };
       default:
         return {
           icon: "text-red-600",
           button: "bg-red-600 hover:bg-red-700 text-white",
-          border: "border-red-200"
+          border: "border-red-200",
         };
     }
   };
@@ -64,13 +64,15 @@ const ConfirmationDialog = ({
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center">
       {/* Backdrop */}
-      <div 
+      <div
         className="absolute inset-0 bg-black bg-opacity-50"
         onClick={onClose}
       />
-      
+
       {/* Dialog */}
-      <div className={`relative bg-white rounded-lg shadow-xl max-w-md w-full mx-4 border ${styles.border}`}>
+      <div
+        className={`relative bg-white rounded-lg shadow-xl max-w-md w-full mx-4 border ${styles.border}`}
+      >
         {/* Header */}
         <div className="flex items-center justify-between p-6 border-b border-gray-200">
           <div className="flex items-center gap-3">
@@ -84,11 +86,11 @@ const ConfirmationDialog = ({
             <X className="w-5 h-5" />
           </button>
         </div>
-        
+
         {/* Content */}
         <div className="p-6">
           <p className="text-gray-600 mb-6">{message}</p>
-          
+
           {/* Actions */}
           <div className="flex gap-3 justify-end">
             <Button
@@ -98,10 +100,7 @@ const ConfirmationDialog = ({
             >
               {cancelText}
             </Button>
-            <Button
-              onClick={handleConfirm}
-              className={styles.button}
-            >
+            <Button onClick={handleConfirm} className={styles.button}>
               {confirmText}
             </Button>
           </div>
@@ -111,4 +110,4 @@ const ConfirmationDialog = ({
   );
 };
 
-export default ConfirmationDialog; 
+export default ConfirmationDialog;

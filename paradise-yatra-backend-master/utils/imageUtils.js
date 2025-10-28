@@ -8,20 +8,20 @@
  * @returns {string} - The full image URL
  */
 const getImageUrl = (filename) => {
-  if (!filename) return '';
-  
+  if (!filename) return "";
+
   // Remove leading slash if present
-  const cleanFilename = filename.startsWith('/') ? filename.slice(1) : filename;
-  
+  const cleanFilename = filename.startsWith("/") ? filename.slice(1) : filename;
+
   // Use BACKEND_URL for image URLs since images are stored on the backend server
-  const baseUrl = process.env.BACKEND_URL || process.env.CLIENT_ORIGIN || '';
-  
+  const baseUrl = process.env.BACKEND_URL || process.env.CLIENT_ORIGIN || "";
+
   if (baseUrl) {
     // Ensure baseUrl doesn't end with slash
-    const cleanBaseUrl = baseUrl.endsWith('/') ? baseUrl.slice(0, -1) : baseUrl;
+    const cleanBaseUrl = baseUrl.endsWith("/") ? baseUrl.slice(0, -1) : baseUrl;
     return `${cleanBaseUrl}/uploads/${cleanFilename}`;
   }
-  
+
   // Fallback to relative path
   return `/uploads/${cleanFilename}`;
 };
@@ -33,7 +33,7 @@ const getImageUrl = (filename) => {
  */
 const processImageUrls = (filenames) => {
   if (!Array.isArray(filenames)) return [];
-  return filenames.map(filename => processSingleImage(filename));
+  return filenames.map((filename) => processSingleImage(filename));
 };
 
 /**
@@ -42,12 +42,15 @@ const processImageUrls = (filenames) => {
  * @returns {string} - Full image URL
  */
 const processSingleImage = (image) => {
-  if (!image) return '';
-  
+  if (!image) return "";
+
   // If it's already a full URL, return as is
-  if (image.startsWith('http://') || image.startsWith('https://')) {
+  if (image.startsWith("http://") || image.startsWith("https://")) {
     // Check if it's a malformed URL with double uploads path
-    if (image.includes('/uploads/https://') || image.includes('/uploads/http://')) {
+    if (
+      image.includes("/uploads/https://") ||
+      image.includes("/uploads/http://")
+    ) {
       // Extract the actual backend URL part
       const match = image.match(/\/uploads\/(https?:\/\/[^\/]+\/uploads\/.+)/);
       if (match) {
@@ -56,12 +59,12 @@ const processSingleImage = (image) => {
     }
     return image;
   }
-  
+
   return getImageUrl(image);
 };
 
 module.exports = {
   getImageUrl,
   processImageUrls,
-  processSingleImage
+  processSingleImage,
 };

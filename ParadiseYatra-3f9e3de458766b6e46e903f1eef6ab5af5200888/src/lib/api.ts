@@ -17,22 +17,22 @@ class ApiError extends Error {
 
 const handleResponse = async (response: Response) => {
   const data = await response.json();
-  
+
   if (!response.ok) {
     throw new ApiError(data.message || 'API request failed', response.status);
   }
-  
+
   // Handle direct array responses (like packages by category)
   if (Array.isArray(data)) {
     return data;
   }
-  
+
   return data;
 };
 
 const makeRequest = async (url: string, options: RequestInit = {}) => {
   const token = typeof window !== 'undefined' ? localStorage.getItem('token') : null;
-  
+
   const config: RequestInit = {
     headers: {
       'Content-Type': 'application/json',
@@ -54,7 +54,7 @@ export const packagesAPI = {
         searchParams.append(key, String(value));
       }
     });
-    
+
     const url = `/api/packages${searchParams.toString() ? `?${searchParams.toString()}` : ''}`;
     return makeRequest(url);
   },
@@ -76,7 +76,7 @@ export const packagesAPI = {
         searchParams.append(key, String(value));
       }
     });
-    
+
     const url = `/api/packages/category/${encodeURIComponent(category)}${searchParams.toString() ? `?${searchParams.toString()}` : ''}`;
     return makeRequest(url);
   },

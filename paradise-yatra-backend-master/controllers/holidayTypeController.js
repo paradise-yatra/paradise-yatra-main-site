@@ -1,22 +1,32 @@
-const HolidayType = require('../models/HolidayType');
+const HolidayType = require("../models/HolidayType");
 
 // Get all holiday types
 const getAllHolidayTypes = async (req, res) => {
   try {
-    const holidayTypes = await HolidayType.find({ isActive: true }).sort({ order: 1, createdAt: -1 });
+    const holidayTypes = await HolidayType.find({ isActive: true }).sort({
+      order: 1,
+      createdAt: -1,
+    });
     res.json(holidayTypes);
   } catch (error) {
-    res.status(500).json({ message: 'Error fetching holiday types', error: error.message });
+    res
+      .status(500)
+      .json({ message: "Error fetching holiday types", error: error.message });
   }
 };
 
 // Get all holiday types (admin)
 const getAllHolidayTypesAdmin = async (req, res) => {
   try {
-    const holidayTypes = await HolidayType.find().sort({ order: 1, createdAt: -1 });
+    const holidayTypes = await HolidayType.find().sort({
+      order: 1,
+      createdAt: -1,
+    });
     res.json(holidayTypes);
   } catch (error) {
-    res.status(500).json({ message: 'Error fetching holiday types', error: error.message });
+    res
+      .status(500)
+      .json({ message: "Error fetching holiday types", error: error.message });
   }
 };
 
@@ -25,49 +35,63 @@ const getHolidayType = async (req, res) => {
   try {
     const holidayType = await HolidayType.findById(req.params.id);
     if (!holidayType) {
-      return res.status(404).json({ message: 'Holiday type not found' });
+      return res.status(404).json({ message: "Holiday type not found" });
     }
     res.json(holidayType);
   } catch (error) {
-    res.status(500).json({ message: 'Error fetching holiday type', error: error.message });
+    res
+      .status(500)
+      .json({ message: "Error fetching holiday type", error: error.message });
   }
 };
 
 // Get holiday type by slug
 const getHolidayTypeBySlug = async (req, res) => {
   try {
-    const holidayType = await HolidayType.findOne({ slug: req.params.slug, isActive: true });
+    const holidayType = await HolidayType.findOne({
+      slug: req.params.slug,
+      isActive: true,
+    });
     if (!holidayType) {
-      return res.status(404).json({ message: 'Holiday type not found' });
+      return res.status(404).json({ message: "Holiday type not found" });
     }
     res.json(holidayType);
   } catch (error) {
-    res.status(500).json({ message: 'Error fetching holiday type', error: error.message });
+    res
+      .status(500)
+      .json({ message: "Error fetching holiday type", error: error.message });
   }
 };
 
 // Create new holiday type
 const createHolidayType = async (req, res) => {
   try {
-    console.log('Creating holiday type with data:', req.body);
-    console.log('User making request:', req.user);
-    
+    console.log("Creating holiday type with data:", req.body);
+    console.log("User making request:", req.user);
+
     // Generate slug from title if not provided
     const holidayData = { ...req.body };
     if (!holidayData.slug) {
-      holidayData.slug = holidayData.title.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '');
+      holidayData.slug = holidayData.title
+        .toLowerCase()
+        .replace(/[^a-z0-9]+/g, "-")
+        .replace(/(^-|-$)/g, "");
     }
-    
+
     const holidayType = new HolidayType(holidayData);
     await holidayType.save();
-    console.log('Holiday type created successfully:', holidayType);
+    console.log("Holiday type created successfully:", holidayType);
     res.status(201).json(holidayType);
   } catch (error) {
-    console.error('Error creating holiday type:', error);
+    console.error("Error creating holiday type:", error);
     if (error.code === 11000) {
-      res.status(400).json({ message: 'Holiday type with this slug already exists' });
+      res
+        .status(400)
+        .json({ message: "Holiday type with this slug already exists" });
     } else {
-      res.status(500).json({ message: 'Error creating holiday type', error: error.message });
+      res
+        .status(500)
+        .json({ message: "Error creating holiday type", error: error.message });
     }
   }
 };
@@ -78,23 +102,30 @@ const updateHolidayType = async (req, res) => {
     // Generate slug from title if title is being updated and slug is not provided
     const updateData = { ...req.body };
     if (updateData.title && !updateData.slug) {
-      updateData.slug = updateData.title.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '');
+      updateData.slug = updateData.title
+        .toLowerCase()
+        .replace(/[^a-z0-9]+/g, "-")
+        .replace(/(^-|-$)/g, "");
     }
-    
+
     const holidayType = await HolidayType.findByIdAndUpdate(
       req.params.id,
       updateData,
       { new: true, runValidators: true }
     );
     if (!holidayType) {
-      return res.status(404).json({ message: 'Holiday type not found' });
+      return res.status(404).json({ message: "Holiday type not found" });
     }
     res.json(holidayType);
   } catch (error) {
     if (error.code === 11000) {
-      res.status(400).json({ message: 'Holiday type with this slug already exists' });
+      res
+        .status(400)
+        .json({ message: "Holiday type with this slug already exists" });
     } else {
-      res.status(500).json({ message: 'Error updating holiday type', error: error.message });
+      res
+        .status(500)
+        .json({ message: "Error updating holiday type", error: error.message });
     }
   }
 };
@@ -104,11 +135,13 @@ const deleteHolidayType = async (req, res) => {
   try {
     const holidayType = await HolidayType.findByIdAndDelete(req.params.id);
     if (!holidayType) {
-      return res.status(404).json({ message: 'Holiday type not found' });
+      return res.status(404).json({ message: "Holiday type not found" });
     }
-    res.json({ message: 'Holiday type deleted successfully' });
+    res.json({ message: "Holiday type deleted successfully" });
   } catch (error) {
-    res.status(500).json({ message: 'Error deleting holiday type', error: error.message });
+    res
+      .status(500)
+      .json({ message: "Error deleting holiday type", error: error.message });
   }
 };
 
@@ -117,13 +150,18 @@ const toggleHolidayTypeStatus = async (req, res) => {
   try {
     const holidayType = await HolidayType.findById(req.params.id);
     if (!holidayType) {
-      return res.status(404).json({ message: 'Holiday type not found' });
+      return res.status(404).json({ message: "Holiday type not found" });
     }
     holidayType.isActive = !holidayType.isActive;
     await holidayType.save();
     res.json(holidayType);
   } catch (error) {
-    res.status(500).json({ message: 'Error toggling holiday type status', error: error.message });
+    res
+      .status(500)
+      .json({
+        message: "Error toggling holiday type status",
+        error: error.message,
+      });
   }
 };
 
@@ -132,13 +170,18 @@ const toggleHolidayTypeFeatured = async (req, res) => {
   try {
     const holidayType = await HolidayType.findById(req.params.id);
     if (!holidayType) {
-      return res.status(404).json({ message: 'Holiday type not found' });
+      return res.status(404).json({ message: "Holiday type not found" });
     }
     holidayType.isFeatured = !holidayType.isFeatured;
     await holidayType.save();
     res.json(holidayType);
   } catch (error) {
-    res.status(500).json({ message: 'Error toggling holiday type featured status', error: error.message });
+    res
+      .status(500)
+      .json({
+        message: "Error toggling holiday type featured status",
+        error: error.message,
+      });
   }
 };
 
@@ -152,11 +195,16 @@ const updateHolidayTypeOrder = async (req, res) => {
       { new: true }
     );
     if (!holidayType) {
-      return res.status(404).json({ message: 'Holiday type not found' });
+      return res.status(404).json({ message: "Holiday type not found" });
     }
     res.json(holidayType);
   } catch (error) {
-    res.status(500).json({ message: 'Error updating holiday type order', error: error.message });
+    res
+      .status(500)
+      .json({
+        message: "Error updating holiday type order",
+        error: error.message,
+      });
   }
 };
 
@@ -164,40 +212,40 @@ const updateHolidayTypeOrder = async (req, res) => {
 const searchHolidayTypes = async (req, res) => {
   try {
     const { q } = req.query;
-    
+
     if (!q || q.trim().length === 0) {
       return res.json({ holidayTypes: [] });
     }
 
     const searchQuery = q.trim();
-    
+
     // Validate search query length
     if (searchQuery.length < 2) {
       return res.json({ holidayTypes: [] });
     }
-    
+
     // Create case-insensitive search query for name and description
     const query = {
       isActive: true,
       $and: [
         {
           $or: [
-            { name: { $regex: searchQuery, $options: 'i' } },
-            { description: { $regex: searchQuery, $options: 'i' } },
-            { shortDescription: { $regex: searchQuery, $options: 'i' } }
-          ]
+            { name: { $regex: searchQuery, $options: "i" } },
+            { description: { $regex: searchQuery, $options: "i" } },
+            { shortDescription: { $regex: searchQuery, $options: "i" } },
+          ],
         },
         // Ensure required fields exist and are not null/undefined
-        { name: { $exists: true, $ne: null, $ne: '' } }
-      ]
+        { name: { $exists: true, $ne: null, $ne: "" } },
+      ],
     };
 
-    console.log('Holiday type search query:', searchQuery);
-    console.log('MongoDB query:', JSON.stringify(query));
+    console.log("Holiday type search query:", searchQuery);
+    console.log("MongoDB query:", JSON.stringify(query));
 
     // Find holiday types with relevance scoring
     const holidayTypes = await HolidayType.find(query)
-      .select('name description shortDescription isFeatured slug image')
+      .select("name description shortDescription isFeatured slug image")
       .limit(10)
       .lean();
 
@@ -208,13 +256,13 @@ const searchHolidayTypes = async (req, res) => {
     }
 
     // Score and sort by relevance
-    const scoredHolidayTypes = holidayTypes.map(ht => {
+    const scoredHolidayTypes = holidayTypes.map((ht) => {
       try {
         let score = 0;
         const searchLower = searchQuery.toLowerCase();
-        
+
         // Safely check name
-        if (ht.name && typeof ht.name === 'string') {
+        if (ht.name && typeof ht.name === "string") {
           if (ht.name.toLowerCase().includes(searchLower)) {
             score += 10;
             // Exact name match gets bonus
@@ -223,24 +271,24 @@ const searchHolidayTypes = async (req, res) => {
             }
           }
         }
-        
+
         // Safely check description
-        if (ht.description && typeof ht.description === 'string') {
+        if (ht.description && typeof ht.description === "string") {
           if (ht.description.toLowerCase().includes(searchLower)) {
             score += 3;
           }
         }
-        
+
         // Safely check short description
-        if (ht.shortDescription && typeof ht.shortDescription === 'string') {
+        if (ht.shortDescription && typeof ht.shortDescription === "string") {
           if (ht.shortDescription.toLowerCase().includes(searchLower)) {
             score += 2;
           }
         }
-        
+
         return { ...ht, score };
       } catch (err) {
-        console.error('Error processing holiday type:', ht._id, err);
+        console.error("Error processing holiday type:", ht._id, err);
         return { ...ht, score: 0 };
       }
     });
@@ -252,15 +300,17 @@ const searchHolidayTypes = async (req, res) => {
 
     console.log(`Returning ${suggestions.length} holiday type suggestions`);
     res.json({ holidayTypes: suggestions });
-    
   } catch (error) {
-    console.error('Search holiday types error:', error);
-    console.error('Error stack:', error.stack);
-    
+    console.error("Search holiday types error:", error);
+    console.error("Error stack:", error.stack);
+
     // Return empty suggestions instead of 500 error
-    res.json({ 
+    res.json({
       holidayTypes: [],
-      error: process.env.NODE_ENV === 'development' ? error.message : 'Search temporarily unavailable'
+      error:
+        process.env.NODE_ENV === "development"
+          ? error.message
+          : "Search temporarily unavailable",
     });
   }
 };
@@ -276,5 +326,5 @@ module.exports = {
   toggleHolidayTypeStatus,
   toggleHolidayTypeFeatured,
   updateHolidayTypeOrder,
-  searchHolidayTypes
-}; 
+  searchHolidayTypes,
+};

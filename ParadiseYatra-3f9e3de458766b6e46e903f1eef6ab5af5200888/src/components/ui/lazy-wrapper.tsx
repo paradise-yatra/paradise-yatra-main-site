@@ -1,6 +1,16 @@
 "use client";
 
-import React, { Suspense, lazy, ComponentType, ReactNode, useState, useEffect, useRef, useCallback, useMemo } from "react";
+import React, {
+  Suspense,
+  lazy,
+  ComponentType,
+  ReactNode,
+  useState,
+  useEffect,
+  useRef,
+  useCallback,
+  useMemo,
+} from "react";
 import Loading from "./loading";
 
 interface LazyWrapperProps {
@@ -11,28 +21,28 @@ interface LazyWrapperProps {
   rootMargin?: string;
 }
 
-const LazyWrapper = ({ 
-  children, 
+const LazyWrapper = ({
+  children,
   fallback = <Loading size="lg" className="min-h-[200px]" />,
-  className = ""
+  className = "",
 }: LazyWrapperProps) => {
   return (
     <div className={className}>
-      <Suspense fallback={fallback}>
-        {children}
-      </Suspense>
+      <Suspense fallback={fallback}>{children}</Suspense>
     </div>
   );
 };
 
 // Error boundary component for lazy loading with accessibility improvements
 const ErrorFallback = ({ retry }: { error: Error; retry: () => void }) => (
-  <div 
+  <div
     className="flex flex-col items-center justify-center min-h-[200px] p-4"
     role="alert"
     aria-live="polite"
   >
-    <div className="text-red-600 mb-4" id="error-message">Failed to load component</div>
+    <div className="text-red-600 mb-4" id="error-message">
+      Failed to load component
+    </div>
     <button
       onClick={retry}
       className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition-colors"
@@ -53,7 +63,7 @@ export const createLazyComponent = <T extends ComponentType<any>>(
   } = {}
 ) => {
   const LazyComponent = lazy(importFunc);
-  
+
   const LazyWrappedComponent = React.memo((props: React.ComponentProps<T>) => {
     const [hasError, setHasError] = useState(false);
     const [isVisible, setIsVisible] = useState(false);
@@ -114,7 +124,12 @@ export const createLazyComponent = <T extends ComponentType<any>>(
     }, []);
 
     if (hasError) {
-      return <ErrorFallback error={new Error('Component failed to load')} retry={retry} />;
+      return (
+        <ErrorFallback
+          error={new Error("Component failed to load")}
+          retry={retry}
+        />
+      );
     }
 
     // Only render the component when it's visible
@@ -129,20 +144,22 @@ export const createLazyComponent = <T extends ComponentType<any>>(
     return (
       <div ref={containerRef}>
         <LazyWrapper fallback={fallback}>
-          <ErrorBoundary onError={(error) => {
-            if (mountedRef.current) {
-              setHasError(true);
-              setError(error);
-            }
-          }}>
+          <ErrorBoundary
+            onError={(error) => {
+              if (mountedRef.current) {
+                setHasError(true);
+                setError(error);
+              }
+            }}
+          >
             <LazyComponent {...props} />
           </ErrorBoundary>
         </LazyWrapper>
       </div>
     );
   });
-  
-  LazyWrappedComponent.displayName = 'LazyWrappedComponent';
+
+  LazyWrappedComponent.displayName = "LazyWrappedComponent";
   return LazyWrappedComponent;
 };
 
@@ -173,4 +190,4 @@ class ErrorBoundary extends React.Component<
   }
 }
 
-export default LazyWrapper; 
+export default LazyWrapper;

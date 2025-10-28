@@ -39,7 +39,7 @@ export const intersectionObserverOptions = {
 // Preload critical resources
 export function preloadResource(href: string, as: string) {
   if (typeof window === 'undefined') return;
-  
+
   const link = document.createElement('link');
   link.rel = 'preload';
   link.href = href;
@@ -50,7 +50,7 @@ export function preloadResource(href: string, as: string) {
 // Prefetch non-critical resources
 export function prefetchResource(href: string) {
   if (typeof window === 'undefined') return;
-  
+
   const link = document.createElement('link');
   link.rel = 'prefetch';
   link.href = href;
@@ -67,7 +67,7 @@ export function measurePerformance(name: string, fn: () => void) {
   const start = performance.now();
   fn();
   const end = performance.now();
-  
+
   if (process.env.NODE_ENV === 'development') {
     console.log(`${name} took ${end - start} milliseconds`);
   }
@@ -83,10 +83,10 @@ export function trapFocus(element: HTMLElement) {
   const focusableElements = element.querySelectorAll(
     'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])'
   );
-  
+
   const firstElement = focusableElements[0] as HTMLElement;
   const lastElement = focusableElements[focusableElements.length - 1] as HTMLElement;
-  
+
   function handleTabKey(e: KeyboardEvent) {
     if (e.key === 'Tab') {
       if (e.shiftKey) {
@@ -102,9 +102,9 @@ export function trapFocus(element: HTMLElement) {
       }
     }
   }
-  
+
   element.addEventListener('keydown', handleTabKey);
-  
+
   return () => {
     element.removeEventListener('keydown', handleTabKey);
   };
@@ -136,7 +136,7 @@ export function batchDOMUpdates(updates: (() => void)[]) {
 // Memory leak prevention
 export function createCleanupFunction() {
   const cleanupFunctions: (() => void)[] = [];
-  
+
   return {
     add: (fn: () => void) => cleanupFunctions.push(fn),
     cleanup: () => {
@@ -163,10 +163,10 @@ export async function registerServiceWorker() {
 // Performance budget checking
 export function checkPerformanceBudget(metric: string, value: number, budget: number): boolean {
   const isWithinBudget = value <= budget;
-  
+
   if (!isWithinBudget && process.env.NODE_ENV === 'development') {
     console.warn(`Performance budget exceeded for ${metric}: ${value}ms (budget: ${budget}ms)`);
   }
-  
+
   return isWithinBudget;
 }

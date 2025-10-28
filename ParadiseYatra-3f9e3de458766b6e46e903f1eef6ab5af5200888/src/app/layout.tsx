@@ -4,6 +4,7 @@ import "./globals.css";
 import Footer from "@/components/Footer";
 import { BlogProvider } from "@/context/BlogContext";
 import Script from "next/script";
+import NewFooter from "@/components/NewFooter";
 
 const playfairDisplay = Playfair_Display({
   weight: ["400", "500", "600", "700", "800", "900"],
@@ -37,9 +38,10 @@ export const metadata: Metadata = {
   },
   // Preload critical resources
   other: {
-    'theme-color': '#1e40af',
-    'sitemap': '/sitemap.xml',
-    'Content-Security-Policy': "default-src 'self'; script-src 'self' 'unsafe-eval' 'unsafe-inline' https://www.googletagmanager.com https://www.youtube-nocookie.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' data: https: blob:; media-src 'self' https://www.youtube-nocookie.com; frame-src 'self' https://www.youtube-nocookie.com; connect-src 'self' https://www.youtube-nocookie.com;",
+    "theme-color": "#1e40af",
+    sitemap: "/sitemap.xml",
+    "Content-Security-Policy":
+      "default-src 'self'; script-src 'self' 'unsafe-eval' 'unsafe-inline' https://www.googletagmanager.com https://www.youtube-nocookie.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' data: https: blob:; media-src 'self' https://www.youtube-nocookie.com; frame-src 'self' https://www.youtube-nocookie.com; connect-src 'self' https://www.youtube-nocookie.com;",
   },
 };
 
@@ -51,7 +53,7 @@ export default function RootLayout({
   return (
     <html lang="en">
       <head>
-         <Script
+        <Script
           src="https://www.googletagmanager.com/gtag/js?id=G-99JYJS0FSF"
           strategy="afterInteractive"
         />
@@ -102,12 +104,11 @@ export default function RootLayout({
           `}
         </Script>
       </head>
-      <body
-        className={`${playfairDisplay.variable} ${nunito.variable} antialiased`}
-      >
+      <body className="antialiased">
         <BlogProvider>
           {children}
           <Footer />
+          {/* <NewFooter /> */}
         </BlogProvider>
       </body>
     </html>

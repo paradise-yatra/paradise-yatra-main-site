@@ -1,20 +1,25 @@
-const axios = require('axios');
+const axios = require("axios");
 
 // Get all countries from the API
 const getAllCountries = async (req, res) => {
   try {
     const apiKey = process.env.NEXT_PUBLIC_COUNTRY_API;
     if (!apiKey) {
-      return res.status(500).json({ message: 'Country API key not configured' });
+      return res
+        .status(500)
+        .json({ message: "Country API key not configured" });
     }
 
-    const response = await axios.get('https://api.countrystatecity.in/v1/countries', {
-      headers: {
-        'X-CSCAPI-KEY': apiKey
+    const response = await axios.get(
+      "https://api.countrystatecity.in/v1/countries",
+      {
+        headers: {
+          "X-CSCAPI-KEY": apiKey,
+        },
       }
-    });
+    );
 
-    const countries = response.data.map(country => ({
+    const countries = response.data.map((country) => ({
       id: country.id,
       name: country.name,
       iso2: country.iso2,
@@ -31,19 +36,21 @@ const getAllCountries = async (req, res) => {
       latitude: country.latitude,
       longitude: country.longitude,
       emoji: country.emoji,
-      emojiU: country.emojiU
+      emojiU: country.emojiU,
     }));
 
     res.json({ countries });
   } catch (error) {
-    console.error('Get countries error:', error);
+    console.error("Get countries error:", error);
     if (error.response) {
-      res.status(error.response.status).json({ 
-        message: 'Failed to fetch countries from external API',
-        error: error.response.data 
+      res.status(error.response.status).json({
+        message: "Failed to fetch countries from external API",
+        error: error.response.data,
       });
     } else {
-      res.status(500).json({ message: 'Server error while fetching countries' });
+      res
+        .status(500)
+        .json({ message: "Server error while fetching countries" });
     }
   }
 };
@@ -53,40 +60,45 @@ const getStatesByCountry = async (req, res) => {
   try {
     const { countryIso2 } = req.params;
     const apiKey = process.env.NEXT_PUBLIC_COUNTRY_API;
-    
+
     if (!apiKey) {
-      return res.status(500).json({ message: 'Country API key not configured' });
+      return res
+        .status(500)
+        .json({ message: "Country API key not configured" });
     }
 
     if (!countryIso2) {
-      return res.status(400).json({ message: 'Country ISO2 code is required' });
+      return res.status(400).json({ message: "Country ISO2 code is required" });
     }
 
-    const response = await axios.get(`https://api.countrystatecity.in/v1/countries/${countryIso2}/states`, {
-      headers: {
-        'X-CSCAPI-KEY': apiKey
+    const response = await axios.get(
+      `https://api.countrystatecity.in/v1/countries/${countryIso2}/states`,
+      {
+        headers: {
+          "X-CSCAPI-KEY": apiKey,
+        },
       }
-    });
+    );
 
-    const states = response.data.map(state => ({
+    const states = response.data.map((state) => ({
       id: state.id,
       name: state.name,
       state_code: state.state_code,
       latitude: state.latitude,
       longitude: state.longitude,
-      type: state.type
+      type: state.type,
     }));
 
     res.json({ states });
   } catch (error) {
-    console.error('Get states error:', error);
+    console.error("Get states error:", error);
     if (error.response) {
-      res.status(error.response.status).json({ 
-        message: 'Failed to fetch states from external API',
-        error: error.response.data 
+      res.status(error.response.status).json({
+        message: "Failed to fetch states from external API",
+        error: error.response.data,
       });
     } else {
-      res.status(500).json({ message: 'Server error while fetching states' });
+      res.status(500).json({ message: "Server error while fetching states" });
     }
   }
 };
@@ -96,38 +108,45 @@ const getCitiesByState = async (req, res) => {
   try {
     const { countryIso2, stateIso2 } = req.params;
     const apiKey = process.env.NEXT_PUBLIC_COUNTRY_API;
-    
+
     if (!apiKey) {
-      return res.status(500).json({ message: 'Country API key not configured' });
+      return res
+        .status(500)
+        .json({ message: "Country API key not configured" });
     }
 
     if (!countryIso2 || !stateIso2) {
-      return res.status(400).json({ message: 'Country ISO2 and State ISO2 codes are required' });
+      return res
+        .status(400)
+        .json({ message: "Country ISO2 and State ISO2 codes are required" });
     }
 
-    const response = await axios.get(`https://api.countrystatecity.in/v1/countries/${countryIso2}/states/${stateIso2}/cities`, {
-      headers: {
-        'X-CSCAPI-KEY': apiKey
+    const response = await axios.get(
+      `https://api.countrystatecity.in/v1/countries/${countryIso2}/states/${stateIso2}/cities`,
+      {
+        headers: {
+          "X-CSCAPI-KEY": apiKey,
+        },
       }
-    });
+    );
 
-    const cities = response.data.map(city => ({
+    const cities = response.data.map((city) => ({
       id: city.id,
       name: city.name,
       latitude: city.latitude,
-      longitude: city.longitude
+      longitude: city.longitude,
     }));
 
     res.json({ cities });
   } catch (error) {
-    console.error('Get cities error:', error);
+    console.error("Get cities error:", error);
     if (error.response) {
-      res.status(error.response.status).json({ 
-        message: 'Failed to fetch cities from external API',
-        error: error.response.data 
+      res.status(error.response.status).json({
+        message: "Failed to fetch cities from external API",
+        error: error.response.data,
       });
     } else {
-      res.status(500).json({ message: 'Server error while fetching cities' });
+      res.status(500).json({ message: "Server error while fetching cities" });
     }
   }
 };
@@ -137,38 +156,43 @@ const getCitiesByCountry = async (req, res) => {
   try {
     const { countryIso2 } = req.params;
     const apiKey = process.env.NEXT_PUBLIC_COUNTRY_API;
-    
+
     if (!apiKey) {
-      return res.status(500).json({ message: 'Country API key not configured' });
+      return res
+        .status(500)
+        .json({ message: "Country API key not configured" });
     }
 
     if (!countryIso2) {
-      return res.status(400).json({ message: 'Country ISO2 code is required' });
+      return res.status(400).json({ message: "Country ISO2 code is required" });
     }
 
-    const response = await axios.get(`https://api.countrystatecity.in/v1/countries/${countryIso2}/cities`, {
-      headers: {
-        'X-CSCAPI-KEY': apiKey
+    const response = await axios.get(
+      `https://api.countrystatecity.in/v1/countries/${countryIso2}/cities`,
+      {
+        headers: {
+          "X-CSCAPI-KEY": apiKey,
+        },
       }
-    });
+    );
 
-    const cities = response.data.map(city => ({
+    const cities = response.data.map((city) => ({
       id: city.id,
       name: city.name,
       latitude: city.latitude,
-      longitude: city.longitude
+      longitude: city.longitude,
     }));
 
     res.json({ cities });
   } catch (error) {
-    console.error('Get cities by country error:', error);
+    console.error("Get cities by country error:", error);
     if (error.response) {
-      res.status(error.response.status).json({ 
-        message: 'Failed to fetch cities from external API',
-        error: error.response.data 
+      res.status(error.response.status).json({
+        message: "Failed to fetch cities from external API",
+        error: error.response.data,
       });
     } else {
-      res.status(500).json({ message: 'Server error while fetching cities' });
+      res.status(500).json({ message: "Server error while fetching cities" });
     }
   }
 };
@@ -178,32 +202,39 @@ const getCountryDetails = async (req, res) => {
   try {
     const { countryIso2 } = req.params;
     const apiKey = process.env.NEXT_PUBLIC_COUNTRY_API;
-    
+
     if (!apiKey) {
-      return res.status(500).json({ message: 'Country API key not configured' });
+      return res
+        .status(500)
+        .json({ message: "Country API key not configured" });
     }
 
     if (!countryIso2) {
-      return res.status(400).json({ message: 'Country ISO2 code is required' });
+      return res.status(400).json({ message: "Country ISO2 code is required" });
     }
 
-    const response = await axios.get(`https://api.countrystatecity.in/v1/countries/${countryIso2}`, {
-      headers: {
-        'X-CSCAPI-KEY': apiKey
+    const response = await axios.get(
+      `https://api.countrystatecity.in/v1/countries/${countryIso2}`,
+      {
+        headers: {
+          "X-CSCAPI-KEY": apiKey,
+        },
       }
-    });
+    );
 
     const country = response.data;
     res.json({ country });
   } catch (error) {
-    console.error('Get country details error:', error);
+    console.error("Get country details error:", error);
     if (error.response) {
-      res.status(error.response.status).json({ 
-        message: 'Failed to fetch country details from external API',
-        error: error.response.data 
+      res.status(error.response.status).json({
+        message: "Failed to fetch country details from external API",
+        error: error.response.data,
       });
     } else {
-      res.status(500).json({ message: 'Server error while fetching country details' });
+      res
+        .status(500)
+        .json({ message: "Server error while fetching country details" });
     }
   }
 };
@@ -213,32 +244,41 @@ const getStateDetails = async (req, res) => {
   try {
     const { countryIso2, stateIso2 } = req.params;
     const apiKey = process.env.NEXT_PUBLIC_COUNTRY_API;
-    
+
     if (!apiKey) {
-      return res.status(500).json({ message: 'Country API key not configured' });
+      return res
+        .status(500)
+        .json({ message: "Country API key not configured" });
     }
 
     if (!countryIso2 || !stateIso2) {
-      return res.status(400).json({ message: 'Country ISO2 and State ISO2 codes are required' });
+      return res
+        .status(400)
+        .json({ message: "Country ISO2 and State ISO2 codes are required" });
     }
 
-    const response = await axios.get(`https://api.countrystatecity.in/v1/countries/${countryIso2}/states/${stateIso2}`, {
-      headers: {
-        'X-CSCAPI-KEY': apiKey
+    const response = await axios.get(
+      `https://api.countrystatecity.in/v1/countries/${countryIso2}/states/${stateIso2}`,
+      {
+        headers: {
+          "X-CSCAPI-KEY": apiKey,
+        },
       }
-    });
+    );
 
     const state = response.data;
     res.json({ state });
   } catch (error) {
-    console.error('Get state details error:', error);
+    console.error("Get state details error:", error);
     if (error.response) {
-      res.status(error.response.status).json({ 
-        message: 'Failed to fetch state details from external API',
-        error: error.response.data 
+      res.status(error.response.status).json({
+        message: "Failed to fetch state details from external API",
+        error: error.response.data,
       });
     } else {
-      res.status(500).json({ message: 'Server error while fetching state details' });
+      res
+        .status(500)
+        .json({ message: "Server error while fetching state details" });
     }
   }
 };
@@ -249,5 +289,5 @@ module.exports = {
   getCitiesByState,
   getCitiesByCountry,
   getCountryDetails,
-  getStateDetails
+  getStateDetails,
 };

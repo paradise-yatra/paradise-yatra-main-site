@@ -22,7 +22,7 @@ export const useTypingEffect = ({
     if (texts.length === 0) return;
 
     const currentFullText = texts[currentTextIndex];
-    
+
     if (isPaused) {
       const pauseTimeout = setTimeout(() => {
         setIsPaused(false);
