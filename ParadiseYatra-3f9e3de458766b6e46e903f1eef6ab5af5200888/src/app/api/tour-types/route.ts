@@ -36,20 +36,20 @@ export async function GET() {
         const destinationsResponse = await fetch(
           `${API_CONFIG.getFullUrl(API_CONFIG.ENDPOINTS.DESTINATIONS.ALL)}?tourType=${tourType}&limit=100`
         );
-        
+
         // Fetch packages
         const packagesResponse = await fetch(
           `${API_CONFIG.getFullUrl(API_CONFIG.ENDPOINTS.PACKAGES.ALL)}?tourType=${tourType}&limit=100`
         );
-        
+
         let destinations = [];
         let packages = [];
-        
+
         if (destinationsResponse.ok) {
           const destinationsData = await destinationsResponse.json();
           destinations = destinationsData.destinations || [];
         }
-        
+
         if (packagesResponse.ok) {
           const packagesData = await packagesResponse.json();
           packages = packagesData.packages || [];
@@ -57,7 +57,7 @@ export async function GET() {
 
         // Get fixed departures for this tour type
         const fixedDepartures = fixedDeparturesData.fixedDepartures || [];
-        const tourTypeFixedDepartures = fixedDepartures.filter((fd: any) => 
+        const tourTypeFixedDepartures = fixedDepartures.filter((fd: any) =>
           fd.tourType === tourType
         );
 
@@ -136,15 +136,17 @@ export async function GET() {
     // Organize data by tour type and state
     const organizedData = tourTypeData.map(({ tourType, items }) => {
       // Group items by state
-      const itemsByState = items.reduce((acc: { [key: string]: Array<{
-        id: string;
-        name: string;
-        location: string;
-        image: string;
-        category: string;
-        isTrending: boolean;
-        type: string;
-      }> }, item: {
+      const itemsByState = items.reduce((acc: {
+        [key: string]: Array<{
+          id: string;
+          name: string;
+          location: string;
+          image: string;
+          category: string;
+          isTrending: boolean;
+          type: string;
+        }>
+      }, item: {
         id: string;
         name: string;
         location: string;
@@ -230,16 +232,18 @@ export async function GET() {
         };
 
         // Normalize state names
-        const normalizedItemsByState: { [key: string]: Array<{
-          id: string;
-          name: string;
-          location: string;
-          image: string;
-          category: string;
-          isTrending: boolean;
-          type: string;
-        }> } = {};
-        
+        const normalizedItemsByState: {
+          [key: string]: Array<{
+            id: string;
+            name: string;
+            location: string;
+            image: string;
+            category: string;
+            isTrending: boolean;
+            type: string;
+          }>
+        } = {};
+
         Object.keys(itemsByState).forEach(state => {
           const normalizedState = stateMapping[state.toLowerCase()] || state;
           if (!normalizedItemsByState[normalizedState]) {
@@ -269,23 +273,27 @@ export async function GET() {
       // For international tours, organize by country first, then by state
       if (tourType === 'international') {
         // For international tours, parse location to extract country and city/state
-        const itemsByCountry: { [key: string]: { [key: string]: Array<{
-          id: string;
-          name: string;
-          location: string;
-          image: string;
-          category: string;
-          isTrending: boolean;
-          type: string;
-        }> } } = {};
+        const itemsByCountry: {
+          [key: string]: {
+            [key: string]: Array<{
+              id: string;
+              name: string;
+              location: string;
+              image: string;
+              category: string;
+              isTrending: boolean;
+              type: string;
+            }>
+          }
+        } = {};
 
         // Process each item directly instead of relying on state grouping
         items.forEach(item => {
           const locationParts = item.location.split(',').map((part: string) => part.trim());
-          
+
           // For international tours, assume format: "City, Country" or "City, State, Country"
           let country, cityState;
-          
+
           if (locationParts.length === 2) {
             // Format: "City, Country"
             cityState = locationParts[0];
@@ -314,7 +322,7 @@ export async function GET() {
             else if (cityState.includes('Amazon')) country = 'Brazil';
             else country = cityState; // Use cityState as country if no match found
           }
-          
+
           if (!itemsByCountry[country]) {
             itemsByCountry[country] = {};
           }

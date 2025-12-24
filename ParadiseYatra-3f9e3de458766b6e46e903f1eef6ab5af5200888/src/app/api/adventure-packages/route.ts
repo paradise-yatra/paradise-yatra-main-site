@@ -7,25 +7,25 @@ export async function GET(request: NextRequest) {
   try {
     const { searchParams } = new URL(request.url);
     const limit = searchParams.get('limit') || '6';
-    
+
     // Validate limit parameter
     if (!validateLimit(limit)) {
       return NextResponse.json(
-        { 
-          message: 'Invalid limit parameter', 
+        {
+          message: 'Invalid limit parameter',
           error: `Limit '${limit}' is not valid. Must be a number between 1 and 100`
-        }, 
+        },
         { status: 400 }
       );
     }
-    
+
     const response = await fetch(`${BACKEND_URL}/api/packages?category=adventure&limit=${limit}`);
     const data = await response.json();
-    
+
     if (!response.ok) {
       return NextResponse.json({ message: data.message || 'Failed to fetch adventure packages' }, { status: response.status });
     }
-    
+
     return NextResponse.json(data);
   } catch (error) {
     console.error('Adventure Packages API error:', error);

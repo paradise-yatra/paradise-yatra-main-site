@@ -3,7 +3,7 @@
 
 export const PACKAGE_CATEGORIES = [
   'Beach Holidays',
-  'Adventure Tours', 
+  'Adventure Tours',
   'Trending Destinations',
   'Premium Packages',
   'Popular Packages',

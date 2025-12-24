@@ -3,40 +3,40 @@
 /* Custom scrollbar styles */
 @layer utilities {
   .scrollbar-hide {
-    -ms-overflow-style: none;  /* Internet Explorer 10+ */
-    scrollbar-width: none;  /* Firefox */
+    -ms-overflow-style: none; /* Internet Explorer 10+ */
+    scrollbar-width: none; /* Firefox */
   }
-  
+
   .scrollbar-hide::-webkit-scrollbar {
-    display: none;  /* Safari and Chrome */
+    display: none; /* Safari and Chrome */
   }
-  
+
   /* Enhanced smooth scrolling utilities */
   .smooth-scroll {
     scroll-behavior: smooth;
     -webkit-overflow-scrolling: touch;
   }
-  
+
   .smooth-scroll-all {
     scroll-behavior: smooth;
     -webkit-overflow-scrolling: touch;
   }
-  
+
   .smooth-scroll-all * {
     scroll-behavior: smooth;
   }
-  
+
   /* Mobile horizontal scrolling enhancements */
   .mobile-scroll-container {
     -webkit-overflow-scrolling: touch;
     scroll-snap-type: x mandatory;
     scroll-behavior: smooth;
   }
-  
+
   .mobile-scroll-container > * {
     scroll-snap-align: start;
   }
-  
+
   /* Ensure smooth scrolling on mobile */
   @media (max-width: 768px) {
     .mobile-scroll-container {
@@ -44,34 +44,34 @@
       scroll-snap-type: x mandatory;
     }
   }
-  
+
   .scrollbar-thin {
     scrollbar-width: thin;
     scrollbar-color: #d1d5db #f3f4f6;
   }
-  
+
   .scrollbar-thin::-webkit-scrollbar {
     width: 6px;
   }
-  
+
   .scrollbar-thin::-webkit-scrollbar-track {
     background: #f3f4f6;
     border-radius: 3px;
   }
-  
+
   .scrollbar-thin::-webkit-scrollbar-thumb {
     background: #d1d5db;
     border-radius: 3px;
   }
-  
+
   .scrollbar-thin::-webkit-scrollbar-thumb:hover {
     background: #9ca3af;
   }
-  
+
   .scrollbar-thumb-gray-300::-webkit-scrollbar-thumb {
     background: #d1d5db;
   }
-  
+
   .scrollbar-track-gray-100::-webkit-scrollbar-track {
     background: #f3f4f6;
   }
@@ -79,15 +79,20 @@
 
 /* Custom font classes */
 .font-playfair-display {
-  font-family: var(--font-playfair-display), 'Playfair Display', serif;
+  font-family: var(--font-playfair-display), "Playfair Display", serif;
 }
 
 .font-nunito {
-  font-family: var(--font-nunito), 'Nunito', sans-serif;
+  font-family: var(--font-nunito), "Nunito", sans-serif;
 }
 
 .font-roboto {
-  font-family: var(--font-roboto), 'Roboto', sans-serif;
+  font-family: var(--font-roboto), "Roboto", sans-serif;
+}
+
+.font-apple-system {
+  font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display",
+    "SF Pro Text", "Helvetica Neue", Helvetica, Arial, sans-serif;
 }
 
 :root {
@@ -109,34 +114,35 @@
   --ring: #0ea5e9;
   --destructive: #ef4444;
   --destructive-foreground: #ffffff;
-  
+
   /* Travel-specific colors */
   --travel-blue: #0ea5e9;
   --travel-teal: #14b8a6;
   --travel-orange: #f97316;
   --travel-purple: #8b5cf6;
   --travel-green: #10b981;
-  
+
   /* Admin Theme Variables - Light Mode (WCAG AA compliant) */
   --admin-bg-primary: #ffffff;
   --admin-bg-secondary: #f8fafc;
   --admin-bg-tertiary: #f1f5f9;
-  --admin-text-primary: #0f172a;      /* 4.5:1 contrast ratio */
-  --admin-text-secondary: #334155;     /* 4.5:1 contrast ratio */
-  --admin-text-muted: #64748b;        /* 4.5:1 contrast ratio */
+  --admin-text-primary: #0f172a; /* 4.5:1 contrast ratio */
+  --admin-text-secondary: #334155; /* 4.5:1 contrast ratio */
+  --admin-text-muted: #64748b; /* 4.5:1 contrast ratio */
   --admin-border: #e2e8f0;
-  --admin-accent: #0ea5e9;            /* 4.5:1 contrast ratio */
-  --admin-accent-hover: #0284c7;      /* 4.5:1 contrast ratio */
-  --admin-success: #059669;           /* 4.5:1 contrast ratio */
-  --admin-warning: #d97706;           /* 4.5:1 contrast ratio */
-  --admin-error: #dc2626;             /* 4.5:1 contrast ratio */
-  
+  --admin-accent: #0ea5e9; /* 4.5:1 contrast ratio */
+  --admin-accent-hover: #0284c7; /* 4.5:1 contrast ratio */
+  --admin-success: #059669; /* 4.5:1 contrast ratio */
+  --admin-warning: #d97706; /* 4.5:1 contrast ratio */
+  --admin-error: #dc2626; /* 4.5:1 contrast ratio */
+
   /* Typography */
-  --font-playfair-display: 'Playfair Display', serif;
-  --font-nunito: 'Nunito', sans-serif;
-  --font-roboto: 'Roboto', sans-serif;
-  --font-sans: var(--font-nunito), -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-  --font-mono: 'JetBrains Mono', 'Fira Code', monospace;
+  --font-playfair-display: "Playfair Display", serif;
+  --font-nunito: "Nunito", sans-serif;
+  --font-roboto: "Roboto", sans-serif;
+  --font-sans: -apple-system, BlinkMacSystemFont, "SF Pro Display",
+    "SF Pro Text", "Helvetica Neue", Helvetica, Arial, sans-serif;
+  --font-mono: "JetBrains Mono", "Fira Code", monospace;
 }
 
 @theme inline {
@@ -184,15 +190,15 @@
   --admin-bg-primary: #0f172a;
   --admin-bg-secondary: #1e293b;
   --admin-bg-tertiary: #334155;
-  --admin-text-primary: #f8fafc;      /* 4.5:1 contrast ratio */
-  --admin-text-secondary: #cbd5e1;    /* 4.5:1 contrast ratio */
-  --admin-text-muted: #94a3b8;        /* 4.5:1 contrast ratio */
+  --admin-text-primary: #f8fafc; /* 4.5:1 contrast ratio */
+  --admin-text-secondary: #cbd5e1; /* 4.5:1 contrast ratio */
+  --admin-text-muted: #94a3b8; /* 4.5:1 contrast ratio */
   --admin-border: #475569;
-  --admin-accent: #3b82f6;            /* 4.5:1 contrast ratio */
-  --admin-accent-hover: #2563eb;      /* 4.5:1 contrast ratio */
-  --admin-success: #10b981;           /* 4.5:1 contrast ratio */
-  --admin-warning: #f59e0b;           /* 4.5:1 contrast ratio */
-  --admin-error: #ef4444;             /* 4.5:1 contrast ratio */
+  --admin-accent: #3b82f6; /* 4.5:1 contrast ratio */
+  --admin-accent-hover: #2563eb; /* 4.5:1 contrast ratio */
+  --admin-success: #10b981; /* 4.5:1 contrast ratio */
+  --admin-warning: #f59e0b; /* 4.5:1 contrast ratio */
+  --admin-error: #ef4444; /* 4.5:1 contrast ratio */
 }
 
 /* Base styles */
@@ -216,11 +222,14 @@ html {
 }
 
 /* Form input text color fixes */
-input, textarea, select {
+input,
+textarea,
+select {
   color: #374151 !important; /* Ensure form inputs have proper text color */
 }
 
-input::placeholder, textarea::placeholder {
+input::placeholder,
+textarea::placeholder {
   color: #9ca3af !important; /* Ensure placeholder text is visible */
 }
 
@@ -234,7 +243,8 @@ input::placeholder, textarea::placeholder {
 body {
   background: var(--background);
   color: var(--foreground);
-  font-family: var(--font-nunito), -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display",
+    "SF Pro Text", "Helvetica Neue", Helvetica, Arial, sans-serif;
   font-feature-settings: "cv02", "cv03", "cv04", "cv11";
   font-variation-settings: normal;
   line-height: 1.6;
@@ -248,11 +258,27 @@ body {
 }
 
 /* Typography */
-h1, h2, h3, h4, h5, h6 {
-  font-family: var(--font-playfair-display), 'Playfair Display', serif;
+h1,
+h2,
+h3,
+h4,
+h5,
+h6 {
+  font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display",
+    "SF Pro Text", "Helvetica Neue", Helvetica, Arial, sans-serif;
   font-weight: 600;
   line-height: 1.3;
   letter-spacing: -0.02em;
+}
+
+/* Override h3 font weight to be light */
+h3 {
+  font-weight: 300;
+}
+
+/* Override h4 font weight to be semibold */
+h4 {
+  font-weight: 600;
 }
 
 /* Card content styling */
@@ -262,24 +288,27 @@ h1, h2, h3, h4, h5, h6 {
 .modern-card p,
 .modern-card span,
 .modern-card div:not(:has(h1, h2, h3, h4, h5, h6)) {
-  font-family: var(--font-nunito), 'Nunito', sans-serif;
+  font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display",
+    "SF Pro Text", "Helvetica Neue", Helvetica, Arial, sans-serif;
   font-weight: 400;
 }
 
-/* Ensure all paragraph text in cards uses Nunito */
+/* Ensure all paragraph text in cards uses Apple System */
 .card p,
 .modern-card p,
 [class*="card"] p {
-  font-family: var(--font-nunito), 'Nunito', sans-serif;
+  font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display",
+    "SF Pro Text", "Helvetica Neue", Helvetica, Arial, sans-serif;
   font-weight: 400;
 }
 
-/* Ensure all span and div text in cards uses Nunito (except headings) */
+/* Ensure all span and div text in cards uses Apple System (except headings) */
 .card span,
 .card div:not(:has(h1, h2, h3, h4, h5, h6)),
 .modern-card span,
 .modern-card div:not(:has(h1, h2, h3, h4, h5, h6)) {
-  font-family: var(--font-nunito), 'Nunito', sans-serif;
+  font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display",
+    "SF Pro Text", "Helvetica Neue", Helvetica, Arial, sans-serif;
   font-weight: 400;
 }
 
@@ -295,7 +324,7 @@ h2 {
 
 h3 {
   font-size: clamp(1.25rem, 3vw, 1.875rem);
-  font-weight: 600;
+  font-weight: 300;
 }
 
 p {
@@ -379,13 +408,18 @@ p {
 }
 
 .modern-card::before {
-  content: '';
+  content: "";
   position: absolute;
   top: 0;
   left: 0;
   right: 0;
   height: 1px;
-  background: linear-gradient(90deg, transparent, rgba(59, 130, 246, 0.3), transparent);
+  background: linear-gradient(
+    90deg,
+    transparent,
+    rgba(59, 130, 246, 0.3),
+    transparent
+  );
   opacity: 0;
   transition: opacity 0.3s ease;
 }
@@ -409,7 +443,7 @@ p {
 }
 
 .modern-card h3 {
-  font-weight: 600;
+  font-weight: 300;
   color: #1f2937;
   margin-bottom: 0.75rem;
   transition: color 0.2s ease;
@@ -545,7 +579,12 @@ p {
 
 /* Loading states */
 .skeleton {
-  background: linear-gradient(90deg, var(--muted) 25%, var(--border) 50%, var(--muted) 75%);
+  background: linear-gradient(
+    90deg,
+    var(--muted) 25%,
+    var(--border) 50%,
+    var(--muted) 75%
+  );
   background-size: 200% 100%;
   animation: loading 1.5s infinite;
 }
@@ -623,7 +662,7 @@ p {
     --admin-text-muted: #666666;
     --admin-border: #000000;
   }
-  
+
   .dark {
     --admin-text-primary: #ffffff;
     --admin-text-secondary: #cccccc;
@@ -640,7 +679,7 @@ p {
     transition-duration: 0.01ms !important;
     scroll-behavior: auto !important;
   }
-  
+
   html {
     scroll-behavior: auto !important;
   }
@@ -874,7 +913,7 @@ html {
   width: 20px;
   height: 20px;
   border-radius: 50%;
-  background: #3B82F6;
+  background: #3b82f6;
   cursor: pointer;
   border: 2px solid #ffffff;
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
@@ -882,7 +921,7 @@ html {
 }
 
 .slider::-webkit-slider-thumb:hover {
-  background: #2563EB;
+  background: #2563eb;
   transform: scale(1.1);
   box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
 }
@@ -891,7 +930,7 @@ html {
   width: 20px;
   height: 20px;
   border-radius: 50%;
-  background: #3B82F6;
+  background: #3b82f6;
   cursor: pointer;
   border: 2px solid #ffffff;
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
@@ -899,7 +938,7 @@ html {
 }
 
 .slider::-moz-range-thumb:hover {
-  background: #2563EB;
+  background: #2563eb;
   transform: scale(1.1);
   box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
 }

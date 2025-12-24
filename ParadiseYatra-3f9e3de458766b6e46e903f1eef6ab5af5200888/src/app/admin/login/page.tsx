@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent } from "@/components/ui/card";
-import Image from "next/image"; 
+import Image from "next/image";
 import { Loader2 } from "lucide-react";
 
 const AdminLoginPage = () => {
@@ -44,22 +44,28 @@ const AdminLoginPage = () => {
       localStorage.setItem("adminUser", JSON.stringify(data.user));
       router.push("/admin");
     } catch (err: unknown) {
-      setError(err instanceof Error ? err.message : "An error occurred during login");
+      setError(
+        err instanceof Error ? err.message : "An error occurred during login"
+      );
     } finally {
       setLoading(false);
     }
   };
 
   return (
-    <div 
-      className="min-h-screen flex items-center justify-center p-4 bg-gradient-to-br from-blue-50 via-white to-indigo-50"
-    >
+    <div className="min-h-screen flex items-center justify-center p-4 bg-gradient-to-br from-blue-50 via-white to-indigo-50">
       <div className="w-full max-w-md">
         <Card className="border-0 shadow-2xl rounded-2xl overflow-hidden bg-white">
           <div className="space-y-1 pb-2 pt-8 px-6">
             <div className="flex justify-center mb-4">
               <div className="w-20 h-20 rounded-full bg-gradient-to-r from-indigo-600 to-purple-600 flex items-center justify-center shadow-lg">
-                <Image src="/footerLogo.png" alt="logo" className="w-20 h-20 object-contain" width={80} height={80} />
+                <Image
+                  src="/footerLogo.png"
+                  alt="logo"
+                  className="w-20 h-20 object-contain"
+                  width={80}
+                  height={80}
+                />
               </div>
             </div>
             <h2 className="text-3xl font-bold text-center text-gray-900">

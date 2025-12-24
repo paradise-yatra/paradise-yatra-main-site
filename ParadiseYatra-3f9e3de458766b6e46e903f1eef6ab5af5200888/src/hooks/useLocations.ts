@@ -57,12 +57,12 @@ export const useLocations = (): UseLocationsReturn => {
     try {
       setLoading(true);
       setError(null);
-      
+
       const response = await fetch('/api/locations/countries');
       if (!response.ok) {
         throw new Error('Failed to fetch countries');
       }
-      
+
       const data = await response.json();
       setCountries(data.countries || []);
     } catch (err) {
@@ -82,12 +82,12 @@ export const useLocations = (): UseLocationsReturn => {
     try {
       setLoading(true);
       setError(null);
-      
+
       const response = await fetch(`/api/locations/states/${countryIso2}`);
       if (!response.ok) {
         throw new Error('Failed to fetch states');
       }
-      
+
       const data = await response.json();
       setStates(data.states || []);
     } catch (err) {

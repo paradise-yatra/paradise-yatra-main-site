@@ -2,7 +2,15 @@
 
 import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
-import { Clock, User, ChevronRight, Sparkles, Mail, BookOpen, ArrowRight } from "lucide-react";
+import {
+  Clock,
+  User,
+  ChevronRight,
+  Sparkles,
+  Mail,
+  BookOpen,
+  ArrowRight,
+} from "lucide-react";
 import { Button } from "@/components/ui/button";
 
 import Link from "next/link";
@@ -98,17 +106,19 @@ const BlogPage = () => {
                   />
                 </div>
                 <div>
-                  <p className="text-xs text-slate-500">Trusted Travel Experts</p>
+                  <p className="text-xs text-slate-500">
+                    Trusted Travel Experts
+                  </p>
                 </div>
               </div>
-              
+
               {/* Breadcrumb */}
               <nav className="flex items-center space-x-2 text-sm text-slate-500">
                 <ChevronRight className="w-3 h-3 text-slate-400" />
                 <span className="text-slate-800">Blog</span>
               </nav>
             </div>
-            
+
             {/* Trust Indicators */}
             <div className="hidden md:flex items-center space-x-4 text-xs text-slate-600">
               <div className="flex items-center space-x-2">
@@ -159,9 +169,10 @@ const BlogPage = () => {
             animate={{ opacity: 1, y: 0 }}
             className="text-base md:text-lg text-slate-600 mb-5 md:mb-6 max-w-2xl mx-auto"
           >
-            Discover expert tips, local insights, and guides to make your journey unforgettable.
+            Discover expert tips, local insights, and guides to make your
+            journey unforgettable.
           </motion.p>
-          
+
           {/* Trust Badges */}
           <motion.div
             initial={{ opacity: 0, y: 10 }}
@@ -173,19 +184,25 @@ const BlogPage = () => {
               <div className="w-4 h-4 bg-green-100 rounded-full flex items-center justify-center">
                 <span className="text-green-600 text-xs">📚</span>
               </div>
-              <span className="text-xs font-medium text-slate-700">500+ Travel Guides</span>
+              <span className="text-xs font-medium text-slate-700">
+                500+ Travel Guides
+              </span>
             </div>
             <div className="flex items-center space-x-2 bg-white/80 backdrop-blur-sm px-3 py-1.5 rounded-full border border-slate-200">
               <div className="w-4 h-4 bg-blue-100 rounded-full flex items-center justify-center">
                 <span className="text-blue-600 text-xs">⏰</span>
               </div>
-              <span className="text-xs font-medium text-slate-700">10+ Years Experience</span>
+              <span className="text-xs font-medium text-slate-700">
+                10+ Years Experience
+              </span>
             </div>
             <div className="flex items-center space-x-2 bg-white/80 backdrop-blur-sm px-3 py-1.5 rounded-full border border-slate-200">
               <div className="w-4 h-4 bg-purple-100 rounded-full flex items-center justify-center">
                 <span className="text-purple-600 text-xs">👨‍💼</span>
               </div>
-              <span className="text-xs font-medium text-slate-700">Local Expert Writers</span>
+              <span className="text-xs font-medium text-slate-700">
+                Local Expert Writers
+              </span>
             </div>
           </motion.div>
         </div>
@@ -212,7 +229,7 @@ const BlogPage = () => {
                 className="w-full h-[220px] sm:h-[300px] md:h-[350px] object-cover transition-transform duration-500 group-hover:scale-105"
               />
               <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/20 to-transparent"></div>
-              
+
               {/* Trust Badge */}
               <div className="absolute top-4 right-4">
                 <div className="bg-green-500 text-white text-xs px-2 py-1 rounded-full font-medium flex items-center space-x-1">
@@ -220,7 +237,7 @@ const BlogPage = () => {
                   <span>Featured & Verified</span>
                 </div>
               </div>
-              
+
               <div className="absolute bottom-0 left-0 right-0 p-6 text-white">
                 <div className="flex items-center space-x-2 mb-3">
                   <span className="text-xs bg-blue-600 px-3 py-1 rounded-full font-medium">
@@ -242,7 +259,10 @@ const BlogPage = () => {
                     <span>👁️ {blogPosts[0].views || 1000}+ views</span>
                     <span>❤️ {blogPosts[0].likes || 50}+ likes</span>
                   </div>
-                  <Link href={`/blog/${generateSlug(blogPosts[0].title)}`} className="order-1 sm:order-2 self-start sm:self-auto">
+                  <Link
+                    href={`/blog/${generateSlug(blogPosts[0].title)}`}
+                    className="order-1 sm:order-2 self-start sm:self-auto"
+                  >
                     <Button className="bg-blue-600 hover:scale-105 hover:cursor-pointer text-white font-medium px-4 py-2 rounded-lg inline-flex items-center text-sm">
                       Read Article
                       <ArrowRight className="w-4 h-4 ml-2" />
@@ -267,24 +287,53 @@ const BlogPage = () => {
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4 md:gap-6">
               <div className="flex flex-col items-center space-y-2">
                 <div className="w-12 h-12 bg-blue-100 rounded-full flex items-center justify-center">
-                  <span className="text-blue-600 text-xl"><Image src="/local-experience.png" alt="Local Expertise" width={48} height={48} /></span>
+                  <span className="text-blue-600 text-xl">
+                    <Image
+                      src="/local-experience.png"
+                      alt="Local Expertise"
+                      width={48}
+                      height={48}
+                    />
+                  </span>
                 </div>
                 <h4 className="font-medium text-slate-900">Local Expertise</h4>
-                <p className="text-xs text-slate-600">Written by travel experts with deep local knowledge</p>
+                <p className="text-xs text-slate-600">
+                  Written by travel experts with deep local knowledge
+                </p>
               </div>
               <div className="flex flex-col items-center space-y-2">
                 <div className="w-12 h-12 bg-green-100 rounded-full flex items-center justify-center">
-                  <span className="text-green-600 text-xl"><Image src="/validated.png" alt="Verified Information" width={48} height={48} /></span>
+                  <span className="text-green-600 text-xl">
+                    <Image
+                      src="/validated.png"
+                      alt="Verified Information"
+                      width={48}
+                      height={48}
+                    />
+                  </span>
                 </div>
-                <h4 className="font-medium text-slate-900">Verified Information</h4>
-                <p className="text-xs text-slate-600">All content is fact-checked and regularly updated</p>
+                <h4 className="font-medium text-slate-900">
+                  Verified Information
+                </h4>
+                <p className="text-xs text-slate-600">
+                  All content is fact-checked and regularly updated
+                </p>
               </div>
               <div className="flex flex-col items-center space-y-2">
                 <div className="w-12 h-12 bg-purple-100 rounded-full flex items-center justify-center">
-                  <span className="text-purple-600 text-xl"><Image src="/customer-review.png" alt="Real Experiences" width={48} height={48} /></span>
+                  <span className="text-purple-600 text-xl">
+                    <Image
+                      src="/customer-review.png"
+                      alt="Real Experiences"
+                      width={48}
+                      height={48}
+                    />
+                  </span>
                 </div>
                 <h4 className="font-medium text-slate-900">Real Experiences</h4>
-                <p className="text-xs text-slate-600">Based on actual travel experiences and local insights</p>
+                <p className="text-xs text-slate-600">
+                  Based on actual travel experiences and local insights
+                </p>
               </div>
             </div>
           </div>
@@ -342,12 +391,17 @@ const BlogPage = () => {
                   <div className="flex items-center justify-between pt-3 border-t border-slate-100">
                     <div className="flex items-center gap-2 text-xs text-slate-700">
                       <div className="w-6 h-6 rounded-full bg-blue-100 text-blue-700 flex items-center justify-center font-medium text-sm">
-                        {post.author?.charAt(0) || 'A'}
+                        {post.author?.charAt(0) || "A"}
                       </div>
-                      <span className="font-medium">{post.author || 'Anonymous'}</span>
+                      <span className="font-medium">
+                        {post.author || "Anonymous"}
+                      </span>
                     </div>
                     <Link href={`/blog/${generateSlug(post.title)}`}>
-                      <Button variant="ghost" className="text-xs text-blue-600 hover:scale-105 hover:cursor-pointer px-3 py-1 h-auto">
+                      <Button
+                        variant="ghost"
+                        className="text-xs text-blue-600 hover:scale-105 hover:cursor-pointer px-3 py-1 h-auto"
+                      >
                         Read More →
                       </Button>
                     </Link>
@@ -369,9 +423,10 @@ const BlogPage = () => {
             Get Travel Inspiration
           </h3>
           <p className="text-slate-600 mb-4 max-w-sm mx-auto text-sm">
-            Subscribe to receive our latest travel guides and destination highlights directly in your inbox.
+            Subscribe to receive our latest travel guides and destination
+            highlights directly in your inbox.
           </p>
-          
+
           {/* Trust Indicators */}
           <div className="flex justify-center items-center space-x-4 mb-4 text-xs text-slate-600">
             <div className="flex items-center space-x-2">
@@ -393,7 +448,7 @@ const BlogPage = () => {
               <span>Expert Content</span>
             </div>
           </div>
-          
+
           <div className="flex flex-col sm:flex-row gap-2 md:gap-3 max-w-sm mx-auto">
             <input
               type="email"
@@ -407,17 +462,21 @@ const BlogPage = () => {
           <p className="text-xs text-slate-400 mt-3">
             We respect your privacy. Unsubscribe anytime.
           </p>
-          
+
           {/* Social Proof */}
           <div className="mt-4 pt-4 border-t border-blue-200">
-            <p className="text-xs text-slate-500 mb-2">Join 5,000+ travel enthusiasts</p>
+            <p className="text-xs text-slate-500 mb-2">
+              Join 5,000+ travel enthusiasts
+            </p>
             <div className="flex justify-center items-center space-x-1 text-xs text-slate-400">
               <span>⭐</span>
               <span>⭐</span>
               <span>⭐</span>
               <span>⭐</span>
               <span>⭐</span>
-              <span className="ml-1 text-slate-600">4.9/5 from our readers</span>
+              <span className="ml-1 text-slate-600">
+                4.9/5 from our readers
+              </span>
             </div>
           </div>
         </motion.div>

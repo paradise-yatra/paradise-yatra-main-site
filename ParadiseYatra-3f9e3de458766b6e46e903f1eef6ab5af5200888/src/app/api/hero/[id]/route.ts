@@ -9,7 +9,7 @@ export async function PUT(
   try {
     const { id } = await params;
     const body = await request.json();
-    
+
     const response = await fetch(`${BACKEND_URL}/api/hero/${id}`, {
       method: 'PUT',
       headers: {

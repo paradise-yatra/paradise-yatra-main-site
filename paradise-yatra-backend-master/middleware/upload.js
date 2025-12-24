@@ -1,24 +1,25 @@
-const multer = require('multer');
-const path = require('path');
+const multer = require("multer");
+const path = require("path");
+const { CloudinaryStorage } = require("multer-storage-cloudinary");
+const cloudinary = require("../config/cloudinary");
 
-// Configure multer for file uploads
-const storage = multer.diskStorage({
-  destination: function (req, file, cb) {
-    cb(null, 'uploads/');
+// Configure Cloudinary storage for multer
+const storage = new CloudinaryStorage({
+  cloudinary: cloudinary,
+  params: {
+    folder: "paradise-yatra", // Folder name in Cloudinary
+    allowed_formats: ["jpg", "jpeg", "png", "gif", "webp"],
+    transformation: [{ quality: "auto", fetch_format: "auto" }],
   },
-  filename: function (req, file, cb) {
-    const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
-    cb(null, file.fieldname + '-' + uniqueSuffix + path.extname(file.originalname));
-  }
 });
 
 // File filter for images
 const fileFilter = (req, file, cb) => {
   // Accept only image files
-  if (file.mimetype.startsWith('image/')) {
+  if (file.mimetype.startsWith("image/")) {
     cb(null, true);
   } else {
-    cb(new Error('Only image files are allowed!'), false);
+    cb(new Error("Only image files are allowed!"), false);
   }
 };
 
@@ -28,27 +29,31 @@ const upload = multer({
   fileFilter: fileFilter,
   limits: {
     fileSize: 5 * 1024 * 1024, // 5MB limit
-    files: 10 // Maximum 10 files
-  }
+    files: 10, // Maximum 10 files
+  },
 });
 
 // Middleware for package image uploads
-const uploadPackageImages = upload.array('images', 10);
+const uploadPackageImages = upload.array("images", 10);
 
 // Middleware for single image upload (for destinations, packages, etc.)
-const uploadSingleImage = upload.single('image');
+const uploadSingleImage = upload.single("image");
 
 // Error handling middleware for multer
 const handleUploadError = (err, req, res, next) => {
   if (err instanceof multer.MulterError) {
-    if (err.code === 'LIMIT_FILE_SIZE') {
-      return res.status(400).json({ message: 'File too large. Maximum size is 5MB.' });
+    if (err.code === "LIMIT_FILE_SIZE") {
+      return res
+        .status(400)
+        .json({ message: "File too large. Maximum size is 5MB." });
     }
-    if (err.code === 'LIMIT_FILE_COUNT') {
-      return res.status(400).json({ message: 'Too many files. Maximum 10 files allowed.' });
+    if (err.code === "LIMIT_FILE_COUNT") {
+      return res
+        .status(400)
+        .json({ message: "Too many files. Maximum 10 files allowed." });
     }
   }
-  if (err.message === 'Only image files are allowed!') {
+  if (err.message === "Only image files are allowed!") {
     return res.status(400).json({ message: err.message });
   }
   next(err);
@@ -57,5 +62,5 @@ const handleUploadError = (err, req, res, next) => {
 module.exports = {
   uploadPackageImages,
   uploadSingleImage,
-  handleUploadError
-}; 
+  handleUploadError,
+};

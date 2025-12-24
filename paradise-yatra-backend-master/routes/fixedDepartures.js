@@ -1,7 +1,10 @@
-const express = require('express');
+const express = require("express");
 const router = express.Router();
-const { auth, adminAuth } = require('../middleware/auth');
-const { uploadSingleImage, handleUploadError } = require('../middleware/upload');
+const { auth, adminAuth } = require("../middleware/auth");
+const {
+  uploadSingleImage,
+  handleUploadError,
+} = require("../middleware/upload");
 const {
   getAllFixedDepartures,
   getFixedDeparture,
@@ -18,40 +21,52 @@ const {
   getFixedDeparturesByState,
   getAvailableCountries,
   getAvailableTourTypes,
-  getAvailableStates
-} = require('../controllers/fixedDepartureController');
+  getAvailableStates,
+} = require("../controllers/fixedDepartureController");
 
 // Public routes
-router.get('/health', (req, res) => {
-  res.json({ 
-    status: 'ok', 
-    message: 'Fixed Departures API is running',
-    timestamp: new Date().toISOString()
+router.get("/health", (req, res) => {
+  res.json({
+    status: "ok",
+    message: "Fixed Departures API is running",
+    timestamp: new Date().toISOString(),
   });
 });
 
-router.get('/', getAllFixedDepartures);
-router.get('/featured', getFeaturedFixedDepartures);
-router.get('/search', searchFixedDepartures);
+router.get("/", getAllFixedDepartures);
+router.get("/featured", getFeaturedFixedDepartures);
+router.get("/search", searchFixedDepartures);
 
 // New filtering routes
-router.get('/tour-type/:tourType', getFixedDeparturesByTourType);
-router.get('/country/:country', getFixedDeparturesByCountry);
-router.get('/state/:state', getFixedDeparturesByState);
+router.get("/tour-type/:tourType", getFixedDeparturesByTourType);
+router.get("/country/:country", getFixedDeparturesByCountry);
+router.get("/state/:state", getFixedDeparturesByState);
 
 // Utility routes for available options
-router.get('/countries', getAvailableCountries);
-router.get('/tour-types', getAvailableTourTypes);
-router.get('/states', getAvailableStates);
+router.get("/countries", getAvailableCountries);
+router.get("/tour-types", getAvailableTourTypes);
+router.get("/states", getAvailableStates);
 
-router.get('/slug/:slug', getFixedDepartureBySlug);
-router.get('/:id', getFixedDeparture);
+router.get("/slug/:slug", getFixedDepartureBySlug);
+router.get("/:id", getFixedDeparture);
 
 // Admin routes
-router.post('/', adminAuth, uploadSingleImage, handleUploadError, createFixedDeparture);
-router.put('/:id', adminAuth, uploadSingleImage, handleUploadError, updateFixedDeparture);
-router.delete('/:id', adminAuth, deleteFixedDeparture);
-router.patch('/:id/toggle-featured', adminAuth, toggleFeatured);
-router.patch('/:id/toggle-status', adminAuth, toggleStatus);
+router.post(
+  "/",
+  adminAuth,
+  uploadSingleImage,
+  handleUploadError,
+  createFixedDeparture
+);
+router.put(
+  "/:id",
+  adminAuth,
+  uploadSingleImage,
+  handleUploadError,
+  updateFixedDeparture
+);
+router.delete("/:id", adminAuth, deleteFixedDeparture);
+router.patch("/:id/toggle-featured", adminAuth, toggleFeatured);
+router.patch("/:id/toggle-status", adminAuth, toggleStatus);
 
 module.exports = router;

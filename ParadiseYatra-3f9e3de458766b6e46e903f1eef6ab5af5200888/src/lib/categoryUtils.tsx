@@ -1,21 +1,21 @@
 // Utility functions for handling package categories and URLs
 
-import { PACKAGE_CATEGORIES } from '@/config/categories';
-import { 
-  Compass, 
-  MapPin, 
-  Mountain, 
-  Waves, 
-  TreePine, 
-  Heart, 
-  Users, 
-  Crown, 
-  DollarSign, 
-  Calendar, 
+import { PACKAGE_CATEGORIES } from "@/config/categories";
+import {
+  Compass,
+  MapPin,
+  Mountain,
+  Waves,
+  TreePine,
+  Heart,
+  Users,
+  Crown,
+  DollarSign,
+  Calendar,
   Star,
-  Sparkles
-} from 'lucide-react';
-import React from 'react';
+  Sparkles,
+} from "lucide-react";
+import React from "react";
 
 /**
  * Converts a category name to a URL-friendly format
@@ -32,7 +32,7 @@ export const categoryToUrl = (category: string): string => {
  * @returns The original category name
  */
 export const urlToCategory = (urlCategory: string): string => {
-  return decodeURIComponent(urlCategory.replace(/-/g, ' '));
+  return decodeURIComponent(urlCategory.replace(/-/g, " "));
 };
 
 /**
@@ -42,33 +42,33 @@ export const urlToCategory = (urlCategory: string): string => {
  */
 export const getCategoryIcon = (category: string): React.ReactElement => {
   const iconProps = { className: "w-5 h-5 text-blue-600" };
-  
+
   switch (category.toLowerCase()) {
-    case 'trending destinations':
+    case "trending destinations":
       return React.createElement(Compass, iconProps);
-    case 'premium packages':
+    case "premium packages":
       return React.createElement(Crown, iconProps);
-    case 'adventure tours':
+    case "adventure tours":
       return React.createElement(Mountain, iconProps);
-    case 'beach holidays':
+    case "beach holidays":
       return React.createElement(Waves, iconProps);
-    case 'mountain treks':
+    case "mountain treks":
       return React.createElement(Mountain, iconProps);
-    case 'wildlife safaris':
+    case "wildlife safaris":
       return React.createElement(TreePine, iconProps);
-    case 'pilgrimage tours':
+    case "pilgrimage tours":
       return React.createElement(MapPin, iconProps);
-    case 'honeymoon packages':
+    case "honeymoon packages":
       return React.createElement(Heart, iconProps);
-    case 'family tours':
+    case "family tours":
       return React.createElement(Users, iconProps);
-    case 'luxury tours':
+    case "luxury tours":
       return React.createElement(Sparkles, iconProps);
-    case 'budget tours':
+    case "budget tours":
       return React.createElement(DollarSign, iconProps);
-    case 'fixed departure':
+    case "fixed departure":
       return React.createElement(Calendar, iconProps);
-    case 'popular packages':
+    case "popular packages":
       return React.createElement(Star, iconProps);
     default:
       return React.createElement(MapPin, iconProps);
@@ -82,34 +82,34 @@ export const getCategoryIcon = (category: string): React.ReactElement => {
  */
 export const getCategoryDescription = (category: string): string => {
   switch (category.toLowerCase()) {
-    case 'trending destinations':
-      return 'Discover our most popular and trending travel destinations';
-    case 'premium packages':
-      return 'Experience luxury and comfort with our premium travel packages';
-    case 'adventure tours':
-      return 'Get your adrenaline pumping with our exciting adventure tours';
-    case 'beach holidays':
-      return 'Relax and unwind at the world\'s most beautiful beaches';
-    case 'mountain treks':
-      return 'Conquer peaks and enjoy breathtaking mountain views';
-    case 'wildlife safaris':
-      return 'Witness incredible wildlife in their natural habitats';
-    case 'pilgrimage tours':
-      return 'Embark on spiritual journeys to sacred destinations';
-    case 'honeymoon packages':
-      return 'Create unforgettable memories with your special someone';
-    case 'family tours':
-      return 'Perfect packages for the whole family to enjoy together';
-    case 'luxury tours':
-      return 'Indulge in the finest travel experiences';
-    case 'budget tours':
-      return 'Explore amazing destinations without breaking the bank';
-    case 'fixed departure':
-      return 'Join our scheduled group departures for amazing experiences';
-    case 'popular packages':
-      return 'Our most loved and frequently booked travel packages';
+    case "trending destinations":
+      return "Discover our most popular and trending travel destinations";
+    case "premium packages":
+      return "Experience luxury and comfort with our premium travel packages";
+    case "adventure tours":
+      return "Get your adrenaline pumping with our exciting adventure tours";
+    case "beach holidays":
+      return "Relax and unwind at the world's most beautiful beaches";
+    case "mountain treks":
+      return "Conquer peaks and enjoy breathtaking mountain views";
+    case "wildlife safaris":
+      return "Witness incredible wildlife in their natural habitats";
+    case "pilgrimage tours":
+      return "Embark on spiritual journeys to sacred destinations";
+    case "honeymoon packages":
+      return "Create unforgettable memories with your special someone";
+    case "family tours":
+      return "Perfect packages for the whole family to enjoy together";
+    case "luxury tours":
+      return "Indulge in the finest travel experiences";
+    case "budget tours":
+      return "Explore amazing destinations without breaking the bank";
+    case "fixed departure":
+      return "Join our scheduled group departures for amazing experiences";
+    case "popular packages":
+      return "Our most loved and frequently booked travel packages";
     default:
-      return 'Discover amazing travel packages in this category';
+      return "Discover amazing travel packages in this category";
   }
 };
 

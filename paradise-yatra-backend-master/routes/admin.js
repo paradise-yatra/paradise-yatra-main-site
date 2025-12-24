@@ -1,10 +1,10 @@
-const express = require('express');
+const express = require("express");
 const router = express.Router();
-const { adminAuth } = require('../middleware/auth');
-const User = require('../models/User');
-const Package = require('../models/Package');
-const Destination = require('../models/Destination');
-const Blog = require('../models/Blog');
+const { adminAuth } = require("../middleware/auth");
+const User = require("../models/User");
+const Package = require("../models/Package");
+const Destination = require("../models/Destination");
+const Blog = require("../models/Blog");
 
 // Get admin dashboard stats
 const getDashboardStats = async (req, res) => {
@@ -14,7 +14,7 @@ const getDashboardStats = async (req, res) => {
     const totalDestinations = await Destination.countDocuments();
     const totalBlogs = await Blog.countDocuments();
     const packageStats = await Package.aggregate([
-      { $group: { _id: '$category', count: { $sum: 1 } } }
+      { $group: { _id: "$category", count: { $sum: 1 } } },
     ]);
 
     res.json({
@@ -22,11 +22,11 @@ const getDashboardStats = async (req, res) => {
       totalPackages,
       totalDestinations,
       totalBlogs,
-      packageStats
+      packageStats,
     });
   } catch (error) {
-    console.error('Get dashboard stats error:', error);
-    res.status(500).json({ message: 'Server error.' });
+    console.error("Get dashboard stats error:", error);
+    res.status(500).json({ message: "Server error." });
   }
 };
 
@@ -34,9 +34,9 @@ const getDashboardStats = async (req, res) => {
 const getAllUsers = async (req, res) => {
   try {
     const { limit = 20, page = 1 } = req.query;
-    
+
     const users = await User.find()
-      .select('-password')
+      .select("-password")
       .sort({ createdAt: -1 })
       .limit(parseInt(limit))
       .skip((parseInt(page) - 1) * parseInt(limit));
@@ -49,12 +49,12 @@ const getAllUsers = async (req, res) => {
         current: parseInt(page),
         total: Math.ceil(total / parseInt(limit)),
         hasNext: parseInt(page) * parseInt(limit) < total,
-        hasPrev: parseInt(page) > 1
-      }
+        hasPrev: parseInt(page) > 1,
+      },
     });
   } catch (error) {
-    console.error('Get all users error:', error);
-    res.status(500).json({ message: 'Server error.' });
+    console.error("Get all users error:", error);
+    res.status(500).json({ message: "Server error." });
   }
 };
 
@@ -62,31 +62,33 @@ const getAllUsers = async (req, res) => {
 const updateUserStatus = async (req, res) => {
   try {
     const { isActive } = req.body;
-    
+
     const user = await User.findByIdAndUpdate(
       req.params.id,
       { isActive },
       { new: true, runValidators: true }
-    ).select('-password');
+    ).select("-password");
 
     if (!user) {
-      return res.status(404).json({ message: 'User not found.' });
+      return res.status(404).json({ message: "User not found." });
     }
 
     res.json({
-      message: 'User status updated successfully',
-      user
+      message: "User status updated successfully",
+      user,
     });
   } catch (error) {
-    console.error('Update user status error:', error);
-    res.status(500).json({ message: 'Server error during user status update.' });
+    console.error("Update user status error:", error);
+    res
+      .status(500)
+      .json({ message: "Server error during user status update." });
   }
 };
 
 // Get admin analytics
 const getAnalytics = async (req, res) => {
   try {
-    const { period = '30' } = req.query;
+    const { period = "30" } = req.query;
     const daysAgo = new Date();
     daysAgo.setDate(daysAgo.getDate() - parseInt(period));
 
@@ -94,21 +96,21 @@ const getAnalytics = async (req, res) => {
     const popularPackages = await Package.aggregate([
       { $sort: { rating: -1 } },
       { $limit: 5 },
-      { $project: { title: 1, rating: 1, category: 1 } }
+      { $project: { title: 1, rating: 1, category: 1 } },
     ]);
 
     // Package category distribution
     const packageCategoryStats = await Package.aggregate([
-      { $group: { _id: '$category', count: { $sum: 1 } } }
+      { $group: { _id: "$category", count: { $sum: 1 } } },
     ]);
 
     res.json({
       popularPackages,
-      packageCategoryStats
+      packageCategoryStats,
     });
   } catch (error) {
-    console.error('Get analytics error:', error);
-    res.status(500).json({ message: 'Server error.' });
+    console.error("Get analytics error:", error);
+    res.status(500).json({ message: "Server error." });
   }
 };
 
@@ -116,16 +118,16 @@ const getAnalytics = async (req, res) => {
 const getAllPackagesForAdmin = async (req, res) => {
   try {
     const { category, status, limit = 20, page = 1 } = req.query;
-    
+
     let query = {};
-    
+
     if (category) {
       query.category = category;
     }
-    
-    if (status === 'active') {
+
+    if (status === "active") {
       query.isActive = true;
-    } else if (status === 'inactive') {
+    } else if (status === "inactive") {
       query.isActive = false;
     }
 
@@ -142,12 +144,12 @@ const getAllPackagesForAdmin = async (req, res) => {
         current: parseInt(page),
         total: Math.ceil(total / parseInt(limit)),
         hasNext: parseInt(page) * parseInt(limit) < total,
-        hasPrev: parseInt(page) > 1
-      }
+        hasPrev: parseInt(page) > 1,
+      },
     });
   } catch (error) {
-    console.error('Get all packages for admin error:', error);
-    res.status(500).json({ message: 'Server error.' });
+    console.error("Get all packages for admin error:", error);
+    res.status(500).json({ message: "Server error." });
   }
 };
 
@@ -155,9 +157,9 @@ const getAllPackagesForAdmin = async (req, res) => {
 const bulkUpdatePackageStatus = async (req, res) => {
   try {
     const { packageIds, isActive } = req.body;
-    
+
     if (!packageIds || !Array.isArray(packageIds)) {
-      return res.status(400).json({ message: 'Package IDs array is required' });
+      return res.status(400).json({ message: "Package IDs array is required" });
     }
 
     const result = await Package.updateMany(
@@ -167,11 +169,11 @@ const bulkUpdatePackageStatus = async (req, res) => {
 
     res.json({
       message: `${result.modifiedCount} packages updated successfully`,
-      modifiedCount: result.modifiedCount
+      modifiedCount: result.modifiedCount,
     });
   } catch (error) {
-    console.error('Bulk update package status error:', error);
-    res.status(500).json({ message: 'Server error during bulk update.' });
+    console.error("Bulk update package status error:", error);
+    res.status(500).json({ message: "Server error during bulk update." });
   }
 };
 
@@ -181,18 +183,20 @@ const getPackageStats = async (req, res) => {
     const totalPackages = await Package.countDocuments();
     const activePackages = await Package.countDocuments({ isActive: true });
     const featuredPackages = await Package.countDocuments({ isFeatured: true });
-    
+
     const categoryStats = await Package.aggregate([
-      { $group: { _id: '$category', count: { $sum: 1 } } }
+      { $group: { _id: "$category", count: { $sum: 1 } } },
     ]);
 
     const priceStats = await Package.aggregate([
-      { $group: { 
-        _id: null, 
-        avgPrice: { $avg: '$price' },
-        minPrice: { $min: '$price' },
-        maxPrice: { $max: '$price' }
-      }}
+      {
+        $group: {
+          _id: null,
+          avgPrice: { $avg: "$price" },
+          minPrice: { $min: "$price" },
+          maxPrice: { $max: "$price" },
+        },
+      },
     ]);
 
     res.json({
@@ -200,21 +204,21 @@ const getPackageStats = async (req, res) => {
       activePackages,
       featuredPackages,
       categoryStats,
-      priceStats: priceStats[0] || { avgPrice: 0, minPrice: 0, maxPrice: 0 }
+      priceStats: priceStats[0] || { avgPrice: 0, minPrice: 0, maxPrice: 0 },
     });
   } catch (error) {
-    console.error('Get package stats error:', error);
-    res.status(500).json({ message: 'Server error.' });
+    console.error("Get package stats error:", error);
+    res.status(500).json({ message: "Server error." });
   }
 };
 
 // Admin routes
-router.get('/dashboard', adminAuth, getDashboardStats);
-router.get('/users', adminAuth, getAllUsers);
-router.put('/users/:id/status', adminAuth, updateUserStatus);
-router.get('/analytics', adminAuth, getAnalytics);
-router.get('/packages', adminAuth, getAllPackagesForAdmin);
-router.put('/packages/bulk-status', adminAuth, bulkUpdatePackageStatus);
-router.get('/packages/stats', adminAuth, getPackageStats);
+router.get("/dashboard", adminAuth, getDashboardStats);
+router.get("/users", adminAuth, getAllUsers);
+router.put("/users/:id/status", adminAuth, updateUserStatus);
+router.get("/analytics", adminAuth, getAnalytics);
+router.get("/packages", adminAuth, getAllPackagesForAdmin);
+router.put("/packages/bulk-status", adminAuth, bulkUpdatePackageStatus);
+router.get("/packages/stats", adminAuth, getPackageStats);
 
-module.exports = router; 
+module.exports = router;

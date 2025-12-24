@@ -12,22 +12,22 @@ interface SkeletonProps {
   animated?: boolean;
 }
 
-const Skeleton = ({ 
-  className, 
-  variant = "default", 
-  width, 
-  height, 
+const Skeleton = ({
+  className,
+  variant = "default",
+  width,
+  height,
   lines = 1,
-  animated = true 
+  animated = true,
 }: SkeletonProps) => {
   const baseClasses = "bg-gray-200 dark:bg-gray-300";
-  
+
   const variantClasses = {
     default: "rounded-md",
     card: "rounded-xl",
     text: "rounded-sm",
     circle: "rounded-full",
-    rect: "rounded-none"
+    rect: "rounded-none",
   };
 
   const animationVariants = {
@@ -36,14 +36,14 @@ const Skeleton = ({
       transition: {
         duration: 1.5,
         repeat: Infinity,
-        ease: "easeInOut" as const
-      }
-    }
+        ease: "easeInOut" as const,
+      },
+    },
   };
 
   const style = {
     width: width || "100%",
-    height: height || "1rem"
+    height: height || "1rem",
   };
 
   if (lines > 1) {
@@ -52,15 +52,11 @@ const Skeleton = ({
         {Array.from({ length: lines }).map((_, index) => (
           <motion.div
             key={index}
-            className={cn(
-              baseClasses,
-              variantClasses[variant],
-              className
-            )}
+            className={cn(baseClasses, variantClasses[variant], className)}
             style={{
               ...style,
               height: index === lines - 1 ? "0.75rem" : "1rem",
-              width: index === lines - 1 ? "75%" : "100%"
+              width: index === lines - 1 ? "75%" : "100%",
             }}
             variants={animated ? animationVariants : undefined}
             animate={animated ? "animate" : undefined}
@@ -72,11 +68,7 @@ const Skeleton = ({
 
   return (
     <motion.div
-      className={cn(
-        baseClasses,
-        variantClasses[variant],
-        className
-      )}
+      className={cn(baseClasses, variantClasses[variant], className)}
       style={style}
       variants={animated ? animationVariants : undefined}
       animate={animated ? "animate" : undefined}
@@ -97,47 +89,42 @@ export const SkeletonCard = ({ className }: { className?: string }) => (
   </div>
 );
 
-export const SkeletonText = ({ 
-  lines = 3, 
-  className 
-}: { 
-  lines?: number; 
-  className?: string 
+export const SkeletonText = ({
+  lines = 3,
+  className,
+}: {
+  lines?: number;
+  className?: string;
 }) => (
   <div className={cn("space-y-2", className)}>
     <Skeleton lines={lines} />
   </div>
 );
 
-export const SkeletonAvatar = ({ 
-  size = "40px", 
-  className 
-}: { 
-  size?: string; 
-  className?: string 
+export const SkeletonAvatar = ({
+  size = "40px",
+  className,
+}: {
+  size?: string;
+  className?: string;
 }) => (
-  <Skeleton 
-    variant="circle" 
-    width={size} 
-    height={size} 
-    className={className} 
-  />
+  <Skeleton variant="circle" width={size} height={size} className={className} />
 );
 
-export const SkeletonButton = ({ 
-  width = "120px", 
+export const SkeletonButton = ({
+  width = "120px",
   height = "40px",
-  className 
-}: { 
-  width?: string; 
+  className,
+}: {
+  width?: string;
   height?: string;
   className?: string;
 }) => (
-  <Skeleton 
-    variant="default" 
-    width={width} 
-    height={height} 
-    className={cn("rounded-lg", className)} 
+  <Skeleton
+    variant="default"
+    width={width}
+    height={height}
+    className={cn("rounded-lg", className)}
   />
 );
 
@@ -148,33 +135,38 @@ export const SkeletonHero = () => (
       <div className="flex justify-center">
         <Skeleton width="200px" height="40px" className="rounded-full" />
       </div>
-      
+
       {/* Title skeleton */}
       <div className="space-y-4">
         <Skeleton height="4rem" width="80%" className="mx-auto" />
         <Skeleton height="2rem" width="60%" className="mx-auto" />
       </div>
-      
+
       {/* Description skeleton */}
       <SkeletonText lines={2} className="max-w-2xl mx-auto" />
-      
+
       {/* Buttons skeleton */}
       <div className="flex flex-col sm:flex-row gap-4 justify-center">
         <SkeletonButton width="150px" height="48px" />
         <SkeletonButton width="140px" height="48px" />
       </div>
-      
+
       {/* Search bar skeleton */}
       <div className="max-w-2xl mx-auto">
         <Skeleton height="60px" className="rounded-3xl" />
       </div>
-      
+
       {/* Popular destinations skeleton */}
       <div className="space-y-4">
         <Skeleton height="1rem" width="200px" className="mx-auto" />
         <div className="flex flex-wrap justify-center gap-2">
           {Array.from({ length: 5 }).map((_, i) => (
-            <Skeleton key={i} width="120px" height="32px" className="rounded-full" />
+            <Skeleton
+              key={i}
+              width="120px"
+              height="32px"
+              className="rounded-full"
+            />
           ))}
         </div>
       </div>

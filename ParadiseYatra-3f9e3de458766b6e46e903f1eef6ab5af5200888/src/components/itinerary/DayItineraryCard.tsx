@@ -1,7 +1,13 @@
 "use client";
 
 import { motion } from "framer-motion";
-import { ChevronDown, ChevronUp, CheckCircle, Calendar, Clock } from "lucide-react";
+import {
+  ChevronDown,
+  ChevronUp,
+  CheckCircle,
+  Calendar,
+  Clock,
+} from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 
@@ -17,7 +23,11 @@ interface DayItineraryCardProps {
   onToggle: () => void;
 }
 
-const DayItineraryCard = ({ day, isExpanded, onToggle }: DayItineraryCardProps) => {
+const DayItineraryCard = ({
+  day,
+  isExpanded,
+  onToggle,
+}: DayItineraryCardProps) => {
   return (
     <motion.div
       initial={{ opacity: 0, y: 20 }}
@@ -28,7 +38,7 @@ const DayItineraryCard = ({ day, isExpanded, onToggle }: DayItineraryCardProps) 
     >
       <div className="bg-white rounded-lg shadow-sm hover:shadow-md transition-all duration-300 overflow-hidden">
         {/* Header Section */}
-        <div 
+        <div
           className="flex justify-between items-center p-4 cursor-pointer hover:bg-gray-50 transition-colors"
           onClick={onToggle}
         >
@@ -76,7 +86,9 @@ const DayItineraryCard = ({ day, isExpanded, onToggle }: DayItineraryCardProps) 
                     className="flex items-start space-x-3"
                   >
                     <div className="w-1.5 h-1.5 bg-blue-500 rounded-full mt-2 flex-shrink-0" />
-                    <span className="text-gray-700 text-sm leading-relaxed">{activity}</span>
+                    <span className="text-gray-700 text-sm leading-relaxed">
+                      {activity}
+                    </span>
                   </motion.div>
                 ))}
               </div>

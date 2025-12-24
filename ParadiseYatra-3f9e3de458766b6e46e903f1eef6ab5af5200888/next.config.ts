@@ -12,7 +12,7 @@ const nextConfig: NextConfig = {
   compress: true,
   poweredByHeader: false,
   generateEtags: false,
-  
+
   // Image optimization
   images: {
     dangerouslyAllowSVG: true,
@@ -130,6 +130,13 @@ const nextConfig: NextConfig = {
         port: '',
         pathname: '/**',
       },
+      // Add Cloudinary support
+      {
+        protocol: 'https',
+        hostname: 'res.cloudinary.com',
+        port: '',
+        pathname: '/**',
+      },
       // Only allow localhost in development
       ...(process.env.NODE_ENV === 'development' ? [
         {
@@ -173,7 +180,7 @@ const nextConfig: NextConfig = {
       } as const,
     ],
   },
-  
+
   // Webpack optimizations for better performance
   webpack: (config, { dev, isServer }) => {
     // Optimize chunk loading for better performance
@@ -217,7 +224,7 @@ const nextConfig: NextConfig = {
         sideEffects: false,
       };
     }
-    
+
     // Add performance hints
     config.performance = {
       ...config.performance,
@@ -225,10 +232,10 @@ const nextConfig: NextConfig = {
       maxEntrypointSize: 512000,
       maxAssetSize: 512000,
     };
-    
+
     return config;
   },
-  
+
   // Experimental features for better performance
   experimental: {
     optimizePackageImports: ['lucide-react', 'framer-motion', 'react-icons'],
@@ -242,7 +249,7 @@ const nextConfig: NextConfig = {
       },
     },
   },
-  
+
   // Headers for better caching and security
   async headers() {
     return [

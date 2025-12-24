@@ -97,7 +97,7 @@ export const usePackages = () => {
       setError(null);
       const response = await packagesAPI.update(id, packageData);
       // Update the package in the list
-      setPackages(prev => 
+      setPackages(prev =>
         prev.map(pkg => pkg._id === id ? response.data : pkg)
       );
       return response.data;

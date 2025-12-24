@@ -60,15 +60,19 @@ const AdminBlogs = ({ initialAction, onActionComplete }: AdminBlogsProps) => {
   const [editing, setEditing] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
   const [activeTab, setActiveTab] = useState<"create" | "all">("all");
-  const [deleteDialog, setDeleteDialog] = useState<{ isOpen: boolean; blogId: string | null; blogTitle: string }>({
+  const [deleteDialog, setDeleteDialog] = useState<{
+    isOpen: boolean;
+    blogId: string | null;
+    blogTitle: string;
+  }>({
     isOpen: false,
     blogId: null,
-    blogTitle: ""
+    blogTitle: "",
   });
 
   // Handle initial action from sidebar
   useEffect(() => {
-    if (initialAction === 'create') {
+    if (initialAction === "create") {
       setActiveTab("create");
       setEditing(null);
       onActionComplete?.();
@@ -103,7 +107,7 @@ const AdminBlogs = ({ initialAction, onActionComplete }: AdminBlogsProps) => {
     seoAuthor: "",
     seoPublisher: "Paradise Yatra",
     seoArticleSection: "",
-    seoArticleTags: []
+    seoArticleTags: [],
   });
 
   useEffect(() => {
@@ -113,9 +117,9 @@ const AdminBlogs = ({ initialAction, onActionComplete }: AdminBlogsProps) => {
   const fetchBlogs = async () => {
     try {
       setLoading(true);
-      const response = await fetch('/api/blogs');
+      const response = await fetch("/api/blogs");
       const data = await response.json();
-      
+
       if (response.ok) {
         // Ensure data is an array
         if (Array.isArray(data)) {
@@ -123,15 +127,15 @@ const AdminBlogs = ({ initialAction, onActionComplete }: AdminBlogsProps) => {
         } else if (data.blogs && Array.isArray(data.blogs)) {
           setBlogs(data.blogs);
         } else {
-          console.error('Unexpected data structure:', data);
+          console.error("Unexpected data structure:", data);
           setBlogs([]);
         }
       } else {
-        console.error('Failed to fetch blogs:', data.message);
+        console.error("Failed to fetch blogs:", data.message);
         setBlogs([]);
       }
     } catch (error) {
-      console.error('Error fetching blogs:', error);
+      console.error("Error fetching blogs:", error);
       setBlogs([]);
     } finally {
       setLoading(false);
@@ -141,55 +145,71 @@ const AdminBlogs = ({ initialAction, onActionComplete }: AdminBlogsProps) => {
   const handleSave = async () => {
     try {
       setSaving(true);
-      const method = editing ? 'PUT' : 'POST';
-      const url = editing ? `/api/blogs/${editing}` : '/api/blogs';
-      
+      const method = editing ? "PUT" : "POST";
+      const url = editing ? `/api/blogs/${editing}` : "/api/blogs";
+
       // Get the admin token from localStorage
-      const token = localStorage.getItem('adminToken');
-      
+      const token = localStorage.getItem("adminToken");
+
       if (!token) {
-        toast.error('Please log in to save changes');
+        toast.error("Please log in to save changes");
         return;
       }
-      
+
       // Transform formData to match backend expectations
       const backendData = {
         ...formData,
-        isPublished: formData.status === 'published',
-        isFeatured: formData.status === 'published', // Auto-mark published blogs as featured
+        isPublished: formData.status === "published",
+        isFeatured: formData.status === "published", // Auto-mark published blogs as featured
         readTime: parseInt(formData.readTime) || 5,
         // Remove frontend-specific fields
         status: undefined,
         publishDate: undefined,
-        isActive: undefined
+        isActive: undefined,
       };
 
       // Check if we need to upload a file
-      const hasFileUpload = formData.image && (formData.image.startsWith('blob:') || formData.image.startsWith('data:'));
-      
+      const hasFileUpload =
+        formData.image &&
+        (formData.image.startsWith("blob:") ||
+          formData.image.startsWith("data:"));
+
       let response;
       if (hasFileUpload) {
         // Handle file upload
         const uploadFormData = new FormData();
-        
+
         // Add all form fields
-        Object.keys(backendData).forEach(key => {
+        Object.keys(backendData).forEach((key) => {
           const value = (backendData as Record<string, unknown>)[key];
-          if (key === 'image' && typeof value === 'string' && value.startsWith('blob:')) {
+          if (
+            key === "image" &&
+            typeof value === "string" &&
+            value.startsWith("blob:")
+          ) {
             // Convert blob URL to file and upload
             fetch(value)
-              .then(res => res.blob())
-              .then(blob => {
-                const file = new File([blob], 'image.jpg', { type: 'image/jpeg' });
-                uploadFormData.append('image', file);
+              .then((res) => res.blob())
+              .then((blob) => {
+                const file = new File([blob], "image.jpg", {
+                  type: "image/jpeg",
+                });
+                uploadFormData.append("image", file);
               });
-          } else if (key === 'image' && typeof value === 'string' && value.startsWith('data:')) {
+          } else if (
+            key === "image" &&
+            typeof value === "string" &&
+            value.startsWith("data:")
+          ) {
             // Convert data URL to file and upload
             const response = fetch(value);
-            response.then(res => res.blob())
-              .then(blob => {
-                const file = new File([blob], 'image.jpg', { type: 'image/jpeg' });
-                uploadFormData.append('image', file);
+            response
+              .then((res) => res.blob())
+              .then((blob) => {
+                const file = new File([blob], "image.jpg", {
+                  type: "image/jpeg",
+                });
+                uploadFormData.append("image", file);
               });
           } else if (value !== undefined) {
             uploadFormData.append(key, String(value));
@@ -199,7 +219,7 @@ const AdminBlogs = ({ initialAction, onActionComplete }: AdminBlogsProps) => {
         response = await fetch(url, {
           method,
           headers: {
-            'Authorization': `Bearer ${token}`,
+            Authorization: `Bearer ${token}`,
           },
           body: uploadFormData,
         });
@@ -208,8 +228,8 @@ const AdminBlogs = ({ initialAction, onActionComplete }: AdminBlogsProps) => {
         response = await fetch(url, {
           method,
           headers: {
-            'Content-Type': 'application/json',
-            'Authorization': `Bearer ${token}`,
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
           },
           body: JSON.stringify(backendData),
         });
@@ -222,29 +242,31 @@ const AdminBlogs = ({ initialAction, onActionComplete }: AdminBlogsProps) => {
         setEditing(null);
         setActiveTab("all");
         resetForm();
-        toast.success(editing ? 'Blog updated successfully!' : 'Blog added successfully!');
+        toast.success(
+          editing ? "Blog updated successfully!" : "Blog added successfully!"
+        );
       } else {
-        console.error('Failed to save blog:', data.message);
-        toast.error(`Failed to save: ${data.message || 'Unknown error'}`);
+        console.error("Failed to save blog:", data.message);
+        toast.error(`Failed to save: ${data.message || "Unknown error"}`);
       }
     } catch (error) {
-      console.error('Error saving blog:', error);
-      toast.error('Network error. Please try again.');
+      console.error("Error saving blog:", error);
+      toast.error("Network error. Please try again.");
     } finally {
       setSaving(false);
     }
   };
 
   const handleEdit = (blog: BlogPost) => {
-    setEditing(blog._id || '');
+    setEditing(blog._id || "");
     // Transform backend data to frontend format
-    const status = blog.isPublished ? 'published' : 'draft';
+    const status = blog.isPublished ? "published" : "draft";
     const frontendData: BlogPost = {
       ...blog,
       status,
-      readTime: blog.readTime?.toString() || '5',
-      publishDate: blog.publishDate || '',
-      isActive: blog.isActive !== undefined ? blog.isActive : true
+      readTime: blog.readTime?.toString() || "5",
+      publishDate: blog.publishDate || "",
+      isActive: blog.isActive !== undefined ? blog.isActive : true,
     };
     setFormData(frontendData);
     setActiveTab("create");
@@ -252,32 +274,32 @@ const AdminBlogs = ({ initialAction, onActionComplete }: AdminBlogsProps) => {
 
   const handleDelete = async (id: string) => {
     // Find the blog to get its title for the confirmation dialog
-    const blog = blogs.find(b => b._id === id || b.id === id);
+    const blog = blogs.find((b) => b._id === id || b.id === id);
     if (blog) {
       setDeleteDialog({
         isOpen: true,
         blogId: id,
-        blogTitle: blog.title
+        blogTitle: blog.title,
       });
     }
   };
 
   const confirmDelete = async () => {
     if (!deleteDialog.blogId) return;
-    
+
     try {
       // Get the admin token from localStorage
-      const token = localStorage.getItem('adminToken');
-      
+      const token = localStorage.getItem("adminToken");
+
       if (!token) {
-        toast.error('Please log in to delete blogs');
+        toast.error("Please log in to delete blogs");
         return;
       }
-      
+
       const response = await fetch(`/api/blogs/${deleteDialog.blogId}`, {
-        method: 'DELETE',
+        method: "DELETE",
         headers: {
-          'Authorization': `Bearer ${token}`,
+          Authorization: `Bearer ${token}`,
         },
       });
 
@@ -285,14 +307,14 @@ const AdminBlogs = ({ initialAction, onActionComplete }: AdminBlogsProps) => {
 
       if (response.ok) {
         await fetchBlogs();
-        toast.success('Blog deleted successfully!');
+        toast.success("Blog deleted successfully!");
       } else {
-        console.error('Failed to delete blog:', data.message);
-        toast.error(`Failed to delete: ${data.message || 'Unknown error'}`);
+        console.error("Failed to delete blog:", data.message);
+        toast.error(`Failed to delete: ${data.message || "Unknown error"}`);
       }
     } catch (error) {
-      console.error('Error deleting blog:', error);
-      toast.error('Network error. Please try again.');
+      console.error("Error deleting blog:", error);
+      toast.error("Network error. Please try again.");
     } finally {
       setDeleteDialog({ isOpen: false, blogId: null, blogTitle: "" });
     }
@@ -333,7 +355,7 @@ const AdminBlogs = ({ initialAction, onActionComplete }: AdminBlogsProps) => {
       seoAuthor: "",
       seoPublisher: "Paradise Yatra",
       seoArticleSection: "",
-      seoArticleTags: []
+      seoArticleTags: [],
     });
   };
 
@@ -363,20 +385,21 @@ const AdminBlogs = ({ initialAction, onActionComplete }: AdminBlogsProps) => {
         <div>
           <h2 className="text-2xl font-bold text-gray-900">Blog Management</h2>
           <p className="text-gray-700">
-            {activeTab === "all" 
-              ? `Manage blog posts and articles (${Array.isArray(blogs) ? blogs.length : 0} blogs)` 
-              : editing 
-                ? "Edit blog post" 
-                : "Create new blog post"
-            }
+            {activeTab === "all"
+              ? `Manage blog posts and articles (${
+                  Array.isArray(blogs) ? blogs.length : 0
+                } blogs)`
+              : editing
+              ? "Edit blog post"
+              : "Create new blog post"}
           </p>
         </div>
-        <Button 
+        <Button
           onClick={() => {
             setActiveTab("create");
             setEditing(null);
             resetForm();
-          }} 
+          }}
           variant="admin-primary"
           className="flex items-center gap-2"
         >
@@ -405,14 +428,16 @@ const AdminBlogs = ({ initialAction, onActionComplete }: AdminBlogsProps) => {
               : "text-gray-600 hover:text-gray-900"
           }`}
         >
-          {editing ? 'Edit Blog' : 'Create Blog'}
+          {editing ? "Edit Blog" : "Create Blog"}
         </button>
       </div>
 
       {activeTab === "create" && (
         <Card className="bg-white border-gray-200">
           <CardHeader>
-            <CardTitle className="text-gray-900">{editing ? 'Edit Blog Post' : 'Add New Blog Post'}</CardTitle>
+            <CardTitle className="text-gray-900">
+              {editing ? "Edit Blog Post" : "Add New Blog Post"}
+            </CardTitle>
           </CardHeader>
           <CardContent className="space-y-6">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -422,7 +447,9 @@ const AdminBlogs = ({ initialAction, onActionComplete }: AdminBlogsProps) => {
                 </label>
                 <Input
                   value={formData.title}
-                  onChange={(e) => setFormData(prev => ({ ...prev, title: e.target.value }))}
+                  onChange={(e) =>
+                    setFormData((prev) => ({ ...prev, title: e.target.value }))
+                  }
                   placeholder="Blog post title"
                   className="bg-white border-gray-300 text-gray-900 placeholder-gray-500"
                 />
@@ -433,7 +460,9 @@ const AdminBlogs = ({ initialAction, onActionComplete }: AdminBlogsProps) => {
                 </label>
                 <Input
                   value={formData.author}
-                  onChange={(e) => setFormData(prev => ({ ...prev, author: e.target.value }))}
+                  onChange={(e) =>
+                    setFormData((prev) => ({ ...prev, author: e.target.value }))
+                  }
                   placeholder="Author name"
                   className="bg-white border-gray-300 text-gray-900 placeholder-gray-500"
                 />
@@ -447,7 +476,12 @@ const AdminBlogs = ({ initialAction, onActionComplete }: AdminBlogsProps) => {
                 </label>
                 <Input
                   value={formData.category}
-                  onChange={(e) => setFormData(prev => ({ ...prev, category: e.target.value }))}
+                  onChange={(e) =>
+                    setFormData((prev) => ({
+                      ...prev,
+                      category: e.target.value,
+                    }))
+                  }
                   placeholder="Travel Guide"
                   className="bg-white border-gray-300 text-gray-900 placeholder-gray-500"
                 />
@@ -458,7 +492,12 @@ const AdminBlogs = ({ initialAction, onActionComplete }: AdminBlogsProps) => {
                 </label>
                 <Input
                   value={formData.readTime}
-                  onChange={(e) => setFormData(prev => ({ ...prev, readTime: e.target.value }))}
+                  onChange={(e) =>
+                    setFormData((prev) => ({
+                      ...prev,
+                      readTime: e.target.value,
+                    }))
+                  }
                   placeholder="5 min read"
                   className="bg-white border-gray-300 text-gray-900 placeholder-gray-500"
                 />
@@ -469,7 +508,12 @@ const AdminBlogs = ({ initialAction, onActionComplete }: AdminBlogsProps) => {
                 </label>
                 <select
                   value={formData.status}
-                  onChange={(e) => setFormData(prev => ({ ...prev, status: e.target.value as "published" | "draft" }))}
+                  onChange={(e) =>
+                    setFormData((prev) => ({
+                      ...prev,
+                      status: e.target.value as "published" | "draft",
+                    }))
+                  }
                   className="w-full p-2 border border-gray-300 rounded-md bg-white text-gray-900"
                 >
                   <option value="draft">Draft</option>
@@ -484,7 +528,9 @@ const AdminBlogs = ({ initialAction, onActionComplete }: AdminBlogsProps) => {
               </label>
               <Textarea
                 value={formData.excerpt}
-                onChange={(e) => setFormData(prev => ({ ...prev, excerpt: e.target.value }))}
+                onChange={(e) =>
+                  setFormData((prev) => ({ ...prev, excerpt: e.target.value }))
+                }
                 placeholder="Brief description of the blog post..."
                 rows={3}
                 className="bg-white border-gray-300 text-gray-900 placeholder-gray-500"
@@ -497,7 +543,9 @@ const AdminBlogs = ({ initialAction, onActionComplete }: AdminBlogsProps) => {
               </label>
               <RichTextEditor
                 value={formData.content}
-                onChange={(content) => setFormData(prev => ({ ...prev, content }))}
+                onChange={(content) =>
+                  setFormData((prev) => ({ ...prev, content }))
+                }
                 placeholder="Write your blog content here..."
               />
             </div>
@@ -509,7 +557,9 @@ const AdminBlogs = ({ initialAction, onActionComplete }: AdminBlogsProps) => {
                 </label>
                 <Input
                   value={formData.slug}
-                  onChange={(e) => setFormData(prev => ({ ...prev, slug: e.target.value }))}
+                  onChange={(e) =>
+                    setFormData((prev) => ({ ...prev, slug: e.target.value }))
+                  }
                   placeholder="blog-post-slug"
                   className="bg-white border-gray-300 text-gray-900 placeholder-gray-500"
                 />
@@ -517,7 +567,9 @@ const AdminBlogs = ({ initialAction, onActionComplete }: AdminBlogsProps) => {
               <div>
                 <ImageUpload
                   value={formData.image}
-                  onChange={(value) => setFormData(prev => ({ ...prev, image: value }))}
+                  onChange={(value) =>
+                    setFormData((prev) => ({ ...prev, image: value }))
+                  }
                   label="Blog Image"
                 />
               </div>
@@ -529,68 +581,93 @@ const AdminBlogs = ({ initialAction, onActionComplete }: AdminBlogsProps) => {
               </label>
               <Input
                 value={formData.imageAlt || ""}
-                onChange={(e) => setFormData(prev => ({ ...prev, imageAlt: e.target.value }))}
+                onChange={(e) =>
+                  setFormData((prev) => ({ ...prev, imageAlt: e.target.value }))
+                }
                 placeholder="Describe the image for accessibility and SEO (e.g., 'Mountain landscape with snow peaks')"
                 className="bg-white border-gray-300 text-gray-900 placeholder-gray-500"
               />
               <p className="text-xs text-gray-500 mt-1">
-                Important for accessibility and SEO. Describe what the image shows.
+                Important for accessibility and SEO. Describe what the image
+                shows.
               </p>
             </div>
 
             {/* SEO Section */}
             <div className="border-t pt-6">
-              <h3 className="text-lg font-semibold text-gray-900 mb-4">SEO & Meta Tags</h3>
-              
+              <h3 className="text-lg font-semibold text-gray-900 mb-4">
+                SEO & Meta Tags
+              </h3>
+
               <div className="space-y-6">
                 {/* Basic SEO */}
                 <div className="bg-gray-50 p-4 rounded-lg">
-                  <h4 className="text-md font-semibold text-gray-800 mb-3">Basic SEO</h4>
-              <div className="space-y-4">
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    SEO Title
-                  </label>
-                  <Input
-                    value={formData.seoTitle || ""}
-                    onChange={(e) => setFormData(prev => ({ ...prev, seoTitle: e.target.value }))}
-                    placeholder="SEO optimized title (optional)"
-                    className="bg-white border-gray-300 text-gray-900 placeholder-gray-500"
-                  />
-                  <p className="text-xs text-gray-500 mt-1">
-                        Leave empty to use the main title. Recommended: 50-60 characters
-                  </p>
-                </div>
+                  <h4 className="text-md font-semibold text-gray-800 mb-3">
+                    Basic SEO
+                  </h4>
+                  <div className="space-y-4">
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-2">
+                        SEO Title
+                      </label>
+                      <Input
+                        value={formData.seoTitle || ""}
+                        onChange={(e) =>
+                          setFormData((prev) => ({
+                            ...prev,
+                            seoTitle: e.target.value,
+                          }))
+                        }
+                        placeholder="SEO optimized title (optional)"
+                        className="bg-white border-gray-300 text-gray-900 placeholder-gray-500"
+                      />
+                      <p className="text-xs text-gray-500 mt-1">
+                        Leave empty to use the main title. Recommended: 50-60
+                        characters
+                      </p>
+                    </div>
 
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Meta Description
-                  </label>
-                  <Textarea
-                    value={formData.seoDescription || ""}
-                    onChange={(e) => setFormData(prev => ({ ...prev, seoDescription: e.target.value }))}
-                    placeholder="Brief description for search engines (150-160 characters recommended)"
-                    rows={3}
-                    className="bg-white border-gray-300 text-gray-900 placeholder-gray-500"
-                  />
-                  <p className="text-xs text-gray-500 mt-1">
-                    {formData.seoDescription ? `${formData.seoDescription.length}/160 characters` : "0/160 characters"}
-                  </p>
-                </div>
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-2">
+                        Meta Description
+                      </label>
+                      <Textarea
+                        value={formData.seoDescription || ""}
+                        onChange={(e) =>
+                          setFormData((prev) => ({
+                            ...prev,
+                            seoDescription: e.target.value,
+                          }))
+                        }
+                        placeholder="Brief description for search engines (150-160 characters recommended)"
+                        rows={3}
+                        className="bg-white border-gray-300 text-gray-900 placeholder-gray-500"
+                      />
+                      <p className="text-xs text-gray-500 mt-1">
+                        {formData.seoDescription
+                          ? `${formData.seoDescription.length}/160 characters`
+                          : "0/160 characters"}
+                      </p>
+                    </div>
 
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    SEO Keywords
-                  </label>
-                  <Input
-                    value={formData.seoKeywords?.join(', ') || ""}
-                    onChange={(e) => setFormData(prev => ({ 
-                      ...prev, 
-                      seoKeywords: e.target.value.split(',').map(k => k.trim()).filter(k => k.length > 0)
-                    }))}
-                    placeholder="keyword1, keyword2, keyword3"
-                    className="bg-white border-gray-300 text-gray-900 placeholder-gray-500"
-                  />
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-2">
+                        SEO Keywords
+                      </label>
+                      <Input
+                        value={formData.seoKeywords?.join(", ") || ""}
+                        onChange={(e) =>
+                          setFormData((prev) => ({
+                            ...prev,
+                            seoKeywords: e.target.value
+                              .split(",")
+                              .map((k) => k.trim())
+                              .filter((k) => k.length > 0),
+                          }))
+                        }
+                        placeholder="keyword1, keyword2, keyword3"
+                        className="bg-white border-gray-300 text-gray-900 placeholder-gray-500"
+                      />
                     </div>
 
                     <div>
@@ -599,7 +676,12 @@ const AdminBlogs = ({ initialAction, onActionComplete }: AdminBlogsProps) => {
                       </label>
                       <Input
                         value={formData.seoCanonicalUrl || ""}
-                        onChange={(e) => setFormData(prev => ({ ...prev, seoCanonicalUrl: e.target.value }))}
+                        onChange={(e) =>
+                          setFormData((prev) => ({
+                            ...prev,
+                            seoCanonicalUrl: e.target.value,
+                          }))
+                        }
                         placeholder="https://yourdomain.com/blog/post-slug"
                         className="bg-white border-gray-300 text-gray-900 placeholder-gray-500"
                       />
@@ -609,7 +691,9 @@ const AdminBlogs = ({ initialAction, onActionComplete }: AdminBlogsProps) => {
 
                 {/* Open Graph */}
                 <div className="bg-blue-50 p-4 rounded-lg">
-                  <h4 className="text-md font-semibold text-blue-800 mb-3">Open Graph (Facebook/LinkedIn)</h4>
+                  <h4 className="text-md font-semibold text-blue-800 mb-3">
+                    Open Graph (Facebook/LinkedIn)
+                  </h4>
                   <div className="space-y-4">
                     <div>
                       <label className="block text-sm font-medium text-gray-700 mb-2">
@@ -617,7 +701,12 @@ const AdminBlogs = ({ initialAction, onActionComplete }: AdminBlogsProps) => {
                       </label>
                       <Input
                         value={formData.seoOgTitle || ""}
-                        onChange={(e) => setFormData(prev => ({ ...prev, seoOgTitle: e.target.value }))}
+                        onChange={(e) =>
+                          setFormData((prev) => ({
+                            ...prev,
+                            seoOgTitle: e.target.value,
+                          }))
+                        }
                         placeholder="Open Graph title (optional)"
                         className="bg-white border-gray-300 text-gray-900 placeholder-gray-500"
                       />
@@ -629,7 +718,12 @@ const AdminBlogs = ({ initialAction, onActionComplete }: AdminBlogsProps) => {
                       </label>
                       <Textarea
                         value={formData.seoOgDescription || ""}
-                        onChange={(e) => setFormData(prev => ({ ...prev, seoOgDescription: e.target.value }))}
+                        onChange={(e) =>
+                          setFormData((prev) => ({
+                            ...prev,
+                            seoOgDescription: e.target.value,
+                          }))
+                        }
                         placeholder="Open Graph description (optional)"
                         rows={2}
                         className="bg-white border-gray-300 text-gray-900 placeholder-gray-500"
@@ -642,7 +736,12 @@ const AdminBlogs = ({ initialAction, onActionComplete }: AdminBlogsProps) => {
                       </label>
                       <ImageUpload
                         value={formData.seoOgImage || ""}
-                        onChange={(value) => setFormData(prev => ({ ...prev, seoOgImage: value }))}
+                        onChange={(value) =>
+                          setFormData((prev) => ({
+                            ...prev,
+                            seoOgImage: value,
+                          }))
+                        }
                         label=""
                       />
                       <p className="text-xs text-gray-500 mt-1">
@@ -654,7 +753,9 @@ const AdminBlogs = ({ initialAction, onActionComplete }: AdminBlogsProps) => {
 
                 {/* Twitter Cards */}
                 <div className="bg-sky-50 p-4 rounded-lg">
-                  <h4 className="text-md font-semibold text-sky-800 mb-3">Twitter Cards</h4>
+                  <h4 className="text-md font-semibold text-sky-800 mb-3">
+                    Twitter Cards
+                  </h4>
                   <div className="space-y-4">
                     <div>
                       <label className="block text-sm font-medium text-gray-700 mb-2">
@@ -662,7 +763,12 @@ const AdminBlogs = ({ initialAction, onActionComplete }: AdminBlogsProps) => {
                       </label>
                       <Input
                         value={formData.seoTwitterTitle || ""}
-                        onChange={(e) => setFormData(prev => ({ ...prev, seoTwitterTitle: e.target.value }))}
+                        onChange={(e) =>
+                          setFormData((prev) => ({
+                            ...prev,
+                            seoTwitterTitle: e.target.value,
+                          }))
+                        }
                         placeholder="Twitter title (optional)"
                         className="bg-white border-gray-300 text-gray-900 placeholder-gray-500"
                       />
@@ -674,7 +780,12 @@ const AdminBlogs = ({ initialAction, onActionComplete }: AdminBlogsProps) => {
                       </label>
                       <Textarea
                         value={formData.seoTwitterDescription || ""}
-                        onChange={(e) => setFormData(prev => ({ ...prev, seoTwitterDescription: e.target.value }))}
+                        onChange={(e) =>
+                          setFormData((prev) => ({
+                            ...prev,
+                            seoTwitterDescription: e.target.value,
+                          }))
+                        }
                         placeholder="Twitter description (optional)"
                         rows={2}
                         className="bg-white border-gray-300 text-gray-900 placeholder-gray-500"
@@ -687,10 +798,15 @@ const AdminBlogs = ({ initialAction, onActionComplete }: AdminBlogsProps) => {
                       </label>
                       <ImageUpload
                         value={formData.seoTwitterImage || ""}
-                        onChange={(value) => setFormData(prev => ({ ...prev, seoTwitterImage: value }))}
+                        onChange={(value) =>
+                          setFormData((prev) => ({
+                            ...prev,
+                            seoTwitterImage: value,
+                          }))
+                        }
                         label=""
                       />
-                  <p className="text-xs text-gray-500 mt-1">
+                      <p className="text-xs text-gray-500 mt-1">
                         Recommended: 1200x675 pixels
                       </p>
                     </div>
@@ -699,7 +815,9 @@ const AdminBlogs = ({ initialAction, onActionComplete }: AdminBlogsProps) => {
 
                 {/* Article Schema */}
                 <div className="bg-green-50 p-4 rounded-lg">
-                  <h4 className="text-md font-semibold text-green-800 mb-3">Article Schema</h4>
+                  <h4 className="text-md font-semibold text-green-800 mb-3">
+                    Article Schema
+                  </h4>
                   <div className="space-y-4">
                     <div>
                       <label className="block text-sm font-medium text-gray-700 mb-2">
@@ -707,7 +825,12 @@ const AdminBlogs = ({ initialAction, onActionComplete }: AdminBlogsProps) => {
                       </label>
                       <Input
                         value={formData.seoAuthor || ""}
-                        onChange={(e) => setFormData(prev => ({ ...prev, seoAuthor: e.target.value }))}
+                        onChange={(e) =>
+                          setFormData((prev) => ({
+                            ...prev,
+                            seoAuthor: e.target.value,
+                          }))
+                        }
                         placeholder="Article author name"
                         className="bg-white border-gray-300 text-gray-900 placeholder-gray-500"
                       />
@@ -719,7 +842,12 @@ const AdminBlogs = ({ initialAction, onActionComplete }: AdminBlogsProps) => {
                       </label>
                       <Input
                         value={formData.seoPublisher || ""}
-                        onChange={(e) => setFormData(prev => ({ ...prev, seoPublisher: e.target.value }))}
+                        onChange={(e) =>
+                          setFormData((prev) => ({
+                            ...prev,
+                            seoPublisher: e.target.value,
+                          }))
+                        }
                         placeholder="Publisher name"
                         className="bg-white border-gray-300 text-gray-900 placeholder-gray-500"
                       />
@@ -731,7 +859,12 @@ const AdminBlogs = ({ initialAction, onActionComplete }: AdminBlogsProps) => {
                       </label>
                       <Input
                         value={formData.seoArticleSection || ""}
-                        onChange={(e) => setFormData(prev => ({ ...prev, seoArticleSection: e.target.value }))}
+                        onChange={(e) =>
+                          setFormData((prev) => ({
+                            ...prev,
+                            seoArticleSection: e.target.value,
+                          }))
+                        }
                         placeholder="e.g., Travel, Adventure, Culture"
                         className="bg-white border-gray-300 text-gray-900 placeholder-gray-500"
                       />
@@ -742,11 +875,16 @@ const AdminBlogs = ({ initialAction, onActionComplete }: AdminBlogsProps) => {
                         Article Tags
                       </label>
                       <Input
-                        value={formData.seoArticleTags?.join(', ') || ""}
-                        onChange={(e) => setFormData(prev => ({ 
-                          ...prev, 
-                          seoArticleTags: e.target.value.split(',').map(k => k.trim()).filter(k => k.length > 0)
-                        }))}
+                        value={formData.seoArticleTags?.join(", ") || ""}
+                        onChange={(e) =>
+                          setFormData((prev) => ({
+                            ...prev,
+                            seoArticleTags: e.target.value
+                              .split(",")
+                              .map((k) => k.trim())
+                              .filter((k) => k.length > 0),
+                          }))
+                        }
                         placeholder="tag1, tag2, tag3"
                         className="bg-white border-gray-300 text-gray-900 placeholder-gray-500"
                       />
@@ -756,26 +894,42 @@ const AdminBlogs = ({ initialAction, onActionComplete }: AdminBlogsProps) => {
 
                 {/* Robots */}
                 <div className="bg-yellow-50 p-4 rounded-lg">
-                  <h4 className="text-md font-semibold text-yellow-800 mb-3">Search Engine Indexing</h4>
+                  <h4 className="text-md font-semibold text-yellow-800 mb-3">
+                    Search Engine Indexing
+                  </h4>
                   <div className="space-y-4">
                     <div className="flex items-center space-x-4">
                       <label className="flex items-center">
                         <input
                           type="checkbox"
                           checked={formData.seoRobotsIndex || false}
-                          onChange={(e) => setFormData(prev => ({ ...prev, seoRobotsIndex: e.target.checked }))}
+                          onChange={(e) =>
+                            setFormData((prev) => ({
+                              ...prev,
+                              seoRobotsIndex: e.target.checked,
+                            }))
+                          }
                           className="mr-2"
                         />
-                        <span className="text-sm font-medium text-gray-700">Allow indexing</span>
+                        <span className="text-sm font-medium text-gray-700">
+                          Allow indexing
+                        </span>
                       </label>
                       <label className="flex items-center">
                         <input
                           type="checkbox"
                           checked={formData.seoRobotsFollow || false}
-                          onChange={(e) => setFormData(prev => ({ ...prev, seoRobotsFollow: e.target.checked }))}
+                          onChange={(e) =>
+                            setFormData((prev) => ({
+                              ...prev,
+                              seoRobotsFollow: e.target.checked,
+                            }))
+                          }
                           className="mr-2"
                         />
-                        <span className="text-sm font-medium text-gray-700">Allow following links</span>
+                        <span className="text-sm font-medium text-gray-700">
+                          Allow following links
+                        </span>
                       </label>
                     </div>
                   </div>
@@ -788,10 +942,17 @@ const AdminBlogs = ({ initialAction, onActionComplete }: AdminBlogsProps) => {
                 <input
                   type="checkbox"
                   checked={formData.isActive}
-                  onChange={(e) => setFormData(prev => ({ ...prev, isActive: e.target.checked }))}
+                  onChange={(e) =>
+                    setFormData((prev) => ({
+                      ...prev,
+                      isActive: e.target.checked,
+                    }))
+                  }
                   className="rounded"
                 />
-                <span className="text-sm font-medium text-gray-700">Active</span>
+                <span className="text-sm font-medium text-gray-700">
+                  Active
+                </span>
               </label>
             </div>
 
@@ -818,7 +979,7 @@ const AdminBlogs = ({ initialAction, onActionComplete }: AdminBlogsProps) => {
                 ) : (
                   <>
                     <Save className="w-4 h-4" />
-                    {editing ? 'Update Blog' : 'Create Blog'}
+                    {editing ? "Update Blog" : "Create Blog"}
                   </>
                 )}
               </Button>
@@ -831,19 +992,34 @@ const AdminBlogs = ({ initialAction, onActionComplete }: AdminBlogsProps) => {
         <div className="space-y-4">
           {blogs.length === 0 ? (
             <div className="text-center py-12">
-              <p className="text-gray-500 text-lg">No blogs found. Create your first blog post!</p>
+              <p className="text-gray-500 text-lg">
+                No blogs found. Create your first blog post!
+              </p>
             </div>
           ) : (
             blogs.map((blog) => (
-              <Card key={blog._id || blog.id} className="bg-white border-gray-200">
+              <Card
+                key={blog._id || blog.id}
+                className="bg-white border-gray-200"
+              >
                 <CardContent className="p-6">
                   <div className="flex items-start justify-between">
                     <div className="flex-1">
                       <div className="flex items-center gap-3 mb-2">
-                        <h3 className="text-lg font-semibold text-gray-900">{blog.title}</h3>
-                        <Badge 
-                          variant={blog.status === 'published' ? 'default' : 'secondary'}
-                          className={blog.status === 'published' ? 'bg-green-600 text-white' : 'bg-gray-500 text-white'}
+                        <h3 className="text-lg font-semibold text-gray-900">
+                          {blog.title}
+                        </h3>
+                        <Badge
+                          variant={
+                            blog.status === "published"
+                              ? "default"
+                              : "secondary"
+                          }
+                          className={
+                            blog.status === "published"
+                              ? "bg-green-600 text-white"
+                              : "bg-gray-500 text-white"
+                          }
                         >
                           {blog.status}
                         </Badge>
@@ -858,7 +1034,9 @@ const AdminBlogs = ({ initialAction, onActionComplete }: AdminBlogsProps) => {
                         {blog.publishDate && (
                           <>
                             <span>•</span>
-                            <span>{new Date(blog.publishDate).toLocaleDateString()}</span>
+                            <span>
+                              {new Date(blog.publishDate).toLocaleDateString()}
+                            </span>
                           </>
                         )}
                       </div>
@@ -874,7 +1052,7 @@ const AdminBlogs = ({ initialAction, onActionComplete }: AdminBlogsProps) => {
                         Edit
                       </Button>
                       <Button
-                        onClick={() => handleDelete(blog._id || blog.id || '')}
+                        onClick={() => handleDelete(blog._id || blog.id || "")}
                         variant="admin-secondary"
                         size="sm"
                         className="flex items-center gap-1 bg-red-600 text-white hover:cursor-pointer"
@@ -894,7 +1072,9 @@ const AdminBlogs = ({ initialAction, onActionComplete }: AdminBlogsProps) => {
       {/* Delete Confirmation Dialog */}
       <ConfirmationDialog
         isOpen={deleteDialog.isOpen}
-        onClose={() => setDeleteDialog({ isOpen: false, blogId: null, blogTitle: "" })}
+        onClose={() =>
+          setDeleteDialog({ isOpen: false, blogId: null, blogTitle: "" })
+        }
         onConfirm={confirmDelete}
         title="Delete Blog Post"
         message={`Are you sure you want to delete "${deleteDialog.blogTitle}"? This action cannot be undone.`}
@@ -906,4 +1086,4 @@ const AdminBlogs = ({ initialAction, onActionComplete }: AdminBlogsProps) => {
   );
 };
 
-export default AdminBlogs; 
+export default AdminBlogs;

@@ -189,12 +189,24 @@ export const LazyCTASection = createLazyComponent(
     <div className="container mx-auto px-4">
       <div className="text-center text-white">
         <div className="mb-8">
-          <Skeleton height="2.5rem" width="300px" className="mx-auto mb-4 bg-white/20" />
-          <Skeleton height="1.25rem" width="200px" className="mx-auto bg-white/20" />
+          <Skeleton
+            height="2.5rem"
+            width="300px"
+            className="mx-auto mb-4 bg-white/20"
+          />
+          <Skeleton
+            height="1.25rem"
+            width="200px"
+            className="mx-auto bg-white/20"
+          />
         </div>
         <div className="max-w-3xl mx-auto mb-8">
           <Skeleton height="1.5rem" width="100%" className="mb-4 bg-white/20" />
-          <Skeleton height="1.5rem" width="80%" className="mx-auto bg-white/20" />
+          <Skeleton
+            height="1.5rem"
+            width="80%"
+            className="mx-auto bg-white/20"
+          />
         </div>
       </div>
     </div>
@@ -208,4 +220,4 @@ export const LazyFooter = createLazyComponent(
     <Skeleton height="40px" width="200px" className="bg-white/20" />
   </div>,
   { threshold: 0.1, rootMargin: "100px" }
-); 
+);

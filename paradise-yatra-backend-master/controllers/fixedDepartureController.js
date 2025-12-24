@@ -1,32 +1,42 @@
-const FixedDeparture = require('../models/FixedDeparture');
-const { PACKAGE_CATEGORIES, TOUR_TYPES } = require('../config/categories');
-const { processImageUrls, processSingleImage } = require('../utils/imageUtils');
+const FixedDeparture = require("../models/FixedDeparture");
+const { PACKAGE_CATEGORIES, TOUR_TYPES } = require("../config/categories");
+const { processImageUrls, processSingleImage } = require("../utils/imageUtils");
 
 // Get all fixed departures
 const getAllFixedDepartures = async (req, res) => {
   try {
-     const { page = 1, limit = 10, status, featured, tourType, country, state, category, holidayType } = req.query;
-    
+    const {
+      page = 1,
+      limit = 10,
+      status,
+      featured,
+      tourType,
+      country,
+      state,
+      category,
+      holidayType,
+    } = req.query;
+
     const query = { isActive: true };
-    
+
     if (status) {
       query.status = status;
     }
-    
-    if (featured === 'true') {
+
+    if (featured === "true") {
       query.isFeatured = true;
     }
 
-    if (tourType && ['international', 'india'].includes(tourType)) {
+    if (tourType && ["international", "india"].includes(tourType)) {
       query.tourType = tourType;
     }
 
     if (country) {
-      query.country = { $regex: new RegExp(country, 'i') };
+      query.country = { $regex: new RegExp(country, "i") };
     }
 
     if (state) {
-      query.state = { $regex: new RegExp(state, 'i') };
+      query.state = { $regex: new RegExp(state, "i") };
     }
 
     if (category) {
@@ -40,7 +50,7 @@ const getAllFixedDepartures = async (req, res) => {
     const options = {
       page: parseInt(page),
       limit: parseInt(limit),
-      sort: { departureDate: 1 }
+      sort: { departureDate: 1 },
     };
 
     const fixedDepartures = await FixedDeparture.find(query)
@@ -52,22 +62,22 @@ const getAllFixedDepartures = async (req, res) => {
     const count = await FixedDeparture.countDocuments(query);
 
     // Process image URLs for each fixed departure
-    const processedFixedDepartures = fixedDepartures.map(departure => {
+    const processedFixedDepartures = fixedDepartures.map((departure) => {
       const departureObj = departure.toObject();
-      
+
       // Process main images
       if (departureObj.images) {
         departureObj.images = processImageUrls(departureObj.images);
       }
-      
+
       // Process itinerary images
       if (departureObj.itinerary && Array.isArray(departureObj.itinerary)) {
-        departureObj.itinerary = departureObj.itinerary.map(day => ({
+        departureObj.itinerary = departureObj.itinerary.map((day) => ({
           ...day,
-          image: processSingleImage(day.image)
+          image: processSingleImage(day.image),
         }));
       }
-      
+
       return departureObj;
     });
 
@@ -75,11 +85,11 @@ const getAllFixedDepartures = async (req, res) => {
       fixedDepartures: processedFixedDepartures,
       totalPages: Math.ceil(count / options.limit),
       currentPage: options.page,
-      total: count
+      total: count,
     });
   } catch (error) {
-    console.error('Error fetching fixed departures:', error);
-    res.status(500).json({ message: 'Internal server error' });
+    console.error("Error fetching fixed departures:", error);
+    res.status(500).json({ message: "Internal server error" });
   }
 };
 
@@ -87,62 +97,62 @@ const getAllFixedDepartures = async (req, res) => {
 const getFixedDeparture = async (req, res) => {
   try {
     const fixedDeparture = await FixedDeparture.findById(req.params.id);
-    
+
     if (!fixedDeparture) {
-      return res.status(404).json({ message: 'Fixed departure not found' });
+      return res.status(404).json({ message: "Fixed departure not found" });
     }
-    
+
     // Process image URLs
     const departureObj = fixedDeparture.toObject();
-    
+
     if (departureObj.images) {
       departureObj.images = processImageUrls(departureObj.images);
     }
-    
+
     if (departureObj.itinerary && Array.isArray(departureObj.itinerary)) {
-      departureObj.itinerary = departureObj.itinerary.map(day => ({
+      departureObj.itinerary = departureObj.itinerary.map((day) => ({
         ...day,
-        image: processSingleImage(day.image)
+        image: processSingleImage(day.image),
       }));
     }
-    
+
     res.json(departureObj);
   } catch (error) {
-    console.error('Error fetching fixed departure:', error);
-    res.status(500).json({ message: 'Internal server error' });
+    console.error("Error fetching fixed departure:", error);
+    res.status(500).json({ message: "Internal server error" });
   }
 };
 
 // Get fixed departure by slug
 const getFixedDepartureBySlug = async (req, res) => {
   try {
-    const fixedDeparture = await FixedDeparture.findOne({ 
+    const fixedDeparture = await FixedDeparture.findOne({
       slug: req.params.slug,
-      isActive: true 
+      isActive: true,
     });
-    
+
     if (!fixedDeparture) {
-      return res.status(404).json({ message: 'Fixed departure not found' });
+      return res.status(404).json({ message: "Fixed departure not found" });
     }
-    
+
     // Process image URLs
     const departureObj = fixedDeparture.toObject();
-    
+
     if (departureObj.images) {
       departureObj.images = processImageUrls(departureObj.images);
     }
-    
+
     if (departureObj.itinerary && Array.isArray(departureObj.itinerary)) {
-      departureObj.itinerary = departureObj.itinerary.map(day => ({
+      departureObj.itinerary = departureObj.itinerary.map((day) => ({
         ...day,
-        image: processSingleImage(day.image)
+        image: processSingleImage(day.image),
       }));
     }
-    
+
     res.json(departureObj);
   } catch (error) {
-    console.error('Error fetching fixed departure by slug:', error);
-    res.status(500).json({ message: 'Internal server error' });
+    console.error("Error fetching fixed departure by slug:", error);
+    res.status(500).json({ message: "Internal server error" });
   }
 };
 
@@ -173,11 +183,21 @@ const createFixedDeparture = async (req, res) => {
       inclusions,
       exclusions,
       terms,
-      images
+      images,
     } = req.body;
 
     // Validate required fields
-    const requiredFields = ['title', 'description', 'shortDescription', 'price', 'duration', 'destination', 'country', 'tourType', 'category'];
+    const requiredFields = [
+      "title",
+      "description",
+      "shortDescription",
+      "price",
+      "duration",
+      "destination",
+      "country",
+      "tourType",
+      "category",
+    ];
     for (const field of requiredFields) {
       if (!req.body[field]) {
         return res.status(400).json({ message: `${field} is required` });
@@ -186,18 +206,24 @@ const createFixedDeparture = async (req, res) => {
 
     // Validate tour type
     if (!TOUR_TYPES.includes(req.body.tourType)) {
-      return res.status(400).json({ message: `Invalid tour type. Must be one of: ${TOUR_TYPES.join(', ')}` });
+      return res.status(400).json({
+        message: `Invalid tour type. Must be one of: ${TOUR_TYPES.join(", ")}`,
+      });
     }
 
     // Validate category
     if (!PACKAGE_CATEGORIES.includes(req.body.category)) {
-      return res.status(400).json({ message: `Invalid category. Must be one of: ${PACKAGE_CATEGORIES.join(', ')}` });
+      return res.status(400).json({
+        message: `Invalid category. Must be one of: ${PACKAGE_CATEGORIES.join(
+          ", "
+        )}`,
+      });
     }
 
     // Check if slug already exists
     const existingFixedDeparture = await FixedDeparture.findOne({ slug });
     if (existingFixedDeparture) {
-      return res.status(400).json({ message: 'Slug already exists' });
+      return res.status(400).json({ message: "Slug already exists" });
     }
 
     const fixedDeparture = new FixedDeparture({
@@ -224,14 +250,14 @@ const createFixedDeparture = async (req, res) => {
       inclusions,
       exclusions,
       terms,
-      images: images || []
+      images: images || [],
     });
 
     await fixedDeparture.save();
     res.status(201).json(fixedDeparture);
   } catch (error) {
-    console.error('Error creating fixed departure:', error);
-    res.status(500).json({ message: 'Internal server error' });
+    console.error("Error creating fixed departure:", error);
+    res.status(500).json({ message: "Internal server error" });
   }
 };
 
@@ -265,31 +291,39 @@ const updateFixedDeparture = async (req, res) => {
       images,
       isActive,
       isFeatured,
-      status
+      status,
     } = req.body;
 
     // Validate tour type if provided
     if (req.body.tourType) {
       if (!TOUR_TYPES.includes(req.body.tourType)) {
-        return res.status(400).json({ message: `Invalid tour type. Must be one of: ${TOUR_TYPES.join(', ')}` });
+        return res.status(400).json({
+          message: `Invalid tour type. Must be one of: ${TOUR_TYPES.join(
+            ", "
+          )}`,
+        });
       }
     }
 
     // Validate category if provided
     if (req.body.category) {
       if (!PACKAGE_CATEGORIES.includes(req.body.category)) {
-        return res.status(400).json({ message: `Invalid category. Must be one of: ${PACKAGE_CATEGORIES.join(', ')}` });
+        return res.status(400).json({
+          message: `Invalid category. Must be one of: ${PACKAGE_CATEGORIES.join(
+            ", "
+          )}`,
+        });
       }
     }
 
     // Check if slug already exists for other fixed departures
     if (slug) {
-      const existingFixedDeparture = await FixedDeparture.findOne({ 
-        slug, 
-        _id: { $ne: req.params.id } 
+      const existingFixedDeparture = await FixedDeparture.findOne({
+        slug,
+        _id: { $ne: req.params.id },
       });
       if (existingFixedDeparture) {
-        return res.status(400).json({ message: 'Slug already exists' });
+        return res.status(400).json({ message: "Slug already exists" });
       }
     }
 
@@ -322,35 +356,37 @@ const updateFixedDeparture = async (req, res) => {
         images,
         isActive,
         isFeatured,
-        status
+        status,
       },
       { new: true, runValidators: true }
     );
 
     if (!updatedFixedDeparture) {
-      return res.status(404).json({ message: 'Fixed departure not found' });
+      return res.status(404).json({ message: "Fixed departure not found" });
     }
 
     res.json(updatedFixedDeparture);
   } catch (error) {
-    console.error('Error updating fixed departure:', error);
-    res.status(500).json({ message: 'Internal server error' });
+    console.error("Error updating fixed departure:", error);
+    res.status(500).json({ message: "Internal server error" });
   }
 };
 
 // Delete fixed departure
 const deleteFixedDeparture = async (req, res) => {
   try {
-    const fixedDeparture = await FixedDeparture.findByIdAndDelete(req.params.id);
-    
+    const fixedDeparture = await FixedDeparture.findByIdAndDelete(
+      req.params.id
+    );
+
     if (!fixedDeparture) {
-      return res.status(404).json({ message: 'Fixed departure not found' });
+      return res.status(404).json({ message: "Fixed departure not found" });
     }
-    
-    res.json({ message: 'Fixed departure deleted successfully' });
+
+    res.json({ message: "Fixed departure deleted successfully" });
   } catch (error) {
-    console.error('Error deleting fixed departure:', error);
-    res.status(500).json({ message: 'Internal server error' });
+    console.error("Error deleting fixed departure:", error);
+    res.status(500).json({ message: "Internal server error" });
   }
 };
 
@@ -358,18 +394,18 @@ const deleteFixedDeparture = async (req, res) => {
 const toggleFeatured = async (req, res) => {
   try {
     const fixedDeparture = await FixedDeparture.findById(req.params.id);
-    
+
     if (!fixedDeparture) {
-      return res.status(404).json({ message: 'Fixed departure not found' });
+      return res.status(404).json({ message: "Fixed departure not found" });
     }
-    
+
     fixedDeparture.isFeatured = !fixedDeparture.isFeatured;
     await fixedDeparture.save();
-    
+
     res.json(fixedDeparture);
   } catch (error) {
-    console.error('Error toggling featured status:', error);
-    res.status(500).json({ message: 'Internal server error' });
+    console.error("Error toggling featured status:", error);
+    res.status(500).json({ message: "Internal server error" });
   }
 };
 
@@ -377,77 +413,89 @@ const toggleFeatured = async (req, res) => {
 const toggleStatus = async (req, res) => {
   try {
     const fixedDeparture = await FixedDeparture.findById(req.params.id);
-    
+
     if (!fixedDeparture) {
-      return res.status(404).json({ message: 'Fixed departure not found' });
+      return res.status(404).json({ message: "Fixed departure not found" });
     }
-    
+
     fixedDeparture.isActive = !fixedDeparture.isActive;
     await fixedDeparture.save();
-    
+
     res.json(fixedDeparture);
   } catch (error) {
-    console.error('Error toggling active status:', error);
-    res.status(500).json({ message: 'Internal server error' });
+    console.error("Error toggling active status:", error);
+    res.status(500).json({ message: "Internal server error" });
   }
 };
 
 // Get featured fixed departures
 const getFeaturedFixedDepartures = async (req, res) => {
   try {
-    const fixedDepartures = await FixedDeparture.find({ 
-      isFeatured: true, 
-      isActive: true 
-    }).sort({ departureDate: 1 }).limit(6);
-    
+    const fixedDepartures = await FixedDeparture.find({
+      isFeatured: true,
+      isActive: true,
+    })
+      .sort({ departureDate: 1 })
+      .limit(6);
+
     res.json(fixedDepartures);
   } catch (error) {
-    console.error('Error fetching featured fixed departures:', error);
-    res.status(500).json({ message: 'Internal server error' });
+    console.error("Error fetching featured fixed departures:", error);
+    res.status(500).json({ message: "Internal server error" });
   }
 };
 
 // Search fixed departures
 const searchFixedDepartures = async (req, res) => {
   try {
-    const { q, destination, status, minPrice, maxPrice, tourType, country, state, category } = req.query;
-    
+    const {
+      q,
+      destination,
+      status,
+      minPrice,
+      maxPrice,
+      tourType,
+      country,
+      state,
+      category,
+    } = req.query;
+
     const query = { isActive: true };
-    
+
     if (q) {
       query.$or = [
-        { title: { $regex: q, $options: 'i' } },
-        { destination: { $regex: q, $options: 'i' } },
-        { country: { $regex: q, $options: 'i' } },
-        { state: { $regex: q, $options: 'i' } },
-        { description: { $regex: q, $options: 'i' } }
+        { title: { $regex: q, $options: "i" } },
+        { destination: { $regex: q, $options: "i" } },
+        { country: { $regex: q, $options: "i" } },
+        { state: { $regex: q, $options: "i" } },
+        { description: { $regex: q, $options: "i" } },
       ];
     }
-    
+
     if (destination) {
-      query.destination = { $regex: destination, $options: 'i' };
+      query.destination = { $regex: destination, $options: "i" };
     }
-    
+
     if (status) {
       query.status = status;
     }
-    
-    if (tourType && ['international', 'india'].includes(tourType)) {
+
+    if (tourType && ["international", "india"].includes(tourType)) {
       query.tourType = tourType;
     }
 
     if (country) {
-      query.country = { $regex: new RegExp(country, 'i') };
+      query.country = { $regex: new RegExp(country, "i") };
     }
 
     if (state) {
-      query.state = { $regex: new RegExp(state, 'i') };
+      query.state = { $regex: new RegExp(state, "i") };
     }
 
     if (category) {
       query.category = category;
     }
-    
+
     if (minPrice || maxPrice) {
       query.price = {};
       if (minPrice) query.price.$gte = parseFloat(minPrice);
@@ -455,14 +503,14 @@ const searchFixedDepartures = async (req, res) => {
     }
 
     const fixedDepartures = await FixedDeparture.find(query)
-      .populate('holidayType', 'title slug image')
+      .populate("holidayType", "title slug image")
       .sort({ departureDate: 1 })
       .limit(20);
-    
+
     res.json(fixedDepartures);
   } catch (error) {
-    console.error('Error searching fixed departures:', error);
-    res.status(500).json({ message: 'Internal server error' });
+    console.error("Error searching fixed departures:", error);
+    res.status(500).json({ message: "Internal server error" });
   }
 };
 
@@ -471,15 +519,15 @@ const getFixedDeparturesByTourType = async (req, res) => {
   try {
     const { tourType } = req.params;
     const { limit = 10, page = 1 } = req.query;
-    
+
     let query = { isActive: true };
-    
-    if (tourType && ['international', 'india'].includes(tourType)) {
+
+    if (tourType && ["international", "india"].includes(tourType)) {
       query.tourType = tourType;
     }
 
     const fixedDepartures = await FixedDeparture.find(query)
-      .populate('holidayType', 'title slug image')
+      .populate("holidayType", "title slug image")
       .sort({ departureDate: 1 })
       .limit(parseInt(limit))
       .skip((parseInt(page) - 1) * parseInt(limit));
@@ -492,12 +540,12 @@ const getFixedDeparturesByTourType = async (req, res) => {
         current: parseInt(page),
         total: Math.ceil(total / parseInt(limit)),
         hasNext: parseInt(page) * parseInt(limit) < total,
-        hasPrev: parseInt(page) > 1
-      }
+        hasPrev: parseInt(page) > 1,
+      },
     });
   } catch (error) {
-    console.error('Get fixed departures by tour type error:', error);
-    res.status(500).json({ message: 'Server error.' });
+    console.error("Get fixed departures by tour type error:", error);
+    res.status(500).json({ message: "Server error." });
   }
 };
 
@@ -506,15 +554,15 @@ const getFixedDeparturesByCountry = async (req, res) => {
   try {
     const { country } = req.params;
     const { limit = 10, page = 1 } = req.query;
-    
+
     let query = { isActive: true };
-    
+
     if (country) {
-      query.country = { $regex: new RegExp(country, 'i') };
+      query.country = { $regex: new RegExp(country, "i") };
     }
 
     const fixedDepartures = await FixedDeparture.find(query)
-      .populate('holidayType', 'title slug image')
+      .populate("holidayType", "title slug image")
       .sort({ departureDate: 1 })
       .limit(parseInt(limit))
       .skip((parseInt(page) - 1) * parseInt(limit));
@@ -527,12 +575,12 @@ const getFixedDeparturesByCountry = async (req, res) => {
         current: parseInt(page),
         total: Math.ceil(total / parseInt(limit)),
         hasNext: parseInt(page) * parseInt(limit) < total,
-        hasPrev: parseInt(page) > 1
-      }
+        hasPrev: parseInt(page) > 1,
+      },
     });
   } catch (error) {
-    console.error('Get fixed departures by country error:', error);
-    res.status(500).json({ message: 'Server error.' });
+    console.error("Get fixed departures by country error:", error);
+    res.status(500).json({ message: "Server error." });
   }
 };
 
@@ -541,15 +589,15 @@ const getFixedDeparturesByState = async (req, res) => {
   try {
     const { state } = req.params;
     const { limit = 10, page = 1 } = req.query;
-    
+
     let query = { isActive: true };
-    
+
     if (state) {
-      query.state = { $regex: new RegExp(state, 'i') };
+      query.state = { $regex: new RegExp(state, "i") };
     }
 
     const fixedDepartures = await FixedDeparture.find(query)
-      .populate('holidayType', 'title slug image')
+      .populate("holidayType", "title slug image")
       .sort({ departureDate: 1 })
       .limit(parseInt(limit))
       .skip((parseInt(page) - 1) * parseInt(limit));
@@ -562,45 +610,52 @@ const getFixedDeparturesByState = async (req, res) => {
         current: parseInt(page),
         total: Math.ceil(total / parseInt(limit)),
         hasNext: parseInt(page) * parseInt(limit) < total,
-        hasPrev: parseInt(page) > 1
-      }
+        hasPrev: parseInt(page) > 1,
+      },
     });
   } catch (error) {
-    console.error('Get fixed departures by state error:', error);
-    res.status(500).json({ message: 'Server error.' });
+    console.error("Get fixed departures by state error:", error);
+    res.status(500).json({ message: "Server error." });
   }
 };
 
 // Get available countries
 const getAvailableCountries = async (req, res) => {
   try {
-    const countries = await FixedDeparture.distinct('country', { isActive: true });
+    const countries = await FixedDeparture.distinct("country", {
+      isActive: true,
+    });
     res.json({ countries: countries.sort() });
   } catch (error) {
-    console.error('Get available countries error:', error);
-    res.status(500).json({ message: 'Server error.' });
+    console.error("Get available countries error:", error);
+    res.status(500).json({ message: "Server error." });
   }
 };
 
 // Get available tour types
 const getAvailableTourTypes = async (req, res) => {
   try {
-    const tourTypes = await FixedDeparture.distinct('tourType', { isActive: true });
+    const tourTypes = await FixedDeparture.distinct("tourType", {
+      isActive: true,
+    });
     res.json({ tourTypes: tourTypes.sort() });
   } catch (error) {
-    console.error('Get available tour types error:', error);
-    res.status(500).json({ message: 'Server error.' });
+    console.error("Get available tour types error:", error);
+    res.status(500).json({ message: "Server error." });
   }
 };
 
 // Get available states
 const getAvailableStates = async (req, res) => {
   try {
-    const states = await FixedDeparture.distinct('state', { isActive: true, state: { $exists: true, $ne: null, $ne: '' } });
+    const states = await FixedDeparture.distinct("state", {
+      isActive: true,
+      state: { $exists: true, $ne: null, $ne: "" },
+    });
     res.json({ states: states.sort() });
   } catch (error) {
-    console.error('Get available states error:', error);
-    res.status(500).json({ message: 'Server error.' });
+    console.error("Get available states error:", error);
+    res.status(500).json({ message: "Server error." });
   }
 };
 
@@ -620,5 +675,5 @@ module.exports = {
   getFixedDeparturesByState,
   getAvailableCountries,
   getAvailableTourTypes,
-  getAvailableStates
+  getAvailableStates,
 };
