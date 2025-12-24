@@ -3,11 +3,6 @@ import type { NextConfig } from "next";
 const nextConfig: NextConfig = {
   /* config options here */
   output: 'standalone',
-  eslint: {
-    // Warning: This allows production builds to successfully complete even if
-    // your project has ESLint errors.
-    ignoreDuringBuilds: true,
-  },
   // Performance optimizations
   compress: true,
   poweredByHeader: false,
@@ -236,19 +231,15 @@ const nextConfig: NextConfig = {
     return config;
   },
 
-  // Experimental features for better performance
-  experimental: {
-    optimizePackageImports: ['lucide-react', 'framer-motion', 'react-icons'],
-    optimizeCss: true,
-    turbo: {
-      rules: {
-        '*.svg': {
-          loaders: ['@svgr/webpack'],
-          as: '*.js',
-        },
-      },
-    },
-  },
+  turbopack: {},
+
+// Experimental features for better performance
+experimental: {
+  optimizePackageImports: ['lucide-react', 'framer-motion', 'react-icons'],
+  optimizeCss: true,
+  // ← Remove any 'turbo' here if still present!
+},
+
 
   // Headers for better caching and security
   async headers() {
