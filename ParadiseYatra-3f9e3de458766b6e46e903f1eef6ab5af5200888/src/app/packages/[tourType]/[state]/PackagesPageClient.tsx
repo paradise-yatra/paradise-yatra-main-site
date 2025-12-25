@@ -741,7 +741,10 @@ export default function PackagesPageClient({ params }: PackagesPageClientProps) 
                 {filteredItems.length > 0 ? (
                   <div className="space-y-6">
                     {paginatedItems.map((item: any, index: number) => (
-                      <div key={item._id || index} data-item-type={item.type} className="bg-white rounded-xl shadow-sm overflow-hidden hover:shadow-md transition-all duration-300 group">
+                      <div 
+                       key={`${item.type}-${item._id}`}
+                       data-item-type={item.type} 
+                      className="bg-white rounded-xl shadow-sm overflow-hidden hover:shadow-md transition-all duration-300 group">
                         <div className="flex flex-col md:flex-row h-full">
                           <div className="relative w-full md:w-80 overflow-hidden shadow-sm h-48 sm:h-56 md:h-auto md:aspect-[16/9] flex-shrink-0">
                             <Image

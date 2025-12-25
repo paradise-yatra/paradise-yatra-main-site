@@ -58,11 +58,9 @@ const connectDB = async () => {
     console.log("Connected to MongoDB Atlas successfully");
   } catch (error) {
     console.error("MongoDB connection error:", error.message);
+    throw error;
   }
 };
-
-// Connect to database
-connectDB();
 
 // Routes
 const authRoutes = require("./routes/auth");
@@ -121,10 +119,11 @@ app.use("*", (req, res) => {
   res.status(404).json({ message: "Route not found" });
 });
 
-const PORT = process.env.PORT || 5000;
+const PORT = process.env.PORT || 5001;
 
 const startServer = async () => {
   try {
+    // Connect to database
     await connectDB();
 
     const server = app.listen(PORT, () => {
@@ -135,13 +134,35 @@ const startServer = async () => {
       if (error.code === "EADDRINUSE") {
         console.log(`Port ${PORT} is busy, trying port ${PORT + 1}...`);
         const newPort = PORT + 1;
+        server.close();
         app.listen(newPort, () => {
           console.log(`Server is running on port ${newPort}`);
         });
       } else {
         console.error("Server error:", error);
+        process.exit(1);
       }
     });
+
+    // Graceful shutdown
+    process.on('SIGTERM', shutdown);
+    process.on('SIGINT', shutdown);
+
+    function shutdown() {
+      console.log('\nShutting down gracefully...');
+      server.close(async () => {
+        console.log('HTTP server closed');
+        try {
+          await mongoose.connection.close();
+          console.log('MongoDB connection closed');
+          process.exit(0);
+        } catch (error) {
+          console.error('Error closing MongoDB:', error.message);
+          process.exit(1);
+        }
+      });
+    }
+
   } catch (error) {
     console.error("Failed to start server:", error);
     process.exit(1);
