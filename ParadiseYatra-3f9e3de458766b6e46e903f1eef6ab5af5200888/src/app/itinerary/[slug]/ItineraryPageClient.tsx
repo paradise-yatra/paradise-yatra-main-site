@@ -68,11 +68,24 @@ interface ItineraryPageClientProps {
 const ItineraryPageClient = ({ packageData, slug }: ItineraryPageClientProps) => {
   const [expandedDays, setExpandedDays] = useState<number[]>([0, 1]);
   const [isLeadFormOpen, setIsLeadFormOpen] = useState(false);
-  const [activeSection, setActiveSection] = useState<SectionType>('itinerary');
+  const [activeSection, setActiveSection] = useState<SectionType>('overview');
   const [otherPackages, setOtherPackages] = useState<any[]>([]);
   const [packagesLoading, setPackagesLoading] = useState(false);
   const router = useRouter();
   const [showTerms, setShowTerms] = useState(false);
+
+  useEffect(() => {
+    // Small delay is sometimes needed after client navigation
+    const timer = setTimeout(() => {
+      window.scrollTo({
+        top: 0,
+        left: 0,
+        behavior: "instant"   // instant = no animation
+      })
+    }, 0)
+
+    return () => clearTimeout(timer)
+  }, [])
 
   // Fetch other packages when packages section is active
   useEffect(() => {

@@ -28,27 +28,42 @@ export default function WhoWeAre() {
   return (
     <section className="w-full py-12 md:py-20 px-4 md:px-8 lg:px-12">
       <div className="max-w-7xl mx-auto">
-        {/* Mobile Layout */}
-        <div className="md:hidden flex flex-col gap-8">
-          {/* Images Section */}
+        {/* ==================== MOBILE LAYOUT ==================== */}
+        <div className="md:hidden flex flex-col gap-10">
+          {/* Images - Mobile version */}
+          <div className="relative h-[380px] w-full max-w-[380px] mx-auto">
+            <div className="absolute w-64 h-72 -top-6 left-1/2 -translate-x-1/2 rounded-3xl overflow-hidden shadow-lg">
+              <Image
+                src="/l3.webp"
+                alt="Travel experience 1"
+                fill
+                className="object-cover"
+                sizes="(max-width: 768px) 70vw, 33vw"
+              />
+            </div>
 
-          {/* Content Section */}
-          <div className="flex flex-col gap-6">
-            <div className="text-center">
+            <div className="absolute w-48 h-56 bottom-0 right-4 rounded-3xl overflow-hidden border-4 border-white shadow-lg">
+              <Image
+                src="/l2.webp"
+                alt="Travel experience 2"
+                fill
+                className="object-cover"
+                sizes="(max-width: 768px) 50vw, 25vw"
+              />
+            </div>
+          </div>
+
+          {/* Content */}
+          <div className="flex flex-col gap-6 text-center px-2">
+            <div>
               <h2 className="text-blue-600 text-sm font-semibold mb-2">
                 Who We Are
               </h2>
-              <h3 className="text-2xl font-light text-gray-900 mb-4">
+              <h3 className="text-2xl sm:text-3xl font-light text-gray-800 mb-4">
                 Explore the world, your way with travel experiences that feel
                 personal, flexible.
               </h3>
-
-              <div className="relative h-[400px] flex items-center justify-center">
-                <div className="absolute w-72 h-64 bg-gray-300 rounded-3xl top-0 left-1/2 transform -translate-x-1/2"></div>
-                <div className="absolute w-48 h-56 bg-gray-300 rounded-3xl bottom-0 right-1/4 transform translate-x-1/2 border-4 border-white"></div>
-              </div>
-
-              <p className="text-gray-600 text-sm leading-relaxed mt-4">
+              <p className="text-gray-600 text-base leading-relaxed">
                 We are a passionate team of explorers, planners, and dreamers
                 dedicated to crafting journeys that match your unique style and
                 pace. From remote mountain trails to vibrant coastal towns, we
@@ -56,20 +71,24 @@ export default function WhoWeAre() {
               </p>
             </div>
 
-            {/* Features List */}
-            <div className="space-y-4">
+            {/* Features */}
+            <div className="space-y-5 mt-4">
               {features.map((feature, index) => (
-                <div key={index} className="flex gap-3">
+                <div key={index} className="flex gap-4 items-start px-4">
                   <div className="flex-shrink-0 mt-1">
-                    <div className="flex items-center justify-center w-6 h-6 rounded-full bg-blue-600">
-                      <CheckCircle2 className="w-4 h-4 text-white" />
-                    </div>
+                    <Image
+                      src="/Icon_Who_We.svg"
+                      alt="check"
+                      width={28}
+                      height={28}
+                      className="w-7 h-7"
+                    />
                   </div>
-                  <div>
-                    <h4 className="font-light text-gray-900 text-sm">
+                  <div className="text-left">
+                    <h4 className="font-medium text-gray-800 text-base">
                       {feature.title}
                     </h4>
-                    <p className="text-gray-600 text-xs mt-1">
+                    <p className="text-gray-600 text-sm mt-1 leading-relaxed">
                       {feature.description}
                     </p>
                   </div>
@@ -79,39 +98,43 @@ export default function WhoWeAre() {
           </div>
         </div>
 
-        {/* Desktop Layout */}
-        <div className="hidden md:grid md:grid-cols-[1.5fr_2fr] gap-12 items-start justify-start">
-          {/* Images Section */}
-          <div className="relative h-[580px] flex items-center justify-center">
-            <div className="absolute w-[440px] h-[500px] bg-gray-300 rounded-3xl top-0 left-0 overflow-hidden">
+        {/* ==================== DESKTOP LAYOUT ==================== */}
+        <div className="hidden md:grid md:grid-cols-[1.5fr_2fr] gap-12 items-center">
+          {/* Images - Desktop */}
+          <div className="relative h-[580px] w-full">
+            <div className="absolute w-[440px] h-[500px] top-0 left-0 rounded-3xl overflow-hidden shadow-xl">
               <Image
                 src="/l3.webp"
-                alt="who-we-are"
+                alt="Main travel scene"
                 fill
                 className="object-cover"
+                sizes="(min-width: 768px) 40vw, 33vw"
+                priority
               />
             </div>
-            <div className="absolute w-[270px] h-[270px] bg-gray-300 rounded-3xl bottom-0 right-0 border-4 border-white overflow-hidden">
+
+            <div className="absolute w-[270px] h-[270px] bottom-8 right-0 rounded-3xl border-4 border-white overflow-hidden shadow-xl">
               <Image
                 src="/l2.webp"
-                alt="who-we-are"
+                alt="Secondary travel moment"
                 fill
                 className="object-cover"
+                sizes="(min-width: 768px) 25vw, 20vw"
               />
             </div>
           </div>
 
-          {/* Content Section */}
-          <div className="flex flex-col gap-8">
-            <div className="">
-              <h3 className="text-blue-600 text-xs font-semibold mb-2">
+          {/* Content */}
+          <div className="flex flex-col gap-10">
+            <div>
+              <h3 className="text-blue-600 text-sm font-semibold mb-3">
                 Who We Are
               </h3>
-              <h3 className="text-3xl font-light text-gray-900 mb-4">
+              <h2 className="text-4xl lg:text-5xl font-light text-gray-800 mb-6 leading-tight">
                 Explore the world, your way with travel experiences that feel
                 personal, flexible.
-              </h3>
-              <p className="text-gray-600 text-[18px] leading-relaxed">
+              </h2>
+              <p className="text-gray-700 text-lg lg:text-xl leading-relaxed">
                 We are a passionate team of explorers, planners, and dreamers
                 dedicated to crafting journeys that match your unique style and
                 pace. From remote mountain trails to vibrant coastal towns, we
@@ -119,28 +142,23 @@ export default function WhoWeAre() {
               </p>
             </div>
 
-            {/* Features List */}
-            <div className="space-y-4">
+            <div className="space-y-6">
               {features.map((feature, index) => (
-                <div key={index} className="flex gap-3">
+                <div key={index} className="flex gap-4">
                   <div className="flex-shrink-0 mt-1">
-                    {/* <div className="flex items-center justify-center w-6 h-6 rounded-full bg-blue-600">
-                      <CheckCircle2 className="w-4 h-4 text-white" />
-                    </div> */}
-
                     <Image
                       src="/Icon_Who_We.svg"
-                      alt="check"
-                      width={24}
-                      height={24}
-                      className="w-6 h-6"
+                      alt="feature icon"
+                      width={32}
+                      height={32}
+                      className="w-8 h-8"
                     />
                   </div>
                   <div>
-                    <h4 className="font-light text-gray-700 text-[21px]">
+                    <h4 className="font-medium text-gray-800 text-xl lg:text-2xl">
                       {feature.title}
                     </h4>
-                    <p className="text-gray-600 text-sm mt-1 text-[16px]">
+                    <p className="text-gray-600 text-base lg:text-lg mt-2">
                       {feature.description}
                     </p>
                   </div>

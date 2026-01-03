@@ -131,6 +131,7 @@ const nextConfig: NextConfig = {
         hostname: 'res.cloudinary.com',
         port: '',
         pathname: '/**',
+        
       },
       // Only allow localhost in development
       ...(process.env.NODE_ENV === 'development' ? [

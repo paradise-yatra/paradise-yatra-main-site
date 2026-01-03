@@ -65,6 +65,8 @@ const HomePageClient = memo(() => {
       <LazyHeroSection />
       {/* <LazyFixedDepartureCarousel /> */}
       <NewTrendingDestinations />
+
+  
       {/* <LazyTrendingDestinations /> */}
       {/* <LazyHolidaysSection /> */}
 

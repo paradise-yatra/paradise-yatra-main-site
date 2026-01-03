@@ -20,6 +20,7 @@
     "@tiptap/starter-kit": "^3.0.9",
     "@types/nodemailer": "^6.4.17",
     "clsx": "^2.1.1",
+    "country-state-city": "^3.2.1",
     "critters": "^0.0.23",
     "date-fns": "^4.1.0",
     "framer-motion": "^12.23.10",
