@@ -56,12 +56,17 @@ interface PackageOrDestination {
 // Function to fetch package or destination by slug
 async function getPackage(slug: string): Promise<PackageOrDestination | null> {
   try {
-    // ✅ CORRECT - Use the environment variable or construct proper API URL
-    let baseUrl = process.env.NEXT_PUBLIC_BACKEND_URL;
+    // Get the backend URL from environment variable
+    let baseUrl = process.env.NEXT_PUBLIC_BACKEND_URL || '';
     
-    // If no environment variable is set, use relative URLs for API calls
+    // Remove /api suffix if it exists to avoid double /api/api/ in URL
+    if (baseUrl && baseUrl.endsWith('/api')) {
+      baseUrl = baseUrl.replace(/\/api$/, '');
+    }
+    
+    // If still no baseUrl, use empty string for relative URLs
     if (!baseUrl) {
-      baseUrl = ''; // Empty string = relative URL (will use /api routes)
+      baseUrl = '';
     }
     
     console.log('Fetching package with baseUrl:', baseUrl, 'slug:', slug);
@@ -92,6 +97,7 @@ async function getPackage(slug: string): Promise<PackageOrDestination | null> {
     return null;
   }
 }
+
 // Generate metadata for SEO
 export async function generateMetadata({ params }: { params: Promise<{ slug: string }> }): Promise<Metadata> {
   const resolvedParams = await params;
