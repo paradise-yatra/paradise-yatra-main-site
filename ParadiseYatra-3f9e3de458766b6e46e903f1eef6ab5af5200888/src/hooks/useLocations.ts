@@ -1,6 +1,140 @@
-import { useState, useEffect, useCallback } from 'react';
+// import { useState, useEffect, useCallback } from 'react';
 
-interface Country {
+// interface Country {
+//   id: number;
+//   name: string;
+//   iso2: string;
+//   iso3: string;
+//   phone_code: string;
+//   capital: string;
+//   currency: string;
+//   currency_symbol: string;
+//   tld: string;
+//   native: string;
+//   region: string;
+//   subregion: string;
+//   timezones: Array<{
+//     zoneName: string;
+//     gmtOffset: number;
+//     gmtOffsetName: string;
+//     abbreviation: string;
+//     tzName: string;
+//   }>;
+//   latitude: string;
+//   longitude: string;
+//   emoji: string;
+//   emojiU: string;
+// }
+
+// interface State {
+//   id: number;
+//   name: string;
+//   state_code?: string;
+//   latitude?: string;
+//   longitude?: string;
+//   type?: string;
+// }
+
+// interface UseLocationsReturn {
+//   countries: Country[];
+//   states: State[];
+//   loading: boolean;
+//   error: string | null;
+//   fetchCountries: () => Promise<void>;
+//   fetchStates: (countryIso2: string) => Promise<void>;
+//   clearStates: () => void;
+//   getCountryByIso2: (iso2: string) => Country | undefined;
+//   getStateById: (stateId: string) => State | undefined;
+// }
+
+// export const useLocations = (): UseLocationsReturn => {
+//   const [countries, setCountries] = useState<Country[]>([]);
+//   const [states, setStates] = useState<State[]>([]);
+//   const [loading, setLoading] = useState(false);
+//   const [error, setError] = useState<string | null>(null);
+
+//   const fetchCountries = useCallback(async () => {
+//     try {
+//       setLoading(true);
+//       setError(null);
+
+//       const response = await fetch('/api/locations/countries');
+//       if (!response.ok) {
+//         throw new Error('Failed to fetch countries');
+//       }
+
+//       const data = await response.json();
+//       setCountries(data.countries || []);
+//     } catch (err) {
+//       setError(err instanceof Error ? err.message : 'Failed to fetch countries');
+//       console.error('Error fetching countries:', err);
+//     } finally {
+//       setLoading(false);
+//     }
+//   }, []);
+
+//   const fetchStates = useCallback(async (countryIso2: string) => {
+//     if (!countryIso2) {
+//       setStates([]);
+//       return;
+//     }
+
+//     try {
+//       setLoading(true);
+//       setError(null);
+
+//       const response = await fetch(`/api/locations/states/${countryIso2}`);
+//       if (!response.ok) {
+//         throw new Error('Failed to fetch states');
+//       }
+
+//       const data = await response.json();
+//       setStates(data.states || []);
+//     } catch (err) {
+//       setError(err instanceof Error ? err.message : 'Failed to fetch states');
+//       console.error('Error fetching states:', err);
+//       setStates([]);
+//     } finally {
+//       setLoading(false);
+//     }
+//   }, []);
+
+//   const clearStates = useCallback(() => {
+//     setStates([]);
+//   }, []);
+
+//   const getCountryByIso2 = useCallback((iso2: string): Country | undefined => {
+//     return countries.find(country => country.iso2 === iso2);
+//   }, [countries]);
+
+//   const getStateById = useCallback((stateId: string): State | undefined => {
+//     return states.find(state => state.id.toString() === stateId);
+//   }, [states]);
+
+//   // Fetch countries on mount
+//   useEffect(() => {
+//     fetchCountries();
+//   }, [fetchCountries]);
+
+//   return {
+//     countries,
+//     states,
+//     loading,
+//     error,
+//     fetchCountries,
+//     fetchStates,
+//     clearStates,
+//     getCountryByIso2,
+//     getStateById
+//   };
+// };
+
+
+import { useState, useCallback, useMemo } from 'react';
+import { Country, State } from 'country-state-city';
+import type { ICountry, IState } from 'country-state-city';
+
+interface CountryData {
   id: number;
   name: string;
   iso2: string;
@@ -26,7 +160,7 @@ interface Country {
   emojiU: string;
 }
 
-interface State {
+interface StateData {
   id: number;
   name: string;
   state_code?: string;
@@ -36,44 +170,75 @@ interface State {
 }
 
 interface UseLocationsReturn {
-  countries: Country[];
-  states: State[];
+  countries: CountryData[];
+  states: StateData[];
   loading: boolean;
   error: string | null;
-  fetchCountries: () => Promise<void>;
-  fetchStates: (countryIso2: string) => Promise<void>;
+  searchQuery: string;
+  filteredCountries: CountryData[];
+  setSearchQuery: (query: string) => void;
+  fetchStates: (countryIso2: string) => void;
   clearStates: () => void;
-  getCountryByIso2: (iso2: string) => Country | undefined;
-  getStateById: (stateId: string) => State | undefined;
+  getCountryByIso2: (iso2: string) => CountryData | undefined;
+  getStateByCode: (stateCode: string) => StateData | undefined;
 }
 
 export const useLocations = (): UseLocationsReturn => {
-  const [countries, setCountries] = useState<Country[]>([]);
-  const [states, setStates] = useState<State[]>([]);
+  const [states, setStates] = useState<StateData[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [searchQuery, setSearchQuery] = useState('');
 
-  const fetchCountries = useCallback(async () => {
+  // Get all countries from country-state-city package
+  const countries = useMemo(() => {
     try {
-      setLoading(true);
-      setError(null);
-
-      const response = await fetch('/api/locations/countries');
-      if (!response.ok) {
-        throw new Error('Failed to fetch countries');
-      }
-
-      const data = await response.json();
-      setCountries(data.countries || []);
+      const allCountries = Country.getAllCountries();
+      return allCountries.map((country: ICountry, index: number) => ({
+        id: index + 1,
+        name: country.name,
+        iso2: country.isoCode,
+        iso3: country.isoCode,
+        phone_code: country.phonecode,
+        capital: '',
+        currency: country.currency || '',
+        currency_symbol: '',
+        tld: '',
+        native: country.name,
+        region: '',
+        subregion: '',
+        timezones: country.timezones?.map((tz: any) => ({
+          zoneName: tz.zoneName,
+          gmtOffset: tz.gmtOffset,
+          gmtOffsetName: tz.gmtOffsetName,
+          abbreviation: tz.abbreviation,
+          tzName: tz.tzName
+        })) || [],
+        latitude: country.latitude,
+        longitude: country.longitude,
+        emoji: '',
+        emojiU: ''
+      }));
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to fetch countries');
-      console.error('Error fetching countries:', err);
-    } finally {
-      setLoading(false);
+      console.error('Error loading countries:', err);
+      return [];
     }
   }, []);
 
-  const fetchStates = useCallback(async (countryIso2: string) => {
+  // Filter countries based on search query
+  const filteredCountries = useMemo(() => {
+    if (!searchQuery.trim()) {
+      return countries;
+    }
+    
+    const query = searchQuery.toLowerCase();
+    return countries.filter(country => 
+      country.name.toLowerCase().includes(query) ||
+      country.iso2.toLowerCase().includes(query) ||
+      country.iso3.toLowerCase().includes(query)
+    );
+  }, [countries, searchQuery]);
+
+  const fetchStates = useCallback((countryIso2: string) => {
     if (!countryIso2) {
       setStates([]);
       return;
@@ -83,13 +248,18 @@ export const useLocations = (): UseLocationsReturn => {
       setLoading(true);
       setError(null);
 
-      const response = await fetch(`/api/locations/states/${countryIso2}`);
-      if (!response.ok) {
-        throw new Error('Failed to fetch states');
-      }
+      const countryStates = State.getStatesOfCountry(countryIso2);
+      
+      const formattedStates = countryStates.map((state: IState, index: number) => ({
+        id: index + 1,
+        name: state.name,
+        state_code: state.isoCode,
+        latitude: state.latitude || '',
+        longitude: state.longitude || '',
+        type: ''
+      }));
 
-      const data = await response.json();
-      setStates(data.states || []);
+      setStates(formattedStates);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to fetch states');
       console.error('Error fetching states:', err);
@@ -103,28 +273,25 @@ export const useLocations = (): UseLocationsReturn => {
     setStates([]);
   }, []);
 
-  const getCountryByIso2 = useCallback((iso2: string): Country | undefined => {
+  const getCountryByIso2 = useCallback((iso2: string): CountryData | undefined => {
     return countries.find(country => country.iso2 === iso2);
   }, [countries]);
 
-  const getStateById = useCallback((stateId: string): State | undefined => {
-    return states.find(state => state.id.toString() === stateId);
+  const getStateByCode = useCallback((stateCode: string): StateData | undefined => {
+    return states.find(state => state.state_code === stateCode);
   }, [states]);
-
-  // Fetch countries on mount
-  useEffect(() => {
-    fetchCountries();
-  }, [fetchCountries]);
 
   return {
     countries,
     states,
     loading,
     error,
-    fetchCountries,
+    searchQuery,
+    filteredCountries,
+    setSearchQuery,
     fetchStates,
     clearStates,
     getCountryByIso2,
-    getStateById
+    getStateByCode
   };
 };

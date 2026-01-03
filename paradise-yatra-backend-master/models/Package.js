@@ -29,6 +29,7 @@ const packageSchema = new mongoose.Schema(
     originalPrice: {
       type: Number,
       min: 0,
+      default: null,
     },
     discount: {
       type: Number,

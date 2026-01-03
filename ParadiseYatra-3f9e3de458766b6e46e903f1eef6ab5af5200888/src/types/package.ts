@@ -2,6 +2,7 @@ export interface Package {
   _id: string;
   title: string;
   slug: string;
+  coverImage?: string; // Add this line to match your API log
   description: string;
   shortDescription: string;
   price: number;

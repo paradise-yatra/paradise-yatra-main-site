@@ -420,6 +420,8 @@ const AdminHolidayTypes = () => {
     }
   };
 
+  
+
   const updateOrder = async (id: string, newOrder: number) => {
     try {
       const token = localStorage.getItem("adminToken");
@@ -464,41 +466,38 @@ const AdminHolidayTypes = () => {
     clearStates();
   };
 
-  const handleEdit = (holidayType: HolidayType) => {
-    setEditingId(holidayType._id);
-    
-    // Find country ISO2 and state code from names
-    const country = countries.find(c => c.name === holidayType.country);
-    
-    if (country?.iso2) {
-      setSelectedCountryIso2(country.iso2);
-      // Fetch states for this country first, then set the state
-      fetchStates(country.iso2).then(() => {
-        // After states are fetched, find and set the state id
-        const state = states.find(s => s.name === holidayType.state);
-        setSelectedStateCode(state?.id?.toString() || '');
-      });
-    } else {
-      setSelectedCountryIso2('');
-      setSelectedStateCode('');
-    }
-    
-    setFormData({
-      title: holidayType.title,
-      description: holidayType.description,
-      shortDescription: holidayType.shortDescription,
-      image: holidayType.image,
-      duration: holidayType.duration,
-      travelers: holidayType.travelers,
-      badge: holidayType.badge,
-      price: holidayType.price,
-      country: holidayType.country,
-      state: holidayType.state,
-      tourType: holidayType.tourType,
-      category: holidayType.category,
-      order: holidayType.order
-    });
-  };
+ const handleEdit = (holidayType: HolidayType) => {
+  setEditingId(holidayType._id);
+  
+  // Find country ISO2 from name
+  const country = countries.find(c => c.name === holidayType.country);
+  
+  if (country?.iso2) {
+    setSelectedCountryIso2(country.iso2);
+    // Fetch states for this country
+    fetchStates(country.iso2);
+  } else {
+    setSelectedCountryIso2('');
+    setSelectedStateCode('');
+  }
+  
+  // Set form data - the state dropdown will update when states are loaded
+  setFormData({
+    title: holidayType.title,
+    description: holidayType.description,
+    shortDescription: holidayType.shortDescription,
+    image: holidayType.image,
+    duration: holidayType.duration,
+    travelers: holidayType.travelers,
+    badge: holidayType.badge,
+    price: holidayType.price,
+    country: holidayType.country,
+    state: holidayType.state,
+    tourType: holidayType.tourType,
+    category: holidayType.category,
+    order: holidayType.order
+  });
+};
 
   const handleCancel = () => {
     setShowCreateForm(false);

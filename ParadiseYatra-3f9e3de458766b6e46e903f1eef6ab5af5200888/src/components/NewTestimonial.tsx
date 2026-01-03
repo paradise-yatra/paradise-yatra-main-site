@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 export default function NewTestimonial() {
   return (
     <div className="max-w-6xl mx-auto mb-12 px-6 md:px-0 lg:px-0">
-      <h1 className="text-5xl font-apple-system font-medium text-gray-900 mb-12">
+      <h1 className="text-5xl font-apple-system font-medium text-gray-600 mb-12">
         Trekkers Highlights
       </h1>
 
@@ -22,7 +22,7 @@ export default function NewTestimonial() {
               />
             </div>
             <div>
-              <h2 className="text-xl font-semibold text-gray-900">
+              <h2 className="text-xl font-semibold text-gray-600">
                 Liam Anderson
               </h2>
               <p className="text-gray-600">Market Explorer</p>
@@ -35,7 +35,7 @@ export default function NewTestimonial() {
             ))}
           </div>
 
-          <h3 className="text-2xl font-bold text-gray-900 mb-4">
+          <h3 className="text-2xl font-bold text-gray-600 mb-4">
             A Colorful Journey Through Marrakechs Spice Souks
           </h3>
 
