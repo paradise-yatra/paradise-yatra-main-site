@@ -886,7 +886,7 @@ const NewAdventureEscapes = () => {
                       <Link href={`/itinerary/${pkg.slug || pkg._id}`}>
                         <Button
                           variant="outline"
-                          className="border-blue-600 text-blue-600 hover:bg-blue-50 cursor-pointer font-semibold px-6 group-hover:border-blue-700 group-hover:text-blue-700 transition-colors"
+                          className="border-blue-600 text-blue-600 hover:bg-blue-100 hover:text-black cursor-pointer font-semibold px-6 group-hover:border-blue-700 group-hover:text-blue-700 transition-colors"
                         >
                           View Details
                           <ArrowRight className="ml-2 h-4 w-4 group-hover:translate-x-1 transition-transform" />

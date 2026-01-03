@@ -1384,7 +1384,7 @@ const NewTrendingDestinations = () => {
                           {pkg.originalPrice && <span className="text-sm text-slate-400 line-through">₹{pkg.originalPrice.toLocaleString()}</span>}
                         </div>
                         <Link href={`/itinerary/${pkg.slug || pkg._id}`} className="w-full">
-                          <Button variant="outline" className="w-full border-blue-600 text-blue-600 h-12 font-semibold hover:bg-blue-50 cursor-pointer">
+                          <Button variant="outline" className="w-full border-blue-600 text-blue-600 h-12 font-semibold hover:bg-blue-50  cursor-pointer">
                             View Details <ArrowRight className="ml-2 h-4 w-4" />
                           </Button>
                         </Link>
@@ -1420,7 +1420,7 @@ const NewTrendingDestinations = () => {
                         {pkg.originalPrice && <span className="text-xs text-slate-400 line-through">₹{pkg.originalPrice.toLocaleString()}</span>}
                       </div>
                       <Link href={`/itinerary/${pkg.slug || pkg._id}`}>
-                        <Button variant="outline" className="border-blue-600 text-blue-600 hover:bg-blue-50 cursor-pointer font-semibold px-6">
+                        <Button variant="outline" className="border-blue-600 text-blue-600 hover:bg-blue-100 hover:text-black cursor-pointer font-semibold px-6">
                           View Details <ArrowRight className="ml-2 h-4 w-4 group-hover:translate-x-1 transition-transform" />
                         </Button>
                       </Link>

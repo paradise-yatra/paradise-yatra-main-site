@@ -958,7 +958,7 @@ const NewDestinationsGrid = () => {
                         </div>
                         <Button
                           variant="outline"
-                          className="border-blue-600 text-blue-600 hover:bg-blue-50 cursor-pointer font-semibold px-6"
+                          className="border-blue-600 text-blue-600 hover:bg-blue-100 hover:text-black cursor-pointer font-semibold px-6"
                         >
                           View Details
                           <ArrowRight className="ml-2 h-4 w-4 group-hover:translate-x-1 transition-transform" />

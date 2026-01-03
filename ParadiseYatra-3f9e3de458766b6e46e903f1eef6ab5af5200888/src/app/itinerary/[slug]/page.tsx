@@ -56,25 +56,19 @@ interface PackageOrDestination {
 // Function to fetch package or destination by slug
 async function getPackage(slug: string): Promise<PackageOrDestination | null> {
   try {
-    // For server-side rendering, we need to construct the full URL
-    let baseUrl = process.env.NEXT_PUBLIC_API_URL || process.env.NEXT_PUBLIC_BACKEND_URL;
+    // ✅ CORRECT - Use the environment variable or construct proper API URL
+    let baseUrl = process.env.NEXT_PUBLIC_BACKEND_URL;
     
-    // If no environment variable is set, construct the URL based on environment
+    // If no environment variable is set, use relative URLs for API calls
     if (!baseUrl) {
-      if (typeof window === 'undefined') {
-        // Server-side rendering - use the production domain or localhost
-        baseUrl = process.env.NODE_ENV === 'production' 
-          ? 'https://paradiseyatra.com' 
-          : 'http://localhost:3000';
-      } else {
-        // Client-side - use relative URL
-        baseUrl = '';
-      }
+      baseUrl = ''; // Empty string = relative URL (will use /api routes)
     }
+    
+    console.log('Fetching package with baseUrl:', baseUrl, 'slug:', slug);
     
     // First try to fetch as package by slug
     let response = await fetch(`${baseUrl}/api/packages/slug/${slug}`, {
-      cache: 'no-store' // Ensure fresh data for SEO
+      cache: 'no-store'
     });
     
     // If package fetch fails, try to fetch as destination by slug
@@ -85,31 +79,19 @@ async function getPackage(slug: string): Promise<PackageOrDestination | null> {
       });
     }
     
-    // If both package and destination fetch fail, try to fetch package by ID (assuming the slug might be an ID)
-    if (!response.ok && response.status === 404) {
-      // Check if the slug looks like a MongoDB ObjectId (24 hex characters)
-      if (/^[0-9a-fA-F]{24}$/.test(slug)) {
-        console.log(`Trying package by ID for slug: ${slug}`);
-        response = await fetch(`${baseUrl}/api/packages/${slug}`, {
-          cache: 'no-store'
-        });
-      }
-    }
-    
     if (!response.ok) {
       console.error(`Failed to fetch package/destination with slug: ${slug}, Status: ${response.status}`);
       return null;
     }
     
     const data = await response.json();
-    console.log(`Successfully fetched package/destination: ${slug}`, data);
+    console.log(`Successfully fetched package/destination: ${slug}`);
     return data;
   } catch (error) {
     console.error('Error fetching package/destination:', error);
     return null;
   }
 }
-
 // Generate metadata for SEO
 export async function generateMetadata({ params }: { params: Promise<{ slug: string }> }): Promise<Metadata> {
   const resolvedParams = await params;
