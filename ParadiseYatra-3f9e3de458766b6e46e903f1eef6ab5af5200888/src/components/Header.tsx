@@ -196,7 +196,7 @@ const Header = () => {
   }, [isMobileMenuOpen]);
 
   const trustItems = [
-    { icon: Star, text: "4.9★", color: "text-yellow-400" },
+    { icon: Star, text: "4.4★", color: "text-yellow-400" },
     { icon: Shield, text: "100% Safe", color: "text-blue-200" },
     { icon: Users, text: "5000+", color: "text-cyan-500" },
     { icon: Headphones, text: "24/7", color: "text-amber-500" },
