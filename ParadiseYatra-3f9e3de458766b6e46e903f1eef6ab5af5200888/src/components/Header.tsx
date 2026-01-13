@@ -3,9 +3,6 @@
 import { Button } from "@/components/ui/button";
 import {
   Menu,
-  Shield,
-  Users,
-  Headphones,
   Star,
   Phone,
   ChevronDown,
@@ -21,11 +18,12 @@ import {
   Building,
   TreePine,
   Camera,
+  Mail,
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useState, useEffect } from "react";
 import LeadCaptureForm from "./LeadCaptureForm";
-import { useRouter } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 
 import { useNavigation } from "@/hooks/useNavigation";
 import Image from "next/image";
@@ -36,6 +34,10 @@ const Header = () => {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [isLeadFormOpen, setIsLeadFormOpen] = useState(false);
   const [isNavigating, setIsNavigating] = useState(false);
+
+  const pathname = usePathname();
+  const isHome = pathname === "/";
+  const isTransparent = isHome && !isScrolled;
 
   // Use the custom hook for dynamic navigation
   const { navItems, loading } = useNavigation();
@@ -195,54 +197,47 @@ const Header = () => {
     };
   }, [isMobileMenuOpen]);
 
-  const trustItems = [
-    { icon: Star, text: "4.4★", color: "text-yellow-400" },
-    { icon: Shield, text: "100% Safe", color: "text-blue-200" },
-    { icon: Users, text: "5000+", color: "text-cyan-500" },
-    { icon: Headphones, text: "24/7", color: "text-amber-500" },
-  ];
+  const TopBar = () => (
+    <div
+      className={`${
+        isTransparent
+          ? "bg-transparent border-transparent"
+          : "bg-slate-50 border-b border-slate-200"
+      } transition-colors duration-300`}
+    >
+      <div className="container mx-auto px-4 sm:px-6">
+        <div className="flex justify-between items-center py-2 text-xs sm:text-sm">
+          <div
+            className={`hidden md:flex items-center space-x-4 ${
+              isTransparent ? "text-white" : "text-slate-600"
+            }`}
+          >
+            <div className="flex items-center space-x-2">
+              <Phone className="h-3 w-3 sm:h-4 sm:w-4" />
+              <span>+91 8979396413</span>
+            </div>
+            <div className="flex items-center space-x-2">
+                  <Mail className="h-4 w-4" />
+                  <span>info@wanderlust.com</span>
+                </div>
+          </div>
+          <div
+            className={`flex items-center space-x-2 ${
+              isTransparent ? "text-white" : "text-slate-600"
+            }`}
+          >
+            <MapPin className="h-3 w-3 sm:h-4 sm:w-4" />
+            <span>Serving travelers worldwide</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
 
   if (loading) {
     return (
       <header className="fixed top-0 left-0 right-0 z-50 w-full">
-        {/* Trust indicators ribbon */}
-        <motion.div
-          initial={{ y: -40 }}
-          animate={{ y: 0 }}
-          transition={{ duration: 0.8, type: "spring" }}
-          className="bg-gradient-to-r from-blue-600 via-purple-600 to-blue-700 text-white"
-        >
-          <div className="container mx-auto px-2 sm:px-4 py-1 sm:py-2">
-            <div className="flex items-center justify-center gap-x-2 sm:gap-x-4 lg:gap-x-8 text-xs">
-              {trustItems.map((item, index) => (
-                <motion.div
-                  key={index}
-                  initial={{ opacity: 0, y: 20 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ delay: index * 0.1, duration: 0.5 }}
-                  whileHover={{ scale: 1.05 }}
-                  className="flex items-center space-x-1"
-                >
-                  <motion.span
-                    animate={{ opacity: [0.8, 1, 0.8], scale: [1, 1.06, 1] }}
-                    transition={{
-                      duration: 1.8,
-                      repeat: Infinity,
-                      repeatType: "mirror",
-                      delay: index * 0.2,
-                    }}
-                    className="flex items-center space-x-1"
-                  >
-                    <item.icon className={`w-3 h-3 ${item.color}`} />
-                    <span className="font-semibold text-xs whitespace-nowrap">
-                      {item.text}
-                    </span>
-                  </motion.span>
-                </motion.div>
-              ))}
-            </div>
-          </div>
-        </motion.div>
+        <TopBar />
 
         {/* Main header with loading state */}
         <motion.div
@@ -336,69 +331,56 @@ const Header = () => {
 
   return (
     <header className="fixed top-0 left-0 right-0 z-50 w-full">
-      {/* Trust indicators ribbon */}
-      <motion.div
-        initial={{ y: -40 }}
-        animate={{ y: 0 }}
-        transition={{ duration: 0.8, type: "spring" }}
-        className="bg-gradient-to-r from-blue-600 via-purple-600 to-blue-700 text-white"
-      >
-        <div className="container mx-auto px-2 sm:px-4 py-1 sm:py-2">
-          <div className="flex items-center justify-center gap-x-2 sm:gap-x-4 lg:gap-x-8 text-xs">
-            {trustItems.map((item, index) => (
-              <motion.div
-                key={index}
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: index * 0.1, duration: 0.5 }}
-                whileHover={{ scale: 1.05 }}
-                className="flex items-center space-x-1"
-              >
-                <motion.span
-                  animate={{ opacity: [0.8, 1, 0.8], scale: [1, 1.06, 1] }}
-                  transition={{
-                    duration: 1.8,
-                    repeat: Infinity,
-                    repeatType: "mirror",
-                    delay: index * 0.2,
-                  }}
-                  className="flex items-center space-x-1"
-                >
-                  <item.icon className={`w-3 h-3 ${item.color}`} />
-                  <span className="font-semibold text-xs whitespace-nowrap">
-                    {item.text}
-                  </span>
-                </motion.span>
-              </motion.div>
-            ))}
-          </div>
-        </div>
-      </motion.div>
+      <TopBar />
 
       {/* Main header */}
       <motion.div
         initial={{ opacity: 0, y: -20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ delay: 0.3, duration: 0.5 }}
-        className={`bg-white/95 backdrop-blur-xl border-b border-gray-100/50 transition-all duration-300 ${
-          isScrolled ? "shadow-lg bg-white/98" : ""
-        }`}
+        className={`transition-all duration-300 ${
+          isTransparent
+            ? "bg-transparent border-transparent"
+            : "bg-white/95 border-gray-100/50"
+        } ${isScrolled && !isTransparent ? "shadow-lg bg-white/98" : ""}`}
       >
         <div className="container mx-auto px-4 sm:px-6">
           <div className="flex items-center h-16 lg:h-20">
             {/* Logo - Left side */}
             <motion.div
               whileHover={{ scale: 1.05 }}
-              className="flex items-center flex-shrink-0 w-40 -ml-2"
+              className="flex items-center flex-shrink-0 -ml-2"
             >
-              <Image
-                src="/headerLogo.png"
-                alt="Paradise Yatra"
-                width={80}
-                height={80}
-                className="w-12 h-12 sm:w-16 sm:h-16 lg:w-20 lg:h-20 hover:cursor-pointer"
+              <button
+                type="button"
                 onClick={() => router.push("/")}
-              />
+                className="flex items-center space-x-2 group"
+              >
+                <div className="relative h-10 w-10 sm:h-11 sm:w-11 rounded-xl overflow-hidden shadow-md group-hover:shadow-lg transition-shadow bg-white">
+                  <Image
+                    src="/favicon.png"
+                    alt="Paradise Yatra"
+                    fill
+                    className="object-contain p-1.5"
+                  />
+                </div>
+                <div className="text-left">
+                  <h1
+                    className={`!text-2xl font-bold ${
+                      isTransparent ? "text-white" : "text-slate-900"
+                    }`}
+                  >
+                    Paradise Yatra
+                  </h1>
+                  <p
+                    className={`text-xs -mt-1 ${
+                      isTransparent ? "!text-white/80" : "text-slate-500"
+                    }`}
+                  >
+                    Yatra To Paradise
+                  </p>
+                </div>
+              </button>
             </motion.div>
 
             {/* Navigation - Desktop - Centered */}
@@ -415,8 +397,11 @@ const Header = () => {
                       onMouseLeave={() => setActiveDropdown(null)}
                     >
                       <motion.button
-                        whileHover={{ color: "#2563eb" }}
-                        className="flex items-center px-3 py-2 text-gray-700 font-medium text-sm rounded-lg hover:bg-blue-50 transition-all duration-300 whitespace-nowrap"
+                        className={`flex items-center px-3 py-2 font-medium text-sm rounded-lg transition-all duration-300 whitespace-nowrap ${
+                          isTransparent
+                            ? "text-white hover:text-white/80 hover:bg-white/10"
+                            : "text-gray-700 hover:text-blue-600 hover:bg-blue-50"
+                        }`}
                       >
                         {IconComponent && (
                           <IconComponent className="w-4 h-4 mr-2" />
@@ -706,7 +691,11 @@ const Header = () => {
             <div className="hidden lg:flex items-center space-x-4 xl:space-x-6 flex-shrink-0 ml-auto xl:ml-8 2xl:ml-auto">
               <motion.div
                 whileHover={{ scale: 1.05 }}
-                className="hidden xl:flex items-center space-x-2 text-sm text-gray-600 hover:text-blue-600 transition-all duration-200 cursor-pointer px-2 py-2 rounded-lg hover:bg-blue-50"
+                className={`hidden xl:flex items-center space-x-2 text-sm cursor-pointer px-2 py-2 rounded-lg transition-all duration-200 ${
+                  isTransparent
+                    ? "text-white hover:text-white/80 hover:bg-white/10"
+                    : "text-gray-600 hover:text-blue-600 hover:bg-blue-50"
+                }`}
               >
                 <Phone className="w-4 h-4" />
                 <span className="whitespace-nowrap">+91 8979396413</span>

@@ -1110,6 +1110,7 @@ export default function CategoryPage({ params }: CategoryPageProps) {
                                                             </svg>
                                                         </a>
                                                     </div>
+
                                                 </div>
                                             </div>
                                         ))}
