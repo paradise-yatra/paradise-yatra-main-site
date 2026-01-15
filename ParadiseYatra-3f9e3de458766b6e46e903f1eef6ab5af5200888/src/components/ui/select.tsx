@@ -114,7 +114,7 @@ const SelectTrigger = React.forwardRef<HTMLButtonElement, SelectTriggerProps>(
     ref
   ) => {
     const baseClasses =
-      "flex h-10 w-full items-center justify-between rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50";
+      "flex h-10 w-full items-center justify-between rounded-md border border-input bg-white px-3 py-2 text-sm ring-offset-background text-gray-700 placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50";
 
     return (
       <button
@@ -225,7 +225,7 @@ interface SelectItemProps {
 const SelectItem = React.forwardRef<HTMLDivElement, SelectItemProps>(
   ({ className = "", children, value, handleSelect, ...props }, ref) => {
     const baseClasses =
-      "relative flex w-full cursor-pointer select-none items-center rounded-sm px-2 py-1.5 text-sm outline-none hover:bg-accent hover:text-accent-foreground data-[disabled]:pointer-events-none data-[disabled]:opacity-50";
+      "relative flex w-full cursor-pointer text-black bg-white select-none items-center rounded-sm px-2 py-1.5 text-sm outline-none hover:bg-accent hover:text-accent-foreground data-[disabled]:pointer-events-none data-[disabled]:opacity-50";
 
     const handleItemSelect = (e: React.MouseEvent | React.TouchEvent) => {
       e.preventDefault();

@@ -69,28 +69,33 @@ async function getPackage(slug: string): Promise<PackageOrDestination | null> {
       baseUrl = '';
     }
     
-    console.log('Fetching package with baseUrl:', baseUrl, 'slug:', slug);
-    
     // First try to fetch as package by slug
     let response = await fetch(`${baseUrl}/api/packages/slug/${slug}`, {
       cache: 'no-store'
     });
     
-    // If package fetch fails, try to fetch as destination by slug
+    // If package fetch fails with 404, try to fetch as destination by slug
     if (!response.ok && response.status === 404) {
-      console.log(`Package not found, trying destination for slug: ${slug}`);
       response = await fetch(`${baseUrl}/api/destinations/slug/${slug}`, {
         cache: 'no-store'
       });
     }
     
+    // If both endpoints failed, log error and return null
     if (!response.ok) {
-      console.error(`Failed to fetch package/destination with slug: ${slug}, Status: ${response.status}`);
+      if (response.status === 404) {
+        // Only log in development, not in production
+        if (process.env.NODE_ENV === 'development') {
+          console.log(`Package/destination not found with slug: ${slug}`);
+        }
+      } else {
+        // Log actual errors (non-404)
+        console.error(`Failed to fetch package/destination with slug: ${slug}, Status: ${response.status}`);
+      }
       return null;
     }
     
     const data = await response.json();
-    console.log(`Successfully fetched package/destination: ${slug}`);
     return data;
   } catch (error) {
     console.error('Error fetching package/destination:', error);
@@ -202,6 +207,7 @@ const ItineraryPage = async ({ params }: { params: Promise<{ slug: string }> }) 
   }
 
   // Normalize the data structure for the client component
+  // Preserve inclusions and exclusions exactly as they come from the database
   const normalizedData = {
     ...packageData,
     title: packageData.title || packageData.name || 'Travel Package',
@@ -214,13 +220,18 @@ const ItineraryPage = async ({ params }: { params: Promise<{ slug: string }> }) 
     duration: packageData.duration || 'N/A',
     category: packageData.category || 'Travel',
     highlights: packageData.highlights || [],
-    inclusions: packageData.inclusions || [],
-    exclusions: packageData.exclusions || [],
+    // Use exact database values - don't override with empty array if they exist
+    inclusions: Array.isArray(packageData.inclusions) ? packageData.inclusions : (packageData.inclusions ? [packageData.inclusions] : []),
+    exclusions: Array.isArray(packageData.exclusions) ? packageData.exclusions : (packageData.exclusions ? [packageData.exclusions] : []),
     rating: packageData.rating || 0,
     reviews: packageData.reviews || [],
     isActive: packageData.isActive !== false,
     isFeatured: packageData.isFeatured || false,
   };
+
+  // Debug log to verify data
+  console.log('Normalized Data - Inclusions:', normalizedData.inclusions);
+  console.log('Normalized Data - Exclusions:', normalizedData.exclusions);
 
   return <ItineraryPageClient packageData={normalizedData} slug={resolvedParams.slug} />;
 };

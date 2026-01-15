@@ -332,6 +332,7 @@ import { useRouter } from "next/navigation";
 import Image from "next/image";
 import Link from "next/link";
 import { getImageUrl } from "@/lib/utils";
+import { motion } from "framer-motion";
 
 interface HolidayType {
   _id: string;
@@ -356,6 +357,7 @@ const NewHolidaysSection = () => {
   const [currentIndex, setCurrentIndex] = useState(0);
   const [isMobile, setIsMobile] = useState(false);
   const [isTransitioning, setIsTransitioning] = useState(false);
+  const [newCardIndex, setNewCardIndex] = useState<number | null>(null);
   const scrollContainerRef = useRef<HTMLDivElement>(null);
   const isScrollingProgrammatically = useRef(false);
 
@@ -427,15 +429,30 @@ const NewHolidaysSection = () => {
   const handlePrevious = () => {
     if (isMobile || isTransitioning || currentIndex === 0) return;
     setIsTransitioning(true);
+    setNewCardIndex(0);
     setCurrentIndex((prev) => prev - 1);
-    setTimeout(() => setIsTransitioning(false), 500);
+    setTimeout(() => {
+      setIsTransitioning(false);
+      setNewCardIndex(null);
+    }, 400);
   };
 
   const handleNext = () => {
     if (isMobile || isTransitioning || currentIndex >= categories.length - 3) return;
     setIsTransitioning(true);
+    setNewCardIndex(2);
     setCurrentIndex((prev) => prev + 1);
-    setTimeout(() => setIsTransitioning(false), 500);
+    setTimeout(() => {
+      setIsTransitioning(false);
+      setNewCardIndex(null);
+    }, 400);
+  };
+
+  const formatDuration = (duration: string) => {
+    if (!duration) return "Contact for details";
+    const match = duration.match(/^(\d+)N\/(\d+)D$/i);
+    if (match) return `${match[2]} Days, ${match[1]} Nights`;
+    return duration;
   };
 
   const handleDotClick = (index: number) => {
@@ -492,32 +509,53 @@ const NewHolidaysSection = () => {
   return (
     <section className="py-16 bg-white">
       <style jsx global>{`
-        @keyframes fadeInUp { 
-          from { opacity: 0; transform: translateY(30px); } 
-          to { opacity: 1; transform: translateY(0); } 
+        @keyframes fadeInSoft {
+          from { opacity: 0; transform: translateY(10px); }
+          to { opacity: 1; transform: translateY(0); }
         }
-        .card-enter { 
-          animation: fadeInUp 0.5s cubic-bezier(0.4, 0, 0.2, 1) forwards; 
+        .card-new {
+          animation: fadeInSoft 0.4s ease-out;
+        }
+        @media (min-width: 768px) {
+          .desktop-card {
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+          }
+          .desktop-card:hover {
+            transform: translateY(-8px);
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.12);
+          }
+          .desktop-card-image {
+            overflow: hidden;
+          }
+          .desktop-card-button {
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+          }
+          .desktop-card:hover .desktop-card-button {
+            transform: translateX(4px);
+            box-shadow: 0 4px 12px rgba(37, 99, 235, 0.25);
+          }
         }
         .mobile-scroll-container {
           scroll-snap-type: x mandatory;
           display: flex;
           overflow-x: auto;
-          gap: 1.25rem;
-          padding: 0 1rem 1.5rem;
+          gap: 0.75rem;
+          padding: 0 0.5rem 1.5rem !important;
           scrollbar-width: none;
           scroll-behavior: smooth;
           -webkit-overflow-scrolling: touch;
+          scroll-padding-left: 0.5rem;
+          scroll-padding-right: 0.5rem;
         }
         .mobile-scroll-container::-webkit-scrollbar { 
           display: none; 
         }
         .mobile-scroll-item { 
-          scroll-snap-align: start;
+          scroll-snap-align: center;
           scroll-snap-stop: always;
           flex-shrink: 0; 
-          width: 85vw; 
-          max-width: 320px; 
+          width: 88vw !important; 
+          max-width: 340px !important;
         }
         
         .pagination-dot {
@@ -543,11 +581,29 @@ const NewHolidaysSection = () => {
       `}</style>
 
       <div className="max-w-7xl mx-auto">
-        <div className="text-center mb-4 relative">
+        <motion.div 
+          className="text-center mb-4 relative"
+          initial={{ opacity: 0, y: -20 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true, margin: "-100px" }}
+          transition={{ duration: 0.6, ease: "easeOut" }}
+        >
           {/* Decorative Background Element */}
-          <div className="absolute left-1/2 -top-10 -translate-x-1/2 w-32 h-32 bg-blue-100/40 blur-3xl rounded-full -z-10" />
+          <motion.div 
+            className="absolute left-1/2 -top-10 -translate-x-1/2 w-32 h-32 bg-blue-100/40 blur-3xl rounded-full -z-10"
+            initial={{ scale: 0, opacity: 0 }}
+            whileInView={{ scale: 1, opacity: 1 }}
+            viewport={{ once: true }}
+            transition={{ duration: 0.8, ease: "easeOut" }}
+          />
 
-          <div className="flex flex-col items-center gap-2 mb-4">
+          <motion.div 
+            className="flex flex-col items-center gap-2 mb-4"
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            transition={{ duration: 0.6, delay: 0.2, ease: "easeOut" }}
+          >
             <h2 className="!text-3xl md:!text-5xl !font-extrabold text-slate-900 tracking-tight">
               <span className="bg-gradient-to-r from-blue-600 to-indigo-600 bg-clip-text text-transparent">
                 Holiday
@@ -556,17 +612,29 @@ const NewHolidaysSection = () => {
             </h2>
 
             {/* Rich accent line */}
-            <div className="flex items-center gap-2 mt-1">
+            <motion.div 
+              className="flex items-center gap-2 mt-1"
+              initial={{ opacity: 0, scale: 0.8 }}
+              whileInView={{ opacity: 1, scale: 1 }}
+              viewport={{ once: true }}
+              transition={{ duration: 0.5, delay: 0.4, ease: "easeOut" }}
+            >
               <div className="h-[2px] w-8 bg-gradient-to-r from-transparent to-blue-500 rounded-full" />
               <div className="h-1.5 w-1.5 rounded-full bg-indigo-600 shadow-[0_0_8px_rgba(79,70,229,0.6)]" />
               <div className="h-[2px] w-8 bg-gradient-to-l from-transparent to-blue-500 rounded-full" />
-            </div>
-          </div>
+            </motion.div>
+          </motion.div>
 
-          <p className="!text-sm md:!text-lg !text-slate-500 max-w-2xl mx-auto leading-relaxed px-4">
+          <motion.p 
+            className="!text-sm md:!text-lg !text-slate-500 max-w-2xl mx-auto leading-relaxed px-4"
+            initial={{ opacity: 0, y: 10 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            transition={{ duration: 0.6, delay: 0.3, ease: "easeOut" }}
+          >
             From beach getaways to mountain adventures, find the perfect holiday type that matches your travel style
-          </p>
-        </div>
+          </motion.p>
+        </motion.div>
 
         {!isMobile && (
           <div className="flex justify-between items-center mb-8">
@@ -596,11 +664,22 @@ const NewHolidaysSection = () => {
         )}
 
         {isMobile ? (
-          <div className="md:hidden -mx-4">
-            <div className="mobile-scroll-container" ref={scrollContainerRef}>
-              {categories.map((category) => (
-                <div key={category._id} className="mobile-scroll-item">
-                  <Card className="overflow-hidden border border-gray-200 h-full bg-white flex flex-col">
+          <div className="md:hidden w-full overflow-x-hidden">
+            <div className="mobile-scroll-container" ref={scrollContainerRef} style={{ paddingLeft: '0.5rem', paddingRight: '0.5rem' }}>
+              {categories.map((category, index) => (
+                <motion.div 
+                  key={category._id} 
+                  className="mobile-scroll-item"
+                  initial={{ opacity: 0, x: 50 }}
+                  whileInView={{ opacity: 1, x: 0 }}
+                  viewport={{ once: true, margin: "-50px" }}
+                  transition={{ 
+                    duration: 0.5, 
+                    delay: index * 0.1,
+                    ease: [0.4, 0.0, 0.2, 1]
+                  }}
+                >
+                  <Card className="overflow-hidden border border-gray-200 h-full bg-white flex flex-col shadow-md">
                     <div className="relative h-52 w-full overflow-hidden">
                       <Image
                         src={getImageUrl(category.image) || FALLBACK_IMAGE}
@@ -611,7 +690,7 @@ const NewHolidaysSection = () => {
                     </div>
                     <CardContent className="flex flex-col flex-grow p-4">
                       <div className="flex items-center text-slate-500 text-xs mb-1">
-                        <MapPin className="h-3 w-3 mr-1" /> {category.duration}
+                        <MapPin className="h-3 w-3 mr-1" /> {formatDuration(category.duration)}
                       </div>
                       <h3 className="!text-lg !font-bold text-slate-900 mb-2 truncate">
                         {category.title}
@@ -636,7 +715,7 @@ const NewHolidaysSection = () => {
                       </div>
                     </CardContent>
                   </Card>
-                </div>
+                </motion.div>
               ))}
             </div>
 
@@ -656,10 +735,21 @@ const NewHolidaysSection = () => {
         ) : (
           <>
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-              {visibleCategories.map((category) => (
-                <div key={category._id} className="card-enter opacity-0">
-                  <Card className="overflow-hidden border border-gray-200 group h-full bg-white">
-                    <div className="relative h-64 overflow-hidden">
+              {visibleCategories.map((category, index) => (
+                <motion.div 
+                  key={category._id}
+                  initial={{ opacity: 0, y: 30 }}
+                  whileInView={{ opacity: 1, y: 0 }}
+                  viewport={{ once: true, margin: "-50px" }}
+                  transition={{ 
+                    duration: 0.5, 
+                    delay: index * 0.1,
+                    ease: [0.4, 0.0, 0.2, 1]
+                  }}
+                  whileHover={{ y: -8, transition: { duration: 0.3 } }}
+                >
+                  <Card className="desktop-card overflow-hidden border border-gray-200 group h-full bg-white">
+                    <div className="desktop-card-image relative h-64 overflow-hidden">
                       <Image
                         src={getImageUrl(category.image) || FALLBACK_IMAGE}
                         alt={category.title}
@@ -669,9 +759,9 @@ const NewHolidaysSection = () => {
                     </div>
                     <CardContent className="p-6">
                       <div className="flex items-center text-slate-500 text-sm mb-2">
-                        <MapPin className="h-4 w-4 mr-1" /> {category.duration}
+                        <MapPin className="h-4 w-4 mr-1" /> {formatDuration(category.duration)}
                       </div>
-                      <h3 className="!text-xl !font-bold text-slate-900 mb-2 truncate group-hover:text-blue-600 transition-colors">
+                      <h3 className="!text-xl !font-bold text-slate-900 mb-2 truncate group-hover:text-blue-600 transition-colors duration-300">
                         {category.title}
                       </h3>
                       <div className="flex items-center text-slate-500 text-sm mb-4">
@@ -687,14 +777,14 @@ const NewHolidaysSection = () => {
                         <Button
                           variant="outline"
                           onClick={() => navigateToDetails(category.slug)}
-                          className="border border-slate-900 text-slate-900 bg-transparent hover:bg-blue-600 hover:text-white hover:border-blue-600 transition-all duration-300 cursor-pointer px-6"
+                          className="desktop-card-button border border-slate-900 text-slate-900 bg-transparent hover:bg-blue-600 hover:text-white hover:border-blue-600 transition-all duration-300 cursor-pointer px-6"
                         >
-                          View Details <ArrowRight className="ml-2 h-4 w-4" />
+                          View Details <ArrowRight className="ml-2 h-4 w-4 transition-transform duration-300 group-hover:translate-x-1" />
                         </Button>
                       </div>
                     </CardContent>
                   </Card>
-                </div>
+                </motion.div>
               ))}
             </div>
 
@@ -714,10 +804,19 @@ const NewHolidaysSection = () => {
           </>
         )}
 
-        <div className="text-center mt-12 px-2">
+        <motion.div 
+          className="text-center mt-12 px-2"
+          initial={{ opacity: 0, y: 20 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true }}
+          transition={{ duration: 0.6, delay: 0.5, ease: "easeOut" }}
+        >
           <Link href="/holiday-types" className="inline-block group">
-            <button
-              className="relative overflow-hidden rounded-full w-full sm:w-auto shadow-xl hover:shadow-indigo-500/40 transition-all duration-300 hover:scale-105 active:scale-95 bg-gradient-to-r from-blue-500 via-blue-600 to-indigo-600"
+            <motion.button
+              className="relative overflow-hidden rounded-full w-full sm:w-auto shadow-xl hover:shadow-indigo-500/40 transition-all duration-300 bg-gradient-to-r from-blue-500 via-blue-600 to-indigo-600"
+              whileHover={{ scale: 1.05 }}
+              whileTap={{ scale: 0.95 }}
+              transition={{ duration: 0.2 }}
             >
               <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-1000"></div>
               <div className="flex items-center justify-center">
@@ -728,9 +827,9 @@ const NewHolidaysSection = () => {
                   <ArrowRight className="w-4 h-4 text-indigo-600" strokeWidth={2.5} />
                 </div>
               </div>
-            </button>
+            </motion.button>
           </Link>
-        </div>
+        </motion.div>
       </div>
     </section>
   );

@@ -1,15 +1,17 @@
 "use client";
 
 import { motion, AnimatePresence } from "framer-motion";
-import { CheckCircle, Loader2, Clock, MapPin, Star, Users, Calendar, Award, Bed, Utensils, Car, Eye, Check, ChevronDown, ChevronUp, Sparkles } from "lucide-react";
+import { CheckCircle, Loader2, Clock, MapPin, Star, Users, Calendar, Award, Bed, Utensils, Car, Eye, Check, ChevronDown, ChevronUp, Sparkles, Plane, Camera, Shield, ArrowRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 import { useState, useEffect } from "react";
 import { DayItineraryCard, InclusionList, PackageHeader } from "@/components/itinerary";
 import { useRouter } from "next/navigation";
 import LeadCaptureForm from "@/components/LeadCaptureForm";
-import { LazyHeader } from "@/components/lazy-components";
+import Header from "@/components/Header";
 
 interface DayItinerary {
   day: number;
@@ -66,13 +68,29 @@ interface ItineraryPageClientProps {
 }
 
 const ItineraryPageClient = ({ packageData, slug }: ItineraryPageClientProps) => {
-  const [expandedDays, setExpandedDays] = useState<number[]>([0, 1]);
+  const [selectedImage, setSelectedImage] = useState(0);
   const [isLeadFormOpen, setIsLeadFormOpen] = useState(false);
-  const [activeSection, setActiveSection] = useState<SectionType>('overview');
   const [otherPackages, setOtherPackages] = useState<any[]>([]);
   const [packagesLoading, setPackagesLoading] = useState(false);
   const router = useRouter();
-  const [showTerms, setShowTerms] = useState(false);
+  
+  // Get gallery images or use single image
+  const galleryImages = packageData?.images && packageData.images.length > 0 
+    ? packageData.images 
+    : packageData?.images?.[0] 
+      ? [packageData.images[0]] 
+      : ["https://images.unsplash.com/photo-1488646953014-85cb44e25828?w=1920&q=80"];
+
+  // Debug: Log inclusions and exclusions to verify data
+  useEffect(() => {
+    console.log('Package Data Inclusions:', packageData?.inclusions);
+    console.log('Package Data Exclusions:', packageData?.exclusions);
+    console.log('Full Package Data:', packageData);
+  }, [packageData]);
+
+  // Ensure we're using the exact database values
+  const inclusions = Array.isArray(packageData?.inclusions) ? packageData.inclusions : [];
+  const exclusions = Array.isArray(packageData?.exclusions) ? packageData.exclusions : [];
 
   useEffect(() => {
     // Small delay is sometimes needed after client navigation
@@ -87,10 +105,10 @@ const ItineraryPageClient = ({ packageData, slug }: ItineraryPageClientProps) =>
     return () => clearTimeout(timer)
   }, [])
 
-  // Fetch other packages when packages section is active
+  // Fetch other packages
   useEffect(() => {
     const fetchOtherPackages = async () => {
-      if (activeSection === 'packages' && otherPackages.length === 0) {
+      if (otherPackages.length === 0) {
         try {
           setPackagesLoading(true);
           
@@ -156,215 +174,7 @@ const ItineraryPageClient = ({ packageData, slug }: ItineraryPageClientProps) =>
     };
 
     fetchOtherPackages();
-  }, [activeSection, packageData?._id, otherPackages.length]);
-
-  const toggleDay = (dayIndex: number) => {
-    setExpandedDays(prev => 
-      prev.includes(dayIndex) 
-        ? prev.filter(d => d !== dayIndex)
-        : [...prev, dayIndex]
-    );
-  };
-
-  const renderSectionContent = () => {
-    switch (activeSection) {
-      case 'overview':
-        return (
-          <div className="space-y-8">
-            <div>
-              <h3 className="text-2xl font-bold text-gray-900 mb-6">About This Tour</h3>
-              <p className="text-gray-700 leading-relaxed text-lg">
-                {packageData?.description}
-              </p>
-            </div>
-          </div>
-        );
-
-      case 'itinerary':
-        return (
-          <div>
-            <h3 className="text-2xl font-bold text-gray-900 mb-4">Detailed Itinerary</h3>
-            {packageData?.itinerary && packageData.itinerary.length > 0 ? (
-              <div className="space-y-3">
-                {packageData.itinerary.map((day: DayItinerary, index: number) => (
-                  <div 
-                    key={index} 
-                    className="bg-gray-50 rounded-lg p-4 cursor-pointer hover:bg-gray-100 transition-colors"
-                    onClick={() => toggleDay(index)}
-                  >
-                    <div className="flex items-center justify-between">
-                      <div className="flex items-center flex-nowrap overflow-hidden min-w-0">
-                        <Badge className="bg-green-100 text-green-800 mr-3 whitespace-nowrap flex-shrink-0">Day {day.day}</Badge>
-                        <span className="text-gray-700 font-medium truncate">{day.title}</span>
-                      </div>
-                      <div className="text-gray-500">
-                        {expandedDays.includes(index) ? (
-                          <ChevronUp className="w-5 h-5" />
-                        ) : (
-                          <ChevronDown className="w-5 h-5" />
-                        )}
-                      </div>
-                    </div>
-                    
-                    <AnimatePresence>
-                      {expandedDays.includes(index) && (
-                        <motion.div
-                          initial={{ opacity: 0, height: 0, marginTop: 0, paddingTop: 0 }}
-                          animate={{ opacity: 1, height: 'auto', marginTop: 16, paddingTop: 16 }}
-                          exit={{ opacity: 0, height: 0, marginTop: 0, paddingTop: 0 }}
-                          transition={{ 
-                            duration: 0.3, 
-                            ease: [0.4, 0.0, 0.2, 1],
-                            opacity: { duration: 0.2 },
-                            height: { duration: 0.3 }
-                          }}
-                          className="border-t border-gray-200 overflow-hidden"
-                        >
-                        <div className="space-y-3">
-                          <div>
-                            <h4 className="font-semibold text-gray-800 mb-2">Activities:</h4>
-                            {Array.isArray(day.activities) && day.activities.length > 0 ? (
-                              <ul className="list-disc list-inside space-y-1 text-gray-600">
-                                {day.activities.map((activity, actIndex) => (
-                                  <li key={actIndex}>{activity}</li>
-                                ))}
-                              </ul>
-                            ) : (
-                              <p className="text-gray-600">No activities specified</p>
-                            )}
-                          </div>
-                        </div>
-                        </motion.div>
-                      )}
-                    </AnimatePresence>
-                  </div>
-                ))}
-              </div>
-            ) : (
-              <div className="text-center py-8 text-gray-500">
-                No itinerary available for this package
-              </div>
-            )}
-          </div>
-        );
-
-      case 'included':
-        return (
-          <div>
-            <h3 className="text-2xl font-bold text-gray-900 mb-4">What's Included</h3>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              <div className="bg-green-50 rounded-lg p-6">
-                <h4 className="text-lg font-semibold text-green-800 mb-4">✅ Included</h4>
-                {Array.isArray(packageData?.inclusions) && packageData.inclusions.length > 0 ? (
-                  <ul className="space-y-3">
-                    {packageData.inclusions.map((inclusion: string, index: number) => (
-                      <li key={index} className="flex items-center text-green-700">
-                        <Check className="w-4 h-4 mr-2 flex-shrink-0" />
-                        {inclusion}
-                      </li>
-                    ))}
-                  </ul>
-                ) : (
-                  <p className="text-gray-500 italic">No inclusions specified</p>
-                )}
-              </div>
-              
-              <div className="bg-red-50 rounded-lg p-6">
-                <h4 className="text-lg font-semibold text-red-800 mb-4">❌ Not Included</h4>
-                {Array.isArray(packageData?.exclusions) && packageData.exclusions.length > 0 ? (
-                  <ul className="space-y-3">
-                    {packageData.exclusions.map((exclusion: string, index: number) => (
-                      <li key={index} className="flex items-center text-red-700">
-                        <span className="w-4 h-4 mr-2 flex-shrink-0">•</span>
-                        {exclusion}
-                      </li>
-                    ))}
-                  </ul>
-                ) : (
-                  <p className="text-gray-500 italic">No exclusions specified</p>
-                )}
-              </div>
-            </div>
-          </div>
-        );
-
-      case 'packages':
-        return (
-          <div>
-            <h3 className="text-2xl font-bold text-gray-900 mb-4">Other Package Suggestions</h3>
-            {packagesLoading ? (
-              <div className="text-center py-8 text-gray-500">
-                <Loader2 className="w-8 h-8 animate-spin mx-auto mb-4 text-blue-600" />
-                <p>Loading other packages...</p>
-              </div>
-            ) : otherPackages.length > 0 ? (
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6 w-full max-w-full overflow-hidden">
-                {otherPackages.map((pkg: any, index: number) => (
-                  <Card key={index} className="shadow-lg border-0 bg-white hover:shadow-xl transition-shadow duration-300 overflow-hidden w-full max-w-full">
-                    {/* Package Image */}
-                    <div className="relative h-48 overflow-hidden">
-                      <img 
-                        src={pkg.image || pkg.images?.[0] || "https://images.unsplash.com/photo-1488646953014-85cb44e25828?ixlib=rb-4.0.3&auto=format&fit=crop&w=500&q=80"} 
-                        alt={pkg.title || pkg.name}
-                        className="w-full h-full object-cover hover:scale-110 transition-transform duration-200"
-                      />
-                      {/* Rating Badge */}
-                      <div className="absolute top-3 right-3 bg-white/90 backdrop-blur-sm rounded-full px-2 py-1 flex items-center">
-                        <Star className="w-4 h-4 text-yellow-400 fill-current mr-1" />
-                        <span className="text-sm font-semibold text-gray-800">{pkg.rating || 4.8}</span>
-                      </div>
-                    </div>
-                    
-                    <CardContent className="p-4 sm:p-6">
-                      <h4 className="text-lg font-semibold text-gray-900 mb-2 line-clamp-2 break-words">{pkg.title || pkg.name}</h4>
-                      <p className="text-gray-600 text-sm mb-4 line-clamp-3 break-words">{pkg.shortDescription || pkg.description}</p>
-                      
-                      <div className="space-y-2 mb-4">
-                        <div className="flex items-center text-gray-700 text-sm">
-                          <MapPin className="w-4 h-4 mr-2 text-blue-500" />
-                          <span className="truncate">{pkg.destination || pkg.location}</span>
-                        </div>
-                        <div className="flex items-center text-gray-700 text-sm">
-                          <Calendar className="w-4 h-4 mr-2 text-green-500" />
-                          <span>{pkg.duration}</span>
-                        </div>
-                        <div className="flex items-center text-gray-700 text-sm">
-                          <Users className="w-4 h-4 mr-2 text-purple-500" />
-                          <span>{pkg.minPeople || 2}-{pkg.maxPeople || 12} People</span>
-                        </div>
-                      </div>
-                      
-                      <div className="flex items-center justify-between mb-4">
-                        <div className="text-2xl font-bold text-blue-600">
-                          {formatPrice(pkg.price)}
-                        </div>
-                        <Badge className="bg-green-100 text-green-800 text-xs">
-                          {pkg.isFeatured ? 'Featured' : 'Popular'}
-                        </Badge>
-                      </div>
-                      
-                      <Button 
-                        onClick={() => router.push(`/destinations/${pkg.slug || pkg._id}`)}
-                        className="w-full bg-blue-600 text-white hover:bg-blue-700 py-3 text-sm font-bold rounded-lg shadow-md transition-all duration-200 transform hover:scale-105"
-                      >
-                        View Details
-                      </Button>
-                    </CardContent>
-                  </Card>
-                ))}
-              </div>
-            ) : (
-              <div className="text-center py-8 text-gray-500">
-                No other packages found for this destination.
-              </div>
-            )}
-          </div>
-        );
-
-      default:
-        return null;
-    }
-  };
+  }, [packageData?._id, otherPackages.length]);
 
   const formatPrice = (price: number) => {
     return `₹${price.toLocaleString('en-IN')}`;
@@ -398,261 +208,496 @@ const ItineraryPageClient = ({ packageData, slug }: ItineraryPageClientProps) =>
     <motion.div 
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
-      transition={{ duration: 0.2, ease: 'easeOut' }}
-      className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-50 mt-15"
+      transition={{ duration: 0.1, ease: 'easeOut' }}
+      className="min-h-screen bg-white"
     >
-      <LazyHeader />
+      <Header />
 
-      {/* Hero Section */}
-      <PackageHeader 
-        title={packageData.title}
-        subtitle={packageData.shortDescription}
-        duration={packageData.duration}
-        location={packageData.destination}
-        rating={packageData.rating.toString()}
-        totalReviews={packageData.reviews.length}
-        coverImage={packageData.images && packageData.images.length > 0 ? packageData.images[0] : ""}
-      />
-
-      <div className="container mx-auto px-4 sm:px-6 py-8 max-w-6xl overflow-hidden">
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 lg:gap-8">
-          <div className="lg:col-span-2 overflow-hidden">
-            {/* Package Info Header */}
-            <div
-              className="bg-white rounded-2xl p-6 shadow-lg border border-gray-100 mb-8 mt-5"
-            >
-              <div className="flex flex-wrap items-center gap-6 mb-6">
-                <div className="flex items-center">
-                  <Star className="w-5 h-5 text-yellow-400 fill-current mr-2" />
-                  <span className="text-gray-700 font-medium">{packageData.rating || 4.8} ({packageData.reviews?.length || 0} reviews)</span>
-                </div>
-                <div className="flex items-center">
-                  <Calendar className="w-5 h-5 text-gray-500 mr-2" />
-                  <span className="text-gray-700 font-medium">{packageData.duration || "7 Days, 6 Nights"}</span>
-                </div>
-                <div className="flex items-center">
-                  <Users className="w-5 h-5 text-gray-500 mr-2" />
-                  <span className="text-gray-700 font-medium">2-12 People</span>
-                </div>
-              </div>
-
-              {/* Navigation Tabs */}
-              <div className="flex space-x-1 bg-gray-100 rounded-lg p-0.5">
-                {(['overview', 'itinerary', 'included', 'packages'] as SectionType[]).map((section) => (
-                  <button
-                    key={section}
-                    onClick={() => setActiveSection(section)}
-                    className={`flex-1 px-2 py-1 rounded-md text-sm font-medium transition-all duration-200 capitalize ${
-                      activeSection === section
-                        ? 'bg-white text-gray-900 shadow-sm'
-                        : 'text-gray-500 hover:text-gray-700'
-                    }`}
-                  >
-                    {section === 'packages' ? 'Other Packages' : section}
-                  </button>
-                ))}
-              </div>
+      {/* Image Gallery */}
+      <section className="relative pt-24 sm:pt-28 lg:pt-32">
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.3 }}
+          className="grid grid-cols-1 lg:grid-cols-3 gap-2 h-60 lg:h-[350px] max-w-7xl mx-auto px-4 sm:px-6"
+        >
+          <div className="lg:col-span-2 relative overflow-hidden rounded-lg">
+            <img 
+              src={galleryImages[selectedImage]} 
+              alt={packageData.title}
+              className="w-full h-full object-cover"
+            />
+            <div className="absolute top-4 left-4">
+              <Badge className="!bg-blue-500 text-white text-sm">
+                {packageData.category}
+              </Badge>
             </div>
+          </div>
+          <div className="hidden lg:flex flex-col gap-2">
+            {galleryImages.slice(1, 3).map((image, index) => (
+              <div 
+                key={index + 1}
+                className="flex-1 relative overflow-hidden rounded-lg cursor-pointer"
+                onClick={() => setSelectedImage(index + 1)}
+              >
+                <img 
+                  src={image} 
+                  alt={`${packageData.title} ${index + 2}`}
+                  className="w-full h-full object-cover hover:scale-110 transition-transform duration-300"
+                />
+              </div>
+            ))}
+            {galleryImages.length > 3 && (
+              <div className="flex-1 relative overflow-hidden rounded-lg cursor-pointer bg-slate-800 flex items-center justify-center">
+                <span className="text-white font-semibold">+{galleryImages.length - 3} Photos</span>
+              </div>
+            )}
+          </div>
+        </motion.div>
+      </section>
 
-            {/* Section Content */}
-            <motion.div 
-              key={activeSection}
-              initial={{ opacity: 0, y: 12 }}
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-12 items-start">
+          {/* Main Content */}
+          <div className="lg:col-span-2 space-y-8">
+            {/* Header */}
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.25, ease: 'easeOut' }}
-              className="bg-white rounded-2xl p-4 sm:p-6 shadow-lg border border-gray-100 mb-8 overflow-hidden"
+              transition={{ duration: 0.2 }}
             >
-              {renderSectionContent()}
-            </motion.div>
-
-            {/* Travel Icons Section */}
-            <motion.div 
-              initial={{ opacity: 0, y: 12 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true }}
-              transition={{ duration: 0.3, ease: 'easeOut' }}
-              className="mt-8 mb-8 bg-white rounded-lg p-4"
-            >
-              <h3 className="text-xl font-semibold text-gray-900 mb-6">What's Included in Your Journey</h3>
-              <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
-                <div className="flex flex-col items-center text-center p-4 bg-blue-50 rounded-lg hover:bg-blue-100 transition-colors">
-                  <Car className="w-8 h-8 text-blue-600 mb-3" />
-                  <span className="text-sm font-medium text-gray-700">Transfers</span>
-                  <span className="text-xs text-gray-500 mt-1">Airport & Local</span>
+              <div className="flex items-center text-slate-500 text-xs sm:text-sm mb-2">
+                <MapPin className="h-3 w-3 sm:h-4 sm:w-4 mr-1" />
+                {packageData.destination}
+              </div>
+              <h1 className="!text-2xl sm:!text-3xl lg:!text-4xl !font-bold !text-slate-900 mb-4">{packageData.title}</h1>
+              <div className="flex flex-wrap items-center gap-3 sm:gap-6 mb-6">
+                <div className="flex items-center space-x-1">
+                  <Star className="h-4 w-4 sm:h-5 sm:w-5 fill-yellow-400 text-yellow-400" />
+                  <span className="!font-semibold text-slate-900 text-sm sm:text-base">{packageData.rating || 4.8}</span>
+                  <span className="text-slate-500 text-xs sm:text-sm">({packageData.reviews?.length || 0} reviews)</span>
                 </div>
-                <div className="flex flex-col items-center text-center p-4 bg-green-50 rounded-lg hover:bg-green-100 transition-colors">
-                  <Eye className="w-8 h-8 text-green-600 mb-3" />
-                  <span className="text-sm font-medium text-gray-700">Sightseeing</span>
-                  <span className="text-xs text-gray-500 mt-1">Guided Tours</span>
+                <div className="flex items-center text-slate-500 text-xs sm:text-sm">
+                  <Calendar className="h-4 w-4 sm:h-5 sm:w-5 mr-1" />
+                  {packageData.duration}
                 </div>
-                <div className="flex flex-col items-center text-center p-4 bg-purple-50 rounded-lg hover:bg-purple-100 transition-colors">
-                  <Bed className="w-8 h-8 text-purple-600 mb-3" />
-                  <span className="text-sm font-medium text-gray-700">Accommodation</span>
-                  <span className="text-xs text-gray-500 mt-1">Quality Hotels</span>
-                </div>
-                <div className="flex flex-col items-center text-center p-4 bg-amber-50 rounded-lg hover:bg-amber-100 transition-colors">
-                  <Utensils className="w-8 h-8 text-amber-600 mb-3" />
-                  <span className="text-sm font-medium text-gray-700">Meals</span>
-                  <span className="text-xs text-gray-500 mt-1">Quality Food</span>
+                <div className="flex items-center text-slate-500 text-xs sm:text-sm">
+                  <Users className="h-4 w-4 sm:h-5 sm:w-5 mr-1" />
+                  2-12 People
                 </div>
               </div>
             </motion.div>
-          </div>
 
-          <div className="lg:col-span-1">
-            <motion.div 
-              initial={{ opacity: 0, x: 16 }}
-              whileInView={{ opacity: 1, x: 0 }}
-              viewport={{ once: true }}
-              transition={{ duration: 0.35, ease: 'easeOut' }}
-              className="sticky top-8 pb-8"
-            >
-              
-              {/* Highlights Section */}
-              <Card className="shadow-lg border-0 bg-gradient-to-br from-yellow-50 to-amber-50 border-l-4 border-yellow-400 mb-6 mt-5">
-                <CardContent className="p-6">
-                  <h3 className="text-xl font-bold text-gray-900 mb-4 flex items-center">
-                    <Sparkles className="w-6 h-6 text-yellow-500 mr-2" />
-                    Highlights
-                  </h3>
-                  {packageData.highlights && packageData.highlights.length > 0 ? (
-                    <div className="space-y-3">
-                      {packageData.highlights.map((highlight: string, index: number) => (
-                        <div key={index} className="flex items-start">
-                          <div className="w-2 h-2 bg-blue-500 rounded-full mt-2 mr-3 flex-shrink-0"></div>
-                          <span className="text-gray-700 text-sm leading-relaxed">{highlight}</span>
-                        </div>
+            {/* Tabs */}
+            <Tabs defaultValue="overview" className="w-full">
+              <TabsList className="grid w-full grid-cols-2 sm:grid-cols-4 gap-1 sm:gap-0 h-auto">
+                <TabsTrigger value="overview" className="text-sm sm:text-sm px-2 sm:px-3 py-2 sm:py-1.5 whitespace-nowrap">Overview</TabsTrigger>
+                <TabsTrigger value="itinerary" className="text-sm sm:text-sm px-2 sm:px-3 py-2 sm:py-1.5 whitespace-nowrap">Itinerary</TabsTrigger>
+                <TabsTrigger value="included" className="text-sm sm:text-sm px-2 sm:px-3 py-2 sm:py-1.5 whitespace-nowrap">Included</TabsTrigger>
+                <TabsTrigger value="packages" className="text-sm sm:text-sm px-2 sm:px-3 py-2 sm:py-1.5 whitespace-nowrap">Other Packages</TabsTrigger>
+              </TabsList>
+
+              <TabsContent value="overview" className="space-y-6 mt-6">
+                <motion.div
+                  initial={{ opacity: 0, y: 10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ duration: 0.3 }}
+                >
+                  <h3 className="!text-2xl !font-bold text-slate-900 mb-4">Package Highlights</h3>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    {packageData.highlights && packageData.highlights.length > 0 ? (
+                      packageData.highlights.map((highlight: string, index: number) => (
+                        <motion.div
+                          key={index}
+                          initial={{ opacity: 0, x: -20 }}
+                          animate={{ opacity: 1, x: 0 }}
+                          transition={{ duration: 0.3, delay: index * 0.1 }}
+                          className="flex items-center space-x-3 p-4 bg-blue-50 rounded-lg"
+                        >
+                          <Check className="h-5 w-5 text-blue-600 flex-shrink-0" />
+                          <span className="text-slate-700 text-base">{highlight}</span>
+                        </motion.div>
+                      ))
+                    ) : (
+                      <p className="text-slate-600">No highlights available</p>
+                    )}
+                  </div>
+                </motion.div>
+
+                <motion.div
+                  initial={{ opacity: 0, y: 10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ duration: 0.3, delay: 0.2 }}
+                >
+                  <h3 className="!text-2xl !font-bold text-slate-900 mb-4">About This Tour</h3>
+                  <p className="!text-slate-600 leading-relaxed">
+                    {packageData.description || packageData.shortDescription}
+                  </p>
+                </motion.div>
+              </TabsContent>
+
+              <TabsContent value="itinerary" className="mt-6">
+                <motion.div
+                  initial={{ opacity: 0, y: 10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ duration: 0.3 }}
+                >
+                  <h3 className="!text-2xl !font-bold text-slate-900 mb-6">Detailed Itinerary</h3>
+                  {packageData?.itinerary && packageData.itinerary.length > 0 ? (
+                    <Accordion type="single" collapsible className="space-y-4">
+                      {packageData.itinerary.map((day: DayItinerary, index: number) => (
+                        <AccordionItem key={index} value={`day-${day.day}`} className="border border-slate-200 rounded-lg">
+                          <AccordionTrigger className="px-6 py-4 hover:bg-slate-50 cursor-pointer">
+                            <div className="flex items-center space-x-4">
+                              <div className="bg-blue-100 text-blue-800 px-3 py-1 rounded-full text-sm font-semibold">
+                                Day {day.day}
+                              </div>
+                              <h4 className="!text-lg !font-semibold !text-left text-slate-900">{day.title}</h4>
+                            </div>
+                          </AccordionTrigger>
+                          <AccordionContent className="px-6 pb-4">
+                            <ul className="space-y-3">
+                              {Array.isArray(day.activities) && day.activities.length > 0 ? (
+                                day.activities.map((activity, actIndex) => (
+                                  <li key={actIndex} className="flex items-start space-x-3">
+                                    <Clock className="h-4 w-4 text-blue-600 mt-1 flex-shrink-0" />
+                                    <span className="text-slate-600">{activity}</span>
+                                  </li>
+                                ))
+                              ) : (
+                                <li className="text-slate-600">No activities specified</li>
+                              )}
+                            </ul>
+                          </AccordionContent>
+                        </AccordionItem>
+                      ))}
+                    </Accordion>
+                  ) : (
+                    <div className="text-center py-8 text-slate-500">
+                      No itinerary available for this package
+                    </div>
+                  )}
+                </motion.div>
+              </TabsContent>
+
+              <TabsContent value="included" className="mt-6">
+                <motion.div
+                  initial={{ opacity: 0, y: 10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ duration: 0.3 }}
+                  className="grid grid-cols-1 md:grid-cols-2 gap-8"
+                >
+                  <div>
+                    <h3 className="!text-2xl !font-bold text-slate-900 mb-6">What's Included</h3>
+                    <ul className="space-y-3">
+                      {inclusions.length > 0 ? (
+                        inclusions.map((item: string, index: number) => (
+                          <li key={index} className="flex items-start space-x-3">
+                            <Check className="h-5 w-5 text-blue-600 mt-0.5 flex-shrink-0" />
+                            <span className="text-slate-600 text-md">{item?.trim() || item}</span>
+                          </li>
+                        ))
+                      ) : (
+                        <li className="text-slate-500 italic">No inclusions specified</li>
+                      )}
+                    </ul>
+                  </div>
+                  
+                  <div>
+                    <h3 className="!text-2xl !font-bold text-slate-900 mb-6">What to Expect</h3>
+                    <div className="space-y-4">
+                      <div className="flex items-center space-x-3 p-3 border rounded-lg">
+                        <Plane className="h-5 w-5 text-blue-600" />
+                        <span className="text-slate-600">Pick-up and drop-off included</span>
+                      </div>
+                      <div className="flex items-center space-x-3 p-3 border rounded-lg">
+                        <Utensils className="h-5 w-5 text-orange-600" />
+                        <span className="text-slate-600">Local cuisine experiences</span>
+                      </div>
+                      <div className="flex items-center space-x-3 p-3 border rounded-lg">
+                        <Camera className="h-5 w-5 text-purple-600" />
+                        <span className="text-slate-600">Professional photo opportunities</span>
+                      </div>
+                      <div className="flex items-center space-x-3 p-3 border rounded-lg">
+                        <Shield className="h-5 w-5 text-green-600" />
+                        <span className="text-slate-600">24/7 support & safety</span>
+                      </div>
+                    </div>
+                  </div>
+                </motion.div>
+
+                {/* Not Included Section */}
+                <motion.div
+                  initial={{ opacity: 0, y: 10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ duration: 0.3, delay: 0.2 }}
+                  className="mt-12"
+                >
+                  <h3 className="!text-2xl !font-bold text-slate-900 mb-6">Not Included</h3>
+                  {exclusions.length > 0 ? (
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                      {exclusions.length <= 4 ? (
+                        // Single column if 4 or fewer items
+                        <ul className="space-y-3">
+                          {exclusions.map((item: string, index: number) => (
+                            <li key={index} className="flex items-start space-x-3">
+                              <div className="h-5 w-5 rounded-full border-2 border-red-500 flex items-center justify-center mt-0.5 flex-shrink-0">
+                                <div className="h-2 w-2 bg-red-500 rounded-full"></div>
+                              </div>
+                              <span className="text-slate-600 text-md">{item?.trim() || item}</span>
+                            </li>
+                          ))}
+                        </ul>
+                      ) : (
+                        // Two columns if more than 4 items
+                        <>
+                          <ul className="space-y-3">
+                            {exclusions.slice(0, Math.ceil(exclusions.length / 2)).map((item: string, index: number) => (
+                              <li key={index} className="flex items-start space-x-3">
+                                <div className="h-5 w-5 rounded-full border-2 border-red-500 flex items-center justify-center mt-0.5 flex-shrink-0">
+                                  <div className="h-2 w-2 bg-red-500 rounded-full"></div>
+                                </div>
+                                <span className="text-slate-600 text-md">{item?.trim() || item}</span>
+                              </li>
+                            ))}
+                          </ul>
+                          <ul className="space-y-3">
+                            {exclusions.slice(Math.ceil(exclusions.length / 2)).map((item: string, index: number) => (
+                              <li key={index + Math.ceil(exclusions.length / 2)} className="flex items-start space-x-3">
+                                <div className="h-5 w-5 rounded-full border-2 border-red-500 flex items-center justify-center mt-0.5 flex-shrink-0">
+                                  <div className="h-2 w-2 bg-red-500 rounded-full"></div>
+                                </div>
+                                <span className="text-slate-600 text-md">{item?.trim() || item}</span>
+                              </li>
+                            ))}
+                          </ul>
+                        </>
+                      )}
+                    </div>
+                  ) : (
+                    <p className="text-slate-500 italic">No exclusions specified</p>
+                  )}
+                </motion.div>
+              </TabsContent>
+
+              <TabsContent value="packages" className="mt-6">
+                <motion.div
+                  initial={{ opacity: 0, y: 10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ duration: 0.3 }}
+                >
+                  <h3 className="!text-2xl !font-bold text-slate-900 mb-6">Similar Packages</h3>
+                  {packagesLoading ? (
+                    <div className="text-center py-8 text-slate-500">
+                      <Loader2 className="w-8 h-8 animate-spin mx-auto mb-4 text-blue-600" />
+                      <p>Loading packages...</p>
+                    </div>
+                  ) : otherPackages.length > 0 ? (
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                      {otherPackages.map((pkg: any, index: number) => (
+                        <motion.div
+                          key={index}
+                          initial={{ opacity: 0, scale: 0.9 }}
+                          animate={{ opacity: 1, scale: 1 }}
+                          transition={{ duration: 0.3, delay: index * 0.1 }}
+                        >
+                          <Card className="overflow-hidden hover:shadow-lg transition-shadow duration-300 group">
+                            <img 
+                              src={pkg.image || pkg.images?.[0] || "https://images.unsplash.com/photo-1488646953014-85cb44e25828?w=500&q=80"} 
+                              alt={pkg.title || pkg.name}
+                              className="w-full h-48 object-cover"
+                            />
+                            <CardContent className="p-4">
+                              <div className="flex items-center text-slate-500 text-sm mb-2">
+                                <MapPin className="h-4 w-4 mr-1" />
+                                {pkg.destination || pkg.location}
+                              </div>
+                              <h4 className="font-semibold text-slate-900 mb-2 line-clamp-2 group-hover:text-blue-600 transition-colors">{pkg.title || pkg.name}</h4>
+                              <div className="flex items-center space-x-1 mb-3">
+                                <Star className="h-4 w-4 fill-yellow-400 text-yellow-400" />
+                                <span className="text-sm font-medium">{pkg.rating || 4.8}</span>
+                                <span className="text-sm text-slate-500">({pkg.reviews || 0})</span>
+                              </div>
+                              <div className="flex items-center justify-between">
+                                <div>
+                                  <span className="text-lg font-bold text-slate-900">{formatPrice(pkg.price)}</span>
+                                  {pkg.originalPrice > pkg.price && (
+                                    <span className="text-sm text-slate-500 line-through ml-2">{formatPrice(pkg.originalPrice)}</span>
+                                  )}
+                                </div>
+                                <Button 
+                                  onClick={() => router.push(`/itinerary/${pkg.slug || pkg._id}`)}
+                                  size="sm" 
+                                  className="bg-gradient-to-r from-blue-500 to-indigo-600 hover:from-blue-600 hover:to-indigo-700 text-white"
+                                >
+                                  View Details
+                                </Button>
+                              </div>
+                            </CardContent>
+                          </Card>
+                        </motion.div>
                       ))}
                     </div>
                   ) : (
-                    <p className="text-gray-500 italic text-sm">No highlights specified</p>
+                    <p className="text-slate-600 text-center py-8">No similar packages found.</p>
                   )}
-                </CardContent>
-              </Card>
+                </motion.div>
+              </TabsContent>
+            </Tabs>
 
-              <Card className="shadow-xl border-0 bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white mb-8 overflow-hidden">
-                <CardContent className="p-6 relative">
-                  {/* Background Pattern */}
-                  <div className="absolute inset-0 bg-gradient-to-br from-blue-600/20 to-indigo-700/20"></div>
-                  <div className="absolute top-0 right-0 w-32 h-32 bg-white/10 rounded-full -translate-y-16 translate-x-16"></div>
-                  <div className="absolute bottom-0 left-0 w-24 h-24 bg-white/5 rounded-full translate-y-12 -translate-x-12"></div>
-                  
-                  <div className="relative z-10">
-                    <h3 className="text-2xl font-bold mb-6 text-white">Plan your trip to {packageData.destination}</h3>
-                    <div className="mb-8">
-                      <div className="flex items-baseline mb-3">
-                        <span className="text-md text-blue-100 mr-2">Starting from</span>
-                        <span className="text-4xl font-bold text-white">{formatPrice(discountedPrice)}</span>
-                        {packageData.originalPrice && (
-                          <span className="text-xl text-blue-100 line-through ml-4">{formatPrice(packageData.originalPrice)}</span>
-                        )}
-                      </div>
-                      {discount > 0 && (
-                        <Badge className="bg-yellow-400 text-yellow-900 text-sm font-bold px-4 py-2 rounded-full shadow-lg">
-                          Save {discount}%
-                        </Badge>
+          </div>
+
+          {/* Booking Sidebar */}
+          <div className="lg:col-span-1">
+            <motion.div 
+              initial={{ opacity: 0, x: 20 }}
+              animate={{ opacity: 1, x: 0 }}
+              transition={{ duration: 0.4 }}
+              className="sticky top-20 sm:top-24 lg:top-28 z-10 self-start"
+            >
+              <Card className="p-6 shadow-lg">
+                <CardContent className="p-0">
+                  <div className="text-center mb-6">
+                    <div className="flex items-center justify-center space-x-2 mb-2">
+                      <span className="text-3xl font-bold text-slate-900">{formatPrice(discountedPrice)}</span>
+                      {packageData.originalPrice && packageData.originalPrice > packageData.price && (
+                        <span className="text-lg text-slate-500 line-through">{formatPrice(packageData.originalPrice)}</span>
                       )}
                     </div>
-                    
-                    <div className="space-y-4">
-                      <Button 
-                        onClick={() => setIsLeadFormOpen(true)}
-                        className="w-full bg-blue-600 text-white hover:bg-blue-700 py-4 text-lg font-bold rounded-xl shadow-lg transition-all duration-200 transform hover:scale-105 border-0 hover:cursor-pointer"
-                      >
-                        Contact Us
-                      </Button>
-                    </div>
-                    
-                    <p className="text-sm text-blue-100 mt-6 text-center font-medium">
-                      Contact our travel experts to plan your perfect journey
-                    </p>
+                    <p className="!text-sm !text-slate-500">per person</p>
+                    {discount > 0 && (
+                      <Badge variant="destructive" className="bg-red-500 text-white mt-2">
+                        Save {discount}%
+                      </Badge>
+                    )}
+                  </div>
+
+                  <div className="space-y-4 mb-6">
+                    <Button 
+                      onClick={() => setIsLeadFormOpen(true)}
+                      className="w-full bg-gradient-to-r from-blue-500 to-indigo-600 hover:from-blue-600 hover:to-indigo-700 text-white py-6 text-lg"
+                    >
+                      Book This Package
+                      <ArrowRight className="ml-2 h-5 w-5" />
+                    </Button>
+                  </div>
+
+                  <div className="border-t pt-6">
+                    <h4 className="font-semibold text-slate-900 mb-4">Why Book With Us?</h4>
+                    <ul className="space-y-3 text-sm">
+                      <li className="flex items-center space-x-2">
+                        <Shield className="h-4 w-4 text-blue-600" />
+                        <span>100% Safe & Secure</span>
+                      </li>
+                      <li className="flex items-center space-x-2">
+                        <Award className="h-4 w-4 text-blue-600" />
+                        <span>Award-Winning Service</span>
+                      </li>
+                      <li className="flex items-center space-x-2">
+                        <Check className="h-4 w-4 text-blue-600" />
+                        <span>24/7 Customer Support</span>
+                      </li>
+                    </ul>
                   </div>
                 </CardContent>
               </Card>
             </motion.div>
           </div>
         </div>
-      </div>
-      {/* Terms and Conditions Section */}
-      <div className="container mx-auto px-2 py-0 max-w-6xl !pb-5 ">
-        <Card className="bg-white rounded-2xl p-0.5 shadow-lg border border-gray-100">
-          <CardContent className="p-0">
-            <div 
-              className="flex items-center justify-between cursor-pointer"
-              onClick={() => setShowTerms(!showTerms)}
-            >
-              <div className="flex items-center">
-                <div className="w-7 h-7 bg-blue-100 rounded-lg flex items-center justify-center mr-2">
-                  <CheckCircle className="w-4 h-4 text-blue-600" />
-                </div>
-                <h3 className="text-xs font-bold text-gray-900">Terms and Conditions</h3>
-              </div>
-              {showTerms ? (
-                <ChevronUp className="w-4 h-4 text-gray-500" />
-              ) : (
-                <ChevronDown className="w-4 h-4 text-gray-500" />
-              )}
-            </div>
+
+        {/* Terms and Conditions Section */}
+        <section className="mt-8 sm:mt-16 pt-8 sm:pt-16 border-t border-slate-200">
+          <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
+            <h2 className="!text-2xl sm:!text-3xl !font-bold text-slate-900 mb-4 sm:mb-8">Terms and Conditions</h2>
             
-            {showTerms && (
-              <motion.div
-                initial={{ opacity: 0, height: 0 }}
-                animate={{ opacity: 1, height: 'auto' }}
-                exit={{ opacity: 0, height: 0 }}
-                transition={{ duration: 0.2, ease: 'easeOut' }}
-                className="mt-2 pt-3 border-t border-gray-200"
-              >
-                <div className="prose prose-xs max-w-none text-gray-600 text-xs">
-                  <div className="font-medium mb-2">
-                    At Paradise Yatra, we aim to provide you with a seamless and enjoyable travel experience. 
-                    Please read the following Terms & Conditions carefully, as they apply to all bookings made with us.
+            <Accordion type="single" collapsible className="space-y-2 sm:space-y-4">
+              <AccordionItem value="booking" className="border border-slate-200 rounded-lg">
+                <AccordionTrigger className="px-3 sm:px-6 py-3 sm:py-4 hover:bg-slate-50">
+                  <h3 className="!text-base sm:!text-xl !font-semibold text-slate-900 text-left">Booking and Payment</h3>
+                </AccordionTrigger>
+                <AccordionContent className="px-3 sm:px-6 pb-3 sm:pb-4">
+                  <ul className="space-y-1.5 sm:space-y-2 text-sm sm:text-base text-slate-600">
+                    <li>• A deposit of 30% is required to confirm your booking</li>
+                    <li>• Full payment must be completed 30 days before departure</li>
+                    <li>• All prices are in INR and include taxes unless otherwise stated</li>
+                    <li>• Payment can be made via credit card, bank transfer, or UPI</li>
+                  </ul>
+                </AccordionContent>
+              </AccordionItem>
+
+              <AccordionItem value="cancellation" className="border border-slate-200 rounded-lg">
+                <AccordionTrigger className="px-3 sm:px-6 py-3 sm:py-4 hover:bg-slate-50">
+                  <h3 className="!text-base sm:!text-xl !font-semibold text-slate-900 text-left">Cancellation Policy</h3>
+                </AccordionTrigger>
+                <AccordionContent className="px-3 sm:px-6 pb-3 sm:pb-4">
+                  <ul className="space-y-1.5 sm:space-y-2 text-sm sm:text-base text-slate-600">
+                    <li>• Cancellation 60+ days before departure: Full refund minus ₹100 processing fee</li>
+                    <li>• Cancellation 30-59 days before departure: 75% refund</li>
+                    <li>• Cancellation 15-29 days before departure: 50% refund</li>
+                    <li>• Cancellation less than 15 days: No refund</li>
+                  </ul>
+                </AccordionContent>
+              </AccordionItem>
+
+              <AccordionItem value="documents" className="border border-slate-200 rounded-lg">
+                <AccordionTrigger className="px-3 sm:px-6 py-3 sm:py-4 hover:bg-slate-50">
+                  <h3 className="!text-base sm:!text-xl !font-semibold text-slate-900 text-left">Travel Documents</h3>
+                </AccordionTrigger>
+                <AccordionContent className="px-3 sm:px-6 pb-3 sm:pb-4">
+                  <ul className="space-y-1.5 sm:space-y-2 text-sm sm:text-base text-slate-600">
+                    <li>• Valid passport required (minimum 6 months validity)</li>
+                    <li>• Visa requirements vary by destination - check with embassy</li>
+                    <li>• Travel insurance is strongly recommended</li>
+                    <li>• All travelers must provide accurate personal information</li>
+                  </ul>
+                </AccordionContent>
+              </AccordionItem>
+
+              <AccordionItem value="health" className="border border-slate-200 rounded-lg">
+                <AccordionTrigger className="px-3 sm:px-6 py-3 sm:py-4 hover:bg-slate-50">
+                  <h3 className="!text-base sm:!text-xl !font-semibold text-slate-900 text-left">Health and Safety</h3>
+                </AccordionTrigger>
+                <AccordionContent className="px-3 sm:px-6 pb-3 sm:pb-4">
+                  <ul className="space-y-1.5 sm:space-y-2 text-sm sm:text-base text-slate-600">
+                    <li>• Participants must be in good physical condition for adventure activities</li>
+                    <li>• Medical conditions must be disclosed before booking</li>
+                    <li>• Follow all safety instructions provided by guides</li>
+                    <li>• Company is not liable for personal injury due to negligence</li>
+                  </ul>
+                </AccordionContent>
+              </AccordionItem>
+
+              <AccordionItem value="force-majeure" className="border border-slate-200 rounded-lg">
+                <AccordionTrigger className="px-3 sm:px-6 py-3 sm:py-4 hover:bg-slate-50">
+                  <h3 className="!text-base sm:!text-xl !font-semibold text-slate-900 text-left">Force Majeure</h3>
+                </AccordionTrigger>
+                <AccordionContent className="px-3 sm:px-6 pb-3 sm:pb-4">
+                  <ul className="space-y-1.5 sm:space-y-2 text-sm sm:text-base text-slate-600">
+                    <li>• Tours may be modified or cancelled due to weather, natural disasters, or political unrest</li>
+                    <li>• Alternative arrangements will be provided when possible</li>
+                    <li>• Refunds will be processed according to circumstances</li>
+                    <li>• Travel insurance is recommended to cover unforeseen events</li>
+                  </ul>
+                </AccordionContent>
+              </AccordionItem>
+
+              <AccordionItem value="important" className="border border-slate-200 rounded-lg">
+                <AccordionTrigger className="px-3 sm:px-6 py-3 sm:py-4 hover:bg-slate-50">
+                  <h3 className="!text-base sm:!text-xl !font-semibold text-slate-900 text-left">Important Notes</h3>
+                </AccordionTrigger>
+                <AccordionContent className="px-3 sm:px-6 pb-3 sm:pb-4">
+                  <div className="bg-blue-50 p-4 sm:p-6 rounded-lg">
+                    <p className="text-sm sm:text-base text-slate-600 leading-relaxed">
+                      By booking this package, you agree to these terms and conditions. We reserve the right to modify 
+                      itineraries due to local conditions while maintaining the quality of your experience. For any 
+                      questions or clarifications, please contact our customer service team.
+                    </p>
                   </div>
-                  
-                  <ol className="list-decimal pl-3 space-y-2">
-                    <li>
-                      <span className="font-medium text-gray-800">Booking & Payment</span>
-                      <ul className="list-disc pl-3 mt-1 space-y-1 text-xs">
-                        <li>A booking shall be considered confirmed only upon receipt of the advance payment.</li>
-                        <li>The remaining balance must be settled prior to the commencement of the trip.</li>
-                        <li>Payments may be made via bank transfer, UPI, debit/credit card, or other approved methods.</li>
-                      </ul>
-                    </li>
-                    
-                    <li>
-                      <span className="font-medium text-gray-800">Itinerary & Changes</span>
-                      <ul className="list-disc pl-3 mt-1 space-y-1 text-xs">
-                        <li>The company reserves the right to alter, amend, or cancel itineraries due to unforeseen circumstances including but not limited to weather conditions, political disturbances, natural calamities, or transportation delays.</li>
-                        <li>In the event of changes, we will endeavor to provide comparable alternatives at no additional cost. However, any extra expenses incurred shall be borne solely by the traveler.</li>
-                      </ul>
-                    </li>
-                    
-                    <li>
-                      <span className="font-medium text-gray-800">Travel Documents & Identification</span>
-                      <ul className="list-disc pl-3 mt-1 space-y-1 text-xs">
-                        <li>All travelers are required to carry valid government-issued identification and any other necessary travel documents throughout the trip.</li>
-                      </ul>
-                    </li>
-                    
-                    <li>
-                      <span className="font-medium text-gray-800">Responsibility for Personal Belongings</span>
-                      <ul className="list-disc pl-3 mt-1 space-y-1 text-xs">
-                        <li>Travelers are responsible for the safety and security of their luggage, valuables, and personal belongings. The company shall not be liable for any loss, theft, or damage.</li>
-                      </ul>
-                    </li>
-                    
-                    <li>
-                      <span className="font-medium text-gray-800">Liability & Insurance</span>
-                      <ul className="list-disc pl-3 mt-1 space-y-1 text-xs">
-                        <li>The company shall not be held responsible for any medical expenses, accidents, injuries, loss of life, or property damage occurring during the trip.</li>
-                        <li>Travelers are strongly advised to secure comprehensive travel and medical insurance prior to departure.</li>
-                      </ul>
-                    </li>
-                  </ol>
-                </div>
-              </motion.div>
-            )}
-          </CardContent>
-        </Card>
+                </AccordionContent>
+              </AccordionItem>
+            </Accordion>
+          </div>
+        </section>
       </div>
 
       {/* Lead Capture Form */}

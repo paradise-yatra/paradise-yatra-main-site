@@ -565,39 +565,61 @@ const NewPremiumPackages = () => {
   const totalMobileDots = allPackages.length;
 
   return (
-    // <section className="py-16 bg-white">
-    <section
+    <section 
       className="py-16 bg-cover bg-center bg-no-repeat relative"
-      style={{ backgroundImage: "url('https://res.cloudinary.com/dwuwpxu0y/image/upload/v1768219728/Abstract_background_of_weathered_wood_in_blue_and_red_tones_1_gmdgpd.jpg')" }}
+      style={{ 
+        backgroundImage: "url('https://res.cloudinary.com/dwuwpxu0y/image/upload/v1768219728/Abstract_background_of_weathered_wood_in_blue_and_red_tones_1_gmdgpd.jpg')"
+      }}
     >
-      <div className="absolute inset-0 bg-gradient-to-b from-white/40 via-white/10 to-transparent pointer-events-none z-0" />
+      <div className="absolute inset-0 bg-gradient-to-b from-white/30 via-black/5 to-black/10 pointer-events-none z-0" />
       <style jsx global>{`
-        @keyframes fadeInUp { 
-          from { opacity: 0; transform: translateY(30px); } 
+        @keyframes fadeInSoft { 
+          from { opacity: 0; transform: translateY(10px); } 
           to { opacity: 1; transform: translateY(0); } 
         }
         .card-enter { 
-          animation: fadeInUp 0.5s cubic-bezier(0.4, 0, 0.2, 1) forwards; 
+          animation: fadeInSoft 0.35s ease-out forwards; 
         }
         .mobile-scroll-container {
           scroll-snap-type: x mandatory;
           display: flex;
           overflow-x: auto;
-          gap: 1.25rem;
-          padding: 0 1rem 1.5rem;
+          gap: 0.75rem;
+          padding: 0 0.5rem 1.5rem !important;
           scrollbar-width: none;
           scroll-behavior: smooth;
           -webkit-overflow-scrolling: touch;
+          scroll-padding-left: 0.5rem;
+          scroll-padding-right: 0.5rem;
         }
         .mobile-scroll-container::-webkit-scrollbar { 
           display: none; 
         }
         .mobile-scroll-item { 
-          scroll-snap-align: start;
+          scroll-snap-align: center;
           scroll-snap-stop: always;
           flex-shrink: 0; 
-          width: 85vw; 
-          max-width: 320px; 
+          width: 88vw !important; 
+          max-width: 340px !important;
+        }
+        @media (min-width: 768px) {
+          .desktop-card {
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+          }
+          .desktop-card:hover {
+            transform: translateY(-8px);
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.12);
+          }
+          .desktop-card-image {
+            overflow: hidden;
+          }
+          .desktop-card-button {
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+          }
+          .desktop-card:hover .desktop-card-button {
+            transform: translateX(4px);
+            box-shadow: 0 4px 12px rgba(37, 99, 235, 0.25);
+          }
         }
 
         .premium-pagination-dot {
@@ -626,21 +648,26 @@ const NewPremiumPackages = () => {
       <div className="max-w-7xl mx-auto">
         <div className="text-center mb-4 relative">
           {/* Decorative Background Element */}
-          <div className="absolute left-1/2 -top-10 -translate-x-1/2 w-32 h-32 bg-indigo-100/40 blur-3xl rounded-full -z-10" />
+          <div className="absolute left-1/2 -top-10 -translate-x-1/2 w-32 h-32 bg-gray-900/40 blur-3xl rounded-full -z-10" />
 
-          <div className="flex flex-col items-center gap-2.5 mb-5 md:mb-6">
-            <h2 className="!text-3xl md:!text-5xl lg:!text-6xl !font-extrabold text-black tracking-tight">
-              Premium Packages
+
+          <div className="flex flex-col items-center gap-2 mb-4">
+            <h2 className="!text-3xl md:!text-5xl !font-extrabold text-slate-900 tracking-tight">
+              <span className="bg-gradient-to-r from-blue-600 to-indigo-600 bg-clip-text text-transparent">
+                Premium
+              </span>{" "}
+              Packages
             </h2>
 
-            <div className="flex items-center gap-3 mt-2">
-              <div className="h-[2px] w-10 bg-gradient-to-r from-transparent via-gray-800 to-transparent rounded-full" />
-              <div className="h-2 w-2 rounded-full bg-black shadow-[0_0_10px_rgba(0,0,0,0.35)]" />
-              <div className="h-[2px] w-10 bg-gradient-to-l from-transparent via-gray-800 to-transparent rounded-full" />
+            {/* Rich accent line */}
+            <div className="flex items-center gap-2 mt-1">
+              <div className="h-[2px] w-8 bg-gradient-to-r from-transparent to-blue-500 rounded-full" />
+              <div className="h-1.5 w-1.5 rounded-full bg-indigo-600 shadow-[0_0_8px_rgba(79,70,229,0.6)]" />
+              <div className="h-[2px] w-8 bg-gradient-to-l from-transparent to-blue-500 rounded-full" />
             </div>
           </div>
 
-          <p className="!text-base md:!text-xl !text-black max-w-2xl mx-auto leading-relaxed px-4 font-semibold">
+          <p className="!text-sm md:!text-lg !text-slate-500 max-w-2xl mx-auto leading-relaxed px-4">
             Indulge in luxury travel experiences, handpicked for unforgettable journeys
           </p>
         </div>
@@ -671,11 +698,11 @@ const NewPremiumPackages = () => {
         )}
 
         {isMobile ? (
-          <div className="md:hidden -mx-4">
-            <div className="mobile-scroll-container" ref={scrollContainerRef}>
+          <div className="md:hidden w-full overflow-x-hidden">
+            <div className="mobile-scroll-container" ref={scrollContainerRef} style={{ paddingLeft: '0.5rem', paddingRight: '0.5rem' }}>
               {allPackages.map((pkg) => (
                 <div key={pkg._id} className="mobile-scroll-item">
-                  <Card className="overflow-hidden border border-gray-200 h-full bg-white flex flex-col">
+                  <Card className="overflow-hidden border border-gray-200 h-full bg-white flex flex-col shadow-md">
                     <div className="relative h-52 w-full overflow-hidden">
                       <SafeImage
                         src={pkg.images[0] || FALLBACK_IMAGE}
@@ -683,9 +710,9 @@ const NewPremiumPackages = () => {
                         fallback={FALLBACK_IMAGE}
                       />
                       {pkg.rating && (
-                        <div className="absolute top-4 right-4 bg-white/90 px-3 py-1 rounded-full flex items-center gap-1">
+                        <div className="absolute top-4 right-4 bg-white/95 backdrop-blur-sm px-3 py-1 rounded-full flex items-center gap-1 shadow-lg">
                           <Star className="h-4 w-4 fill-yellow-400 text-yellow-400" />
-                          <span className="text-sm font-base">{pkg.rating.toFixed(1)}</span>
+                          <span className="text-sm font-semibold">{pkg.rating.toFixed(1)}</span>
                         </div>
                       )}
                     </div>
@@ -742,19 +769,19 @@ const NewPremiumPackages = () => {
         ) : (
           <>
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-              {visiblePackages.map((pkg) => (
+              {visiblePackages.map((pkg, index) => (
                 <div key={pkg._id} className="card-enter opacity-0">
-                  <Card className="overflow-hidden border border-gray-200 group h-full bg-white">
-                    <div className="relative h-64 overflow-hidden">
+                  <Card className="desktop-card overflow-hidden border border-gray-200 group h-full bg-white">
+                    <div className="desktop-card-image relative h-64 overflow-hidden">
                       <SafeImage
                         src={pkg.images[0] || FALLBACK_IMAGE}
                         alt={pkg.title}
                         fallback={FALLBACK_IMAGE}
                       />
                       {pkg.rating && (
-                        <div className="absolute top-4 right-4 bg-white/90 px-3 py-1 rounded-full flex items-center gap-1">
+                        <div className="absolute top-4 right-4 bg-white/95 backdrop-blur-sm px-3 py-1 rounded-full flex items-center gap-1 shadow-lg">
                           <Star className="h-4 w-4 fill-yellow-400 text-yellow-400" />
-                          <span className="text-sm font-base">{pkg.rating.toFixed(1)}</span>
+                          <span className="text-sm font-semibold">{pkg.rating.toFixed(1)}</span>
                         </div>
                       )}
                     </div>
@@ -762,7 +789,7 @@ const NewPremiumPackages = () => {
                       <div className="flex items-center text-slate-500 text-sm mb-2">
                         <MapPin className="h-4 w-4 mr-1" /> {pkg.destination}
                       </div>
-                      <h3 className="!text-xl !font-bold text-slate-900 mb-2 truncate group-hover:text-indigo-600 transition-colors">
+                      <h3 className="!text-xl !font-bold text-slate-900 mb-2 truncate group-hover:text-indigo-600 transition-colors duration-300">
                         {cleanTitle(pkg.title)}
                       </h3>
                       <div className="flex items-center text-slate-500 text-sm mb-4">
@@ -783,9 +810,9 @@ const NewPremiumPackages = () => {
                         <Link href={`/itinerary/${pkg.slug || pkg._id}`}>
                           <Button
                             variant="outline"
-                            className=" border border-slate-900 text-slate-900 bg-transparent hover:bg-indigo-600 hover:text-white hover:border-indigo-600 transition-all duration-300 cursor-pointer px-6"
+                            className="desktop-card-button border border-slate-900 text-slate-900 bg-transparent hover:bg-indigo-600 hover:text-white hover:border-indigo-600 transition-all duration-300 cursor-pointer px-6"
                           >
-                            View Details <ArrowRight className="ml-2 h-4 w-4" />
+                            View Details <ArrowRight className="ml-2 h-4 w-4 transition-transform duration-300 group-hover:translate-x-1" />
                           </Button>
                         </Link>
                       </div>
@@ -814,7 +841,7 @@ const NewPremiumPackages = () => {
         <div className="text-center mt-12 px-2">
           <Link href={getCategoryPageUrl("Premium Packages")} className="inline-block group">
             <button
-              className="relative overflow-hidden rounded-full w-full sm:w-auto shadow-xl hover:shadow-purple-500/40 transition-all duration-300 hover:scale-105 active:scale-95 bg-gradient-to-r from-indigo-500 via-indigo-600 to-purple-600"
+              className="relative overflow-hidden rounded-full w-full sm:w-auto shadow-xl hover:shadow-indigo-500/40 transition-all duration-300 hover:scale-105 active:scale-95 bg-gradient-to-r from-blue-500 via-blue-600 to-indigo-600"
             >
               <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-1000"></div>
               <div className="flex items-center justify-center">
@@ -822,7 +849,7 @@ const NewPremiumPackages = () => {
                   View All Packages
                 </span>
                 <div className="bg-white rounded-full p-2 m-1.5 transition-all duration-300 group-hover:-rotate-45 group-hover:scale-110 shadow-md">
-                  <ArrowRight className="w-4 h-4 text-purple-600" strokeWidth={2.5} />
+                  <ArrowRight className="w-4 h-4 text-indigo-600" strokeWidth={2.5} />
                 </div>
               </div>
             </button>

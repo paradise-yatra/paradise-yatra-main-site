@@ -186,14 +186,20 @@ const Header = () => {
 
   // Prevent body scroll when mobile menu is open
   useEffect(() => {
+    const bodyStyle = document.body.style;
+
     if (isMobileMenuOpen) {
-      document.body.style.overflow = "hidden";
+      bodyStyle.overflowY = "hidden";
     } else {
-      document.body.style.overflow = "unset";
+      bodyStyle.overflowY = "";
     }
 
+    // Always keep horizontal overflow hidden to prevent stray scroll on mobile
+    bodyStyle.overflowX = "hidden";
+
     return () => {
-      document.body.style.overflow = "unset";
+      bodyStyle.overflowY = "";
+      bodyStyle.overflowX = "hidden";
     };
   }, [isMobileMenuOpen]);
 
@@ -202,11 +208,13 @@ const Header = () => {
       className={`${
         isTransparent
           ? "bg-transparent border-transparent"
-          : "bg-slate-50 border-b border-slate-200"
+          : isScrolled
+          ? "bg-slate-50 border-b border-slate-200"
+          : "bg-white border-b border-slate-200"
       } transition-colors duration-300`}
     >
-      <div className="container mx-auto px-4 sm:px-6">
-        <div className="flex justify-between items-center py-2 text-xs sm:text-sm">
+      <div className="max-w-7xl mx-auto px-3 sm:px-4">
+        <div className="flex justify-between items-center py-1.5 sm:py-2 text-xs sm:text-sm">
           <div
             className={`hidden md:flex items-center space-x-4 ${
               isTransparent ? "text-white" : "text-slate-600"
@@ -218,7 +226,7 @@ const Header = () => {
             </div>
             <div className="flex items-center space-x-2">
                   <Mail className="h-4 w-4" />
-                  <span>info@wanderlust.com</span>
+                  <span>sales@paradiseyatra.com</span>
                 </div>
           </div>
           <div
@@ -233,101 +241,6 @@ const Header = () => {
       </div>
     </div>
   );
-
-  if (loading) {
-    return (
-      <header className="fixed top-0 left-0 right-0 z-50 w-full">
-        <TopBar />
-
-        {/* Main header with loading state */}
-        <motion.div
-          initial={{ opacity: 0, y: -20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.3, duration: 0.5 }}
-          className="bg-white/95 backdrop-blur-xl border-b border-gray-100/50"
-        >
-          <div className="container mx-auto px-4 sm:px-6">
-            <div className="flex items-center justify-between h-16 lg:h-20">
-              {/* Logo */}
-              <motion.div
-                whileHover={{ scale: 1.05 }}
-                className="flex items-center flex-shrink-0"
-              >
-                <Image
-                  src="/headerLogo.png"
-                  alt="Paradise Yatra"
-                  width={80}
-                  height={80}
-                  className="w-12 h-12 sm:w-16 sm:h-18 lg:w-20 lg:h-20 hover:cursor-pointer"
-                  onClick={() => router.push("/")}
-                />
-              </motion.div>
-
-              {/* Loading navigation */}
-              <nav className="hidden lg:flex items-center justify-center flex-1 px-8">
-                <div className="animate-pulse flex space-x-4">
-                  <div className="h-4 bg-gray-200 rounded w-28"></div>
-                  <div className="h-4 bg-gray-200 rounded w-32"></div>
-                  <div className="h-4 bg-gray-200 rounded w-36"></div>
-                  <div className="h-4 bg-gray-200 rounded w-24"></div>
-                </div>
-              </nav>
-
-              {/* Right side */}
-              <div className="hidden lg:flex space-x-2 xl:space-x-4 !flex-shrink-0 ml-auto">
-                <motion.div
-                  whileHover={{ scale: 1.05 }}
-                  className="hidden xl:flex items-center space-x-2 text-sm text-gray-600 hover:text-blue-600 transition-all duration-200 cursor-pointer px-3 py-2 rounded-lg hover:bg-blue-50"
-                >
-                  <Phone />
-                  <span>+91 8979396413</span>
-                </motion.div>
-
-                <motion.div
-                  whileHover={{ scale: 1.05 }}
-                  whileTap={{ scale: 0.95 }}
-                >
-                  <Button
-                    onClick={() => setIsLeadFormOpen(true)}
-                    size="sm"
-                    className="bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white font-semibold px-3 xl:px-6 py-2 rounded-lg transition-all duration-300 shadow-lg"
-                  >
-                    Book Now
-                  </Button>
-                </motion.div>
-              </div>
-
-              {/* Mobile menu button */}
-              <motion.div
-                whileHover={{ scale: 1.1 }}
-                whileTap={{ scale: 0.9 }}
-                className="lg:hidden mobile-menu-container ml-auto"
-              >
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  className="p-2 text-gray-700 hover:bg-blue-50 hover:text-blue-600 rounded-full"
-                  onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
-                >
-                  {isMobileMenuOpen ? (
-                    <X className="w-5 h-5" />
-                  ) : (
-                    <Menu className="w-5 h-5" />
-                  )}
-                </Button>
-              </motion.div>
-            </div>
-          </div>
-        </motion.div>
-
-        {/* Lead Capture Form */}
-        <LeadCaptureForm
-          isOpen={isLeadFormOpen}
-          onClose={() => setIsLeadFormOpen(false)}
-        />
-      </header>
-    );
-  }
 
   return (
     <header className="fixed top-0 left-0 right-0 z-50 w-full">
@@ -344,12 +257,12 @@ const Header = () => {
             : "bg-white/95 border-gray-100/50"
         } ${isScrolled && !isTransparent ? "shadow-lg bg-white/98" : ""}`}
       >
-        <div className="container mx-auto px-4 sm:px-6">
-          <div className="flex items-center h-16 lg:h-20">
-            {/* Logo - Left side */}
+        <div className="max-w-7xl mx-auto px-3 sm:px-4">
+          <div className="flex items-center h-14 sm:h-16 lg:h-20">
+            {/* Logo - Left side - Fixed width for balance */}
             <motion.div
               whileHover={{ scale: 1.05 }}
-              className="flex items-center flex-shrink-0 -ml-2"
+              className="flex items-center flex-shrink-0 w-64"
             >
               <button
                 type="button"
@@ -383,8 +296,8 @@ const Header = () => {
               </button>
             </motion.div>
 
-            {/* Navigation - Desktop - Centered */}
-            <nav className="hidden lg:flex flex-1 px-8 ml-20">
+            {/* Navigation - Desktop - Centered with flex-grow */}
+            <nav className="hidden lg:flex flex-1 justify-center">
               <div className="flex items-center space-x-6">
                 {navItems.map((item, index) => {
                   const IconComponent =
@@ -397,7 +310,7 @@ const Header = () => {
                       onMouseLeave={() => setActiveDropdown(null)}
                     >
                       <motion.button
-                        className={`flex items-center px-3 py-2 font-medium text-sm rounded-lg transition-all duration-300 whitespace-nowrap ${
+                        className={`flex items-center px-2 sm:px-3 py-1.5 sm:py-2 font-medium text-xs sm:text-sm rounded-lg transition-all duration-300 whitespace-nowrap ${
                           isTransparent
                             ? "text-white hover:text-white/80 hover:bg-white/10"
                             : "text-gray-700 hover:text-blue-600 hover:bg-blue-50"
@@ -687,18 +600,19 @@ const Header = () => {
               </div>
             </nav>
 
-            {/* Right side - Desktop */}
-            <div className="hidden lg:flex items-center space-x-4 xl:space-x-6 flex-shrink-0 ml-auto xl:ml-8 2xl:ml-auto">
+            {/* Right side - Desktop - Fixed width for balance */}
+            <div className="hidden lg:flex items-center space-x-3 xl:space-x-4 flex-shrink-0 w-64 justify-end">
               <motion.div
                 whileHover={{ scale: 1.05 }}
-                className={`hidden xl:flex items-center space-x-2 text-sm cursor-pointer px-2 py-2 rounded-lg transition-all duration-200 ${
-                  isTransparent
-                    ? "text-white hover:text-white/80 hover:bg-white/10"
-                    : "text-gray-600 hover:text-blue-600 hover:bg-blue-50"
-                }`}
+                whileTap={{ scale: 0.95 }}
               >
-                <Phone className="w-4 h-4" />
-                <span className="whitespace-nowrap">+91 8979396413</span>
+                <Button
+                  onClick={() => router.push('/signup')}
+                  size="sm"
+                  className="bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-600 hover:to-teal-700 hover:cursor-pointer text-white font-semibold px-2.5 sm:px-3 xl:px-4 py-1.5 sm:py-2 rounded-lg transition-all duration-300 shadow-lg whitespace-nowrap text-xs sm:text-sm"
+                >
+                  Sign Up
+                </Button>
               </motion.div>
               <motion.div
                 whileHover={{ scale: 1.05 }}
@@ -707,7 +621,7 @@ const Header = () => {
                 <Button
                   onClick={() => setIsLeadFormOpen(true)}
                   size="sm"
-                  className="bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 hover:cursor-pointer text-white font-semibold px-3 xl:px-4 py-2 rounded-lg transition-all duration-300 shadow-lg whitespace-nowrap"
+                  className="bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 hover:cursor-pointer text-white font-semibold px-2.5 sm:px-3 xl:px-4 py-1.5 sm:py-2 rounded-lg transition-all duration-300 shadow-lg whitespace-nowrap text-xs sm:text-sm"
                 >
                   Book Now
                 </Button>
@@ -723,13 +637,21 @@ const Header = () => {
               <Button
                 variant="ghost"
                 size="sm"
-                className="p-2 text-gray-700 hover:bg-blue-50 hover:text-blue-600 rounded-full"
+                className={`p-1.5 sm:p-2 rounded-full ${
+                  isTransparent
+                    ? "text-white hover:bg-white/10 hover:text-white"
+                    : "text-slate-900 hover:bg-blue-50 hover:text-blue-600"
+                }`}
                 onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
               >
                 {isMobileMenuOpen ? (
-                  <X className="w-5 h-5" />
+                  <X className={`w-10 h-10 ${
+                    isTransparent ? "text-white" : "text-slate-900"
+                  }`} />
                 ) : (
-                  <Menu className="w-5 h-5" />
+                  <Menu className={`w-10 h-10 ${
+                    isTransparent ? "text-white" : "text-slate-900"
+                  }`} />
                 )}
               </Button>
             </motion.div>

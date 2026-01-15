@@ -26,7 +26,7 @@ export default function WhoWeAre() {
   ];
 
   return (
-    <section className="w-full py-12 md:py-20 px-4 md:px-8 lg:px-12 bg-white" >
+    <section className="w-full py-12 md:py-20 px-4 md:px-8 lg:px-12 bg-slate-200" >
       <div className="max-w-7xl mx-auto">
         {/* ==================== MOBILE LAYOUT ==================== */}
         <div className="md:hidden flex flex-col gap-10">
@@ -99,7 +99,7 @@ export default function WhoWeAre() {
         </div>
 
         {/* ==================== DESKTOP LAYOUT ==================== */}
-        <div className="hidden md:grid md:grid-cols-[1.5fr_2fr] gap-12 items-center bg-white">
+        <div className="hidden md:grid md:grid-cols-[1.5fr_2fr] gap-12 items-center bg-slate-200">
           {/* Images - Desktop */}
           <div className="relative h-[580px] w-full">
             <div className="absolute w-[440px] h-[500px] top-0 left-0 rounded-3xl overflow-hidden shadow-xl">

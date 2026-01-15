@@ -885,6 +885,7 @@ const NewAdventureEscapes = () => {
   const [currentIndex, setCurrentIndex] = useState(0);
   const [isMobile, setIsMobile] = useState(false);
   const [isTransitioning, setIsTransitioning] = useState(false);
+  const [newCardIndex, setNewCardIndex] = useState<number | null>(null);
   const scrollContainerRef = useRef<HTMLDivElement>(null);
   const [imageErrors, setImageErrors] = useState<Record<string, boolean>>({});
   const isScrollingProgrammatically = useRef(false);
@@ -962,8 +963,12 @@ const NewAdventureEscapes = () => {
   const handlePrevious = () => {
     if (isMobile || isTransitioning || currentIndex === 0) return;
     setIsTransitioning(true);
+    setNewCardIndex(0);
     setCurrentIndex((prev) => prev - 1);
-    setTimeout(() => setIsTransitioning(false), 500);
+    setTimeout(() => {
+      setIsTransitioning(false);
+      setNewCardIndex(null);
+    }, 400);
   };
 
   const handleNext = () => {
@@ -1070,28 +1075,70 @@ const NewAdventureEscapes = () => {
   return (
     <section className="py-16 bg-slate-50">
       <style jsx global>{`
-        @keyframes fadeInUp {
-          from { opacity: 0; transform: translateY(30px); }
+        @keyframes fadeInSoft {
+          from { opacity: 0; transform: translateY(10px); }
           to { opacity: 1; transform: translateY(0); }
         }
-        .card-enter { 
-          animation: fadeInUp 0.5s cubic-bezier(0.4, 0, 0.2, 1) forwards;
-          opacity: 0;
+        .card-new {
+          animation: fadeInSoft 0.4s ease-out;
+        }
+        @media (min-width: 768px) {
+          .desktop-card {
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+          }
+          .desktop-card:hover {
+            transform: translateY(-8px);
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.12);
+          }
+          .desktop-card-image {
+            overflow: hidden;
+          }
+          .desktop-card-button {
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+          }
+          .desktop-card:hover .desktop-card-button {
+            transform: translateX(4px);
+            box-shadow: 0 4px 12px rgba(37, 99, 235, 0.25);
+          }
         }
         .mobile-scroll-container {
           scroll-snap-type: x mandatory;
           display: flex;
           overflow-x: auto;
-          gap: 1rem;
-          padding: 0 7.5% 1.5rem;
+          gap: 0.75rem;
+          padding: 0 0.5rem 1.5rem !important;
           scrollbar-width: none;
+          scroll-behavior: smooth;
           -webkit-overflow-scrolling: touch;
+          scroll-padding-left: 0.5rem;
+          scroll-padding-right: 0.5rem;
         }
         .mobile-scroll-container::-webkit-scrollbar { display: none; }
         .mobile-scroll-item { 
-          scroll-snap-align: center; 
+          scroll-snap-align: center;
+          scroll-snap-stop: always;
           flex-shrink: 0; 
-          width: 85%; 
+          width: 88vw !important; 
+          max-width: 340px !important;
+        }
+        @media (min-width: 768px) {
+          .desktop-card {
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+          }
+          .desktop-card:hover {
+            transform: translateY(-8px);
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.12);
+          }
+          .desktop-card-image {
+            overflow: hidden;
+          }
+          .desktop-card-button {
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+          }
+          .desktop-card:hover .desktop-card-button {
+            transform: translateX(4px);
+            box-shadow: 0 4px 12px rgba(37, 99, 235, 0.25);
+          }
         }
       `}</style>
 
@@ -1147,11 +1194,11 @@ const NewAdventureEscapes = () => {
 
         {/* Content */}
         {isMobile ? (
-          <div className="md:hidden -mx-4">
-            <div className="mobile-scroll-container" ref={scrollContainerRef}>
+          <div className="md:hidden w-full overflow-x-hidden">
+            <div className="mobile-scroll-container" ref={scrollContainerRef} style={{ paddingLeft: '0.5rem', paddingRight: '0.5rem' }}>
               {allPackages.map((pkg) => (
                 <div key={pkg._id} className="mobile-scroll-item">
-                  <Card className="overflow-hidden border border-gray-200 h-full bg-white flex flex-col">
+                  <Card className="overflow-hidden border border-gray-200 h-full bg-white flex flex-col shadow-md">
                     <div className="relative h-52 w-full overflow-hidden">
                       <Image
                         src={getSafeImage(pkg)}
@@ -1161,9 +1208,9 @@ const NewAdventureEscapes = () => {
                         onError={() => handleImageError(pkg._id)}
                       />
                       {pkg.rating && (
-                        <div className="absolute top-4 right-4 bg-white/90 px-3 py-1 rounded-full flex items-center gap-1">
+                        <div className="absolute top-4 right-4 bg-white/95 backdrop-blur-sm px-3 py-1 rounded-full flex items-center gap-1 shadow-lg">
                           <Star className="h-4 w-4 fill-yellow-400 text-yellow-400" />
-                          <span className="text-sm font-base">{pkg.rating.toFixed(1)}</span>
+                          <span className="text-sm font-semibold">{pkg.rating.toFixed(1)}</span>
                         </div>
                       )}
                     </div>
@@ -1220,10 +1267,10 @@ const NewAdventureEscapes = () => {
         ) : (
           <>
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-              {visiblePackages.map((pkg) => (
-                <div key={pkg._id} className="card-enter opacity-0">
-                  <Card className="overflow-hidden border border-gray-200 group h-full bg-white">
-                    <div className="relative h-64 overflow-hidden">
+              {visiblePackages.map((pkg, index) => (
+                <div key={pkg._id} className={newCardIndex === index ? 'card-new' : ''}>
+                  <Card className="desktop-card overflow-hidden border border-gray-200 group h-full bg-white">
+                    <div className="desktop-card-image relative h-64 overflow-hidden">
                       <Image
                         src={getSafeImage(pkg)}
                         alt={pkg.title}
@@ -1232,9 +1279,9 @@ const NewAdventureEscapes = () => {
                         onError={() => handleImageError(pkg._id)}
                       />
                       {pkg.rating && (
-                        <div className="absolute top-4 right-4 bg-white/90 px-3 py-1 rounded-full flex items-center gap-1">
+                        <div className="absolute top-4 right-4 bg-white/95 backdrop-blur-sm px-3 py-1 rounded-full flex items-center gap-1 shadow-lg">
                           <Star className="h-4 w-4 fill-yellow-400 text-yellow-400" />
-                          <span className="text-sm font-base">{pkg.rating.toFixed(1)}</span>
+                          <span className="text-sm font-semibold">{pkg.rating.toFixed(1)}</span>
                         </div>
                       )}
                     </div>
@@ -1242,7 +1289,7 @@ const NewAdventureEscapes = () => {
                       <div className="flex items-center text-slate-500 text-sm mb-2">
                         <MapPin className="h-4 w-4 mr-1" /> {pkg.destination}
                       </div>
-                      <h3 className="!text-xl !font-bold text-slate-900 mb-2 truncate group-hover:text-blue-600 transition-colors">
+                      <h3 className="!text-xl !font-bold text-slate-900 mb-2 truncate group-hover:text-blue-600 transition-colors duration-300">
                         {cleanTitle(pkg.title)}
                       </h3>
                       <div className="flex items-center text-slate-500 text-sm mb-4">
@@ -1263,9 +1310,9 @@ const NewAdventureEscapes = () => {
                         <Link href={`/itinerary/${pkg.slug || pkg._id}`}>
                           <Button
                             variant="outline"
-                            className=" border border-slate-900 text-slate-900 bg-transparent hover:bg-blue-600 hover:text-white hover:border-blue-600 transition-all duration-300 cursor-pointer px-6"
+                            className="desktop-card-button border border-slate-900 text-slate-900 bg-transparent hover:bg-blue-600 hover:text-white hover:border-blue-600 transition-all duration-300 cursor-pointer px-6"
                           >
-                            View Details <ArrowRight className="ml-2 h-4 w-4" />
+                            View Details <ArrowRight className="ml-2 h-4 w-4 transition-transform duration-300 group-hover:translate-x-1" />
                           </Button>
                         </Link>
                       </div>
