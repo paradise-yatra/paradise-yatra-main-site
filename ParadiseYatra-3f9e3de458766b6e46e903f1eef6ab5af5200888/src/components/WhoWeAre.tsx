@@ -26,7 +26,7 @@ export default function WhoWeAre() {
   ];
 
   return (
-    <section className="w-full py-12 md:py-20 px-4 md:px-8 lg:px-12">
+    <section className="w-full py-12 md:py-20 px-4 md:px-8 lg:px-12 bg-slate-200" >
       <div className="max-w-7xl mx-auto">
         {/* ==================== MOBILE LAYOUT ==================== */}
         <div className="md:hidden flex flex-col gap-10">
@@ -56,7 +56,7 @@ export default function WhoWeAre() {
           {/* Content */}
           <div className="flex flex-col gap-6 text-center px-2">
             <div>
-              <h2 className="text-blue-600 text-sm font-semibold mb-2">
+              <h2 className="text-blue-600 text-sm !font-semibold mb-2">
                 Who We Are
               </h2>
               <h3 className="text-2xl sm:text-3xl font-light text-gray-800 mb-4">
@@ -99,7 +99,7 @@ export default function WhoWeAre() {
         </div>
 
         {/* ==================== DESKTOP LAYOUT ==================== */}
-        <div className="hidden md:grid md:grid-cols-[1.5fr_2fr] gap-12 items-center">
+        <div className="hidden md:grid md:grid-cols-[1.5fr_2fr] gap-12 items-center bg-slate-200">
           {/* Images - Desktop */}
           <div className="relative h-[580px] w-full">
             <div className="absolute w-[440px] h-[500px] top-0 left-0 rounded-3xl overflow-hidden shadow-xl">
@@ -127,7 +127,7 @@ export default function WhoWeAre() {
           {/* Content */}
           <div className="flex flex-col gap-10">
             <div>
-              <h3 className="text-blue-600 text-sm font-semibold mb-3">
+              <h3 className="text-blue-600 text-sm !font-semibold mb-3">
                 Who We Are
               </h3>
               <h2 className="text-4xl lg:text-5xl font-light text-gray-800 mb-6 leading-tight">

@@ -10,7 +10,7 @@ export const LazyHeader = createLazyComponent(
   <div className="min-h-[80px] bg-white flex items-center justify-center">
     <Skeleton height="40px" width="200px" />
   </div>,
-  { threshold: 0.1, rootMargin: "100px" }
+  { threshold: 0, rootMargin: "0px" }
 );
 
 export const LazyHeroSection = createLazyComponent(

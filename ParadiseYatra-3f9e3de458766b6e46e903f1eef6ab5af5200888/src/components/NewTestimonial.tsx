@@ -4,7 +4,8 @@ import { Button } from "@/components/ui/button";
 
 export default function NewTestimonial() {
   return (
-    <div className="max-w-6xl mx-auto mb-12 px-6 md:px-0 lg:px-0">
+    <section className="w-full py-12 md:py-20 px-4 md:px-8 lg:px-12 bg-slate-200">
+      <div className="max-w-6xl mx-auto mb-12 px-6 md:px-0 lg:px-0">
       <h1 className="text-5xl font-apple-system font-medium text-gray-600 mb-12">
         Trekkers Highlights
       </h1>
@@ -83,6 +84,7 @@ export default function NewTestimonial() {
           </Button>
         </div>
       </div>
-    </div>
+      </div>
+    </section>
   );
 }
