@@ -35,16 +35,12 @@ export default function DreamsReality() {
               </h1>
             </div>
 
-            <div className="space-y-4 text-gray-600">
-              <p className="text-base leading-relaxed md:text-lg">
-                Li Europan lingues es membres del sam familie. Lor separat
-                existentie es un myth. Por scientie, musica, sport etc, liot
-                Europa usa li sam vocabular.Lor separat existentie es un myth.
-              </p>
-              <p className="text-base leading-relaxed md:text-lg">
-                On refusa continuar payar custosi traductores. At solmen va
-                esser necessi far uniform grammatica, pronunciation et plu
-                sommun paroles.
+            <div className="space-y-4 ">
+              <p className="text-base !text-gray-600 leading-relaxed md:text-lg">
+                Our dedicated team of travel experts works tirelessly to curate journeys that go beyond 
+                the ordinary. From the moment you share your vision until you return home with cherished 
+                memories, we handle every detail with precision and care, ensuring your dream vacation 
+                becomes a beautiful reality.
               </p>
             </div>
 

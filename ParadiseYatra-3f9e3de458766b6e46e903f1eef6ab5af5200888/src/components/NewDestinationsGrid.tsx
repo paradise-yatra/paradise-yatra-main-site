@@ -550,7 +550,7 @@ const NewDestinationsGrid = () => {
   const handlePrevious = () => {
     if (isMobile || isTransitioning || currentIndex === 0) return;
     setIsTransitioning(true);
-    setNewCardIndex(0);
+    setNewCardIndex(0); // New card appears at leftmost position (index 0)
     setCurrentIndex((prev) => prev - 1);
     setTimeout(() => {
       setIsTransitioning(false);
@@ -561,9 +561,12 @@ const NewDestinationsGrid = () => {
   const handleNext = () => {
     if (isMobile || isTransitioning || currentIndex >= allDestinations.length - 3) return;
     setIsTransitioning(true);
-    setNewCardIndex(2);
+    setNewCardIndex(2); // New card appears at rightmost position (index 2)
     setCurrentIndex((prev) => prev + 1);
-    setTimeout(() => setIsTransitioning(false), 500);
+    setTimeout(() => {
+      setIsTransitioning(false);
+      setNewCardIndex(null);
+    }, 400);
   };
 
   const handleDotClick = (index: number) => {
@@ -642,8 +645,8 @@ const NewDestinationsGrid = () => {
           from { opacity: 0; transform: translateY(10px); }
           to { opacity: 1; transform: translateY(0); }
         }
-        .card-new {
-          animation: fadeInSoft 0.4s ease-out;
+        .card-enter {
+          animation: fadeInSoft 0.35s ease-out forwards;
         }
         @media (min-width: 768px) {
           .desktop-card {
@@ -857,7 +860,7 @@ const NewDestinationsGrid = () => {
             {/* Desktop Grid View */}
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
               {visibleDestinations.map((destination, index) => (
-                <div key={destination._id} className={newCardIndex === index ? 'card-new' : ''}>
+                <div key={destination._id} className={newCardIndex === index ? 'card-enter' : ''}>
                   <Card className="desktop-card overflow-hidden border border-gray-200 group h-full bg-white">
                     <div className="desktop-card-image relative h-64 overflow-hidden">
                       <Image
@@ -919,7 +922,7 @@ const NewDestinationsGrid = () => {
         <div className="text-center mt-12 px-2">
           <Link href={getCategoryPageUrl("Popular Destinations")} className="inline-block group">
             <button
-              className="relative overflow-hidden rounded-full w-full sm:w-auto shadow-xl hover:shadow-indigo-500/40 transition-all duration-300 hover:scale-105 active:scale-95 bg-gradient-to-r from-blue-500 via-blue-600 to-indigo-600"
+              className="relative overflow-hidden rounded-full w-full sm:w-auto shadow-xl transition-all duration-300 bg-gradient-to-r from-blue-500 via-blue-600 to-indigo-600"
             >
               <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-1000"></div>
               <div className="flex items-center justify-center">

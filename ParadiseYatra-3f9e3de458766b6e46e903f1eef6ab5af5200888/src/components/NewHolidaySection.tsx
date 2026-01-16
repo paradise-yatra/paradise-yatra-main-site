@@ -332,7 +332,6 @@ import { useRouter } from "next/navigation";
 import Image from "next/image";
 import Link from "next/link";
 import { getImageUrl } from "@/lib/utils";
-import { motion } from "framer-motion";
 
 interface HolidayType {
   _id: string;
@@ -429,7 +428,7 @@ const NewHolidaysSection = () => {
   const handlePrevious = () => {
     if (isMobile || isTransitioning || currentIndex === 0) return;
     setIsTransitioning(true);
-    setNewCardIndex(0);
+    setNewCardIndex(0); // New card appears at leftmost position (index 0)
     setCurrentIndex((prev) => prev - 1);
     setTimeout(() => {
       setIsTransitioning(false);
@@ -440,7 +439,7 @@ const NewHolidaysSection = () => {
   const handleNext = () => {
     if (isMobile || isTransitioning || currentIndex >= categories.length - 3) return;
     setIsTransitioning(true);
-    setNewCardIndex(2);
+    setNewCardIndex(2); // New card appears at rightmost position (index 2)
     setCurrentIndex((prev) => prev + 1);
     setTimeout(() => {
       setIsTransitioning(false);
@@ -513,8 +512,8 @@ const NewHolidaysSection = () => {
           from { opacity: 0; transform: translateY(10px); }
           to { opacity: 1; transform: translateY(0); }
         }
-        .card-new {
-          animation: fadeInSoft 0.4s ease-out;
+        .card-enter {
+          animation: fadeInSoft 0.35s ease-out forwards;
         }
         @media (min-width: 768px) {
           .desktop-card {
@@ -581,29 +580,11 @@ const NewHolidaysSection = () => {
       `}</style>
 
       <div className="max-w-7xl mx-auto">
-        <motion.div 
-          className="text-center mb-4 relative"
-          initial={{ opacity: 0, y: -20 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: true, margin: "-100px" }}
-          transition={{ duration: 0.6, ease: "easeOut" }}
-        >
+        <div className="text-center mb-4 relative">
           {/* Decorative Background Element */}
-          <motion.div 
-            className="absolute left-1/2 -top-10 -translate-x-1/2 w-32 h-32 bg-blue-100/40 blur-3xl rounded-full -z-10"
-            initial={{ scale: 0, opacity: 0 }}
-            whileInView={{ scale: 1, opacity: 1 }}
-            viewport={{ once: true }}
-            transition={{ duration: 0.8, ease: "easeOut" }}
-          />
+          <div className="absolute left-1/2 -top-10 -translate-x-1/2 w-32 h-32 bg-blue-100/40 blur-3xl rounded-full -z-10" />
 
-          <motion.div 
-            className="flex flex-col items-center gap-2 mb-4"
-            initial={{ opacity: 0, y: 20 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
-            transition={{ duration: 0.6, delay: 0.2, ease: "easeOut" }}
-          >
+          <div className="flex flex-col items-center gap-2 mb-4">
             <h2 className="!text-3xl md:!text-5xl !font-extrabold text-slate-900 tracking-tight">
               <span className="bg-gradient-to-r from-blue-600 to-indigo-600 bg-clip-text text-transparent">
                 Holiday
@@ -612,29 +593,17 @@ const NewHolidaysSection = () => {
             </h2>
 
             {/* Rich accent line */}
-            <motion.div 
-              className="flex items-center gap-2 mt-1"
-              initial={{ opacity: 0, scale: 0.8 }}
-              whileInView={{ opacity: 1, scale: 1 }}
-              viewport={{ once: true }}
-              transition={{ duration: 0.5, delay: 0.4, ease: "easeOut" }}
-            >
+            <div className="flex items-center gap-2 mt-1">
               <div className="h-[2px] w-8 bg-gradient-to-r from-transparent to-blue-500 rounded-full" />
               <div className="h-1.5 w-1.5 rounded-full bg-indigo-600 shadow-[0_0_8px_rgba(79,70,229,0.6)]" />
               <div className="h-[2px] w-8 bg-gradient-to-l from-transparent to-blue-500 rounded-full" />
-            </motion.div>
-          </motion.div>
+            </div>
+          </div>
 
-          <motion.p 
-            className="!text-sm md:!text-lg !text-slate-500 max-w-2xl mx-auto leading-relaxed px-4"
-            initial={{ opacity: 0, y: 10 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
-            transition={{ duration: 0.6, delay: 0.3, ease: "easeOut" }}
-          >
+          <p className="!text-sm md:!text-lg !text-slate-500 max-w-2xl mx-auto leading-relaxed px-4">
             From beach getaways to mountain adventures, find the perfect holiday type that matches your travel style
-          </motion.p>
-        </motion.div>
+          </p>
+        </div>
 
         {!isMobile && (
           <div className="flex justify-between items-center mb-8">
@@ -666,19 +635,8 @@ const NewHolidaysSection = () => {
         {isMobile ? (
           <div className="md:hidden w-full overflow-x-hidden">
             <div className="mobile-scroll-container" ref={scrollContainerRef} style={{ paddingLeft: '0.5rem', paddingRight: '0.5rem' }}>
-              {categories.map((category, index) => (
-                <motion.div 
-                  key={category._id} 
-                  className="mobile-scroll-item"
-                  initial={{ opacity: 0, x: 50 }}
-                  whileInView={{ opacity: 1, x: 0 }}
-                  viewport={{ once: true, margin: "-50px" }}
-                  transition={{ 
-                    duration: 0.5, 
-                    delay: index * 0.1,
-                    ease: [0.4, 0.0, 0.2, 1]
-                  }}
-                >
+              {categories.map((category) => (
+                <div key={category._id} className="mobile-scroll-item">
                   <Card className="overflow-hidden border border-gray-200 h-full bg-white flex flex-col shadow-md">
                     <div className="relative h-52 w-full overflow-hidden">
                       <Image
@@ -715,7 +673,7 @@ const NewHolidaysSection = () => {
                       </div>
                     </CardContent>
                   </Card>
-                </motion.div>
+                </div>
               ))}
             </div>
 
@@ -736,18 +694,7 @@ const NewHolidaysSection = () => {
           <>
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
               {visibleCategories.map((category, index) => (
-                <motion.div 
-                  key={category._id}
-                  initial={{ opacity: 0, y: 30 }}
-                  whileInView={{ opacity: 1, y: 0 }}
-                  viewport={{ once: true, margin: "-50px" }}
-                  transition={{ 
-                    duration: 0.5, 
-                    delay: index * 0.1,
-                    ease: [0.4, 0.0, 0.2, 1]
-                  }}
-                  whileHover={{ y: -8, transition: { duration: 0.3 } }}
-                >
+                <div key={category._id} className={newCardIndex === index ? 'card-enter' : ''}>
                   <Card className="desktop-card overflow-hidden border border-gray-200 group h-full bg-white">
                     <div className="desktop-card-image relative h-64 overflow-hidden">
                       <Image
@@ -784,7 +731,7 @@ const NewHolidaysSection = () => {
                       </div>
                     </CardContent>
                   </Card>
-                </motion.div>
+                </div>
               ))}
             </div>
 
@@ -804,19 +751,10 @@ const NewHolidaysSection = () => {
           </>
         )}
 
-        <motion.div 
-          className="text-center mt-12 px-2"
-          initial={{ opacity: 0, y: 20 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: true }}
-          transition={{ duration: 0.6, delay: 0.5, ease: "easeOut" }}
-        >
+        <div className="text-center mt-12 px-2">
           <Link href="/holiday-types" className="inline-block group">
-            <motion.button
-              className="relative overflow-hidden rounded-full w-full sm:w-auto shadow-xl hover:shadow-indigo-500/40 transition-all duration-300 bg-gradient-to-r from-blue-500 via-blue-600 to-indigo-600"
-              whileHover={{ scale: 1.05 }}
-              whileTap={{ scale: 0.95 }}
-              transition={{ duration: 0.2 }}
+            <button
+              className="relative overflow-hidden rounded-full w-full sm:w-auto shadow-xl  transition-all duration-300 bg-gradient-to-r from-blue-500 via-blue-600 to-indigo-600"
             >
               <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-1000"></div>
               <div className="flex items-center justify-center">
@@ -827,9 +765,9 @@ const NewHolidaysSection = () => {
                   <ArrowRight className="w-4 h-4 text-indigo-600" strokeWidth={2.5} />
                 </div>
               </div>
-            </motion.button>
+            </button>
           </Link>
-        </motion.div>
+        </div>
       </div>
     </section>
   );
