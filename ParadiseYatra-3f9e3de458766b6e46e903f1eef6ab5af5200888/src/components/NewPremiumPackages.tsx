@@ -375,7 +375,7 @@
 
 "use client";
 
-import { useState, useEffect, useRef } from "react";
+import React, { useState, useEffect, useRef, useMemo } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import {
@@ -419,6 +419,7 @@ const NewPremiumPackages = () => {
   const [currentIndex, setCurrentIndex] = useState(0);
   const [isMobile, setIsMobile] = useState(false);
   const [isTransitioning, setIsTransitioning] = useState(false);
+  const [newCardIndex, setNewCardIndex] = useState<number | null>(null);
   const scrollContainerRef = useRef<HTMLDivElement>(null);
   const isScrollingProgrammatically = useRef(false);
 
@@ -486,15 +487,23 @@ const NewPremiumPackages = () => {
   const handlePrevious = () => {
     if (isMobile || isTransitioning || currentIndex === 0) return;
     setIsTransitioning(true);
+    setNewCardIndex(0); // New card appears at leftmost position (index 0)
     setCurrentIndex((prev) => prev - 1);
-    setTimeout(() => setIsTransitioning(false), 500);
+    setTimeout(() => {
+      setIsTransitioning(false);
+      setNewCardIndex(null);
+    }, 400);
   };
 
   const handleNext = () => {
     if (isMobile || isTransitioning || currentIndex >= allPackages.length - 3) return;
     setIsTransitioning(true);
+    setNewCardIndex(2); // New card appears at rightmost position (index 2)
     setCurrentIndex((prev) => prev + 1);
-    setTimeout(() => setIsTransitioning(false), 500);
+    setTimeout(() => {
+      setIsTransitioning(false);
+      setNewCardIndex(null);
+    }, 400);
   };
 
   const handleDotClick = (index: number) => {
@@ -542,8 +551,26 @@ const NewPremiumPackages = () => {
     );
   }
 
-  const SafeImage = ({ src, alt, fallback }: { src: string; alt: string; fallback: string }) => {
+  const SafeImage = React.memo(({ src, alt, fallback }: { src: string; alt: string; fallback: string }) => {
     const [imgSrc, setImgSrc] = useState(src);
+    const [hasError, setHasError] = useState(false);
+    const previousSrc = useRef(src);
+
+    // Update imgSrc when src prop changes (but don't reset error state if already using fallback)
+    useEffect(() => {
+      if (previousSrc.current !== src && !hasError) {
+        previousSrc.current = src;
+        setImgSrc(src);
+        setHasError(false);
+      }
+    }, [src, hasError]);
+
+    const handleError = () => {
+      if (!hasError && imgSrc !== fallback) {
+        setHasError(true);
+        setImgSrc(fallback);
+      }
+    };
 
     return (
       <Image
@@ -551,11 +578,16 @@ const NewPremiumPackages = () => {
         alt={alt}
         fill
         className="object-cover"
-        // This triggers if the URL is invalid or returns a 404
-        onError={() => setImgSrc(fallback)}
+        onError={handleError}
+        unoptimized={imgSrc.startsWith('http')}
+        sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
+        priority={false}
       />
     );
-  };
+  }, (prevProps, nextProps) => {
+    // Only re-render if src actually changes
+    return prevProps.src === nextProps.src && prevProps.alt === nextProps.alt;
+  });
 
   const visiblePackages = allPackages.slice(currentIndex, currentIndex + 3);
   const canGoPrevious = currentIndex > 0;
@@ -571,7 +603,7 @@ const NewPremiumPackages = () => {
         backgroundImage: "url('https://res.cloudinary.com/dwuwpxu0y/image/upload/v1768219728/Abstract_background_of_weathered_wood_in_blue_and_red_tones_1_gmdgpd.jpg')"
       }}
     >
-      <div className="absolute inset-0 bg-gradient-to-b from-white/30 via-black/5 to-black/10 pointer-events-none z-0" />
+      <div className="absolute inset-0 bg-gradient-to-b from-white/60 via-white/40 to-white-60 pointer-events-none z-0" />
       <style jsx global>{`
         @keyframes fadeInSoft { 
           from { opacity: 0; transform: translateY(10px); } 
@@ -705,7 +737,7 @@ const NewPremiumPackages = () => {
                   <Card className="overflow-hidden border border-gray-200 h-full bg-white flex flex-col shadow-md">
                     <div className="relative h-52 w-full overflow-hidden">
                       <SafeImage
-                        src={pkg.images[0] || FALLBACK_IMAGE}
+                        src={pkg.images?.[0] || FALLBACK_IMAGE}
                         alt={pkg.title}
                         fallback={FALLBACK_IMAGE}
                       />
@@ -770,11 +802,11 @@ const NewPremiumPackages = () => {
           <>
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
               {visiblePackages.map((pkg, index) => (
-                <div key={pkg._id} className="card-enter opacity-0">
+                <div key={pkg._id} className={newCardIndex === index ? 'card-enter' : ''}>
                   <Card className="desktop-card overflow-hidden border border-gray-200 group h-full bg-white">
                     <div className="desktop-card-image relative h-64 overflow-hidden">
                       <SafeImage
-                        src={pkg.images[0] || FALLBACK_IMAGE}
+                        src={pkg.images?.[0] || FALLBACK_IMAGE}
                         alt={pkg.title}
                         fallback={FALLBACK_IMAGE}
                       />
@@ -841,7 +873,7 @@ const NewPremiumPackages = () => {
         <div className="text-center mt-12 px-2">
           <Link href={getCategoryPageUrl("Premium Packages")} className="inline-block group">
             <button
-              className="relative overflow-hidden rounded-full w-full sm:w-auto shadow-xl hover:shadow-indigo-500/40 transition-all duration-300 hover:scale-105 active:scale-95 bg-gradient-to-r from-blue-500 via-blue-600 to-indigo-600"
+              className="relative overflow-hidden rounded-full w-full sm:w-auto shadow-xl transition-all duration-300 bg-gradient-to-r from-blue-500 via-blue-600 to-indigo-600"
             >
               <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-1000"></div>
               <div className="flex items-center justify-center">

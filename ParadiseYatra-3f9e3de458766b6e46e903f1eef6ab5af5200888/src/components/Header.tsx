@@ -287,7 +287,7 @@ const Header = () => {
                   </h1>
                   <p
                     className={`text-xs -mt-1 ${
-                      isTransparent ? "!text-white/80" : "text-slate-500"
+                      isTransparent ? "!text-white/80" : "!text-slate-500"
                     }`}
                   >
                     Yatra To Paradise

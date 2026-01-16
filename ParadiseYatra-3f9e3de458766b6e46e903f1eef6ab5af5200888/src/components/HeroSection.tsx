@@ -8,6 +8,7 @@ import { SkeletonHero } from "@/components/ui/skeleton";
 import SearchSuggestions from "./SearchSuggestions";
 import { useRouter } from "next/navigation";
 import { Permanent_Marker } from 'next/font/google';
+import Image from "next/image";
 
 interface HeroContent {
   title: string;
@@ -34,19 +35,7 @@ const HeroSection = () => {
   useEffect(() => {
     const fetchHeroContent = async () => {
       try {
-        setLoading(true);
-        const response = await fetch("/api/hero");
-
-        if (!response.ok) {
-          throw new Error("Failed to fetch hero content");
-        }
-
-        const data = await response.json();
-        setHeroContent(data);
-        setError(null);
-      } catch (err) {
-        console.error("Error fetching hero content:", err);
-        setError("Failed to load hero content");
+        // Don't block rendering - set default content immediately
         setHeroContent({
           title: "Your Next Adventure Awaits",
           description: "Explore, dream, and discover with Paradise Yatra.",
@@ -54,8 +43,21 @@ const HeroSection = () => {
           ctaButtonText: "Explore Packages",
           secondaryButtonText: "Watch Video",
         });
-      } finally {
         setLoading(false);
+
+        // Fetch updated content in the background
+        const response = await fetch("/api/hero", {
+          cache: "force-cache", // Cache the response
+        });
+
+        if (response.ok) {
+          const data = await response.json();
+          setHeroContent(data);
+        }
+      } catch (err) {
+        console.error("Error fetching hero content:", err);
+        setError("Failed to load hero content");
+        // Keep default content, already set
       }
     };
 
@@ -96,21 +98,21 @@ const HeroSection = () => {
     <section className="relative min-h-screen flex items-center justify-center overflow-hidden pt-20 sm:pt-24 md:pt-28 pb-12 sm:pb-16 md:pb-20">
       
       {/* Background Image - Travel themed */}
-      <motion.div
-        initial={{ scale: 1.1 }}
-        animate={{ scale: 1 }}
-        transition={{ duration: 1.5, ease: "easeOut" }}
-        className="absolute inset-0 z-0"
-      >
-        <img
-          src="https://images.unsplash.com/photo-1469854523086-cc02fe5d8800?w=1920&q=80"
+      <div className="absolute inset-0 z-0">
+        <Image
+          src="https://images.unsplash.com/photo-1469854523086-cc02fe5d8800?w=1920&q=75&auto=format&fit=crop"
           alt="Travel Background"
-          className="w-full h-full object-cover"
-          loading="eager"
+          fill
+          priority
+          quality={85}
+          className="object-cover"
+          sizes="100vw"
+          placeholder="blur"
+          blurDataURL="data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAAAQABAAD/2wBDAAgGBgcGBQgHBwcJCQgKDBQNDAsLDBkSEw8UHRofHh0aHBwgJC4nICIsIxwcKDcpLDAxNDQ0Hyc5PTgyPC4zNDL/2wBDAQkJCQwLDBgNDRgyIRwhMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjL/wAARCAAIAAoDASIAAhEBAxEB/8QAFQABAQAAAAAAAAAAAAAAAAAAAAv/xAAhEAACAQMDBQAAAAAAAAAAAAABAgMABAUGIWEREiMxUf/EABUBAQEAAAAAAAAAAAAAAAAAAAMF/8QAGhEAAgIDAAAAAAAAAAAAAAAAAAECEgMRkf/aAAwDAQACEQADAD8BtJeyyeH0AthI5xdrLcNM91BF5pX2HaH9bcfaSXWGaRmknyJckliyjqTzSlT54b6b+h9R//Z"
         />
         {/* Dark overlay for text readability */}
         <div className="absolute inset-0 bg-gradient-to-b from-black/70 via-black/30 to-black/80"></div>
-      </motion.div>
+      </div>
 
       {/* Content Container */}
       <div className="relative z-20 w-full max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">

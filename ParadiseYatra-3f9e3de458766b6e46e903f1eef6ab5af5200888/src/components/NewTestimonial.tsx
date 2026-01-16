@@ -1,12 +1,13 @@
 import Image from "next/image";
 import { Star, Play } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import Link from "next/link";
 
 export default function NewTestimonial() {
   return (
     <section className="w-full py-12 md:py-20 px-4 md:px-8 lg:px-12 bg-slate-200">
       <div className="max-w-6xl mx-auto mb-12 px-6 md:px-0 lg:px-0">
-      <h1 className="text-5xl font-apple-system font-medium text-gray-600 mb-12">
+      <h1 className="text-5xl font-apple-system font-medium !text-gray-600 mb-12">
         Trekkers Highlights
       </h1>
 
@@ -26,7 +27,7 @@ export default function NewTestimonial() {
               <h2 className="text-xl font-semibold text-gray-600">
                 Liam Anderson
               </h2>
-              <p className="text-gray-600">Market Explorer</p>
+              <p className="!text-gray-600">Market Explorer</p>
             </div>
           </div>
 
@@ -36,11 +37,11 @@ export default function NewTestimonial() {
             ))}
           </div>
 
-          <h3 className="text-2xl font-bold text-gray-600 mb-4">
+          <h3 className="text-2xl !font-bold !text-gray-600 mb-4">
             A Colorful Journey Through Marrakechs Spice Souks
           </h3>
 
-          <p className="text-gray-500 leading-relaxed">
+          <p className="!text-gray-500 leading-relaxed">
             Wandering through the heart of Marrakech, I found myself immersed in
             a sensory paradise where every corner bursts with colours, aromas,
             and textures. The spice souks are more than just markets—they are
@@ -75,13 +76,15 @@ export default function NewTestimonial() {
             </div> */}
           </div>
 
-          <p className="bottom-4 left-4 right-4 text-gray-600 text-sm mt-12">
+          <p className="bottom-4 left-4 right-4 !text-gray-600 text-sm mt-12">
             Exploring the Vibrant Colors of Marrakechs Spice Markets
           </p>
 
-          <Button className="w-full mt-8 bg-blue-500 hover:bg-blue-600 text-white font-semibold py-6 rounded-xl text-lg">
-            Discover More Stories
-          </Button>
+          <Link href="/why-choose-us">
+            <Button className="w-full mt-8 bg-blue-500 hover:bg-blue-600 text-white font-semibold py-6 rounded-xl text-lg">
+              Discover More Stories
+            </Button>
+          </Link>
         </div>
       </div>
       </div>

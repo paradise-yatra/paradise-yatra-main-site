@@ -885,7 +885,6 @@ const NewAdventureEscapes = () => {
   const [currentIndex, setCurrentIndex] = useState(0);
   const [isMobile, setIsMobile] = useState(false);
   const [isTransitioning, setIsTransitioning] = useState(false);
-  const [newCardIndex, setNewCardIndex] = useState<number | null>(null);
   const scrollContainerRef = useRef<HTMLDivElement>(null);
   const [imageErrors, setImageErrors] = useState<Record<string, boolean>>({});
   const isScrollingProgrammatically = useRef(false);
@@ -963,12 +962,8 @@ const NewAdventureEscapes = () => {
   const handlePrevious = () => {
     if (isMobile || isTransitioning || currentIndex === 0) return;
     setIsTransitioning(true);
-    setNewCardIndex(0);
     setCurrentIndex((prev) => prev - 1);
-    setTimeout(() => {
-      setIsTransitioning(false);
-      setNewCardIndex(null);
-    }, 400);
+    setTimeout(() => setIsTransitioning(false), 500);
   };
 
   const handleNext = () => {
@@ -1079,8 +1074,9 @@ const NewAdventureEscapes = () => {
           from { opacity: 0; transform: translateY(10px); }
           to { opacity: 1; transform: translateY(0); }
         }
-        .card-new {
-          animation: fadeInSoft 0.4s ease-out;
+        .card-enter {
+          animation: fadeInSoft 0.35s ease-out forwards;
+          opacity: 0;
         }
         @media (min-width: 768px) {
           .desktop-card {
@@ -1120,6 +1116,25 @@ const NewAdventureEscapes = () => {
           flex-shrink: 0; 
           width: 88vw !important; 
           max-width: 340px !important;
+        }
+        @keyframes slideInLeft {
+          from { opacity: 0; transform: translateX(-30px); }
+          to { opacity: 1; transform: translateX(0); }
+        }
+        @keyframes slideInRight {
+          from { opacity: 0; transform: translateX(30px); }
+          to { opacity: 1; transform: translateX(0); }
+        }
+        .card-enter {
+          animation: slideInLeft 0.5s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+        }
+        .card-enter:nth-child(2) {
+          animation: slideInRight 0.5s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+          animation-delay: 0.1s;
+        }
+        .card-enter:nth-child(3) {
+          animation: slideInLeft 0.5s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+          animation-delay: 0.2s;
         }
         @media (min-width: 768px) {
           .desktop-card {
@@ -1268,7 +1283,7 @@ const NewAdventureEscapes = () => {
           <>
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
               {visiblePackages.map((pkg, index) => (
-                <div key={pkg._id} className={newCardIndex === index ? 'card-new' : ''}>
+                <div key={pkg._id} className="card-enter opacity-0">
                   <Card className="desktop-card overflow-hidden border border-gray-200 group h-full bg-white">
                     <div className="desktop-card-image relative h-64 overflow-hidden">
                       <Image
@@ -1341,7 +1356,7 @@ const NewAdventureEscapes = () => {
         <div className="text-center mt-12 px-2">
           <Link href={getCategoryPageUrl("Adventure Tours")} className="inline-block group">
             <button
-              className="relative overflow-hidden rounded-full w-full sm:w-auto shadow-xl hover:shadow-indigo-500/40 transition-all duration-300 hover:scale-105 active:scale-95 bg-gradient-to-r from-blue-500 via-blue-600 to-indigo-600"
+              className="relative overflow-hidden rounded-full w-full sm:w-auto shadow-xl transition-all duration-300 bg-gradient-to-r from-blue-500 via-blue-600 to-indigo-600"
             >
               <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-1000"></div>
               <div className="flex items-center justify-center">

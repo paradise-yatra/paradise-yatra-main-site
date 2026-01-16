@@ -27,9 +27,21 @@ export default function WhoWeAre() {
 
   return (
     <section className="w-full py-12 md:py-20 px-4 md:px-8 lg:px-12 bg-slate-200" >
+      
       <div className="max-w-7xl mx-auto">
         {/* ==================== MOBILE LAYOUT ==================== */}
-        <div className="md:hidden flex flex-col gap-10">
+        <div className="md:hidden flex flex-col gap-8">
+          {/* Headings - Mobile version (centered) */}
+          <div className="text-center px-2">
+            <h2 className="text-blue-600 text-sm !font-semibold mb-2">
+              Who We Are
+            </h2>
+            <h3 className="text-2xl sm:text-3xl font-light text-gray-800 mb-4">
+              Explore the world, your way with travel experiences that feel
+              personal, flexible.
+            </h3>
+          </div>
+
           {/* Images - Mobile version */}
           <div className="relative h-[380px] w-full max-w-[380px] mx-auto">
             <div className="absolute w-64 h-72 -top-6 left-1/2 -translate-x-1/2 rounded-3xl overflow-hidden shadow-lg">
@@ -55,21 +67,13 @@ export default function WhoWeAre() {
 
           {/* Content */}
           <div className="flex flex-col gap-6 text-center px-2">
-            <div>
-              <h2 className="text-blue-600 text-sm !font-semibold mb-2">
-                Who We Are
-              </h2>
-              <h3 className="text-2xl sm:text-3xl font-light text-gray-800 mb-4">
-                Explore the world, your way with travel experiences that feel
-                personal, flexible.
-              </h3>
-              <p className="text-gray-600 text-base leading-relaxed">
-                We are a passionate team of explorers, planners, and dreamers
-                dedicated to crafting journeys that match your unique style and
-                pace. From remote mountain trails to vibrant coastal towns, we
-                help you travel smarter — not harder.
-              </p>
-            </div>
+            {/* Paragraph */}
+            <p className="!text-gray-600 !text-base leading-relaxed">
+              We are a passionate team of explorers, planners, and dreamers
+              dedicated to crafting journeys that match your unique style and
+              pace. From remote mountain trails to vibrant coastal towns, we
+              help you travel smarter — not harder.
+            </p>
 
             {/* Features */}
             <div className="space-y-5 mt-4">
@@ -85,10 +89,10 @@ export default function WhoWeAre() {
                     />
                   </div>
                   <div className="text-left">
-                    <h4 className="font-medium text-gray-800 text-base">
+                    <h4 className="font-medium !text-gray-800 !text-base">
                       {feature.title}
                     </h4>
-                    <p className="text-gray-600 text-sm mt-1 leading-relaxed">
+                    <p className="!text-gray-600 !text-sm mt-1 leading-relaxed">
                       {feature.description}
                     </p>
                   </div>
@@ -99,7 +103,7 @@ export default function WhoWeAre() {
         </div>
 
         {/* ==================== DESKTOP LAYOUT ==================== */}
-        <div className="hidden md:grid md:grid-cols-[1.5fr_2fr] gap-12 items-center bg-slate-200">
+        <div className="hidden md:grid md:grid-cols-[1.5fr_2fr] gap-12 items-center">
           {/* Images - Desktop */}
           <div className="relative h-[580px] w-full">
             <div className="absolute w-[440px] h-[500px] top-0 left-0 rounded-3xl overflow-hidden shadow-xl">
@@ -134,7 +138,7 @@ export default function WhoWeAre() {
                 Explore the world, your way with travel experiences that feel
                 personal, flexible.
               </h2>
-              <p className="text-gray-700 text-lg lg:text-xl leading-relaxed">
+              <p className="!text-gray-700 text-lg lg:text-xl leading-relaxed">
                 We are a passionate team of explorers, planners, and dreamers
                 dedicated to crafting journeys that match your unique style and
                 pace. From remote mountain trails to vibrant coastal towns, we
@@ -155,10 +159,10 @@ export default function WhoWeAre() {
                     />
                   </div>
                   <div>
-                    <h4 className="font-medium text-gray-800 text-xl lg:text-2xl">
+                    <h4 className="font-medium !text-gray-800 text-xl lg:text-2xl">
                       {feature.title}
                     </h4>
-                    <p className="text-gray-600 text-base lg:text-lg mt-2">
+                    <p className="!text-gray-600 !text-base lg:text-lg mt-2">
                       {feature.description}
                     </p>
                   </div>
