@@ -229,6 +229,7 @@ const AdminHeroSection = () => {
                 value={formData.backgroundImage}
                 onChange={(value) => setFormData(prev => ({ ...prev, backgroundImage: value }))}
                 label="Background Image"
+                contentType="hero"
               />
             </div>
 

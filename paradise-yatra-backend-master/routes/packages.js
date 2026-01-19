@@ -308,6 +308,11 @@ router.post('/:id/reviews', adminAuth, addReview);
 // ✅ CREATE Package with Cloudinary + originalPrice/discount
 router.post("/", adminAuth, uploadSingleImage, handleUploadError, async (req, res) => {
   try {
+    // Debug: Log all body fields to see what we're getting
+    console.log('📦 req.body keys:', Object.keys(req.body || {}));
+    console.log('📦 req.body.category:', req.body?.category);
+    console.log('📦 Full req.body:', JSON.stringify(req.body, null, 2));
+    
     const { 
       title, 
       description, 
@@ -324,6 +329,7 @@ router.post("/", adminAuth, uploadSingleImage, handleUploadError, async (req, re
       destination,
       slug,
       highlights,
+      holidayType,    // 🆕 NEW - Premium type / Holiday type
       isActive,
       isFeatured
     } = req.body;
@@ -332,9 +338,20 @@ router.post("/", adminAuth, uploadSingleImage, handleUploadError, async (req, re
     
     // Upload image to Cloudinary if file exists
     if (req.file) {
-      const uploadCategory = category ? category.toLowerCase().replace(/\s+/g, '-') : 'default';
-      const result = await uploadToCloudinary(req.file.path, uploadCategory);
+      // HARDCODE 'premium-packages' for this route - same pattern as destinations.js uses 'popular-packages'
+      // This ensures images ALWAYS go to the correct folder regardless of what category is sent
+      const result = await uploadToCloudinary(req.file.path, 'premium-packages');
       imageUrl = result.url;
+      
+      // Verify the URL contains the correct path
+      if (!imageUrl.includes('paradise-yatra/packages/premium-packages')) {
+        console.error('❌ ERROR: Image uploaded to wrong folder!');
+        console.error('❌ Expected: paradise-yatra/packages/premium-packages');
+        console.error('❌ Got:', imageUrl);
+        throw new Error('Image uploaded to incorrect Cloudinary folder');
+      }
+      
+      console.log('✅ Image uploaded successfully to premium-packages folder:', imageUrl);
     }
 
     // Parse highlights if it's a string
@@ -342,21 +359,71 @@ router.post("/", adminAuth, uploadSingleImage, handleUploadError, async (req, re
       ? JSON.parse(highlights) 
       : highlights;
 
+    // Generate slug if not provided
+    let finalSlug = slug;
+    if (!finalSlug || finalSlug.trim() === '') {
+      // Generate slug from title
+      const generateSlug = (text) => {
+        return text
+          .toLowerCase()
+          .replace(/[^a-z0-9 -]/g, "")
+          .replace(/\s+/g, "-")
+          .replace(/-+/g, "-")
+          .trim("-");
+      };
+      
+      let baseSlug = generateSlug(title);
+      let uniqueSlug = baseSlug;
+      let counter = 1;
+      
+      // Ensure slug is unique
+      while (await Package.findOne({ slug: uniqueSlug })) {
+        uniqueSlug = `${baseSlug}-${counter}`;
+        counter++;
+      }
+      
+      finalSlug = uniqueSlug;
+    }
+
+    // Validate tourType - ensure it's present and valid
+    const validTourTypes = ['india', 'international'];
+    const finalTourType = tourType && validTourTypes.includes(tourType) ? tourType : 'india';
+
+    // Handle images: Use uploaded file URL, or check req.body.images (if ImageUpload already uploaded it)
+    let finalImages = [];
+    if (imageUrl) {
+      // Image uploaded via req.file
+      finalImages = [imageUrl];
+    } else if (req.body.images) {
+      // Image already uploaded by ImageUpload component (Cloudinary URL in req.body.images)
+      // Parse images if it's a string (JSON), otherwise use as-is
+      const imagesArray = typeof req.body.images === 'string' 
+        ? JSON.parse(req.body.images) 
+        : Array.isArray(req.body.images) 
+          ? req.body.images 
+          : [req.body.images];
+      
+      if (imagesArray && imagesArray.length > 0 && imagesArray[0]) {
+        console.log('✅ Image URL from body (already uploaded by client):', imagesArray[0]);
+        finalImages = imagesArray;
+      }
+    }
+
     // Prepare package data
     const packageData = {
       title,
       description,
       shortDescription,
-      images: imageUrl ? [imageUrl] : [],
+      images: finalImages,
       category,
       country,
       state,
-      tourType,
+      tourType: finalTourType,
       price: parseFloat(price),
       rating: parseFloat(rating) || 0,
       duration,
       destination,
-      slug,
+      slug: finalSlug,
       highlights: parsedHighlights || [],
       isActive: isActive === 'true' || isActive === true,
       isFeatured: isFeatured === 'true' || isFeatured === true,
@@ -368,6 +435,10 @@ router.post("/", adminAuth, uploadSingleImage, handleUploadError, async (req, re
     }
     if (discount !== undefined && discount !== null && discount !== '') {
       packageData.discount = parseFloat(discount);
+    }
+    // 🆕 Add holidayType if provided
+    if (holidayType) {
+      packageData.holidayType = holidayType;
     }
 
     const newPackage = await Package.create(packageData);
@@ -403,6 +474,10 @@ router.put("/:id", adminAuth, uploadSingleImage, handleUploadError, async (req, 
       destination,
       slug,
       highlights,
+      itinerary,      // ✅ NEW - Itinerary array
+      inclusions,      // ✅ NEW - Inclusions array
+      exclusions,      // ✅ NEW - Exclusions array
+      holidayType,    // 🆕 NEW - Premium type / Holiday type
       isActive,
       isFeatured
     } = req.body;
@@ -424,6 +499,10 @@ router.put("/:id", adminAuth, uploadSingleImage, handleUploadError, async (req, 
     if (discount !== undefined) {
       pkg.discount = discount !== null && discount !== '' ? parseFloat(discount) : 0;
     }
+    // 🆕 Handle holidayType
+    if (holidayType !== undefined) {
+      pkg.holidayType = holidayType || null;
+    }
     
     if (rating !== undefined) pkg.rating = parseFloat(rating);
     if (duration) pkg.duration = duration;
@@ -434,6 +513,33 @@ router.put("/:id", adminAuth, uploadSingleImage, handleUploadError, async (req, 
         ? JSON.parse(highlights) 
         : highlights;
     }
+    // ✅ Handle itinerary
+    if (itinerary !== undefined) {
+      pkg.itinerary = typeof itinerary === 'string' 
+        ? JSON.parse(itinerary) 
+        : Array.isArray(itinerary) 
+          ? itinerary 
+          : [];
+      console.log('✅ Updated itinerary:', pkg.itinerary?.length || 0, 'days');
+    }
+    // ✅ Handle inclusions
+    if (inclusions !== undefined) {
+      pkg.inclusions = typeof inclusions === 'string' 
+        ? JSON.parse(inclusions) 
+        : Array.isArray(inclusions) 
+          ? inclusions 
+          : [];
+      console.log('✅ Updated inclusions:', pkg.inclusions?.length || 0, 'items');
+    }
+    // ✅ Handle exclusions
+    if (exclusions !== undefined) {
+      pkg.exclusions = typeof exclusions === 'string' 
+        ? JSON.parse(exclusions) 
+        : Array.isArray(exclusions) 
+          ? exclusions 
+          : [];
+      console.log('✅ Updated exclusions:', pkg.exclusions?.length || 0, 'items');
+    }
     if (isActive !== undefined) {
       pkg.isActive = isActive === 'true' || isActive === true;
     }
@@ -441,22 +547,49 @@ router.put("/:id", adminAuth, uploadSingleImage, handleUploadError, async (req, 
       pkg.isFeatured = isFeatured === 'true' || isFeatured === true;
     }
 
-    // ✅ Handle image update with old image cleanup
+    // ✅ Handle image update
     if (req.file) {
-      const uploadCategory = category ? category.toLowerCase().replace(/\s+/g, '-') : 'default';
-      
+      // New file uploaded - upload to Cloudinary
+      // HARDCODE 'premium-packages' for this route - same pattern as destinations.js
       // Extract old image public_id for deletion
       const oldPublicId = pkg.images && pkg.images.length > 0 
         ? extractPublicId(pkg.images[0]) 
         : null;
       
-      // Upload new image and delete old one
-      const result = await uploadToCloudinary(req.file.path, uploadCategory, oldPublicId);
+      // Upload new image and delete old one - ALWAYS use 'premium-packages'
+      const result = await uploadToCloudinary(req.file.path, 'premium-packages', oldPublicId);
+      
+      // Verify the URL contains the correct path
+      if (!result.url.includes('paradise-yatra/packages/premium-packages')) {
+        console.error('❌ ERROR: Image uploaded to wrong folder!');
+        console.error('❌ Expected: paradise-yatra/packages/premium-packages');
+        console.error('❌ Got:', result.url);
+        throw new Error('Image uploaded to incorrect Cloudinary folder');
+      }
+      
+      console.log('✅ Image updated successfully to premium-packages folder:', result.url);
       pkg.images = [result.url];
+    } else if (req.body.images) {
+      // No file uploaded but images field provided (e.g., ImageUpload component already uploaded it)
+      // Parse images if it's a string (JSON), otherwise use as-is
+      const imagesArray = typeof req.body.images === 'string' 
+        ? JSON.parse(req.body.images) 
+        : Array.isArray(req.body.images) 
+          ? req.body.images 
+          : [req.body.images];
+      
+      if (imagesArray && imagesArray.length > 0 && imagesArray[0]) {
+        console.log('✅ Image URL updated from body (already uploaded by client):', imagesArray[0]);
+        pkg.images = imagesArray;
+      }
     }
 
     await pkg.save();
-    res.json(pkg);
+    console.log('✅ Package saved successfully with ID:', pkg._id);
+    console.log('✅ Package itinerary count:', pkg.itinerary?.length || 0);
+    console.log('✅ Package inclusions count:', pkg.inclusions?.length || 0);
+    console.log('✅ Package exclusions count:', pkg.exclusions?.length || 0);
+    res.json({ package: pkg });
   } catch (error) {
     console.error("Update package error:", error);
     res.status(500).json({ message: error.message });

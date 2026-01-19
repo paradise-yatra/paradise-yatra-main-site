@@ -7,11 +7,13 @@ import { toast } from "react-toastify";
 import ImageUpload from "@/components/ui/image-upload";
 import { getImageUrl } from "@/lib/utils";
 import { PACKAGE_CATEGORIES, TOUR_TYPES } from "@/config/categories";
-import { useLocations } from "@/hooks/useLocations";
+import { Country, State } from "country-state-city";
+import type { ICountry, IState } from "country-state-city";
 
 interface PremiumPackage {
   _id: string;
   title: string;
+  slug?: string;
   duration: string;
   destination: string;
   country: string;
@@ -43,12 +45,8 @@ const AdminPremiumPackages = () => {
   const [currentPage, setCurrentPage] = useState(1);
   const [itemsPerPage] = useState(10);
 
-  // Use locations hook for dynamic data
-  const { countries, loading: locationsLoading } = useLocations();
-  
-  // Add state for storing country ISO2
+  // Country and state management
   const [selectedCountryIso2, setSelectedCountryIso2] = useState<string>("");
-  // Add state for storing states
   const [states, setStates] = useState<Array<{ name: string; state_code: string }>>([]);
   const [selectedState, setSelectedState] = useState<string>("");
 
@@ -63,7 +61,7 @@ const AdminPremiumPackages = () => {
     originalPrice: "",
     rating: "",
     images: "",
-    category: "",
+    category: "Premium Packages",
     description: "",
     shortDescription: "",
     highlights: "",
@@ -72,39 +70,40 @@ const AdminPremiumPackages = () => {
     isFeatured: false
   });
 
+  // Get all countries
+  const countries = React.useMemo(() => {
+    return Country.getAllCountries().map((c: ICountry) => ({
+      iso2: c.isoCode,
+      name: c.name,
+    }));
+  }, []);
+
   // Transform countries for dropdown
   const countryOptions = countries.map(country => ({
     value: country.iso2,
-    label: `${country.emoji} ${country.name}`
+    label: country.name
   }));
 
   // Handle country change
   const handleCountryChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
     const countryIso2 = e.target.value;
     setSelectedCountryIso2(countryIso2);
-    setSelectedState(""); // Reset state when country changes
-    setFormData(prev => ({ ...prev, country: countryIso2, state: "" }));
+    setSelectedState("");
     
-    // Fetch states for the selected country
-    if (countryIso2) {
-      fetchStates(countryIso2);
-    } else {
-      setStates([]);
-    }
-  };
+    const selectedCountry = countries.find(c => c.iso2 === countryIso2);
+    setFormData(prev => ({ 
+      ...prev, 
+      country: selectedCountry ? selectedCountry.name : "", 
+      state: "" 
+    }));
 
-  // Fetch states for a country
-  const fetchStates = async (countryIso2: string) => {
-    try {
-      const response = await fetch(`/api/locations/states/${countryIso2}`);
-      if (response.ok) {
-        const data = await response.json();
-        setStates(data.states || []);
-      } else {
-        setStates([]);
-      }
-    } catch (error) {
-      console.error('Error fetching states:', error);
+    if (countryIso2) {
+      const countryStates = State.getStatesOfCountry(countryIso2);
+      setStates(countryStates.map((s: IState) => ({
+        name: s.name,
+        state_code: s.isoCode || '',
+      })));
+    } else {
       setStates([]);
     }
   };
@@ -173,8 +172,20 @@ const AdminPremiumPackages = () => {
         stateName = selectedStateObj ? selectedStateObj.name : selectedState;
       }
 
+      // Generate slug from title if not provided
+      const generateSlug = (title: string): string => {
+        return title
+          .toLowerCase()
+          .replace(/[^a-z0-9 -]/g, "")
+          .replace(/\s+/g, "-")
+          .replace(/-+/g, "-")
+          .trim();
+      };
+
       const packageData = {
         ...formData,
+        slug: formData.title ? generateSlug(formData.title) : '', // Generate slug from title
+        tourType: formData.tourType || 'india', // Ensure tourType is always present, default to 'india'
         country: countryName,
         state: stateName,
         price: parseFloat(formData.price),
@@ -190,25 +201,31 @@ const AdminPremiumPackages = () => {
         // Handle file upload
         const uploadFormData = new FormData();
         
-        // Add all form fields
+        // Convert image to file FIRST (await it)
+        let imageFile: File | null = null;
+        if (formData.images) {
+          if (formData.images.startsWith('blob:')) {
+            const res = await fetch(formData.images);
+            const blob = await res.blob();
+            imageFile = new File([blob], 'image.jpg', { type: 'image/jpeg' });
+          } else if (formData.images.startsWith('data:')) {
+            const res = await fetch(formData.images);
+            const blob = await res.blob();
+            imageFile = new File([blob], 'image.jpg', { type: 'image/jpeg' });
+          }
+        }
+        
+        // Add image file if we have one
+        if (imageFile) {
+          uploadFormData.append('image', imageFile);
+        }
+        
+        // Add all form fields (excluding images array, we handle that separately above)
         Object.keys(packageData).forEach(key => {
           const value = (packageData as unknown as Record<string, unknown>)[key];
-          if (key === 'images' && Array.isArray(value) && value.length > 0 && typeof value[0] === 'string' && value[0].startsWith('blob:')) {
-            // Convert blob URL to file and upload
-            fetch(value[0])
-              .then(res => res.blob())
-              .then(blob => {
-                const file = new File([blob], 'image.jpg', { type: 'image/jpeg' });
-                uploadFormData.append('image', file);
-              });
-          } else if (key === 'images' && Array.isArray(value) && value.length > 0 && typeof value[0] === 'string' && value[0].startsWith('data:')) {
-            // Convert data URL to file and upload
-            const response = fetch(value[0]);
-            response.then(res => res.blob())
-              .then(blob => {
-                const file = new File([blob], 'image.jpg', { type: 'image/jpeg' });
-                uploadFormData.append('image', file);
-              });
+          if (key === 'images') {
+            // Skip images - we already handled it above
+            return;
           } else if (Array.isArray(value)) {
             uploadFormData.append(key, JSON.stringify(value));
           } else {
@@ -254,16 +271,17 @@ const AdminPremiumPackages = () => {
   const handleEditPackage = (pkg: PremiumPackage) => {
     setEditingPackage(pkg);
     
-    // Find country ISO2 from name
+    // Set country and state
     const country = countries.find(c => c.name === pkg.country);
     setSelectedCountryIso2(country?.iso2 || '');
-    
-    // Set selected state if package has state
     setSelectedState(pkg.state || '');
-    
-    // Fetch states for the country if it exists
+
     if (country?.iso2) {
-      fetchStates(country.iso2);
+      const countryStates = State.getStatesOfCountry(country.iso2);
+      setStates(countryStates.map((s: IState) => ({
+        name: s.name,
+        state_code: s.isoCode || '',
+      })));
     }
     
     setFormData({
@@ -300,7 +318,11 @@ const AdminPremiumPackages = () => {
         return;
       }
       
-      // Check if we need to upload a file
+      // Check if image has changed (compare with original)
+      const originalImageUrl = editingPackage.images && editingPackage.images.length > 0 ? editingPackage.images[0] : '';
+      const imageChanged = formData.images && formData.images !== originalImageUrl;
+      
+      // Check if we need to upload a file (blob/data URLs need file upload)
       const hasFileUpload = formData.images && (formData.images.startsWith('blob:') || formData.images.startsWith('data:'));
       
       // Convert ISO codes to actual names for submission
@@ -318,6 +340,8 @@ const AdminPremiumPackages = () => {
 
       const packageData = {
         ...formData,
+        slug: editingPackage?.slug || '', // Always include slug from original package
+        tourType: formData.tourType || editingPackage?.tourType || 'india', // Ensure tourType is always present
         country: countryName,
         state: stateName,
         price: parseFloat(formData.price),
@@ -330,28 +354,34 @@ const AdminPremiumPackages = () => {
 
       let response;
       if (hasFileUpload) {
-        // Handle file upload
+        // Handle file upload (blob/data URLs)
         const uploadFormData = new FormData();
         
-        // Add all form fields
+        // Convert image to file FIRST (await it)
+        let imageFile: File | null = null;
+        if (formData.images) {
+          if (formData.images.startsWith('blob:')) {
+            const res = await fetch(formData.images);
+            const blob = await res.blob();
+            imageFile = new File([blob], 'image.jpg', { type: 'image/jpeg' });
+          } else if (formData.images.startsWith('data:')) {
+            const res = await fetch(formData.images);
+            const blob = await res.blob();
+            imageFile = new File([blob], 'image.jpg', { type: 'image/jpeg' });
+          }
+        }
+        
+        // Add image file if we have one
+        if (imageFile) {
+          uploadFormData.append('image', imageFile);
+        }
+        
+        // Add all form fields (excluding images array, we handle that separately above)
         Object.keys(packageData).forEach(key => {
           const value = (packageData as unknown as Record<string, unknown>)[key];
-          if (key === 'images' && Array.isArray(value) && value.length > 0 && typeof value[0] === 'string' && value[0].startsWith('blob:')) {
-            // Convert blob URL to file and upload
-            fetch(value[0])
-              .then(res => res.blob())
-              .then(blob => {
-                const file = new File([blob], 'image.jpg', { type: 'image/jpeg' });
-                uploadFormData.append('image', file);
-              });
-          } else if (key === 'images' && Array.isArray(value) && value.length > 0 && typeof value[0] === 'string' && value[0].startsWith('data:')) {
-            // Convert data URL to file and upload
-            const response = fetch(value[0]);
-            response.then(res => res.blob())
-              .then(blob => {
-                const file = new File([blob], 'image.jpg', { type: 'image/jpeg' });
-                uploadFormData.append('image', file);
-              });
+          if (key === 'images') {
+            // Skip images - we already handled it above
+            return;
           } else if (Array.isArray(value)) {
             uploadFormData.append(key, JSON.stringify(value));
           } else {
@@ -367,7 +397,7 @@ const AdminPremiumPackages = () => {
           body: uploadFormData,
         });
       } else {
-        // Handle regular JSON data
+        // No image change - just send JSON
         response = await fetch(`/api/packages/${editingPackage._id}`, {
           method: 'PUT',
           headers: {
@@ -473,7 +503,7 @@ const AdminPremiumPackages = () => {
       originalPrice: "",
       rating: "",
       images: "",
-      category: "",
+      category: "Premium Packages",
       description: "",
       shortDescription: "",
       highlights: "",
@@ -601,9 +631,8 @@ const AdminPremiumPackages = () => {
                 onChange={handleCountryChange}
                 className="w-full text-gray-900 px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500"
                 required
-                disabled={locationsLoading}
               >
-                <option value="">{locationsLoading ? 'Loading countries...' : 'Select country'}</option>
+                <option value="">Select country</option>
                 {countryOptions.map((country) => (
                   <option key={country.value} value={country.value}>
                     {country.label}
@@ -719,6 +748,7 @@ const AdminPremiumPackages = () => {
                 value={formData.images}
                 onChange={(value) => setFormData({ ...formData, images: value })}
                 label="Package Image"
+                contentType="premium-packages"
               />
             </div>
             <div className="md:col-span-2">
@@ -789,8 +819,8 @@ const AdminPremiumPackages = () => {
         <div className="bg-gradient-to-r from-purple-500 to-purple-600 text-white p-6 rounded-lg">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-purple-100">Total Packages</p>
-              <p className="text-2xl font-bold">{premiumPackages.length}</p>
+              <p className="!text-purple-100">Total Packages</p>
+              <p className="text-2xl !text-white font-bold">{premiumPackages.length}</p>
             </div>
             <Crown className="w-8 h-8 text-purple-200" />
           </div>
@@ -798,8 +828,8 @@ const AdminPremiumPackages = () => {
         <div className="bg-gradient-to-r from-green-500 to-green-600 text-white p-6 rounded-lg">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-green-100">Active Packages</p>
-              <p className="text-2xl font-bold">{premiumPackages.filter(p => p.isActive).length}</p>
+              <p className="!text-green-100">Active Packages</p>
+              <p className="text-2xl !text-white font-bold">{premiumPackages.filter(p => p.isActive).length}</p>
             </div>
             <Star className="w-8 h-8 text-green-200" />
           </div>
@@ -807,8 +837,8 @@ const AdminPremiumPackages = () => {
         <div className="bg-gradient-to-r from-blue-500 to-blue-600 text-white p-6 rounded-lg">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-blue-100">Featured Packages</p>
-              <p className="text-2xl font-bold">{premiumPackages.filter(p => p.isFeatured).length}</p>
+              <p className="!text-blue-100">Featured Packages</p>
+              <p className="text-2xl !text-white font-bold">{premiumPackages.filter(p => p.isFeatured).length}</p>
             </div>
             <Star className="w-8 h-8 text-blue-200" />
           </div>
@@ -816,8 +846,8 @@ const AdminPremiumPackages = () => {
         <div className="bg-gradient-to-r from-yellow-500 to-yellow-600 text-white p-6 rounded-lg">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-yellow-100">Avg Rating</p>
-              <p className="text-2xl font-bold">
+              <p className="!text-yellow-100">Avg Rating</p>
+              <p className="text-2xl !text-white font-bold">
                 {premiumPackages.length > 0 
                   ? (premiumPackages.reduce((sum, p) => sum + p.rating, 0) / premiumPackages.length).toFixed(1)
                   : "0.0"

@@ -47,6 +47,8 @@ interface BlogPost {
   // Backend fields
   isPublished?: boolean;
   isFeatured?: boolean;
+  createdAt?: string;
+  updatedAt?: string;
 }
 
 interface AdminBlogsProps {
@@ -56,10 +58,15 @@ interface AdminBlogsProps {
 
 const AdminBlogs = ({ initialAction, onActionComplete }: AdminBlogsProps) => {
   const [blogs, setBlogs] = useState<BlogPost[]>([]);
+  const [allBlogs, setAllBlogs] = useState<BlogPost[]>([]); // Store all blogs
   const [loading, setLoading] = useState(true);
   const [editing, setEditing] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
   const [activeTab, setActiveTab] = useState<"create" | "all">("all");
+  const [currentPage, setCurrentPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(1);
+  const [totalBlogs, setTotalBlogs] = useState(0);
+  const blogsPerPage = 10; // Show 10 blogs per page
   const [deleteDialog, setDeleteDialog] = useState<{
     isOpen: boolean;
     blogId: string | null;
@@ -111,32 +118,92 @@ const AdminBlogs = ({ initialAction, onActionComplete }: AdminBlogsProps) => {
   });
 
   useEffect(() => {
-    fetchBlogs();
+    fetchBlogs(); // Fetch all blogs once
   }, []);
+
+  // Update paginated blogs when page changes or allBlogs updates
+  useEffect(() => {
+    if (allBlogs.length > 0) {
+      const startIndex = (currentPage - 1) * blogsPerPage;
+      const endIndex = startIndex + blogsPerPage;
+      const paginatedBlogs = allBlogs.slice(startIndex, endIndex);
+      setBlogs(paginatedBlogs);
+      
+      // Update total pages based on allBlogs
+      const totalPagesCount = Math.ceil(allBlogs.length / blogsPerPage);
+      setTotalPages(totalPagesCount);
+      
+      // Reset to page 1 if current page is out of bounds
+      if (currentPage > totalPagesCount && totalPagesCount > 0) {
+        setCurrentPage(1);
+      }
+    } else {
+      setBlogs([]);
+    }
+  }, [currentPage, allBlogs, blogsPerPage]);
 
   const fetchBlogs = async () => {
     try {
       setLoading(true);
-      const response = await fetch("/api/blogs");
+      // Fetch all blogs for admin (use high limit to get all)
+      const response = await fetch(`/api/blogs?limit=1000`);
       const data = await response.json();
 
       if (response.ok) {
-        // Ensure data is an array
+        let blogsArray: BlogPost[] = [];
+        
+        // Handle both response formats
         if (Array.isArray(data)) {
-          setBlogs(data);
+          blogsArray = data;
         } else if (data.blogs && Array.isArray(data.blogs)) {
-          setBlogs(data.blogs);
+          blogsArray = data.blogs;
         } else {
           console.error("Unexpected data structure:", data);
-          setBlogs([]);
+          blogsArray = [];
+        }
+
+        // Sort by createdAt (latest first) - backend should already do this, but ensure it
+        blogsArray.sort((a, b) => {
+          const dateA = new Date(
+            (a as BlogPost).publishDate || 
+            (a as BlogPost).createdAt || 
+            (a as BlogPost).updatedAt || 
+            0
+          ).getTime();
+          const dateB = new Date(
+            (b as BlogPost).publishDate || 
+            (b as BlogPost).createdAt || 
+            (b as BlogPost).updatedAt || 
+            0
+          ).getTime();
+          return dateB - dateA; // Latest first
+        });
+
+        setAllBlogs(blogsArray);
+        setTotalBlogs(blogsArray.length);
+        
+        // Calculate pagination
+        const total = blogsArray.length;
+        const totalPagesCount = Math.ceil(total / blogsPerPage);
+        setTotalPages(totalPagesCount);
+        
+        // Reset to page 1 if current page is out of bounds
+        if (currentPage > totalPagesCount && totalPagesCount > 0) {
+          setCurrentPage(1);
         }
       } else {
         console.error("Failed to fetch blogs:", data.message);
         setBlogs([]);
+        setAllBlogs([]);
+        setTotalBlogs(0);
+        setTotalPages(1);
       }
     } catch (error) {
       console.error("Error fetching blogs:", error);
       setBlogs([]);
+      setAllBlogs([]);
+      setTotalBlogs(0);
+      setTotalPages(1);
     } finally {
       setLoading(false);
     }
@@ -153,92 +220,226 @@ const AdminBlogs = ({ initialAction, onActionComplete }: AdminBlogsProps) => {
 
       if (!token) {
         toast.error("Please log in to save changes");
+        setSaving(false);
+        return;
+      }
+
+      // Validate required fields
+      if (!formData.title || !formData.title.trim()) {
+        toast.error("Please enter a blog title");
+        setSaving(false);
+        return;
+      }
+
+      if (!formData.content || !formData.content.trim()) {
+        toast.error("Please enter blog content");
+        setSaving(false);
+        return;
+      }
+
+      if (!formData.excerpt || !formData.excerpt.trim()) {
+        toast.error("Please enter a blog excerpt");
+        setSaving(false);
+        return;
+      }
+
+      if (!formData.author || !formData.author.trim()) {
+        toast.error("Please enter an author name");
+        setSaving(false);
+        return;
+      }
+
+      if (!formData.category || !formData.category.trim()) {
+        toast.error("Please enter a category");
+        setSaving(false);
+        return;
+      }
+
+      if (!formData.image || !formData.image.trim()) {
+        toast.error("Please upload a blog image");
+        setSaving(false);
         return;
       }
 
       // Transform formData to match backend expectations
       const backendData = {
-        ...formData,
+        title: formData.title.trim(),
+        content: formData.content.trim(),
+        excerpt: formData.excerpt.trim(),
+        author: formData.author.trim(),
+        category: formData.category.trim(),
+        image: formData.image.trim(),
+        imageAlt: formData.imageAlt?.trim() || "",
+        slug: formData.slug?.trim() || formData.title.toLowerCase().replace(/\s+/g, "-"),
+        readTime: parseInt(formData.readTime) || 5,
         isPublished: formData.status === "published",
         isFeatured: formData.status === "published", // Auto-mark published blogs as featured
-        readTime: parseInt(formData.readTime) || 5,
-        // Remove frontend-specific fields
-        status: undefined,
-        publishDate: undefined,
-        isActive: undefined,
+        // SEO fields
+        seoTitle: formData.seoTitle?.trim() || "",
+        seoDescription: formData.seoDescription?.trim() || "",
+        seoKeywords: Array.isArray(formData.seoKeywords) ? formData.seoKeywords : [],
+        seoOgTitle: formData.seoOgTitle?.trim() || "",
+        seoOgDescription: formData.seoOgDescription?.trim() || "",
+        seoOgImage: formData.seoOgImage?.trim() || "",
+        seoTwitterTitle: formData.seoTwitterTitle?.trim() || "",
+        seoTwitterDescription: formData.seoTwitterDescription?.trim() || "",
+        seoTwitterImage: formData.seoTwitterImage?.trim() || "",
+        seoCanonicalUrl: formData.seoCanonicalUrl?.trim() || "",
+        seoRobotsIndex: formData.seoRobotsIndex !== undefined ? formData.seoRobotsIndex : true,
+        seoRobotsFollow: formData.seoRobotsFollow !== undefined ? formData.seoRobotsFollow : true,
+        seoAuthor: formData.seoAuthor?.trim() || "",
+        seoPublisher: formData.seoPublisher?.trim() || "Paradise Yatra",
+        seoArticleSection: formData.seoArticleSection?.trim() || "",
+        seoArticleTags: Array.isArray(formData.seoArticleTags) ? formData.seoArticleTags : [],
       };
 
       // Check if we need to upload a file
+      // Note: If image is already a Cloudinary URL (from ImageUpload component), 
+      // we don't need to upload it again - just send it as part of the form data
       const hasFileUpload =
         formData.image &&
         (formData.image.startsWith("blob:") ||
           formData.image.startsWith("data:"));
+
+      console.log("💾 Saving blog:", {
+        editing: editing ? "Update" : "Create",
+        hasFileUpload,
+        imageType: formData.image ? (formData.image.startsWith("http") ? "URL" : "File") : "None",
+        title: formData.title,
+      });
 
       let response;
       if (hasFileUpload) {
         // Handle file upload
         const uploadFormData = new FormData();
 
-        // Add all form fields
+        // Handle image file conversion first - MUST await this
+        if (formData.image) {
+          let file: File;
+          
+          try {
+            if (formData.image.startsWith("blob:")) {
+              // Convert blob URL to file
+              const blobResponse = await fetch(formData.image);
+              if (!blobResponse.ok) {
+                throw new Error('Failed to fetch blob');
+              }
+              const blob = await blobResponse.blob();
+              file = new File([blob], "blog-image.jpg", {
+                type: blob.type || "image/jpeg",
+              });
+            } else if (formData.image.startsWith("data:")) {
+              // Convert data URL to file
+              const dataResponse = await fetch(formData.image);
+              if (!dataResponse.ok) {
+                throw new Error('Failed to fetch data URL');
+              }
+              const blob = await dataResponse.blob();
+              file = new File([blob], "blog-image.jpg", {
+                type: blob.type || "image/jpeg",
+              });
+            } else {
+              // If it's already a file object
+              file = formData.image as unknown as File;
+            }
+            
+            uploadFormData.append("image", file);
+          } catch (fileError) {
+            console.error("Error converting image file:", fileError);
+            toast.error("Failed to process image file. Please try again.");
+            setSaving(false);
+            return;
+          }
+        }
+
+        // Add all other form fields (excluding image which is already added)
         Object.keys(backendData).forEach((key) => {
           const value = (backendData as Record<string, unknown>)[key];
-          if (
-            key === "image" &&
-            typeof value === "string" &&
-            value.startsWith("blob:")
-          ) {
-            // Convert blob URL to file and upload
-            fetch(value)
-              .then((res) => res.blob())
-              .then((blob) => {
-                const file = new File([blob], "image.jpg", {
-                  type: "image/jpeg",
-                });
-                uploadFormData.append("image", file);
-              });
-          } else if (
-            key === "image" &&
-            typeof value === "string" &&
-            value.startsWith("data:")
-          ) {
-            // Convert data URL to file and upload
-            const response = fetch(value);
-            response
-              .then((res) => res.blob())
-              .then((blob) => {
-                const file = new File([blob], "image.jpg", {
-                  type: "image/jpeg",
-                });
-                uploadFormData.append("image", file);
-              });
-          } else if (value !== undefined) {
-            uploadFormData.append(key, String(value));
+          if (key !== "image" && value !== undefined && value !== null) {
+            if (typeof value === "object" && !Array.isArray(value)) {
+              uploadFormData.append(key, JSON.stringify(value));
+            } else if (Array.isArray(value)) {
+              uploadFormData.append(key, JSON.stringify(value));
+            } else {
+              uploadFormData.append(key, String(value));
+            }
           }
         });
 
-        response = await fetch(url, {
-          method,
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-          body: uploadFormData,
-        });
+        try {
+          console.log("📤 Sending FormData request to:", url);
+          response = await fetch(url, {
+            method,
+            headers: {
+              Authorization: `Bearer ${token}`,
+              // Don't set Content-Type - browser will set it with boundary
+            },
+            body: uploadFormData,
+          });
+          console.log("📥 FormData response status:", response.status);
+        } catch (fetchError) {
+          console.error("❌ Fetch error:", fetchError);
+          toast.error("Network error. Please check your connection and try again.");
+          setSaving(false);
+          return;
+        }
       } else {
         // Handle regular JSON data
-        response = await fetch(url, {
-          method,
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${token}`,
-          },
-          body: JSON.stringify(backendData),
-        });
+        try {
+          console.log("📤 Sending JSON request to:", url);
+          console.log("📤 Request data:", JSON.stringify(backendData, null, 2));
+          response = await fetch(url, {
+            method,
+            headers: {
+              "Content-Type": "application/json",
+              Authorization: `Bearer ${token}`,
+            },
+            body: JSON.stringify(backendData),
+          });
+          console.log("📥 JSON response status:", response.status);
+        } catch (fetchError) {
+          console.error("❌ Fetch error:", fetchError);
+          toast.error("Network error. Please check your connection and try again.");
+          setSaving(false);
+          return;
+        }
       }
 
-      const data = await response.json();
+      // Check if response is ok before parsing
+      if (!response.ok) {
+        let errorMessage = "Unknown error";
+        try {
+          const errorData = await response.json();
+          errorMessage = errorData.message || errorData.error || "Unknown error";
+          console.error("❌ Server error response:", errorData);
+        } catch (parseError) {
+          const responseText = await response.text();
+          errorMessage = `Server error: ${response.status} ${response.statusText}`;
+          console.error("❌ Failed to parse error response:", responseText);
+        }
+        console.error("❌ Failed to save blog:", errorMessage);
+        toast.error(`Failed to save: ${errorMessage}`);
+        setSaving(false);
+        return;
+      }
 
-      if (response.ok) {
-        await fetchBlogs();
+      let data;
+      try {
+        const responseText = await response.text();
+        console.log("✅ Response text:", responseText);
+        data = JSON.parse(responseText);
+        console.log("✅ Parsed response data:", data);
+      } catch (parseError) {
+        console.error("❌ Failed to parse response:", parseError);
+        toast.error("Failed to parse server response");
+        setSaving(false);
+        return;
+      }
+
+      if (data.message || data.blog) {
+        console.log("✅ Blog saved successfully!");
+        await fetchBlogs(); // Refresh all blogs
+        setCurrentPage(1); // Reset to first page
         setEditing(null);
         setActiveTab("all");
         resetForm();
@@ -246,12 +447,13 @@ const AdminBlogs = ({ initialAction, onActionComplete }: AdminBlogsProps) => {
           editing ? "Blog updated successfully!" : "Blog added successfully!"
         );
       } else {
-        console.error("Failed to save blog:", data.message);
-        toast.error(`Failed to save: ${data.message || "Unknown error"}`);
+        console.error("❌ Unexpected response format:", data);
+        toast.error("Unexpected response from server. Please check the console for details.");
       }
     } catch (error) {
       console.error("Error saving blog:", error);
-      toast.error("Network error. Please try again.");
+      const errorMessage = error instanceof Error ? error.message : "Network error. Please try again.";
+      toast.error(errorMessage);
     } finally {
       setSaving(false);
     }
@@ -306,7 +508,13 @@ const AdminBlogs = ({ initialAction, onActionComplete }: AdminBlogsProps) => {
       const data = await response.json();
 
       if (response.ok) {
-        await fetchBlogs();
+        await fetchBlogs(); // Refresh all blogs
+        // If current page becomes empty after deletion, go to previous page
+        const remainingBlogs = totalBlogs - 1;
+        const newTotalPages = Math.ceil(remainingBlogs / blogsPerPage);
+        if (currentPage > newTotalPages && newTotalPages > 0) {
+          setCurrentPage(newTotalPages);
+        }
         toast.success("Blog deleted successfully!");
       } else {
         console.error("Failed to delete blog:", data.message);
@@ -386,9 +594,7 @@ const AdminBlogs = ({ initialAction, onActionComplete }: AdminBlogsProps) => {
           <h2 className="text-2xl font-bold text-gray-900">Blog Management</h2>
           <p className="text-gray-700">
             {activeTab === "all"
-              ? `Manage blog posts and articles (${
-                  Array.isArray(blogs) ? blogs.length : 0
-                } blogs)`
+              ? `Manage blog posts and articles (${totalBlogs} blogs)`
               : editing
               ? "Edit blog post"
               : "Create new blog post"}
@@ -418,7 +624,7 @@ const AdminBlogs = ({ initialAction, onActionComplete }: AdminBlogsProps) => {
               : "text-gray-600 hover:text-gray-900"
           }`}
         >
-          All Blogs ({Array.isArray(blogs) ? blogs.length : 0})
+          All Blogs ({totalBlogs})
         </button>
         <button
           onClick={handleAddNew}
@@ -547,6 +753,7 @@ const AdminBlogs = ({ initialAction, onActionComplete }: AdminBlogsProps) => {
                   setFormData((prev) => ({ ...prev, content }))
                 }
                 placeholder="Write your blog content here..."
+                contentType="blogs"
               />
             </div>
 
@@ -565,13 +772,19 @@ const AdminBlogs = ({ initialAction, onActionComplete }: AdminBlogsProps) => {
                 />
               </div>
               <div>
-                <ImageUpload
-                  value={formData.image}
-                  onChange={(value) =>
-                    setFormData((prev) => ({ ...prev, image: value }))
-                  }
-                  label="Blog Image"
-                />
+                <div>
+                  <ImageUpload
+                    value={formData.image}
+                    onChange={(value) =>
+                      setFormData((prev) => ({ ...prev, image: value }))
+                    }
+                    label="Blog Image"
+                    contentType="blogs"
+                  />
+                  <p className="text-xs text-blue-600 mt-1">
+                    💡 Images will be uploaded to Cloudinary: paradise-yatra/blogs
+                  </p>
+                </div>
               </div>
             </div>
 
@@ -743,6 +956,7 @@ const AdminBlogs = ({ initialAction, onActionComplete }: AdminBlogsProps) => {
                           }))
                         }
                         label=""
+                        contentType="blogs"
                       />
                       <p className="text-xs text-gray-500 mt-1">
                         Recommended: 1200x630 pixels
@@ -805,6 +1019,7 @@ const AdminBlogs = ({ initialAction, onActionComplete }: AdminBlogsProps) => {
                           }))
                         }
                         label=""
+                        contentType="blogs"
                       />
                       <p className="text-xs text-gray-500 mt-1">
                         Recommended: 1200x675 pixels
@@ -990,6 +1205,48 @@ const AdminBlogs = ({ initialAction, onActionComplete }: AdminBlogsProps) => {
 
       {activeTab === "all" && (
         <div className="space-y-4">
+          {/* Blog count and pagination info */}
+          <div className="flex items-center justify-between mb-4">
+            <div className="text-sm text-gray-600">
+              {totalBlogs > 0 ? (
+                <>Showing {(currentPage - 1) * blogsPerPage + 1} - {Math.min(currentPage * blogsPerPage, totalBlogs)} of {totalBlogs} blogs</>
+              ) : (
+                <>No blogs found</>
+              )}
+            </div>
+            {totalPages > 1 && (
+              <div className="flex items-center gap-2">
+                <Button
+                  onClick={() => setCurrentPage(prev => Math.max(1, prev - 1))}
+                  disabled={currentPage === 1}
+                  size="sm"
+                  className={
+                    currentPage === 1
+                      ? "bg-gray-400 text-white cursor-not-allowed opacity-60"
+                      : "bg-black text-white hover:bg-gray-800 transition-colors"
+                  }
+                >
+                  Previous
+                </Button>
+                <span className="text-sm text-gray-600 min-w-[100px] text-center">
+                  Page {currentPage} of {totalPages}
+                </span>
+                <Button
+                  onClick={() => setCurrentPage(prev => Math.min(totalPages, prev + 1))}
+                  disabled={currentPage === totalPages}
+                  size="sm"
+                  className={
+                    currentPage === totalPages
+                      ? "bg-gray-400 text-white cursor-not-allowed opacity-60"
+                      : "bg-black text-white hover:bg-gray-800 transition-colors"
+                  }
+                >
+                  Next
+                </Button>
+              </div>
+            )}
+          </div>
+
           {blogs.length === 0 ? (
             <div className="text-center py-12">
               <p className="text-gray-500 text-lg">

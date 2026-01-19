@@ -22,15 +22,31 @@ export async function POST(request: NextRequest) {
       body: formData,
     });
 
-    const data = await response.json();
-
     if (!response.ok) {
+      let errorMessage = 'Upload failed';
+      
+      try {
+        const errorData = await response.json();
+        console.error('❌ Backend upload error:', errorData);
+        errorMessage = errorData.message || errorData.error || errorMessage;
+      } catch (jsonError) {
+        // If JSON parsing fails, try to get text
+        try {
+          const errorText = await response.text();
+          errorMessage = errorText || response.statusText || `Server returned ${response.status} status`;
+        } catch (textError) {
+          errorMessage = response.statusText || `Server returned ${response.status} status`;
+        }
+        console.error('❌ Failed to parse error response:', jsonError);
+      }
+      
       return NextResponse.json(
-        { message: data.message || 'Upload failed' },
+        { message: errorMessage },
         { status: response.status }
       );
     }
 
+    const data = await response.json();
     return NextResponse.json(data);
   } catch (error) {
     console.error('Upload error:', error);

@@ -185,51 +185,58 @@ const AdminHolidayTypes = () => {
         stateName = selectedState ? selectedState.name : selectedStateCode;
       }
 
-      // Check if we need to upload a file
-      const hasFileUpload = formData.image && (formData.image.startsWith('blob:') || formData.image.startsWith('data:'));
+      // Check if image is already a URL (from ImageUpload component) or needs file upload
+      // ImageUpload component uploads to /api/upload/image and returns Cloudinary URL
+      const isImageUrl = formData.image && formData.image.startsWith('http');
+      const hasBlobDataUrl = formData.image && (formData.image.startsWith('blob:') || formData.image.startsWith('data:'));
       
       let response;
-      if (hasFileUpload) {
-        // Handle file upload
-        const uploadFormData = new FormData();
-        
-        // Add all form fields with converted names
-        Object.keys(formData).forEach(key => {
-          const value = (formData as Record<string, unknown>)[key];
-          if (key === 'country') {
-            uploadFormData.append(key, countryName);
-          } else if (key === 'state') {
-            uploadFormData.append(key, stateName);
-          } else if (key === 'image' && typeof value === 'string' && value.startsWith('blob:')) {
-            // Convert blob URL to file and upload
-            fetch(value)
-              .then(res => res.blob())
-              .then(blob => {
-                const file = new File([blob], 'image.jpg', { type: 'image/jpeg' });
-                uploadFormData.append('image', file);
-              });
-          } else if (key === 'image' && typeof value === 'string' && value.startsWith('data:')) {
-            // Convert data URL to file and upload
-            const response = fetch(value);
-            response.then(res => res.blob())
-              .then(blob => {
-                const file = new File([blob], 'image.jpg', { type: 'image/jpeg' });
-                uploadFormData.append('image', file);
-              });
+      
+      if (hasBlobDataUrl) {
+        // Handle blob/data URL - convert to file first
+        let file: File;
+        try {
+          if (formData.image.startsWith('blob:')) {
+            const blobResponse = await fetch(formData.image);
+            const blob = await blobResponse.blob();
+            file = new File([blob], 'holiday-type-image.jpg', { type: blob.type || 'image/jpeg' });
+          } else if (formData.image.startsWith('data:')) {
+            const blobResponse = await fetch(formData.image);
+            const blob = await blobResponse.blob();
+            file = new File([blob], 'holiday-type-image.jpg', { type: blob.type || 'image/jpeg' });
           } else {
-            uploadFormData.append(key, String(value));
+            throw new Error('Invalid image format');
           }
-        });
+          
+          // Handle file upload
+          const uploadFormData = new FormData();
+          uploadFormData.append('image', file);
+          uploadFormData.append('title', formData.title);
+          uploadFormData.append('description', formData.description);
+          uploadFormData.append('shortDescription', formData.shortDescription);
+          uploadFormData.append('duration', formData.duration || '');
+          uploadFormData.append('travelers', formData.travelers || '');
+          uploadFormData.append('badge', formData.badge || '');
+          uploadFormData.append('price', formData.price || '');
+          uploadFormData.append('country', countryName);
+          uploadFormData.append('state', stateName || '');
+          uploadFormData.append('tourType', formData.tourType || '');
+          uploadFormData.append('category', formData.category || '');
+          uploadFormData.append('order', String(formData.order || 0));
 
-        response = await fetch("/api/holiday-types", {
-          method: "POST",
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-          body: uploadFormData,
-        });
+          response = await fetch("/api/holiday-types", {
+            method: "POST",
+            headers: {
+              Authorization: `Bearer ${token}`,
+            },
+            body: uploadFormData,
+          });
+        } catch (convertError) {
+          console.error('Error converting image:', convertError);
+          return toast.error("Failed to process image. Please try uploading again.");
+        }
       } else {
-        // Handle regular JSON data
+        // Handle regular JSON data (image is already a URL from ImageUpload component)
         response = await fetch("/api/holiday-types", {
           method: "POST",
           headers: {
@@ -238,6 +245,7 @@ const AdminHolidayTypes = () => {
           },
           body: JSON.stringify({
             ...formData,
+            image: formData.image || '',
             country: countryName,
             state: stateName
           }),
@@ -249,8 +257,13 @@ const AdminHolidayTypes = () => {
         throw new Error(errorData.message || "Failed to create holiday type");
       }
 
-      await fetchHolidayTypes();
+      // Close form and reset before fetching
+      setShowCreateForm(false);
       resetForm();
+      
+      // Refresh the holiday types list
+      await fetchHolidayTypes();
+      
       toast.success("Holiday type created successfully!");
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : "An error occurred";
@@ -280,62 +293,83 @@ const AdminHolidayTypes = () => {
         stateName = selectedState ? selectedState.name : selectedStateCode;
       }
 
-      // Check if we need to upload a file
-      const hasFileUpload = formData.image && (formData.image.startsWith('blob:') || formData.image.startsWith('data:'));
+      // Check if image changed - need to check if it's a new blob/data URL or URL
+      const existingHolidayType = holidayTypes.find(ht => ht._id === id);
+      const imageChanged = existingHolidayType && formData.image !== existingHolidayType.image;
+      const hasBlobDataUrl = formData.image && (formData.image.startsWith('blob:') || formData.image.startsWith('data:'));
+      const isNewImageUrl = formData.image && formData.image.startsWith('http') && imageChanged;
+      
+      console.log('Update - Existing image:', existingHolidayType?.image);
+      console.log('Update - New image:', formData.image);
+      console.log('Update - Image changed:', imageChanged);
+      console.log('Update - Has blob/data URL:', hasBlobDataUrl);
+      console.log('Update - Is new image URL:', isNewImageUrl);
       
       let response;
-      if (hasFileUpload) {
-        // Handle file upload
-        const uploadFormData = new FormData();
-        
-        // Add all form fields with converted names
-        Object.keys(formData).forEach(key => {
-          const value = (formData as Record<string, unknown>)[key];
-          if (key === 'country') {
-            uploadFormData.append(key, countryName);
-          } else if (key === 'state') {
-            uploadFormData.append(key, stateName);
-          } else if (key === 'image' && typeof value === 'string' && value.startsWith('blob:')) {
-            // Convert blob URL to file and upload
-            fetch(value)
-              .then(res => res.blob())
-              .then(blob => {
-                const file = new File([blob], 'image.jpg', { type: 'image/jpeg' });
-                uploadFormData.append('image', file);
-              });
-          } else if (key === 'image' && typeof value === 'string' && value.startsWith('data:')) {
-            // Convert data URL to file and upload
-            const response = fetch(value);
-            response.then(res => res.blob())
-              .then(blob => {
-                const file = new File([blob], 'image.jpg', { type: 'image/jpeg' });
-                uploadFormData.append('image', file);
-              });
+      
+      if (hasBlobDataUrl) {
+        // Handle blob/data URL - convert to file first
+        let file: File;
+        try {
+          if (formData.image.startsWith('blob:')) {
+            const blobResponse = await fetch(formData.image);
+            const blob = await blobResponse.blob();
+            file = new File([blob], 'holiday-type-image.jpg', { type: blob.type || 'image/jpeg' });
+          } else if (formData.image.startsWith('data:')) {
+            const blobResponse = await fetch(formData.image);
+            const blob = await blobResponse.blob();
+            file = new File([blob], 'holiday-type-image.jpg', { type: blob.type || 'image/jpeg' });
           } else {
-            uploadFormData.append(key, String(value));
+            throw new Error('Invalid image format');
           }
-        });
+          
+          // Handle file upload
+          const uploadFormData = new FormData();
+          uploadFormData.append('image', file);
+          uploadFormData.append('title', formData.title);
+          uploadFormData.append('description', formData.description);
+          uploadFormData.append('shortDescription', formData.shortDescription);
+          uploadFormData.append('duration', formData.duration || '');
+          uploadFormData.append('travelers', formData.travelers || '');
+          uploadFormData.append('badge', formData.badge || '');
+          uploadFormData.append('price', formData.price || '');
+          uploadFormData.append('country', countryName);
+          uploadFormData.append('state', stateName || '');
+          uploadFormData.append('tourType', formData.tourType || '');
+          uploadFormData.append('category', formData.category || '');
+          uploadFormData.append('order', String(formData.order || 0));
 
-        response = await fetch(`/api/holiday-types/${id}`, {
-          method: "PUT",
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-          body: uploadFormData,
-        });
+          response = await fetch(`/api/holiday-types/${id}`, {
+            method: "PUT",
+            headers: {
+              Authorization: `Bearer ${token}`,
+            },
+            body: uploadFormData,
+          });
+        } catch (convertError) {
+          console.error('Error converting image:', convertError);
+          return toast.error("Failed to process image. Please try uploading again.");
+        }
       } else {
-        // Handle regular JSON data
+        // Handle regular JSON data (image is already a URL from ImageUpload component)
+        // Always include the image in the update request, even if it's the same URL
+        // The backend will handle whether to update it or not
+        const updateData = {
+          ...formData,
+          image: formData.image || '', // Always include image field
+          country: countryName,
+          state: stateName
+        };
+        
+        console.log('Update - Sending JSON update with image:', updateData.image);
+        
         response = await fetch(`/api/holiday-types/${id}`, {
           method: "PUT",
           headers: {
             "Content-Type": "application/json",
             Authorization: `Bearer ${token}`,
           },
-          body: JSON.stringify({
-            ...formData,
-            country: countryName,
-            state: stateName
-          }),
+          body: JSON.stringify(updateData),
         });
       }
 
@@ -558,7 +592,11 @@ const AdminHolidayTypes = () => {
                   value={formData.image}
                   onChange={(value) => setFormData({ ...formData, image: value })}
                   label="Holiday Type Image"
+                  contentType="holiday-types"
                 />
+                <p className="text-xs text-gray-500 mt-1">
+                  💡 Images will be uploaded to Cloudinary: paradise-yatra/packages/holiday-types
+                </p>
               </div>
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">

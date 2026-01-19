@@ -1,169 +1,3 @@
-// const cloudinary = require("../config/cloudinary");
-// const fs = require("fs");
-
-// /**
-//  * Dynamic folder mapping based on category
-//  * You can add more categories here as needed
-//  */
-// const getFolderPath = (category) => {
-//   const folderMap = {
-//     // Packages
-//     'trending-destinations': 'paradise-yatra/packages/trending-destinations',
-//     'popular-packages': 'paradise-yatra/packages/popular-packages',
-//     'holiday-packages': 'paradise-yatra/packages/holiday-packages',
-//     'adventure-packages': 'paradise-yatra/packages/adventure-packages',
-    
-//     // Other content types
-//     'blogs': 'paradise-yatra/blogs',
-//     'testimonials': 'paradise-yatra/testimonials',
-//     'destinations': 'paradise-yatra/destinations',
-//     'hero': 'paradise-yatra/hero',
-//     'cta': 'paradise-yatra/cta',
-//     'holiday-types': 'paradise-yatra/holiday-types',
-//   };
-
-//   // If category exists in map, use it; otherwise create dynamic folder
-//   if (folderMap[category]) {
-//     return folderMap[category];
-//   }
-
-//   // For dynamic categories (like "Beach Holidays", "Mountain Tours")
-//   // Convert to safe folder name
-//   const safeCategoryName = category
-//     .toLowerCase()
-//     .replace(/\s+/g, '-')
-//     .replace(/[^a-z0-9-]/g, '');
-  
-//   return `paradise-yatra/packages/${safeCategoryName}`;
-// };
-
-// /**
-//  * Upload image to Cloudinary with dynamic folder
-//  * @param {String} filePath - Local file path from multer
-//  * @param {String} category - Category for folder routing
-//  * @param {String} oldPublicId - Optional: public_id of old image to delete
-//  */
-// const uploadToCloudinary = async (filePath, category = "default", oldPublicId = null) => {
-//   try {
-//     const folder = getFolderPath(category);
-
-//     // Upload new image
-//     const result = await cloudinary.uploader.upload(filePath, {
-//       folder: folder,
-//       use_filename: true,
-//       unique_filename: true,
-//       overwrite: false,
-//       transformation: [
-//         { quality: "auto", fetch_format: "auto" }
-//       ],
-//     });
-
-//     // Delete local temp file
-//     if (fs.existsSync(filePath)) {
-//       fs.unlinkSync(filePath);
-//     }
-
-//     // Delete old Cloudinary image if provided
-//     if (oldPublicId) {
-//       try {
-//         await cloudinary.uploader.destroy(oldPublicId);
-//         console.log(`Deleted old image: ${oldPublicId}`);
-//       } catch (deleteError) {
-//         console.error(`Failed to delete old image ${oldPublicId}:`, deleteError.message);
-//         // Don't throw - new image uploaded successfully
-//       }
-//     }
-
-//     return {
-//       url: result.secure_url,
-//       public_id: result.public_id,
-//       asset_id: result.asset_id,
-//     };
-//   } catch (error) {
-//     // Clean up local file on error
-//     if (fs.existsSync(filePath)) {
-//       fs.unlinkSync(filePath);
-//     }
-//     throw new Error(`Cloudinary upload failed: ${error.message}`);
-//   }
-// };
-
-// /**
-//  * Upload multiple images
-//  */
-// const uploadMultipleToCloudinary = async (files, category = "default") => {
-//   try {
-//     const fileArray = Array.isArray(files) ? files : [files];
-//     const folder = getFolderPath(category);
-
-//     const uploadPromises = fileArray.map((file) =>
-//       cloudinary.uploader.upload(file.path, {
-//         folder: folder,
-//         use_filename: true,
-//         unique_filename: true,
-//       })
-//     );
-
-//     const results = await Promise.all(uploadPromises);
-
-//     // Cleanup local files
-//     fileArray.forEach((file) => {
-//       if (fs.existsSync(file.path)) {
-//         fs.unlinkSync(file.path);
-//       }
-//     });
-
-//     return results.map((result) => ({
-//       url: result.secure_url,
-//       public_id: result.public_id,
-//     }));
-//   } catch (error) {
-//     // Cleanup on error
-//     const fileArray = Array.isArray(files) ? files : [files];
-//     fileArray.forEach((file) => {
-//       if (fs.existsSync(file.path)) {
-//         fs.unlinkSync(file.path);
-//       }
-//     });
-//     throw new Error(`Multiple upload failed: ${error.message}`);
-//   }
-// };
-
-// /**
-//  * Delete image from Cloudinary
-//  */
-// const deleteFromCloudinary = async (publicId) => {
-//   try {
-//     const result = await cloudinary.uploader.destroy(publicId);
-//     return result;
-//   } catch (error) {
-//     throw new Error(`Cloudinary delete failed: ${error.message}`);
-//   }
-// };
-
-// /**
-//  * Extract public_id from Cloudinary URL
-//  */
-// const extractPublicId = (cloudinaryUrl) => {
-//   if (!cloudinaryUrl || typeof cloudinaryUrl !== 'string') return null;
-  
-//   // Check if it's a Cloudinary URL
-//   if (!cloudinaryUrl.includes('cloudinary.com')) return null;
-  
-//   // Extract public_id from URL
-//   // Example: https://res.cloudinary.com/xxx/image/upload/v123/paradise-yatra/packages/trending/image.jpg
-//   const matches = cloudinaryUrl.match(/\/upload\/(?:v\d+\/)?(.+?)(?:\.[^.]+)?$/);
-//   return matches ? matches[1] : null;
-// };
-
-// module.exports = {
-//   uploadToCloudinary,
-//   uploadMultipleToCloudinary,
-//   deleteFromCloudinary,
-//   extractPublicId,
-//   getFolderPath, // Export for reference
-// };
-
 const cloudinary = require("../config/cloudinary");
 const fs = require("fs");
 
@@ -171,6 +5,9 @@ const fs = require("fs");
  * Dynamic folder mapping based on content type and category
  */
 const getFolderPath = (contentType, category = null) => {
+  // Normalize contentType to lowercase for matching
+  const normalizedContentType = contentType ? contentType.toLowerCase().trim() : null;
+  
   // Pre-defined folder mappings
   const folderMap = {
     // Content types
@@ -179,42 +16,55 @@ const getFolderPath = (contentType, category = null) => {
     'testimonials': 'paradise-yatra/testimonials',
     'hero': 'paradise-yatra/hero',
     'cta': 'paradise-yatra/cta',
-    'holiday-types': 'paradise-yatra/holiday-types',
+    'holiday-types': 'paradise-yatra/packages/holiday-types',
+    'misc': 'paradise-yatra/misc',
+    'default': 'paradise-yatra/misc', // Map 'default' to 'misc' folder
     
     // Package categories
     'trending-destinations': 'paradise-yatra/packages/trending-destinations',
     'popular-packages': 'paradise-yatra/packages/popular-packages',
     'holiday-packages': 'paradise-yatra/packages/holiday-packages',
     'adventure-packages': 'paradise-yatra/packages/adventure-packages',
+    'premium-packages': 'paradise-yatra/packages/premium-packages',
   };
 
-  // If direct match found in folderMap
-  if (folderMap[contentType]) {
-    return folderMap[contentType];
+  console.log(`📁 getFolderPath called with contentType: "${contentType}", normalized: "${normalizedContentType}", category: "${category}"`);
+
+  // If direct match found in folderMap (case-insensitive)
+  if (normalizedContentType && folderMap[normalizedContentType]) {
+    const folder = folderMap[normalizedContentType];
+    console.log(`✅ Matched folderMap: ${folder}`);
+    return folder;
   }
 
   // For packages with category
-  if (contentType === 'packages' && category) {
+  if (normalizedContentType === 'packages' && category) {
     const safeCategoryName = category
       .toLowerCase()
       .replace(/\s+/g, '-')
       .replace(/[^a-z0-9-]/g, '');
     
-    return `paradise-yatra/packages/${safeCategoryName}`;
+    const folder = `paradise-yatra/packages/${safeCategoryName}`;
+    console.log(`✅ Packages with category: ${folder}`);
+    return folder;
   }
 
   // For dynamic categories (backward compatibility with old code)
-  if (contentType && contentType.includes('-')) {
-    const safeCategoryName = contentType
+  if (normalizedContentType && normalizedContentType.includes('-')) {
+    const safeCategoryName = normalizedContentType
       .toLowerCase()
       .replace(/\s+/g, '-')
       .replace(/[^a-z0-9-]/g, '');
     
-    return `paradise-yatra/packages/${safeCategoryName}`;
+    const folder = `paradise-yatra/packages/${safeCategoryName}`;
+    console.log(`✅ Dynamic category: ${folder}`);
+    return folder;
   }
 
   // Default fallback
-  return `paradise-yatra/${contentType || 'default'}`;
+  const defaultFolder = `paradise-yatra/${normalizedContentType || 'default'}`;
+  console.log(`⚠️ Using default fallback: ${defaultFolder}`);
+  return defaultFolder;
 };
 
 /**
@@ -228,10 +78,23 @@ const uploadToCloudinary = async (filePath, contentTypeOrCategory = "misc", cate
   // Support legacy single-parameter usage: uploadToCloudinary(path, 'trending-destinations')
   const contentType = contentTypeOrCategory;
   
+  // Normalize category: handle string "null" or "undefined" as actual null
+  let normalizedCategory = category;
+  if (category === "null" || category === "undefined" || category === null || category === undefined) {
+    normalizedCategory = null;
+  }
+  
+  console.log(`🚀 uploadToCloudinary called with:`);
+  console.log(`   - filePath: ${filePath}`);
+  console.log(`   - contentTypeOrCategory: "${contentTypeOrCategory}"`);
+  console.log(`   - category: "${category}" (normalized: ${normalizedCategory === null ? 'null' : `"${normalizedCategory}"`})`);
+  console.log(`   - oldPublicId: "${oldPublicId}"`);
+  
   // If no category provided and contentType looks like a category, extract it
-  if (!category && contentType && contentType.includes('-')) {
+  if (!normalizedCategory && contentType && contentType.includes('-')) {
     // This is likely a legacy category parameter
-    category = contentType;
+    normalizedCategory = contentType;
+    console.log(`   - Extracted category from contentType: "${normalizedCategory}"`);
   }
   
   try {
@@ -243,22 +106,50 @@ const uploadToCloudinary = async (filePath, contentTypeOrCategory = "misc", cate
       throw new Error("File does not exist");
     }
 
-    const folder = getFolderPath(contentType, category);
+    const folder = getFolderPath(contentType, normalizedCategory);
 
-    console.log(`Uploading to Cloudinary folder: ${folder}`);
+    // CRITICAL: Ensure folder is set correctly - force 'paradise-yatra/blogs' for blogs
+    let finalFolder = folder;
+    if (contentType && contentType.toLowerCase().trim() === 'blogs') {
+      finalFolder = 'paradise-yatra/blogs';
+      console.log(`🔧 FORCED folder to: "${finalFolder}" for blogs content type`);
+    }
 
-    // Upload new image
-    const result = await cloudinary.uploader.upload(filePath, {
-      folder: folder,
+    console.log(`📤 Uploading to Cloudinary folder: "${finalFolder}"`);
+    console.log(`📤 Full upload options: folder="${finalFolder}"`);
+
+    // Upload new image with explicit folder setting
+    const uploadOptions = {
+      folder: finalFolder,
       use_filename: true,
       unique_filename: true,
       overwrite: false,
       transformation: [
         { quality: "auto", fetch_format: "auto" }
       ],
-    });
+    };
+    
+    console.log(`📤 Upload options:`, JSON.stringify(uploadOptions, null, 2));
 
-    console.log(`Upload successful: ${result.secure_url}`);
+    const result = await cloudinary.uploader.upload(filePath, uploadOptions);
+
+    console.log(`✅ Upload successful: ${result.secure_url}`);
+    console.log(`✅ Public ID: ${result.public_id}`);
+    console.log(`✅ Folder in public_id: ${result.public_id.split('/').slice(0, -1).join('/')}`);
+    
+    // Verify folder is correct
+    const expectedFolderParts = folder.split('/');
+    const actualFolderParts = result.public_id.split('/').slice(0, -1);
+    const folderMatches = JSON.stringify(expectedFolderParts) === JSON.stringify(actualFolderParts);
+    
+    if (!folderMatches) {
+      console.error(`❌ FOLDER MISMATCH!`);
+      console.error(`   Expected: ${folder}`);
+      console.error(`   Got: ${actualFolderParts.join('/')}`);
+      console.error(`   Full public_id: ${result.public_id}`);
+    } else {
+      console.log(`✅ Folder verification: CORRECT`);
+    }
 
     // Delete local temp file
     if (fs.existsSync(filePath)) {

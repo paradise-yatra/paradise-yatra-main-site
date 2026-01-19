@@ -304,6 +304,8 @@ const AdminFixedDepartures = () => {
       for (let i = 0; i < files.length; i++) {
         formData.append('image', files[i]);
       }
+      // Add contentType for Cloudinary folder organization
+      formData.append('contentType', 'misc');
 
       const response = await fetch('/api/upload/image', {
         method: 'POST',

@@ -89,10 +89,29 @@ const uploadImage = async (req, res) => {
       return res.status(400).json({ message: "No image file provided" });
     }
 
-    // Get category from request body (e.g., 'trending-destinations', 'blogs')
-    const category = req.body.category || "default";
+    // Get contentType and category from request body
+    // contentType: 'destinations', 'blogs', 'packages', 'testimonials', etc.
+    // category: optional, used when contentType is 'packages'
+    let contentType = req.body.contentType || req.body.category || null;
+    const category = req.body.category && req.body.contentType === 'packages' 
+      ? req.body.category 
+      : null;
 
-    const result = await uploadToCloudinary(req.file.path, category);
+    // Normalize 'default' to 'misc' for consistency
+    if (contentType && contentType.toLowerCase() === 'default') {
+      contentType = 'misc';
+    }
+
+    // Handle legacy format: if category is provided without contentType, treat it as contentTypeOrCategory
+    // This supports backward compatibility
+    const contentTypeOrCategory = contentType || "misc";
+
+    const result = await uploadToCloudinary(
+      req.file.path, 
+      contentTypeOrCategory, 
+      category, 
+      null
+    );
 
     res.status(200).json({
       message: "Image uploaded successfully",

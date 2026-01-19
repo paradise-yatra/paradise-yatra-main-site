@@ -1,13 +1,14 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import React, { useState, useEffect } from "react";
 import { Mountain, Star, MapPin, Clock, Users, Edit, Trash2, Plus, Eye, Zap } from "lucide-react";
 import Image from "next/image";
 import { toast } from "react-toastify";
 import ImageUpload from "@/components/ui/image-upload";
 import { getImageUrl } from "@/lib/utils";
 import { PACKAGE_CATEGORIES, TOUR_TYPES } from "@/config/categories";
-import { useLocations } from "@/hooks/useLocations";
+import { Country, State } from "country-state-city";
+import type { ICountry, IState } from "country-state-city";
 
 interface AdventurePackage {
   _id: string;
@@ -60,12 +61,10 @@ const AdminAdventurePackages = () => {
   const [currentPage, setCurrentPage] = useState(1);
   const [itemsPerPage] = useState(10);
 
-  // Use locations hook for dynamic data
-  const { countries, states, loading: locationsLoading, fetchStates, clearStates } = useLocations();
-  
-  // Add state for storing country ISO2 and state code
+  // Country and state management
   const [selectedCountryIso2, setSelectedCountryIso2] = useState<string>("");
-  const [selectedStateCode, setSelectedStateCode] = useState<string>("");
+  const [states, setStates] = useState<Array<{ name: string; state_code: string }>>([]);
+  const [selectedState, setSelectedState] = useState<string>("");
 
   const [formData, setFormData] = useState({
     title: "",
@@ -86,37 +85,42 @@ const AdminAdventurePackages = () => {
     isActive: true
   });
 
+  // Get all countries
+  const countries = React.useMemo(() => {
+    return Country.getAllCountries().map((c: ICountry) => ({
+      iso2: c.isoCode,
+      name: c.name,
+    }));
+  }, []);
+
   // Transform countries for dropdown
   const countryOptions = countries.map(country => ({
     value: country.iso2,
-    label: `${country.emoji} ${country.name}`
-  }));
-
-  // Transform states for dropdown
-  const stateOptions = states.map(state => ({
-    value: state.state_code,
-    label: state.name
+    label: country.name
   }));
 
   // Handle country change
   const handleCountryChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
     const countryIso2 = e.target.value;
     setSelectedCountryIso2(countryIso2);
-    setFormData(prev => ({ ...prev, country: countryIso2, state: '' }));
-    setSelectedStateCode('');
+    setSelectedState("");
     
-    if (countryIso2) {
-      fetchStates(countryIso2);
-    } else {
-      clearStates();
-    }
-  };
+    const selectedCountry = countries.find(c => c.iso2 === countryIso2);
+    setFormData(prev => ({ 
+      ...prev, 
+      country: selectedCountry ? selectedCountry.name : "", 
+      state: "" 
+    }));
 
-  // Handle state change
-  const handleStateChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
-    const stateCode = e.target.value;
-    setSelectedStateCode(stateCode);
-    setFormData(prev => ({ ...prev, state: stateCode }));
+    if (countryIso2) {
+      const countryStates = State.getStatesOfCountry(countryIso2);
+      setStates(countryStates.map((s: IState) => ({
+        name: s.name,
+        state_code: s.isoCode || '',
+      })));
+    } else {
+      setStates([]);
+    }
   };
 
   useEffect(() => {
@@ -217,9 +221,9 @@ const AdminAdventurePackages = () => {
         const selectedCountry = countries.find(c => c.iso2 === selectedCountryIso2);
         countryName = selectedCountry ? selectedCountry.name : selectedCountryIso2;
       }
-      if (selectedStateCode) {
-        const selectedState = states.find(s => s.state_code === selectedStateCode);
-        stateName = selectedState ? selectedState.name : selectedStateCode;
+      if (selectedState) {
+        const selectedStateObj = states.find(s => s.name === selectedState);
+        stateName = selectedStateObj ? selectedStateObj.name : selectedState;
       }
 
       const packageData: PackageData = {
@@ -246,25 +250,34 @@ const AdminAdventurePackages = () => {
         // Handle file upload
         const uploadFormData = new FormData();
         
-        // Add all form fields
+        // Convert image to file FIRST (await it)
+        let imageFile: File | null = null;
+        if (formData.images) {
+          if (formData.images.startsWith('blob:')) {
+            const res = await fetch(formData.images);
+            const blob = await res.blob();
+            imageFile = new File([blob], 'image.jpg', { type: 'image/jpeg' });
+          } else if (formData.images.startsWith('data:')) {
+            const res = await fetch(formData.images);
+            const blob = await res.blob();
+            imageFile = new File([blob], 'image.jpg', { type: 'image/jpeg' });
+          }
+        }
+        
+        // Add image file if we have one
+        if (imageFile) {
+          uploadFormData.append('image', imageFile);
+        }
+        
+        // Add contentType for Cloudinary folder organization
+        uploadFormData.append('contentType', 'adventure-packages');
+        
+        // Add all form fields (excluding images array, we handle that separately above)
         Object.keys(packageData).forEach(key => {
           const value = packageData[key as keyof PackageData];
-          if (key === 'images' && Array.isArray(value) && value.length > 0 && typeof value[0] === 'string' && value[0].startsWith('blob:')) {
-            // Convert blob URL to file and upload
-            fetch(value[0])
-              .then(res => res.blob())
-              .then(blob => {
-                const file = new File([blob], 'image.jpg', { type: 'image/jpeg' });
-                uploadFormData.append('image', file);
-              });
-          } else if (key === 'images' && Array.isArray(value) && value.length > 0 && typeof value[0] === 'string' && value[0].startsWith('data:')) {
-            // Convert data URL to file and upload
-            const response = fetch(value[0]);
-            response.then(res => res.blob())
-              .then(blob => {
-                const file = new File([blob], 'image.jpg', { type: 'image/jpeg' });
-                uploadFormData.append('image', file);
-              });
+          if (key === 'images') {
+            // Skip images - we already handled it above
+            return;
           } else if (Array.isArray(value)) {
             uploadFormData.append(key, JSON.stringify(value));
           } else {
@@ -314,16 +327,17 @@ const AdminAdventurePackages = () => {
   const handleEditPackage = (pkg: AdventurePackage) => {
     setEditingPackage(pkg);
     
-    // Find country ISO2 and state code from names
+    // Set country and state
     const country = countries.find(c => c.name === pkg.country);
-    const state = states.find(s => s.name === pkg.state);
-    
     setSelectedCountryIso2(country?.iso2 || '');
-    setSelectedStateCode(state?.state_code || '');
-    
-    // If country is found, fetch its states
+    setSelectedState(pkg.state || '');
+
     if (country?.iso2) {
-      fetchStates(country.iso2);
+      const countryStates = State.getStatesOfCountry(country.iso2);
+      setStates(countryStates.map((s: IState) => ({
+        name: s.name,
+        state_code: s.isoCode || '',
+      })));
     }
     
     setFormData({
@@ -332,7 +346,7 @@ const AdminAdventurePackages = () => {
       duration: pkg.duration,
       destination: pkg.destination,
       country: pkg.country,
-      state: pkg.state,
+      state: pkg.state || "",
       tourType: pkg.tourType,
       price: pkg.price.toString(),
       originalPrice: pkg.originalPrice?.toString() || "",
@@ -419,9 +433,9 @@ const AdminAdventurePackages = () => {
         const selectedCountry = countries.find(c => c.iso2 === selectedCountryIso2);
         countryName = selectedCountry ? selectedCountry.name : selectedCountryIso2;
       }
-      if (selectedStateCode) {
-        const selectedState = states.find(s => s.state_code === selectedStateCode);
-        stateName = selectedState ? selectedState.name : selectedStateCode;
+      if (selectedState) {
+        const selectedStateObj = states.find(s => s.name === selectedState);
+        stateName = selectedStateObj ? selectedStateObj.name : selectedState;
       }
 
       const packageData: PackageData = {
@@ -445,28 +459,37 @@ const AdminAdventurePackages = () => {
 
       let response;
       if (hasFileUpload) {
-        // Handle file upload
+        // Handle file upload (blob/data URLs)
         const uploadFormData = new FormData();
         
-        // Add all form fields
+        // Convert image to file FIRST (await it)
+        let imageFile: File | null = null;
+        if (formData.images) {
+          if (formData.images.startsWith('blob:')) {
+            const res = await fetch(formData.images);
+            const blob = await res.blob();
+            imageFile = new File([blob], 'image.jpg', { type: 'image/jpeg' });
+          } else if (formData.images.startsWith('data:')) {
+            const res = await fetch(formData.images);
+            const blob = await res.blob();
+            imageFile = new File([blob], 'image.jpg', { type: 'image/jpeg' });
+          }
+        }
+        
+        // Add image file if we have one
+        if (imageFile) {
+          uploadFormData.append('image', imageFile);
+        }
+        
+        // Add contentType for Cloudinary folder organization
+        uploadFormData.append('contentType', 'adventure-packages');
+        
+        // Add all form fields (excluding images array, we handle that separately above)
         Object.keys(packageData).forEach(key => {
           const value = packageData[key as keyof PackageData];
-          if (key === 'images' && Array.isArray(value) && value.length > 0 && typeof value[0] === 'string' && value[0].startsWith('blob:')) {
-            // Convert blob URL to file and upload
-            fetch(value[0])
-              .then(res => res.blob())
-              .then(blob => {
-                const file = new File([blob], 'image.jpg', { type: 'image/jpeg' });
-                uploadFormData.append('image', file);
-              });
-          } else if (key === 'images' && Array.isArray(value) && value.length > 0 && typeof value[0] === 'string' && value[0].startsWith('data:')) {
-            // Convert data URL to file and upload
-            const response = fetch(value[0]);
-            response.then(res => res.blob())
-              .then(blob => {
-                const file = new File([blob], 'image.jpg', { type: 'image/jpeg' });
-                uploadFormData.append('image', file);
-              });
+          if (key === 'images') {
+            // Skip images - we already handled it above
+            return;
           } else if (Array.isArray(value)) {
             uploadFormData.append(key, JSON.stringify(value));
           } else {
@@ -611,8 +634,8 @@ const AdminAdventurePackages = () => {
       isActive: true
     });
     setSelectedCountryIso2("");
-    setSelectedStateCode("");
-    clearStates();
+    setSelectedState("");
+    setStates([]);
     setShowAddForm(false);
     setEditingPackage(null);
   };
@@ -722,9 +745,8 @@ const AdminAdventurePackages = () => {
                 onChange={handleCountryChange}
                 className="w-full text-gray-900 px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500"
                 required
-                disabled={locationsLoading}
               >
-                <option value="">{locationsLoading ? 'Loading countries...' : 'Select country'}</option>
+                <option value="">Select country</option>
                 {countryOptions.map((country) => (
                   <option key={country.value} value={country.value}>
                     {country.label}
@@ -735,15 +757,18 @@ const AdminAdventurePackages = () => {
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">State</label>
               <select
-                value={selectedStateCode}
-                onChange={handleStateChange}
+                value={selectedState}
+                onChange={(e) => {
+                  setSelectedState(e.target.value);
+                  setFormData(prev => ({ ...prev, state: e.target.value }));
+                }}
                 className="w-full text-gray-900 px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500"
-                disabled={!selectedCountryIso2 || locationsLoading}
+                disabled={!selectedCountryIso2 || states.length === 0}
               >
-                <option value="">{selectedCountryIso2 ? 'Select State' : 'Select a country first'}</option>
-                {stateOptions.map((state) => (
-                  <option key={state.value} value={state.value}>
-                    {state.label}
+                <option value="">{!selectedCountryIso2 ? 'Select country first' : states.length === 0 ? 'No states available' : 'Select state'}</option>
+                {states.map((state) => (
+                  <option key={state.name} value={state.name}>
+                    {state.name}
                   </option>
                 ))}
               </select>
@@ -839,6 +864,7 @@ const AdminAdventurePackages = () => {
                 value={formData.images}
                 onChange={(value) => setFormData({ ...formData, images: value })}
                 label="Package Image"
+                contentType="adventure-packages"
               />
             </div>
             <div className="md:col-span-2">
@@ -874,8 +900,8 @@ const AdminAdventurePackages = () => {
         <div className="bg-gradient-to-r from-green-500 to-green-600 text-white p-6 rounded-lg">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-green-100">Total Packages</p>
-              <p className="text-2xl font-bold">{adventurePackages.length}</p>
+              <p className="!text-green-100">Total Packages</p>
+              <p className="text-2xl !text-white font-bold">{adventurePackages.length}</p>
             </div>
             <Mountain className="w-8 h-8 text-green-200" />
           </div>
@@ -883,8 +909,8 @@ const AdminAdventurePackages = () => {
         <div className="bg-gradient-to-r from-blue-500 to-blue-600 text-white p-6 rounded-lg">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-blue-100">Active Packages</p>
-              <p className="text-2xl font-bold">{adventurePackages.filter(p => p.isActive).length}</p>
+              <p className="!text-blue-100">Active Packages</p>
+              <p className="text-2xl !text-white font-bold">{adventurePackages.filter(p => p.isActive).length}</p>
             </div>
             <Zap className="w-8 h-8 text-blue-200" />
           </div>
@@ -892,8 +918,8 @@ const AdminAdventurePackages = () => {
         <div className="bg-gradient-to-r from-purple-500 to-purple-600 text-white p-6 rounded-lg">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-purple-100">Total Highlights</p>
-              <p className="text-2xl font-bold">{adventurePackages.reduce((sum, p) => sum + (p.highlights?.length || 0), 0).toLocaleString()}</p>
+              <p className="!text-purple-100">Total Highlights</p>
+              <p className="text-2xl !text-white font-bold">{adventurePackages.reduce((sum, p) => sum + (p.highlights?.length || 0), 0).toLocaleString()}</p>
             </div>
             <Users className="w-8 h-8 text-purple-200" />
           </div>
@@ -901,8 +927,8 @@ const AdminAdventurePackages = () => {
         <div className="bg-gradient-to-r from-yellow-500 to-yellow-600 text-white p-6 rounded-lg">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-yellow-100">Avg Rating</p>
-              <p className="text-2xl font-bold">
+              <p className="!text-yellow-100">Avg Rating</p>
+              <p className="text-2xl !text-white font-bold">
                 {(adventurePackages.reduce((sum, p) => sum + p.rating, 0) / adventurePackages.length).toFixed(1)}
               </p>
             </div>

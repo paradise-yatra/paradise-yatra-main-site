@@ -8,7 +8,6 @@ import { SkeletonHero } from "@/components/ui/skeleton";
 import SearchSuggestions from "./SearchSuggestions";
 import { useRouter } from "next/navigation";
 import { Permanent_Marker } from 'next/font/google';
-import Image from "next/image";
 
 interface HeroContent {
   title: string;
@@ -35,7 +34,19 @@ const HeroSection = () => {
   useEffect(() => {
     const fetchHeroContent = async () => {
       try {
-        // Don't block rendering - set default content immediately
+        setLoading(true);
+        const response = await fetch("/api/hero");
+
+        if (!response.ok) {
+          throw new Error("Failed to fetch hero content");
+        }
+
+        const data = await response.json();
+        setHeroContent(data);
+        setError(null);
+      } catch (err) {
+        console.error("Error fetching hero content:", err);
+        setError("Failed to load hero content");
         setHeroContent({
           title: "Your Next Adventure Awaits",
           description: "Explore, dream, and discover with Paradise Yatra.",
@@ -43,21 +54,8 @@ const HeroSection = () => {
           ctaButtonText: "Explore Packages",
           secondaryButtonText: "Watch Video",
         });
+      } finally {
         setLoading(false);
-
-        // Fetch updated content in the background
-        const response = await fetch("/api/hero", {
-          cache: "force-cache", // Cache the response
-        });
-
-        if (response.ok) {
-          const data = await response.json();
-          setHeroContent(data);
-        }
-      } catch (err) {
-        console.error("Error fetching hero content:", err);
-        setError("Failed to load hero content");
-        // Keep default content, already set
       }
     };
 
@@ -98,21 +96,21 @@ const HeroSection = () => {
     <section className="relative min-h-screen flex items-center justify-center overflow-hidden pt-20 sm:pt-24 md:pt-28 pb-12 sm:pb-16 md:pb-20">
       
       {/* Background Image - Travel themed */}
-      <div className="absolute inset-0 z-0">
-        <Image
-          src="https://images.unsplash.com/photo-1469854523086-cc02fe5d8800?w=1920&q=75&auto=format&fit=crop"
+      <motion.div
+        initial={{ scale: 1.1 }}
+        animate={{ scale: 1 }}
+        transition={{ duration: 1.5, ease: "easeOut" }}
+        className="absolute inset-0 z-0"
+      >
+        <img
+          src="https://images.unsplash.com/photo-1469854523086-cc02fe5d8800?w=1920&q=80"
           alt="Travel Background"
-          fill
-          priority
-          quality={85}
-          className="object-cover"
-          sizes="100vw"
-          placeholder="blur"
-          blurDataURL="data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAAAQABAAD/2wBDAAgGBgcGBQgHBwcJCQgKDBQNDAsLDBkSEw8UHRofHh0aHBwgJC4nICIsIxwcKDcpLDAxNDQ0Hyc5PTgyPC4zNDL/2wBDAQkJCQwLDBgNDRgyIRwhMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjL/wAARCAAIAAoDASIAAhEBAxEB/8QAFQABAQAAAAAAAAAAAAAAAAAAAAv/xAAhEAACAQMDBQAAAAAAAAAAAAABAgMABAUGIWEREiMxUf/EABUBAQEAAAAAAAAAAAAAAAAAAAMF/8QAGhEAAgIDAAAAAAAAAAAAAAAAAAECEgMRkf/aAAwDAQACEQADAD8BtJeyyeH0AthI5xdrLcNM91BF5pX2HaH9bcfaSXWGaRmknyJckliyjqTzSlT54b6b+h9R//Z"
+          className="w-full h-full object-cover"
+          loading="eager"
         />
         {/* Dark overlay for text readability */}
         <div className="absolute inset-0 bg-gradient-to-b from-black/70 via-black/30 to-black/80"></div>
-      </div>
+      </motion.div>
 
       {/* Content Container */}
       <div className="relative z-20 w-full max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -156,18 +154,18 @@ const HeroSection = () => {
             {/* Primary Button - Explore Packages */}
             <button
               onClick={() => router.push("/packages/category/popular-destinations")}
-              className="group relative overflow-hidden rounded-full flex-[0.6] sm:flex-none sm:w-auto shadow-2xl hover:shadow-yellow-400/40 transition-all duration-300 hover:scale-105 active:scale-95 min-w-0"
+              className="group relative overflow-hidden rounded-full flex-1 sm:flex-none sm:w-auto shadow-2xl hover:shadow-yellow-400/40 transition-all duration-300 hover:scale-105 active:scale-95 min-w-0"
             >
               <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-1000"></div>
               
               <div className="flex items-center justify-center bg-gradient-to-r from-yellow-500 via-orange-500 to-red-500 rounded-full relative">
-                <span className="text-white font-semibold text-sm sm:text-base pl-3 sm:pl-6 pr-1.5 sm:pr-3 py-3 sm:py-3 whitespace-nowrap truncate">
+                <span className="text-white font-semibold text-xs sm:text-base pl-2 sm:pl-6 pr-1 sm:pr-3 py-2.5 sm:py-2.5 whitespace-nowrap truncate">
                   {heroContent?.ctaButtonText || "Explore Packages"}
                 </span>
                 
-                <div className="bg-white rounded-full p-2 sm:p-2.5 m-1.5 sm:m-2 transition-all duration-300 group-hover:-rotate-45 group-hover:scale-110 shadow-lg flex-shrink-0">
+                <div className="bg-white rounded-full p-1.5 sm:p-2.5 m-1.5 sm:m-2 transition-all duration-300 group-hover:-rotate-45 group-hover:scale-110 shadow-lg flex-shrink-0">
                   <svg
-                    className="w-4 h-4 sm:w-5 sm:h-5 text-orange-600"
+                    className="w-3.5 h-3.5 sm:w-5 sm:h-5 text-orange-600"
                     viewBox="0 0 24 24"
                     fill="none"
                     stroke="currentColor"
@@ -184,22 +182,19 @@ const HeroSection = () => {
             {/* Secondary Button - Watch Video */}
             <button
               onClick={() => window.open("https://www.youtube.com/@ParadiseYatra", "_blank")}
-              className="group relative overflow-hidden rounded-2xl flex-[0.4] sm:flex-none sm:w-auto transition-all duration-300 hover:scale-105 active:scale-95 min-w-0"
+              className="group relative overflow-hidden rounded-2xl flex-1 sm:flex-none sm:w-auto transition-all duration-300 hover:scale-105 active:scale-95 min-w-0"
             >
-              <div className="flex items-center justify-center gap-1.5 sm:gap-3 bg-white/10 backdrop-blur-xl border-2 border-white/30 rounded-2xl px-2.5 sm:px-6 py-3 sm:py-3 shadow-2xl transition-all duration-300 group-hover:bg-white/20 group-hover:border-white/40">
+              <div className="flex items-center justify-center gap-1.5 sm:gap-3 bg-white/10 backdrop-blur-xl border-2 border-white/30 rounded-2xl px-2 sm:px-6 py-2.5 sm:py-2.5 shadow-2xl transition-all duration-300 group-hover:bg-white/20 group-hover:border-white/40">
                 
                 <div className="relative shrink-0">
                   <div className="absolute inset-0 bg-red-500 rounded-full blur-md opacity-60 group-hover:opacity-100 transition-opacity"></div>
-                  <div className="relative bg-white rounded-full p-1.5 sm:p-2">
-                    <svg className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-red-600" viewBox="0 0 24 24" fill="currentColor">
-                      <path d="M23.498 6.186a3.016 3.016 0 0 0-2.122-2.136C19.505 3.545 12 3.545 12 3.545s-7.505 0-9.377.505A3.017 3.017 0 0 0 .502 6.186C0 8.07 0 12 0 12s0 3.93.502 5.814a3.016 3.016 0 0 0 2.122 2.136c1.871.505 9.376.505 9.376.505s7.505 0 9.377-.505a3.015 3.015 0 0 0 2.122-2.136C24 15.93 24 12 24 12s0-3.93-.502-5.814zM9.545 15.568V8.432L15.818 12l-6.273 3.568z"/>
-                    </svg>
+                  <div className="relative bg-white rounded-full p-1 sm:p-2">
+                    <Youtube className="w-3 h-3 sm:w-4 sm:h-4 text-red-600" />
                   </div>
                 </div>
                 
-                <span className="text-white font-semibold text-sm sm:text-base relative whitespace-nowrap truncate">
-                  <span className="sm:hidden">Watch</span>
-                  <span className="hidden sm:inline">{heroContent?.secondaryButtonText || "Watch Video"}</span>
+                <span className="text-white font-semibold text-xs sm:text-base relative whitespace-nowrap truncate">
+                  {heroContent?.secondaryButtonText || "Watch Video"}
                   <span className="absolute bottom-0 left-0 h-0.5 bg-white w-0 group-hover:w-full transition-all duration-300"></span>
                 </span>
               </div>
