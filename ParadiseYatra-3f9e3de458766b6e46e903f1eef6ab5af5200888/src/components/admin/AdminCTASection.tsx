@@ -180,6 +180,7 @@ const AdminCTASection = () => {
                 value={formData.backgroundImage}
                 onChange={(value) => setFormData(prev => ({ ...prev, backgroundImage: value }))}
                 label="Background Image"
+                contentType="cta"
                 
               />
             </div>

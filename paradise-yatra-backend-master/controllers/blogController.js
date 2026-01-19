@@ -1,6 +1,6 @@
 const Blog = require("../models/Blog");
 const { processSingleImage } = require("../utils/imageUtils");
-const cloudinary = require("../config/cloudinary");
+const { uploadToCloudinary, extractPublicId } = require("../utils/cloudinaryUpload");
 
 // Helper function to transform image paths to full URLs
 const transformBlogImageUrl = (blog) => {
@@ -80,22 +80,62 @@ const getBlog = async (req, res) => {
 // Create blog (Admin only)
 const createBlog = async (req, res) => {
   try {
+    console.log('📝 Creating blog...');
+    console.log('📝 Request body:', JSON.stringify(req.body, null, 2));
+    console.log('📝 Request files:', req.files ? Object.keys(req.files) : 'No files');
+    
+    // Validate required fields
+    const requiredFields = ['title', 'content', 'excerpt', 'author', 'category', 'image'];
+    const missingFields = requiredFields.filter(field => !req.body[field] || (typeof req.body[field] === 'string' && !req.body[field].trim()));
+    
+    if (missingFields.length > 0) {
+      console.error('❌ Missing required fields:', missingFields);
+      return res.status(400).json({ 
+        message: `Missing required fields: ${missingFields.join(', ')}` 
+      });
+    }
+    
     // Handle image upload
     if (req.files && req.files.image) {
       const file = req.files.image;
+      
+      // Handle both formidable v2 (file.path) and v3 (file.filepath)
+      const filePath = file.filepath || file.path;
+      
+      if (!filePath) {
+        console.error('❌ No file path found in file object:', file);
+        return res.status(400).json({ message: 'Invalid file upload' });
+      }
 
-      // Upload to Cloudinary
-      const result = await cloudinary.uploader.upload(file.filepath, {
-        folder: "paradise-yatra/blogs",
-        resource_type: "auto",
-      });
+      console.log('🔥 Uploading blog image to Cloudinary folder: paradise-yatra/blogs');
+      console.log('🔥 File path:', filePath);
+      console.log('🔥 File object keys:', Object.keys(file));
+      console.log('🔥 Calling uploadToCloudinary with: filePath, "blogs", null, null');
+      
+      // Upload to Cloudinary using the utility function - pass 'blogs' as content type
+      // IMPORTANT: First parameter is contentType, must be exactly 'blogs'
+      const result = await uploadToCloudinary(filePath, 'blogs', null, null);
+
+      console.log('✅ Blog image uploaded successfully:', result.url);
+      console.log('✅ Public ID:', result.public_id);
+      console.log('✅ Folder path in URL:', result.url.includes('paradise-yatra/blogs') ? 'CORRECT' : 'WRONG');
 
       // Add Cloudinary URL to req.body
-      req.body.image = result.secure_url;
+      req.body.image = result.url;
+
+      // Verify the URL contains the correct path
+      if (!req.body.image.includes('paradise-yatra/blogs')) {
+        console.error('❌ ERROR: Blog image uploaded to wrong folder!');
+        console.error('❌ Expected: paradise-yatra/blogs');
+        console.error('❌ Got:', req.body.image);
+        return res.status(500).json({ message: 'Blog image uploaded to incorrect Cloudinary folder' });
+      }
     }
 
+    console.log('💾 Saving blog to database...');
     const blog = new Blog(req.body);
     await blog.save();
+    console.log('✅ Blog saved successfully with ID:', blog._id);
 
     // Transform image URL
     const transformedBlog = transformBlogImageUrl(blog);
@@ -105,26 +145,77 @@ const createBlog = async (req, res) => {
       blog: transformedBlog,
     });
   } catch (error) {
-    console.error("Create blog error:", error);
-    res.status(500).json({ message: "Server error during blog creation." });
+    console.error("❌ Create blog error:", error);
+    console.error("❌ Error details:", {
+      message: error.message,
+      name: error.name,
+      stack: error.stack,
+    });
+    
+    // Handle validation errors
+    if (error.name === 'ValidationError') {
+      const validationErrors = Object.values(error.errors).map(err => err.message).join(', ');
+      return res.status(400).json({ 
+        message: `Validation error: ${validationErrors}`,
+        errors: error.errors 
+      });
+    }
+    
+    res.status(500).json({ 
+      message: error.message || "Server error during blog creation.",
+      error: process.env.NODE_ENV === 'development' ? error.stack : undefined
+    });
   }
 };
 
 // Update blog (Admin only)
 const updateBlog = async (req, res) => {
   try {
+    // Get existing blog to extract old image public_id
+    const existingBlog = await Blog.findById(req.params.id);
+    
+    if (!existingBlog) {
+      return res.status(404).json({ message: "Blog not found." });
+    }
+
     // Handle image upload if provided
     if (req.files && req.files.image) {
       const file = req.files.image;
+      
+      // Handle both formidable v2 (file.path) and v3 (file.filepath)
+      const filePath = file.filepath || file.path;
+      
+      if (!filePath) {
+        console.error('❌ No file path found in file object:', file);
+        return res.status(400).json({ message: 'Invalid file upload' });
+      }
 
-      // Upload to Cloudinary
-      const result = await cloudinary.uploader.upload(file.filepath, {
-        folder: "paradise-yatra/blogs",
-        resource_type: "auto",
-      });
+      console.log('🔥 New blog image detected for update');
+      console.log('🔥 Uploading to Cloudinary folder: paradise-yatra/blogs');
+      console.log('🔥 File path:', filePath);
+      
+      // Extract old image public_id for deletion
+      const oldPublicId = existingBlog.image ? extractPublicId(existingBlog.image) : null;
+      console.log('🗑️ Old blog image public_id for deletion:', oldPublicId);
+      
+      // Upload new image to paradise-yatra/blogs and delete old one
+      const result = await uploadToCloudinary(filePath, 'blogs', null, oldPublicId);
+      
+      console.log('✅ Upload result:', result);
+      console.log('✅ New blog image URL:', result.url);
+      console.log('✅ New public ID:', result.public_id);
+      console.log('✅ Folder path in URL:', result.url.includes('paradise-yatra/blogs') ? 'CORRECT' : 'WRONG');
 
       // Add Cloudinary URL to req.body
-      req.body.image = result.secure_url;
+      req.body.image = result.url;
+
+      // Verify the URL contains the correct path
+      if (!req.body.image.includes('paradise-yatra/blogs')) {
+        console.error('❌ ERROR: Blog image uploaded to wrong folder!');
+        console.error('❌ Expected: paradise-yatra/blogs');
+        console.error('❌ Got:', req.body.image);
+        return res.status(500).json({ message: 'Blog image uploaded to incorrect Cloudinary folder' });
+      }
     }
 
     const blog = await Blog.findByIdAndUpdate(req.params.id, req.body, {
@@ -136,6 +227,9 @@ const updateBlog = async (req, res) => {
       return res.status(404).json({ message: "Blog not found." });
     }
 
+    console.log('✅ Blog updated successfully');
+    console.log('✅ Current image:', blog.image);
+
     // Transform image URL
     const transformedBlog = transformBlogImageUrl(blog);
 
@@ -144,19 +238,37 @@ const updateBlog = async (req, res) => {
       blog: transformedBlog,
     });
   } catch (error) {
-    console.error("Update blog error:", error);
-    res.status(500).json({ message: "Server error during blog update." });
+    console.error("❌ Update blog error:", error);
+    res.status(500).json({ message: error.message || "Server error during blog update." });
   }
 };
 
 // Delete blog (Admin only)
 const deleteBlog = async (req, res) => {
   try {
-    const blog = await Blog.findByIdAndDelete(req.params.id);
+    const blog = await Blog.findById(req.params.id);
 
     if (!blog) {
       return res.status(404).json({ message: "Blog not found." });
     }
+
+    // Delete image from Cloudinary if it exists
+    if (blog.image) {
+      const publicId = extractPublicId(blog.image);
+      if (publicId) {
+        try {
+          const { deleteFromCloudinary } = require("../utils/cloudinaryUpload");
+          await deleteFromCloudinary(publicId);
+          console.log(`✅ Deleted blog image from Cloudinary: ${publicId}`);
+        } catch (deleteError) {
+          console.error(`⚠️ Failed to delete blog image from Cloudinary:`, deleteError.message);
+          // Continue with blog deletion even if image deletion fails
+        }
+      }
+    }
+
+    // Delete the blog
+    await Blog.findByIdAndDelete(req.params.id);
 
     res.json({ message: "Blog deleted successfully" });
   } catch (error) {
@@ -168,12 +280,18 @@ const deleteBlog = async (req, res) => {
 // Get featured blogs
 const getFeaturedBlogs = async (req, res) => {
   try {
-    const { limit = 6 } = req.query;
+    const { limit = 10 } = req.query; // Increased default limit to 10
 
-    // Temporarily show all blogs for testing (including unpublished ones)
-    const blogs = await Blog.find({})
-      .sort({ isPublished: -1, isFeatured: -1, views: -1, createdAt: -1 }) // Published first, then featured, then by views
+    // Get published blogs, sorted by createdAt (latest first) to show newest blogs
+    // Filter to only published blogs for frontend display
+    const blogs = await Blog.find({ isPublished: true })
+      .sort({ createdAt: -1 }) // Latest first (newest to oldest) - this ensures newest blogs appear first
       .limit(parseInt(limit));
+
+    console.log(`📝 getFeaturedBlogs: Returning ${blogs.length} blogs, sorted by createdAt (latest first)`);
+    if (blogs.length > 0) {
+      console.log(`📝 Latest blog: "${blogs[0].title}" - Created: ${blogs[0].createdAt}`);
+    }
 
     // Transform image URLs
     const transformedBlogs = blogs.map((blog) => transformBlogImageUrl(blog));

@@ -37,6 +37,7 @@ interface RichTextEditorProps {
   onChange: (value: string) => void;
   placeholder?: string;
   className?: string;
+  contentType?: string; // Content type for folder organization (e.g., 'blogs', 'destinations', 'packages')
 }
 
 interface DialogProps {
@@ -52,6 +53,7 @@ interface ImageUploadDialogProps {
   isOpen: boolean;
   onClose: () => void;
   onSubmit: (imageUrl: string, size?: string) => void;
+  contentType?: string; // Content type for folder organization
 }
 
 const Dialog = ({
@@ -132,6 +134,7 @@ const ImageUploadDialog = ({
   isOpen,
   onClose,
   onSubmit,
+  contentType,
 }: ImageUploadDialogProps) => {
   const [isUploading, setIsUploading] = useState(false);
   const [imageSize, setImageSize] = useState("medium");
@@ -163,6 +166,11 @@ const ImageUploadDialog = ({
       const uploadPromises = validFiles.map(async (file) => {
         const formData = new FormData();
         formData.append("image", file);
+        
+        // Add contentType if provided (for folder organization in Cloudinary)
+        if (contentType) {
+          formData.append("contentType", contentType);
+        }
 
         const token = localStorage.getItem("adminToken");
         const response = await fetch("/api/upload/image", {
@@ -283,7 +291,7 @@ const ImageUploadDialog = ({
   );
 };
 
-const MenuBar = ({ editor }: { editor: Editor }) => {
+const MenuBar = ({ editor, contentType }: { editor: Editor; contentType?: string }) => {
   const [linkDialog, setLinkDialog] = useState(false);
   const [imageDialog, setImageDialog] = useState(false);
   const [imageUploadDialog, setImageUploadDialog] = useState(false);
@@ -848,6 +856,7 @@ const MenuBar = ({ editor }: { editor: Editor }) => {
         isOpen={imageUploadDialog}
         onClose={() => setImageUploadDialog(false)}
         onSubmit={addImage}
+        contentType={contentType}
       />
     </>
   );
@@ -858,6 +867,7 @@ export const RichTextEditor = ({
   onChange,
   placeholder = "Start writing...",
   className,
+  contentType,
 }: RichTextEditorProps) => {
   const [isDragOver, setIsDragOver] = useState(false);
 
@@ -887,6 +897,11 @@ export const RichTextEditor = ({
         const uploadPromises = validFiles.map(async (file) => {
           const formData = new FormData();
           formData.append("image", file);
+          
+          // Add contentType if provided (for folder organization in Cloudinary)
+          if (contentType) {
+            formData.append("contentType", contentType);
+          }
 
           const token = localStorage.getItem("adminToken");
           const response = await fetch("/api/upload/image", {
@@ -1002,7 +1017,7 @@ export const RichTextEditor = ({
       onDragOver={handleDragOver}
       onDragLeave={handleDragLeave}
     >
-      <MenuBar editor={editor} />
+      <MenuBar editor={editor} contentType={contentType} />
       <div className="relative">
         <EditorContent editor={editor} />
         {!editor.getText() && (

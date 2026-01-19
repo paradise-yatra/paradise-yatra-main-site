@@ -254,8 +254,8 @@ const Header = () => {
         className={`transition-all duration-300 ${
           isTransparent
             ? "bg-transparent border-transparent"
-            : "bg-white/95 border-gray-100/50"
-        } ${isScrolled && !isTransparent ? "shadow-lg bg-white/98" : ""}`}
+            : "bg-white border-gray-100/50"
+        } ${isScrolled && !isTransparent ? "shadow-lg bg-white" : ""}`}
       >
         <div className="max-w-7xl mx-auto px-3 sm:px-4">
           <div className="flex items-center h-14 sm:h-16 lg:h-20">
@@ -330,11 +330,11 @@ const Header = () => {
                       <AnimatePresence>
                         {activeDropdown === index && (
                           <motion.div
-                            initial={{ opacity: 0, y: 10 }}
-                            animate={{ opacity: 1, y: 0 }}
-                            exit={{ opacity: 0, y: 10 }}
-                            transition={{ duration: 0.5 }}
-                            className="absolute left-0 top-full mt-1 w-80 bg-white rounded-xl shadow-2xl border border-gray-100 z-20 overflow-y-auto max-h-96 scrollbar-thin scrollbar-thumb-gray-300 scrollbar-track-gray-100"
+                            initial={{ opacity: 0, y: 10, scale: 0.95 }}
+                            animate={{ opacity: 1, y: 0, scale: 1 }}
+                            exit={{ opacity: 0, y: 10, scale: 0.95 }}
+                            transition={{ duration: 0.3, ease: "easeOut" }}
+                            className="absolute left-0 top-full mt-2 w-96 bg-white rounded-2xl shadow-2xl border border-slate-200/50 z-20 overflow-hidden backdrop-blur-xl bg-white/98"
                           >
                             {item.submenu.map((subItem, subIndex) => {
                               const DestinationIcon = getDestinationIcon(
@@ -349,19 +349,21 @@ const Header = () => {
                                 return (
                                   <div
                                     key={subIndex}
-                                    className="border-b border-gray-100 last:border-b-0"
+                                    className="border-b border-slate-100 last:border-b-0"
                                   >
-                                    <div className="px-4 py-3 bg-gradient-to-r from-blue-50 to-purple-50">
+                                    <div className="px-5 py-4 bg-gradient-to-r from-blue-50 via-indigo-50 to-purple-50 border-b border-slate-100">
                                       <div className="flex items-center">
-                                        <DestinationIcon className="w-4 h-4 mr-3 text-blue-500" />
-                                        <span className="flex-1 font-medium text-blue-700">
+                                        <div className="w-8 h-8 rounded-lg bg-blue-600 flex items-center justify-center mr-3">
+                                          <DestinationIcon className="w-4 h-4 text-white" />
+                                        </div>
+                                        <span className="flex-1 font-bold text-slate-900 text-sm">
                                           {subItem.name}
                                         </span>
                                       </div>
                                     </div>
 
                                     {/* Show fixed departure packages */}
-                                    <div className="max-h-48 overflow-y-auto scrollbar-thin scrollbar-thumb-gray-300 scrollbar-track-gray-100 relative">
+                                    <div className="max-h-64 overflow-y-auto scrollbar-thin scrollbar-thumb-slate-300 scrollbar-track-slate-100 relative p-2">
                                       {subItem.fixedDepartures.length > 4 && (
                                         <div className="absolute top-0 right-2 w-2 h-2 bg-blue-400 rounded-full animate-pulse"></div>
                                       )}
@@ -371,48 +373,40 @@ const Header = () => {
                                           <a
                                             key={depIndex}
                                             href={`/fixed-departures/${departure.slug}`}
-                                            className="flex items-center px-4 py-3 text-sm text-gray-700 hover:bg-gradient-to-r hover:from-blue-50 hover:to-purple-50 hover:text-blue-600 transition-all duration-200 border-l-4 border-transparent hover:border-blue-500"
+                                            className="group flex items-center gap-3 px-4 py-3 mb-2 rounded-xl text-sm text-slate-700 hover:bg-gradient-to-r hover:from-blue-50 hover:via-indigo-50 hover:to-purple-50 hover:text-blue-600 transition-all duration-300 border border-transparent hover:border-blue-200 hover:shadow-md"
                                           >
                                             {departure.image ? (
-                                              <Image
-                                                src={departure.image}
-                                                alt={departure.title}
-                                                width={48}
-                                                height={32}
-                                                className="w-12 h-8 object-cover rounded mr-3"
-                                              />
+                                              <div className="relative w-16 h-16 rounded-lg overflow-hidden flex-shrink-0 border border-slate-200 group-hover:border-blue-300 transition-colors">
+                                                <Image
+                                                  src={departure.image}
+                                                  alt={departure.title}
+                                                  fill
+                                                  className="object-cover group-hover:scale-110 transition-transform duration-300"
+                                                />
+                                              </div>
                                             ) : (
-                                              <div className="w-12 h-8 bg-gray-200 rounded mr-3 flex items-center justify-center">
-                                                <Calendar className="w-4 h-4 text-gray-400" />
+                                              <div className="w-16 h-16 rounded-lg bg-gradient-to-br from-blue-100 to-indigo-100 border border-slate-200 flex items-center justify-center flex-shrink-0 group-hover:border-blue-300 transition-colors">
+                                                <Calendar className="w-5 h-5 text-blue-600" />
                                               </div>
                                             )}
                                             <div className="flex-1 min-w-0">
-                                              <div className="font-medium text-sm truncate">
+                                              <div className="font-bold text-sm text-slate-900 group-hover:text-blue-600 transition-colors truncate mb-1">
                                                 {departure.title}
                                               </div>
-                                              <div className="text-xs text-gray-500 truncate">
+                                              <div className="text-xs text-slate-500 truncate mb-2">
                                                 {departure.destination}
                                               </div>
-                                              <div className="flex items-center space-x-2 mt-1">
-                                                <span className="text-xs text-blue-600 font-medium">
+                                              <div className="flex items-center gap-2 flex-wrap">
+                                                <span className="text-xs text-blue-600 font-semibold bg-blue-50 px-2 py-0.5 rounded-full">
                                                   {departure.duration}
                                                 </span>
-                                                <span className="text-xs text-gray-400">
-                                                  •
-                                                </span>
-                                                <span className="text-xs text-green-600 font-medium">
-                                                  ₹
-                                                  {departure.price.toLocaleString()}
+                                                <span className="text-xs font-bold text-emerald-600 bg-emerald-50 px-2 py-0.5 rounded-full">
+                                                  ₹{departure.price.toLocaleString()}
                                                 </span>
                                                 {departure.discount > 0 && (
-                                                  <>
-                                                    <span className="text-xs text-gray-400">
-                                                      •
-                                                    </span>
-                                                    <span className="text-xs text-red-600 font-medium">
-                                                      {departure.discount}% OFF
-                                                    </span>
-                                                  </>
+                                                  <span className="text-xs font-bold text-red-600 bg-red-50 px-2 py-0.5 rounded-full">
+                                                    {departure.discount}% OFF
+                                                  </span>
                                                 )}
                                               </div>
                                             </div>
@@ -428,14 +422,13 @@ const Header = () => {
                                           </a>
                                         ))}
                                       {subItem.fixedDepartures.length > 4 && (
-                                        <div className="px-4 py-2 bg-gray-50/50">
+                                        <div className="px-4 py-3 bg-slate-50/80 border-t border-slate-100 mt-2">
                                           <a
                                             href={subItem.href}
-                                            className="text-xs text-blue-600 hover:text-blue-700 cursor-pointer font-medium"
+                                            className="flex items-center justify-center text-xs text-blue-600 hover:text-blue-700 cursor-pointer font-bold uppercase tracking-wider gap-2 group"
                                           >
-                                            View all{" "}
-                                            {subItem.fixedDepartures.length}{" "}
-                                            tours →
+                                            View all {subItem.fixedDepartures.length} tours
+                                            <span className="group-hover:translate-x-1 transition-transform">→</span>
                                           </a>
                                         </div>
                                       )}
@@ -453,28 +446,25 @@ const Header = () => {
                                 return (
                                   <div
                                     key={subIndex}
-                                    className="border-b border-gray-100 last:border-b-0"
+                                    className="border-b border-slate-100 last:border-b-0"
                                   >
-                                    <div className="px-4 py-3 bg-gradient-to-r from-blue-50 to-purple-50">
-                                      <a
-                                        href={`/packages/india/${subItem.name
-                                          .toLowerCase()
-                                          .replace(/\s+/g, "-")}`}
-                                        onClick={() => setIsNavigating(true)}
-                                        className="flex items-center hover:bg-gradient-to-r hover:from-blue-100 hover:to-purple-100 rounded-lg p-2 transition-all duration-200 relative group"
-                                      >
-                                        <DestinationIcon className="w-4 h-4 mr-3 text-blue-500" />
-                                        <span className="flex-1 font-medium text-blue-700 hover:text-blue-800">
-                                          {subItem.name}
-                                        </span>
-                                        <div className="flex items-center gap-2">
-                                          <span className="text-xs text-blue-600 bg-blue-50 px-2 py-1 rounded-full font-medium border border-blue-200">
-                                            {subItem.destinations.length}{" "}
-                                            packages
-                                          </span>
-                                        </div>
-                                      </a>
-                                    </div>
+                                    <a
+                                      href={`/packages/india/${subItem.name
+                                        .toLowerCase()
+                                        .replace(/\s+/g, "-")}`}
+                                      onClick={() => setIsNavigating(true)}
+                                      className="group flex items-center px-5 py-4 hover:bg-gradient-to-r hover:from-blue-50 hover:via-indigo-50 hover:to-purple-50 transition-all duration-300 relative"
+                                    >
+                                      <div className="w-8 h-8 rounded-lg bg-blue-600 flex items-center justify-center mr-3 group-hover:bg-blue-700 transition-colors">
+                                        <DestinationIcon className="w-4 h-4 text-white" />
+                                      </div>
+                                      <span className="flex-1 font-bold text-slate-900 group-hover:text-blue-600 transition-colors text-sm">
+                                        {subItem.name}
+                                      </span>
+                                      <span className="text-xs text-blue-600 bg-blue-50 px-3 py-1 rounded-full font-bold border border-blue-200 group-hover:bg-blue-100 group-hover:border-blue-300 transition-colors">
+                                        {subItem.destinations.length} packages
+                                      </span>
+                                    </a>
                                   </div>
                                 );
                               }
@@ -488,28 +478,25 @@ const Header = () => {
                                 return (
                                   <div
                                     key={subIndex}
-                                    className="border-b border-gray-100 last:border-b-0"
+                                    className="border-b border-slate-100 last:border-b-0"
                                   >
-                                    <div className="px-4 py-3 bg-gradient-to-r from-blue-50 to-purple-50">
-                                      <a
-                                        href={`/packages/international/${subItem.name
-                                          .toLowerCase()
-                                          .replace(/\s+/g, "-")}`}
-                                        onClick={() => setIsNavigating(true)}
-                                        className="flex items-center hover:bg-gradient-to-r hover:from-blue-100 hover:to-purple-100 rounded-lg p-2 transition-all duration-200 relative group"
-                                      >
-                                        <DestinationIcon className="w-4 h-4 mr-3 text-blue-500" />
-                                        <span className="flex-1 font-medium text-blue-700 hover:text-blue-800">
-                                          {subItem.name}
-                                        </span>
-                                        <div className="flex items-center gap-2">
-                                          <span className="text-xs text-blue-600 bg-blue-50 px-2 py-1 rounded-full font-medium border border-blue-200">
-                                            {subItem.destinations.length}{" "}
-                                            packages
-                                          </span>
-                                        </div>
-                                      </a>
-                                    </div>
+                                    <a
+                                      href={`/packages/international/${subItem.name
+                                        .toLowerCase()
+                                        .replace(/\s+/g, "-")}`}
+                                      onClick={() => setIsNavigating(true)}
+                                      className="group flex items-center px-5 py-4 hover:bg-gradient-to-r hover:from-blue-50 hover:via-indigo-50 hover:to-purple-50 transition-all duration-300 relative"
+                                    >
+                                      <div className="w-8 h-8 rounded-lg bg-blue-600 flex items-center justify-center mr-3 group-hover:bg-blue-700 transition-colors">
+                                        <DestinationIcon className="w-4 h-4 text-white" />
+                                      </div>
+                                      <span className="flex-1 font-bold text-slate-900 group-hover:text-blue-600 transition-colors text-sm">
+                                        {subItem.name}
+                                      </span>
+                                      <span className="text-xs text-blue-600 bg-blue-50 px-3 py-1 rounded-full font-bold border border-blue-200 group-hover:bg-blue-100 group-hover:border-blue-300 transition-colors">
+                                        {subItem.destinations.length} packages
+                                      </span>
+                                    </a>
                                   </div>
                                 );
                               }
@@ -603,27 +590,20 @@ const Header = () => {
             {/* Right side - Desktop - Fixed width for balance */}
             <div className="hidden lg:flex items-center space-x-3 xl:space-x-4 flex-shrink-0 w-64 justify-end">
               <motion.div
-                whileHover={{ scale: 1.05 }}
-                whileTap={{ scale: 0.95 }}
-              >
-                <Button
-                  onClick={() => router.push('/signup')}
-                  size="sm"
-                  className="bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-600 hover:to-teal-700 hover:cursor-pointer text-white font-semibold px-2.5 sm:px-3 xl:px-4 py-1.5 sm:py-2 rounded-lg transition-all duration-300 shadow-lg whitespace-nowrap text-xs sm:text-sm"
-                >
-                  Sign Up
-                </Button>
-              </motion.div>
-              <motion.div
-                whileHover={{ scale: 1.05 }}
-                whileTap={{ scale: 0.95 }}
+                whileHover={{ scale: 1.05, y: -2 }}
+                whileTap={{ scale: 0.98 }}
+                className="relative group"
               >
                 <Button
                   onClick={() => setIsLeadFormOpen(true)}
                   size="sm"
-                  className="bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 hover:cursor-pointer text-white font-semibold px-2.5 sm:px-3 xl:px-4 py-1.5 sm:py-2 rounded-lg transition-all duration-300 shadow-lg whitespace-nowrap text-xs sm:text-sm"
+                  className="relative bg-gradient-to-r from-blue-600 via-indigo-600 to-purple-600 hover:from-blue-700 hover:via-indigo-700 hover:to-purple-700 text-white font-bold px-4 xl:px-5 py-2.5 rounded-full transition-all duration-300 shadow-xl hover:shadow-2xl hover:shadow-blue-500/50 whitespace-nowrap text-xs sm:text-sm overflow-hidden border border-blue-400/20"
                 >
-                  Book Now
+                  <span className="relative z-10 flex items-center gap-1.5">
+                    <Calendar className="w-3.5 h-3.5" />
+                    Book Now
+                  </span>
+                  <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-1000"></div>
                 </Button>
               </motion.div>
             </div>

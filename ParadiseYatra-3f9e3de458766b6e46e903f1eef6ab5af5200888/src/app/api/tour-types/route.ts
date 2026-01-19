@@ -3,26 +3,79 @@ import { API_CONFIG } from '@/config/api';
 
 export async function GET() {
   try {
+    const backendUrl = API_CONFIG.getFullUrl('');
+    console.log('Tour Types API - Backend URL:', backendUrl);
+    console.log('Tour Types API - Environment:', process.env.NODE_ENV);
+    console.log('Tour Types API - NEXT_PUBLIC_BACKEND_URL:', process.env.NEXT_PUBLIC_BACKEND_URL);
+
     // Fetch tour types, countries, states, and fixed departures in parallel
+    const tourTypesUrl = `${API_CONFIG.getFullUrl(API_CONFIG.ENDPOINTS.DESTINATIONS.TOUR_TYPES)}`;
+    const countriesUrl = `${API_CONFIG.getFullUrl(API_CONFIG.ENDPOINTS.DESTINATIONS.COUNTRIES)}`;
+    const statesUrl = `${API_CONFIG.getFullUrl(API_CONFIG.ENDPOINTS.DESTINATIONS.STATES)}`;
+    const fixedDeparturesUrl = `${API_CONFIG.getFullUrl(API_CONFIG.ENDPOINTS.FIXED_DEPARTURES.ALL)}?limit=100`;
+
+    console.log('Fetching from URLs:', {
+      tourTypes: tourTypesUrl,
+      countries: countriesUrl,
+      states: statesUrl,
+      fixedDepartures: fixedDeparturesUrl,
+    });
+
     const [tourTypesResponse, countriesResponse, statesResponse, fixedDeparturesResponse] = await Promise.all([
-      fetch(`${API_CONFIG.getFullUrl(API_CONFIG.ENDPOINTS.DESTINATIONS.TOUR_TYPES)}`),
-      fetch(`${API_CONFIG.getFullUrl(API_CONFIG.ENDPOINTS.DESTINATIONS.COUNTRIES)}`),
-      fetch(`${API_CONFIG.getFullUrl(API_CONFIG.ENDPOINTS.DESTINATIONS.STATES)}`),
-      fetch(`${API_CONFIG.getFullUrl(API_CONFIG.ENDPOINTS.FIXED_DEPARTURES.ALL)}?limit=100`)
+      fetch(tourTypesUrl, { 
+        cache: 'no-store',
+        headers: { 'Content-Type': 'application/json' }
+      }),
+      fetch(countriesUrl, { 
+        cache: 'no-store',
+        headers: { 'Content-Type': 'application/json' }
+      }),
+      fetch(statesUrl, { 
+        cache: 'no-store',
+        headers: { 'Content-Type': 'application/json' }
+      }),
+      fetch(fixedDeparturesUrl, { 
+        cache: 'no-store',
+        headers: { 'Content-Type': 'application/json' }
+      })
     ]);
 
-    if (!tourTypesResponse.ok || !countriesResponse.ok || !statesResponse.ok || !fixedDeparturesResponse.ok) {
-      throw new Error('Failed to fetch tour type data');
+    // Check each response individually for better error reporting
+    if (!tourTypesResponse.ok) {
+      const errorText = await tourTypesResponse.text();
+      console.error('Tour Types fetch failed:', {
+        status: tourTypesResponse.status,
+        statusText: tourTypesResponse.statusText,
+        url: tourTypesUrl,
+        error: errorText,
+      });
+      throw new Error(`Failed to fetch tour types: ${tourTypesResponse.status} ${tourTypesResponse.statusText}`);
+    }
+
+    if (!countriesResponse.ok) {
+      console.warn('Countries fetch failed:', countriesResponse.status, countriesResponse.statusText);
+    }
+
+    if (!statesResponse.ok) {
+      console.warn('States fetch failed:', statesResponse.status, statesResponse.statusText);
+    }
+
+    if (!fixedDeparturesResponse.ok) {
+      console.warn('Fixed Departures fetch failed:', fixedDeparturesResponse.status, fixedDeparturesResponse.statusText);
     }
 
     const tourTypesData = await tourTypesResponse.json();
-    const countriesData = await countriesResponse.json();
-    const statesData = await statesResponse.json();
-    const fixedDeparturesData = await fixedDeparturesResponse.json();
+    const countriesData = countriesResponse.ok ? await countriesResponse.json() : { countries: [] };
+    const statesData = statesResponse.ok ? await statesResponse.json() : { states: [] };
+    const fixedDeparturesData = fixedDeparturesResponse.ok ? await fixedDeparturesResponse.json() : { fixedDepartures: [] };
 
-    console.log('Backend URL:', API_CONFIG.BACKEND_URL);
-    console.log('Fixed departures data:', fixedDeparturesData);
-    console.log('Tour types data:', tourTypesData);
+    console.log('Tour types API - Successfully fetched data:', {
+      backendUrl: API_CONFIG.BACKEND_URL,
+      tourTypesCount: tourTypesData?.tourTypes?.length || 0,
+      countriesCount: countriesData?.countries?.length || 0,
+      statesCount: statesData?.states?.length || 0,
+      fixedDeparturesCount: fixedDeparturesData?.fixedDepartures?.length || 0,
+    });
 
     // Ensure we have both international and india tour types
     const requiredTourTypes = ['international', 'india'];

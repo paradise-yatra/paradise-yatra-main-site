@@ -100,13 +100,35 @@ export const useNavigation = () => {
         setError(null);
 
         // Fetch tour types with state categorization
-        const tourTypesResponse = await fetch('/api/tour-types');
+        const tourTypesResponse = await fetch('/api/tour-types', {
+          cache: 'no-store', // Ensure fresh data in production
+          headers: {
+            'Content-Type': 'application/json',
+          },
+        });
         
         if (!tourTypesResponse.ok) {
-          throw new Error('Failed to fetch tour type data');
+          const errorText = await tourTypesResponse.text();
+          console.error('Navigation API Error:', {
+            status: tourTypesResponse.status,
+            statusText: tourTypesResponse.statusText,
+            error: errorText,
+          });
+          throw new Error(`Failed to fetch tour type data: ${tourTypesResponse.status} ${tourTypesResponse.statusText}`);
         }
 
         const tourTypesData = await tourTypesResponse.json();
+        
+        // Validate response data
+        if (!tourTypesData || !tourTypesData.tourTypes || !Array.isArray(tourTypesData.tourTypes)) {
+          console.error('Invalid navigation data structure:', tourTypesData);
+          throw new Error('Invalid navigation data structure');
+        }
+        
+        console.log('Navigation data fetched successfully:', {
+          tourTypesCount: tourTypesData.tourTypes.length,
+          tourTypes: tourTypesData.tourTypes.map((t: TourType) => t.tourType),
+        });
         
         // Create navigation items from tour types
         const dynamicNavItems: NavigationItem[] = [];

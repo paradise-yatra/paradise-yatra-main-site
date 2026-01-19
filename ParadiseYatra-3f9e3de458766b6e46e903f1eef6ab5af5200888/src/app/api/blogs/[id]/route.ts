@@ -35,15 +35,37 @@ export async function PUT(
 ) {
   try {
     const { id } = await params;
-    const body = await request.json();
-    const response = await fetch(`${BACKEND_URL}/api/blogs/${id}`, {
-      method: 'PUT',
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': request.headers.get('Authorization') || '',
-      },
-      body: JSON.stringify(body),
-    });
+    
+    // Check Content-Type to determine how to parse the request
+    const contentType = request.headers.get('content-type') || '';
+    
+    let response;
+    
+    if (contentType.includes('multipart/form-data')) {
+      // Handle FormData requests (file uploads)
+      const formData = await request.formData();
+      
+      response = await fetch(`${BACKEND_URL}/api/blogs/${id}`, {
+        method: 'PUT',
+        headers: {
+          'Authorization': request.headers.get('Authorization') || '',
+          // Don't set Content-Type header - let fetch set it with boundary
+        },
+        body: formData,
+      });
+    } else {
+      // Handle JSON requests
+      const body = await request.json();
+      
+      response = await fetch(`${BACKEND_URL}/api/blogs/${id}`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': request.headers.get('Authorization') || '',
+        },
+        body: JSON.stringify(body),
+      });
+    }
 
     const data = await response.json();
 
@@ -58,7 +80,7 @@ export async function PUT(
   } catch (error) {
     console.error('Blogs API error:', error);
     return NextResponse.json(
-      { message: 'Internal server error' },
+      { message: error instanceof Error ? error.message : 'Internal server error' },
       { status: 500 }
     );
   }

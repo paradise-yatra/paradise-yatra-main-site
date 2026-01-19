@@ -112,7 +112,7 @@ interface AdventurePackage {
   exclusions: string[];
 }
 
-type ItemType = 'package' | 'holiday' | 'fixed-departure' | 'popular-destination' | 'adventure';
+type ItemType = 'trending' | 'premium' | 'package' | 'holiday' | 'fixed-departure' | 'popular-destination' | 'adventure';
 
 interface SelectedItem {
   type: ItemType;
@@ -120,6 +120,8 @@ interface SelectedItem {
 }
 
 const AdminItinerary = () => {
+  const [trendingPackages, setTrendingPackages] = useState<Package[]>([]);
+  const [premiumPackages, setPremiumPackages] = useState<Package[]>([]);
   const [packages, setPackages] = useState<Package[]>([]);
   const [holidayTypes, setHolidayTypes] = useState<HolidayType[]>([]);
   const [fixedDepartures, setFixedDepartures] = useState<FixedDeparture[]>([]);
@@ -155,14 +157,16 @@ const AdminItinerary = () => {
       setIsLoading(true);
       setError(null);
       
-      // Fetch packages, holiday types, fixed departures, popular destinations, and adventure packages
+      // Fetch trending packages, premium packages, packages, holiday types, fixed departures, popular destinations, and adventure packages
       const token = localStorage.getItem('adminToken');
       const headers = {
         'Content-Type': 'application/json',
         ...(token && { 'Authorization': `Bearer ${token}` })
       };
 
-      const [packagesResponse, holidayTypesResponse, fixedDeparturesResponse, popularDestinationsResponse, adventurePackagesResponse] = await Promise.all([
+      const [trendingPackagesResponse, premiumPackagesResponse, packagesResponse, holidayTypesResponse, fixedDeparturesResponse, popularDestinationsResponse, adventurePackagesResponse] = await Promise.all([
+        fetch('/api/packages?category=Trending%20Destinations', { headers }),
+        fetch('/api/packages?category=Premium%20Packages', { headers }),
         fetch('/api/packages', { headers }),
         fetch('/api/holiday-types'),
         fetch('/api/fixed-departures'),
@@ -170,6 +174,12 @@ const AdminItinerary = () => {
         fetch('/api/packages?category=Adventure%20Tours')
       ]);
 
+      if (!trendingPackagesResponse.ok) {
+        throw new Error('Failed to fetch trending packages');
+      }
+      if (!premiumPackagesResponse.ok) {
+        throw new Error('Failed to fetch premium packages');
+      }
       if (!packagesResponse.ok) {
         throw new Error('Failed to fetch packages');
       }
@@ -186,11 +196,43 @@ const AdminItinerary = () => {
         throw new Error('Failed to fetch adventure packages');
       }
 
+      const trendingPackagesData = await trendingPackagesResponse.json();
+      const premiumPackagesData = await premiumPackagesResponse.json();
       const packagesData = await packagesResponse.json();
       const holidayTypesData = await holidayTypesResponse.json();
       const fixedDeparturesData = await fixedDeparturesResponse.json();
       const popularDestinationsData = await popularDestinationsResponse.json();
       const adventurePackagesData = await adventurePackagesResponse.json();
+
+      // Ensure all trending packages have itinerary arrays
+      const normalizedTrendingPackages = (Array.isArray(trendingPackagesData) ? trendingPackagesData : (trendingPackagesData.packages || trendingPackagesData)).map((pkg: {
+        _id: string;
+        itinerary?: Array<{
+          day: number;
+          title: string;
+          activities: string[];
+          image: string;
+        }>;
+      }) => ({
+        ...pkg,
+        itinerary: Array.isArray(pkg.itinerary) ? pkg.itinerary : []
+      }));
+      setTrendingPackages(Array.isArray(normalizedTrendingPackages) ? normalizedTrendingPackages : []);
+
+      // Ensure all premium packages have itinerary arrays
+      const normalizedPremiumPackages = (Array.isArray(premiumPackagesData) ? premiumPackagesData : (premiumPackagesData.packages || premiumPackagesData)).map((pkg: {
+        _id: string;
+        itinerary?: Array<{
+          day: number;
+          title: string;
+          activities: string[];
+          image: string;
+        }>;
+      }) => ({
+        ...pkg,
+        itinerary: Array.isArray(pkg.itinerary) ? pkg.itinerary : []
+      }));
+      setPremiumPackages(Array.isArray(normalizedPremiumPackages) ? normalizedPremiumPackages : []);
 
       // Ensure all packages have itinerary arrays
       const normalizedPackages = (packagesData.packages || packagesData).map((pkg: {
@@ -286,10 +328,23 @@ const AdminItinerary = () => {
     }
   };
 
+  // normalize item data to guarantee arrays for CRUD (prevents undefined errors)
+  const normalizeItemData = (item: any) => ({
+    ...item,
+    itinerary: Array.isArray(item?.itinerary) ? item.itinerary : [],
+    highlights: Array.isArray(item?.highlights) ? item.highlights : [],
+    inclusions: Array.isArray(item?.inclusions) ? item.inclusions : [],
+    exclusions: Array.isArray(item?.exclusions) ? item.exclusions : [],
+  });
+
   const handleItemSelect = (type: ItemType, itemId: string) => {
     let item: Package | HolidayType | FixedDeparture | PopularDestinationPackage | AdventurePackage | null = null;
     
-    if (type === 'package') {
+    if (type === 'trending') {
+      item = trendingPackages.find(p => p._id === itemId) || null;
+    } else if (type === 'premium') {
+      item = premiumPackages.find(p => p._id === itemId) || null;
+    } else if (type === 'package') {
       item = packages.find(p => p._id === itemId) || null;
     } else if (type === 'holiday') {
       item = holidayTypes.find(h => h._id === itemId) || null;
@@ -303,10 +358,7 @@ const AdminItinerary = () => {
 
     setSelectedItem(item ? { 
       type, 
-      data: {
-        ...item,
-        itinerary: Array.isArray(item.itinerary) ? item.itinerary : []
-      }
+      data: normalizeItemData(item)
     } : null);
     setIsEditing(false);
     setEditingDay(null);
@@ -343,7 +395,7 @@ const AdminItinerary = () => {
       );
 
       let endpoint = '';
-      if (selectedItem.type === 'package') {
+      if (selectedItem.type === 'trending' || selectedItem.type === 'premium' || selectedItem.type === 'package' || selectedItem.type === 'adventure') {
         endpoint = `/api/packages/${selectedItem.data._id}`;
       } else if (selectedItem.type === 'holiday') {
         endpoint = `/api/holiday-types/${selectedItem.data._id}`;
@@ -351,8 +403,6 @@ const AdminItinerary = () => {
         endpoint = `/api/fixed-departures/${selectedItem.data._id}`;
       } else if (selectedItem.type === 'popular-destination') {
         endpoint = `/api/destinations/${selectedItem.data._id}`;
-      } else if (selectedItem.type === 'adventure') {
-        endpoint = `/api/packages/${selectedItem.data._id}`;
       }
 
       const response = await fetch(endpoint, {
@@ -367,31 +417,50 @@ const AdminItinerary = () => {
       });
 
       if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.message || 'Failed to update day');
+        const errorData = await response.json().catch(() => ({ message: 'Failed to update day' }));
+        throw new Error(errorData.message || `Failed to update day: ${response.status} ${response.statusText}`);
       }
 
       const updatedData = await response.json();
+      console.log('Update Day Response:', updatedData);
+      
       let updatedItem;
-      if (selectedItem.type === 'package') {
-        updatedItem = updatedData.package;
+      if (selectedItem.type === 'trending' || selectedItem.type === 'premium' || selectedItem.type === 'package' || selectedItem.type === 'adventure') {
+        updatedItem = updatedData.package || updatedData.packages?.[0] || updatedData;
       } else if (selectedItem.type === 'holiday') {
-        updatedItem = updatedData;
+        updatedItem = updatedData.holidayType || updatedData;
       } else if (selectedItem.type === 'fixed-departure') {
         updatedItem = updatedData.fixedDeparture || updatedData;
       } else if (selectedItem.type === 'popular-destination') {
         updatedItem = updatedData.destination || updatedData;
-      } else if (selectedItem.type === 'adventure') {
-        updatedItem = updatedData.package || updatedData;
       }
 
-      setSelectedItem({ 
-        type: selectedItem.type, 
-        data: {
-          ...updatedItem,
-          itinerary: Array.isArray(updatedItem.itinerary) ? updatedItem.itinerary : (selectedItem.data.itinerary || [])
-        }
+      if (!updatedItem || !updatedItem._id) {
+        console.error('Invalid response structure:', updatedData);
+        throw new Error('Invalid response from server');
+      }
+
+      const normalized = normalizeItemData({
+        ...updatedItem,
+        itinerary: Array.isArray(updatedItem.itinerary) ? updatedItem.itinerary : updatedItinerary
       });
+      setSelectedItem({ type: selectedItem.type, data: normalized });
+      // keep collections in sync for immediate UI feedback
+      if (selectedItem.type === 'trending') {
+        setTrendingPackages(prev => prev.map(p => p._id === normalized._id ? normalized : p));
+      } else if (selectedItem.type === 'premium') {
+        setPremiumPackages(prev => prev.map(p => p._id === normalized._id ? normalized : p));
+      } else if (selectedItem.type === 'package') {
+        setPackages(prev => prev.map(p => p._id === normalized._id ? normalized : p));
+      } else if (selectedItem.type === 'holiday') {
+        setHolidayTypes(prev => prev.map(p => p._id === normalized._id ? normalized as HolidayType : p));
+      } else if (selectedItem.type === 'fixed-departure') {
+        setFixedDepartures(prev => prev.map(p => p._id === normalized._id ? normalized as FixedDeparture : p));
+      } else if (selectedItem.type === 'popular-destination') {
+        setPopularDestinationPackages(prev => prev.map(p => p._id === normalized._id ? normalized as PopularDestinationPackage : p));
+      } else if (selectedItem.type === 'adventure') {
+        setAdventurePackages(prev => prev.map(p => p._id === normalized._id ? normalized as AdventurePackage : p));
+      }
       setIsEditing(false);
       setEditingDay(null);
       setSuccess('Day updated successfully!');
@@ -420,7 +489,7 @@ const AdminItinerary = () => {
         .map((day, index) => ({ ...day, day: index + 1 }));
 
       let endpoint = '';
-      if (selectedItem.type === 'package') {
+      if (selectedItem.type === 'trending' || selectedItem.type === 'premium' || selectedItem.type === 'package' || selectedItem.type === 'adventure') {
         endpoint = `/api/packages/${selectedItem.data._id}`;
       } else if (selectedItem.type === 'holiday') {
         endpoint = `/api/holiday-types/${selectedItem.data._id}`;
@@ -428,8 +497,6 @@ const AdminItinerary = () => {
         endpoint = `/api/fixed-departures/${selectedItem.data._id}`;
       } else if (selectedItem.type === 'popular-destination') {
         endpoint = `/api/destinations/${selectedItem.data._id}`;
-      } else if (selectedItem.type === 'adventure') {
-        endpoint = `/api/packages/${selectedItem.data._id}`;
       }
 
       const response = await fetch(endpoint, {
@@ -444,31 +511,49 @@ const AdminItinerary = () => {
       });
 
       if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.message || 'Failed to delete day');
+        const errorData = await response.json().catch(() => ({ message: 'Failed to delete day' }));
+        throw new Error(errorData.message || `Failed to delete day: ${response.status} ${response.statusText}`);
       }
 
       const updatedData = await response.json();
+      console.log('Delete Day Response:', updatedData);
+      
       let updatedItem;
-      if (selectedItem.type === 'package') {
-        updatedItem = updatedData.package;
+      if (selectedItem.type === 'trending' || selectedItem.type === 'premium' || selectedItem.type === 'package' || selectedItem.type === 'adventure') {
+        updatedItem = updatedData.package || updatedData.packages?.[0] || updatedData;
       } else if (selectedItem.type === 'holiday') {
-        updatedItem = updatedData;
+        updatedItem = updatedData.holidayType || updatedData;
       } else if (selectedItem.type === 'fixed-departure') {
         updatedItem = updatedData.fixedDeparture || updatedData;
       } else if (selectedItem.type === 'popular-destination') {
         updatedItem = updatedData.destination || updatedData;
-      } else if (selectedItem.type === 'adventure') {
-        updatedItem = updatedData.package || updatedData;
       }
 
-            setSelectedItem({ 
-        type: selectedItem.type, 
-                   data: {
-             ...updatedItem,
-             itinerary: Array.isArray(updatedItem.itinerary) ? updatedItem.itinerary : (selectedItem.data.itinerary || [])
-           }
-       });
+      if (!updatedItem || !updatedItem._id) {
+        console.error('Invalid response structure:', updatedData);
+        throw new Error('Invalid response from server');
+      }
+
+      const normalized = normalizeItemData({
+        ...updatedItem,
+        itinerary: Array.isArray(updatedItem.itinerary) ? updatedItem.itinerary : updatedItinerary
+      });
+      setSelectedItem({ type: selectedItem.type, data: normalized });
+      if (selectedItem.type === 'trending') {
+        setTrendingPackages(prev => prev.map(p => p._id === normalized._id ? normalized : p));
+      } else if (selectedItem.type === 'premium') {
+        setPremiumPackages(prev => prev.map(p => p._id === normalized._id ? normalized : p));
+      } else if (selectedItem.type === 'package') {
+        setPackages(prev => prev.map(p => p._id === normalized._id ? normalized : p));
+      } else if (selectedItem.type === 'holiday') {
+        setHolidayTypes(prev => prev.map(p => p._id === normalized._id ? normalized as HolidayType : p));
+      } else if (selectedItem.type === 'fixed-departure') {
+        setFixedDepartures(prev => prev.map(p => p._id === normalized._id ? normalized as FixedDeparture : p));
+      } else if (selectedItem.type === 'popular-destination') {
+        setPopularDestinationPackages(prev => prev.map(p => p._id === normalized._id ? normalized as PopularDestinationPackage : p));
+      } else if (selectedItem.type === 'adventure') {
+        setAdventurePackages(prev => prev.map(p => p._id === normalized._id ? normalized as AdventurePackage : p));
+      }
        setSuccess('Day deleted successfully!');
        setTimeout(() => setSuccess(null), 3000);
      } catch (error) {
@@ -480,8 +565,21 @@ const AdminItinerary = () => {
    };
 
   const handleAddDay = async () => {
-    if (!selectedItem || !newDay.title || !newDay.activities || newDay.activities.length === 0) {
-      setError('Please fill in all required fields');
+    if (!selectedItem) {
+      setError('No package selected');
+      return;
+    }
+
+    // Validate title
+    if (!newDay.title || newDay.title.trim() === "") {
+      setError('Please enter a day title');
+      return;
+    }
+
+    // Validate activities - must have at least one non-empty activity
+    const validActivities = (newDay.activities || []).filter(activity => activity && activity.trim() !== "");
+    if (validActivities.length === 0) {
+      setError('Please add at least one activity');
       return;
     }
 
@@ -491,15 +589,15 @@ const AdminItinerary = () => {
       
       const dayToAdd: DayItinerary = {
         day: (selectedItem.data.itinerary || []).length + 1,
-        title: newDay.title!,
-        activities: (newDay.activities || [""]).filter(activity => activity.trim() !== ""),
+        title: newDay.title.trim(),
+        activities: validActivities,
         image: ""
       };
 
       const updatedItinerary = [...(selectedItem.data.itinerary || []), dayToAdd];
 
       let endpoint = '';
-      if (selectedItem.type === 'package') {
+      if (selectedItem.type === 'trending' || selectedItem.type === 'premium' || selectedItem.type === 'package' || selectedItem.type === 'adventure') {
         endpoint = `/api/packages/${selectedItem.data._id}`;
       } else if (selectedItem.type === 'holiday') {
         endpoint = `/api/holiday-types/${selectedItem.data._id}`;
@@ -507,8 +605,6 @@ const AdminItinerary = () => {
         endpoint = `/api/fixed-departures/${selectedItem.data._id}`;
       } else if (selectedItem.type === 'popular-destination') {
         endpoint = `/api/destinations/${selectedItem.data._id}`;
-      } else if (selectedItem.type === 'adventure') {
-        endpoint = `/api/packages/${selectedItem.data._id}`;
       }
 
       const response = await fetch(endpoint, {
@@ -523,31 +619,49 @@ const AdminItinerary = () => {
       });
 
       if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.message || 'Failed to add day');
+        const errorData = await response.json().catch(() => ({ message: 'Failed to add day' }));
+        throw new Error(errorData.message || `Failed to add day: ${response.status} ${response.statusText}`);
       }
 
       const updatedData = await response.json();
+      console.log('Add Day Response:', updatedData);
+      
       let updatedItem;
-      if (selectedItem.type === 'package') {
-        updatedItem = updatedData.package;
+      if (selectedItem.type === 'trending' || selectedItem.type === 'premium' || selectedItem.type === 'package' || selectedItem.type === 'adventure') {
+        updatedItem = updatedData.package || updatedData.packages?.[0] || updatedData;
       } else if (selectedItem.type === 'holiday') {
-        updatedItem = updatedData;
+        updatedItem = updatedData.holidayType || updatedData;
       } else if (selectedItem.type === 'fixed-departure') {
         updatedItem = updatedData.fixedDeparture || updatedData;
       } else if (selectedItem.type === 'popular-destination') {
         updatedItem = updatedData.destination || updatedData;
-      } else if (selectedItem.type === 'adventure') {
-        updatedItem = updatedData.package || updatedData;
       }
 
-      setSelectedItem({ 
-        type: selectedItem.type, 
-        data: {
-          ...updatedItem,
-          itinerary: Array.isArray(updatedItem.itinerary) ? updatedItem.itinerary : (selectedItem.data.itinerary || [])
-        }
+      if (!updatedItem || !updatedItem._id) {
+        console.error('Invalid response structure:', updatedData);
+        throw new Error('Invalid response from server');
+      }
+
+      const normalized = normalizeItemData({
+        ...updatedItem,
+        itinerary: Array.isArray(updatedItem.itinerary) ? updatedItem.itinerary : updatedItinerary
       });
+      setSelectedItem({ type: selectedItem.type, data: normalized });
+      if (selectedItem.type === 'trending') {
+        setTrendingPackages(prev => prev.map(p => p._id === normalized._id ? normalized : p));
+      } else if (selectedItem.type === 'premium') {
+        setPremiumPackages(prev => prev.map(p => p._id === normalized._id ? normalized : p));
+      } else if (selectedItem.type === 'package') {
+        setPackages(prev => prev.map(p => p._id === normalized._id ? normalized : p));
+      } else if (selectedItem.type === 'holiday') {
+        setHolidayTypes(prev => prev.map(p => p._id === normalized._id ? normalized as HolidayType : p));
+      } else if (selectedItem.type === 'fixed-departure') {
+        setFixedDepartures(prev => prev.map(p => p._id === normalized._id ? normalized as FixedDeparture : p));
+      } else if (selectedItem.type === 'popular-destination') {
+        setPopularDestinationPackages(prev => prev.map(p => p._id === normalized._id ? normalized as PopularDestinationPackage : p));
+      } else if (selectedItem.type === 'adventure') {
+        setAdventurePackages(prev => prev.map(p => p._id === normalized._id ? normalized as AdventurePackage : p));
+      }
       setIsAddingDay(false);
       setNewDay({
         day: 1,
@@ -647,7 +761,7 @@ const AdminItinerary = () => {
       const filteredHighlights = packageHighlights.filter(highlight => highlight.trim() !== "");
 
       let endpoint = '';
-      if (selectedItem.type === 'package') {
+      if (selectedItem.type === 'trending' || selectedItem.type === 'premium' || selectedItem.type === 'package' || selectedItem.type === 'adventure') {
         endpoint = `/api/packages/${selectedItem.data._id}`;
       } else if (selectedItem.type === 'holiday') {
         endpoint = `/api/holiday-types/${selectedItem.data._id}`;
@@ -655,8 +769,6 @@ const AdminItinerary = () => {
         endpoint = `/api/fixed-departures/${selectedItem.data._id}`;
       } else if (selectedItem.type === 'popular-destination') {
         endpoint = `/api/destinations/${selectedItem.data._id}`;
-      } else if (selectedItem.type === 'adventure') {
-        endpoint = `/api/packages/${selectedItem.data._id}`;
       }
 
       const response = await fetch(endpoint, {
@@ -671,31 +783,49 @@ const AdminItinerary = () => {
       });
 
       if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.message || 'Failed to update highlights');
+        const errorData = await response.json().catch(() => ({ message: 'Failed to update highlights' }));
+        throw new Error(errorData.message || `Failed to update highlights: ${response.status} ${response.statusText}`);
       }
 
       const updatedData = await response.json();
+      console.log('Update Highlights Response:', updatedData);
+      
       let updatedItem;
-      if (selectedItem.type === 'package') {
-        updatedItem = updatedData.package;
+      if (selectedItem.type === 'trending' || selectedItem.type === 'premium' || selectedItem.type === 'package' || selectedItem.type === 'adventure') {
+        updatedItem = updatedData.package || updatedData.packages?.[0] || updatedData;
       } else if (selectedItem.type === 'holiday') {
-        updatedItem = updatedData;
+        updatedItem = updatedData.holidayType || updatedData;
       } else if (selectedItem.type === 'fixed-departure') {
         updatedItem = updatedData.fixedDeparture || updatedData;
       } else if (selectedItem.type === 'popular-destination') {
         updatedItem = updatedData.destination || updatedData;
-      } else if (selectedItem.type === 'adventure') {
-        updatedItem = updatedData.package || updatedData;
       }
 
-      setSelectedItem({ 
-        type: selectedItem.type, 
-        data: {
-          ...updatedItem,
-          itinerary: Array.isArray(updatedItem.itinerary) ? updatedItem.itinerary : (selectedItem.data.itinerary || [])
-        }
+      if (!updatedItem || !updatedItem._id) {
+        console.error('Invalid response structure:', updatedData);
+        throw new Error('Invalid response from server');
+      }
+
+      const normalized = normalizeItemData({
+        ...updatedItem,
+        itinerary: Array.isArray(updatedItem.itinerary) ? updatedItem.itinerary : (selectedItem.data.itinerary || [])
       });
+      setSelectedItem({ type: selectedItem.type, data: normalized });
+      if (selectedItem.type === 'trending') {
+        setTrendingPackages(prev => prev.map(p => p._id === normalized._id ? normalized : p));
+      } else if (selectedItem.type === 'premium') {
+        setPremiumPackages(prev => prev.map(p => p._id === normalized._id ? normalized : p));
+      } else if (selectedItem.type === 'package') {
+        setPackages(prev => prev.map(p => p._id === normalized._id ? normalized : p));
+      } else if (selectedItem.type === 'holiday') {
+        setHolidayTypes(prev => prev.map(p => p._id === normalized._id ? normalized as HolidayType : p));
+      } else if (selectedItem.type === 'fixed-departure') {
+        setFixedDepartures(prev => prev.map(p => p._id === normalized._id ? normalized as FixedDeparture : p));
+      } else if (selectedItem.type === 'popular-destination') {
+        setPopularDestinationPackages(prev => prev.map(p => p._id === normalized._id ? normalized as PopularDestinationPackage : p));
+      } else if (selectedItem.type === 'adventure') {
+        setAdventurePackages(prev => prev.map(p => p._id === normalized._id ? normalized as AdventurePackage : p));
+      }
       setIsEditingHighlights(false);
       setSuccess('Highlights updated successfully!');
       setTimeout(() => setSuccess(null), 3000);
@@ -717,7 +847,7 @@ const AdminItinerary = () => {
       const filteredInclusions = packageInclusions.filter(inclusion => inclusion.trim() !== "");
 
       let endpoint = '';
-      if (selectedItem.type === 'package') {
+      if (selectedItem.type === 'trending' || selectedItem.type === 'premium' || selectedItem.type === 'package' || selectedItem.type === 'adventure') {
         endpoint = `/api/packages/${selectedItem.data._id}`;
       } else if (selectedItem.type === 'holiday') {
         endpoint = `/api/holiday-types/${selectedItem.data._id}`;
@@ -725,8 +855,6 @@ const AdminItinerary = () => {
         endpoint = `/api/fixed-departures/${selectedItem.data._id}`;
       } else if (selectedItem.type === 'popular-destination') {
         endpoint = `/api/destinations/${selectedItem.data._id}`;
-      } else if (selectedItem.type === 'adventure') {
-        endpoint = `/api/packages/${selectedItem.data._id}`;
       }
 
       const response = await fetch(endpoint, {
@@ -741,31 +869,49 @@ const AdminItinerary = () => {
       });
 
       if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.message || 'Failed to update inclusions');
+        const errorData = await response.json().catch(() => ({ message: 'Failed to update inclusions' }));
+        throw new Error(errorData.message || `Failed to update inclusions: ${response.status} ${response.statusText}`);
       }
 
       const updatedData = await response.json();
+      console.log('Update Inclusions Response:', updatedData);
+      
       let updatedItem;
-      if (selectedItem.type === 'package') {
-        updatedItem = updatedData.package;
+      if (selectedItem.type === 'trending' || selectedItem.type === 'premium' || selectedItem.type === 'package' || selectedItem.type === 'adventure') {
+        updatedItem = updatedData.package || updatedData.packages?.[0] || updatedData;
       } else if (selectedItem.type === 'holiday') {
-        updatedItem = updatedData;
+        updatedItem = updatedData.holidayType || updatedData;
       } else if (selectedItem.type === 'fixed-departure') {
         updatedItem = updatedData.fixedDeparture || updatedData;
       } else if (selectedItem.type === 'popular-destination') {
         updatedItem = updatedData.destination || updatedData;
-      } else if (selectedItem.type === 'adventure') {
-        updatedItem = updatedData.package || updatedData;
       }
 
-      setSelectedItem({ 
-        type: selectedItem.type, 
-        data: {
-          ...updatedItem,
-          itinerary: Array.isArray(updatedItem.itinerary) ? updatedItem.itinerary : (selectedItem.data.itinerary || [])
-        }
+      if (!updatedItem || !updatedItem._id) {
+        console.error('Invalid response structure:', updatedData);
+        throw new Error('Invalid response from server');
+      }
+
+      const normalized = normalizeItemData({
+        ...updatedItem,
+        itinerary: Array.isArray(updatedItem.itinerary) ? updatedItem.itinerary : (selectedItem.data.itinerary || [])
       });
+      setSelectedItem({ type: selectedItem.type, data: normalized });
+      if (selectedItem.type === 'trending') {
+        setTrendingPackages(prev => prev.map(p => p._id === normalized._id ? normalized : p));
+      } else if (selectedItem.type === 'premium') {
+        setPremiumPackages(prev => prev.map(p => p._id === normalized._id ? normalized : p));
+      } else if (selectedItem.type === 'package') {
+        setPackages(prev => prev.map(p => p._id === normalized._id ? normalized : p));
+      } else if (selectedItem.type === 'holiday') {
+        setHolidayTypes(prev => prev.map(p => p._id === normalized._id ? normalized as HolidayType : p));
+      } else if (selectedItem.type === 'fixed-departure') {
+        setFixedDepartures(prev => prev.map(p => p._id === normalized._id ? normalized as FixedDeparture : p));
+      } else if (selectedItem.type === 'popular-destination') {
+        setPopularDestinationPackages(prev => prev.map(p => p._id === normalized._id ? normalized as PopularDestinationPackage : p));
+      } else if (selectedItem.type === 'adventure') {
+        setAdventurePackages(prev => prev.map(p => p._id === normalized._id ? normalized as AdventurePackage : p));
+      }
       setIsEditingInclusions(false);
       setSuccess('Inclusions updated successfully!');
       setTimeout(() => setSuccess(null), 3000);
@@ -787,7 +933,7 @@ const AdminItinerary = () => {
       const filteredExclusions = packageExclusions.filter(exclusion => exclusion.trim() !== "");
 
       let endpoint = '';
-      if (selectedItem.type === 'package') {
+      if (selectedItem.type === 'trending' || selectedItem.type === 'premium' || selectedItem.type === 'package' || selectedItem.type === 'adventure') {
         endpoint = `/api/packages/${selectedItem.data._id}`;
       } else if (selectedItem.type === 'holiday') {
         endpoint = `/api/holiday-types/${selectedItem.data._id}`;
@@ -795,8 +941,6 @@ const AdminItinerary = () => {
         endpoint = `/api/fixed-departures/${selectedItem.data._id}`;
       } else if (selectedItem.type === 'popular-destination') {
         endpoint = `/api/destinations/${selectedItem.data._id}`;
-      } else if (selectedItem.type === 'adventure') {
-        endpoint = `/api/packages/${selectedItem.data._id}`;
       }
 
       const response = await fetch(endpoint, {
@@ -811,31 +955,49 @@ const AdminItinerary = () => {
       });
 
       if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.message || 'Failed to update exclusions');
+        const errorData = await response.json().catch(() => ({ message: 'Failed to update exclusions' }));
+        throw new Error(errorData.message || `Failed to update exclusions: ${response.status} ${response.statusText}`);
       }
 
       const updatedData = await response.json();
+      console.log('Update Exclusions Response:', updatedData);
+      
       let updatedItem;
-      if (selectedItem.type === 'package') {
-        updatedItem = updatedData.package;
+      if (selectedItem.type === 'trending' || selectedItem.type === 'premium' || selectedItem.type === 'package' || selectedItem.type === 'adventure') {
+        updatedItem = updatedData.package || updatedData.packages?.[0] || updatedData;
       } else if (selectedItem.type === 'holiday') {
-        updatedItem = updatedData;
+        updatedItem = updatedData.holidayType || updatedData;
       } else if (selectedItem.type === 'fixed-departure') {
         updatedItem = updatedData.fixedDeparture || updatedData;
       } else if (selectedItem.type === 'popular-destination') {
         updatedItem = updatedData.destination || updatedData;
-      } else if (selectedItem.type === 'adventure') {
-        updatedItem = updatedData.package || updatedData;
       }
 
-      setSelectedItem({ 
-        type: selectedItem.type, 
-        data: {
-          ...updatedItem,
-          itinerary: Array.isArray(updatedItem.itinerary) ? updatedItem.itinerary : (selectedItem.data.itinerary || [])
+      if (!updatedItem || !updatedItem._id) {
+        console.error('Invalid response structure:', updatedData);
+        throw new Error('Invalid response from server');
       }
+
+      const normalized = normalizeItemData({
+        ...updatedItem,
+        itinerary: Array.isArray(updatedItem.itinerary) ? updatedItem.itinerary : (selectedItem.data.itinerary || [])
       });
+      setSelectedItem({ type: selectedItem.type, data: normalized });
+      if (selectedItem.type === 'trending') {
+        setTrendingPackages(prev => prev.map(p => p._id === normalized._id ? normalized : p));
+      } else if (selectedItem.type === 'premium') {
+        setPremiumPackages(prev => prev.map(p => p._id === normalized._id ? normalized : p));
+      } else if (selectedItem.type === 'package') {
+        setPackages(prev => prev.map(p => p._id === normalized._id ? normalized : p));
+      } else if (selectedItem.type === 'holiday') {
+        setHolidayTypes(prev => prev.map(p => p._id === normalized._id ? normalized as HolidayType : p));
+      } else if (selectedItem.type === 'fixed-departure') {
+        setFixedDepartures(prev => prev.map(p => p._id === normalized._id ? normalized as FixedDeparture : p));
+      } else if (selectedItem.type === 'popular-destination') {
+        setPopularDestinationPackages(prev => prev.map(p => p._id === normalized._id ? normalized as PopularDestinationPackage : p));
+      } else if (selectedItem.type === 'adventure') {
+        setAdventurePackages(prev => prev.map(p => p._id === normalized._id ? normalized as AdventurePackage : p));
+      }
       setIsEditingExclusions(false);
       setSuccess('Exclusions updated successfully!');
       setTimeout(() => setSuccess(null), 3000);
@@ -893,7 +1055,7 @@ const AdminItinerary = () => {
               <div className="text-right">
                 <p className="text-sm text-gray-500">Total Packages</p>
                 <p className="text-2xl font-bold text-blue-600">
-                  {packages.length + holidayTypes.length + fixedDepartures.length + popularDestinationPackages.length + adventurePackages.length}
+                  {trendingPackages.length + premiumPackages.length + holidayTypes.length + fixedDepartures.length + popularDestinationPackages.length + adventurePackages.length}
                 </p>
               </div>
             </div>
@@ -934,7 +1096,8 @@ const AdminItinerary = () => {
             {/* Modern Tab Navigation */}
             <div className="flex flex-wrap gap-2 mb-8">
               {[
-                { type: 'package', label: 'Packages', icon: Package, count: packages.length, color: 'blue' },
+                { type: 'trending', label: 'Trending Packages', icon: Star, count: trendingPackages.length, color: 'orange' },
+                { type: 'premium', label: 'Premium Packages', icon: Star, count: premiumPackages.length, color: 'amber' },
                 { type: 'holiday', label: 'Holiday Types', icon: Globe, count: holidayTypes.length, color: 'green' },
                 { type: 'fixed-departure', label: 'Fixed Departures', icon: Plane, count: fixedDepartures.length, color: 'purple' },
                 { type: 'popular-destination', label: 'Popular Destinations', icon: Mountain, count: popularDestinationPackages.length, color: 'orange' },
@@ -964,25 +1127,51 @@ const AdminItinerary = () => {
 
             {/* Enhanced Package Selection Grid */}
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {/* Packages */}
+              {/* Trending Packages */}
               <div className="space-y-3">
                 <div className="flex items-center space-x-2">
-                  <Package className="w-5 h-5 text-blue-600" />
-                  <label className="text-sm font-semibold text-gray-900">Packages</label>
-                  <span className="px-2 py-1 bg-blue-100 text-blue-700 text-xs rounded-full font-medium">
-                    {packages.length}
+                  <Star className="w-5 h-5 text-orange-600" />
+                  <label className="text-sm font-semibold text-gray-900">Trending Packages</label>
+                  <span className="px-2 py-1 bg-orange-100 text-orange-700 text-xs rounded-full font-medium">
+                    {trendingPackages.length}
                   </span>
                 </div>
             <select
               onChange={(e) => {
                 if (e.target.value) {
-                  handleItemSelect('package', e.target.value);
+                  handleItemSelect('trending', e.target.value);
                 }
               }}
-                  className="w-full p-3 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 bg-white hover:border-gray-300"
+                  className="w-full p-3 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent transition-all duration-200 bg-white hover:border-gray-300"
             >
-                  <option value="">Select a package...</option>
-              {packages.map((pkg) => (
+                  <option value="">Select a trending package...</option>
+              {trendingPackages.map((pkg) => (
+                <option key={pkg._id} value={pkg._id}>
+                  {pkg.title} - {pkg.category} ({pkg.duration})
+                </option>
+              ))}
+            </select>
+          </div>
+
+              {/* Premium Packages */}
+              <div className="space-y-3">
+                <div className="flex items-center space-x-2">
+                  <Star className="w-5 h-5 text-yellow-600" />
+                  <label className="text-sm font-semibold text-gray-900">Premium Packages</label>
+                  <span className="px-2 py-1 bg-yellow-100 text-yellow-700 text-xs rounded-full font-medium">
+                    {premiumPackages.length}
+                  </span>
+                </div>
+            <select
+              onChange={(e) => {
+                if (e.target.value) {
+                  handleItemSelect('premium', e.target.value);
+                }
+              }}
+                  className="w-full p-3 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-yellow-500 focus:border-transparent transition-all duration-200 bg-white hover:border-gray-300"
+            >
+                  <option value="">Select a premium package...</option>
+              {premiumPackages.map((pkg) => (
                 <option key={pkg._id} value={pkg._id}>
                   {pkg.title} - {pkg.category} ({pkg.duration})
                 </option>
@@ -1126,29 +1315,33 @@ const AdminItinerary = () => {
                 <div className="flex items-center justify-between">
                   <div className="flex items-center space-x-4">
                     <div className="p-3 bg-white bg-opacity-20 rounded-xl">
-                  {selectedItem.type === 'package' ? (
-                        <Package className="w-8 h-8 text-white" />
+                  {selectedItem.type === 'trending' ? (
+                        <Star className="w-8 h-8 text-orange-500" />
+                  ) : selectedItem.type === 'premium' ? (
+                        <Star className="w-8 h-8 text-amber-500" />
+                  ) : selectedItem.type === 'package' ? (
+                        <Package className="w-8 h-8 text-green-500" />
                   ) : selectedItem.type === 'holiday' ? (
-                        <Globe className="w-8 h-8 text-white" />
+                        <Globe className="w-8 h-8 text-purple-500" />
                   ) : selectedItem.type === 'fixed-departure' ? (
-                        <Plane className="w-8 h-8 text-white" />
+                        <Plane className="w-8 h-8 text-orange-500" />
                   ) : selectedItem.type === 'popular-destination' ? (
-                        <Mountain className="w-8 h-8 text-white" />
+                        <Mountain className="w-8 h-8 text-red-500" />
                   ) : (
-                        <Star className="w-8 h-8 text-white" />
+                        <Star className="w-8 h-8 text-700" />
                   )}
                 </div>
                     <div>
                       <h2 className="text-2xl font-bold text-white">{getDisplayName(selectedItem.data)}</h2>
-                      <p className="text-blue-100 capitalize">
+                      <p className="!text-blue-100 capitalize">
                         {selectedItem.type.replace('-', ' ')} Package
                       </p>
                     </div>
                   </div>
                   <div className="text-right">
                     <div className="bg-white bg-opacity-20 rounded-xl px-4 py-2">
-                      <p className="text-white text-sm font-medium">Itinerary Days</p>
-                      <p className="text-3xl font-bold text-white">
+                      <p className="!text-slate-900 text-sm font-medium">Itinerary Days</p>
+                      <p className="text-3xl font-bold !text-slate-900">
                         {(selectedItem.data.itinerary || []).length}
                       </p>
                     </div>
@@ -1158,34 +1351,34 @@ const AdminItinerary = () => {
               
               <div className="p-6">
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-                {selectedItem.type === 'package' ? (
+                {(selectedItem.type === 'trending' || selectedItem.type === 'premium' || selectedItem.type === 'package') ? (
                   <>
                       <div className="flex items-center space-x-3 p-4 bg-blue-50 rounded-xl">
                         <MapPin className="w-6 h-6 text-blue-600" />
                         <div>
-                          <p className="text-sm text-gray-500">Destination</p>
-                          <p className="font-semibold text-gray-900">{(selectedItem.data as Package).destination}</p>
+                          <p className="text-sm !text-gray-500">Destination</p>
+                          <p className="!font-semibold !text-gray-900">{(selectedItem.data as Package).destination}</p>
                         </div>
                       </div>
                       <div className="flex items-center space-x-3 p-4 bg-green-50 rounded-xl">
                         <Clock className="w-6 h-6 text-green-600" />
                         <div>
-                          <p className="text-sm text-gray-500">Duration</p>
-                          <p className="font-semibold text-gray-900">{selectedItem.data.duration}</p>
+                          <p className="!text-sm !text-gray-500">Duration</p>
+                          <p className="!font-semibold !text-gray-900">{selectedItem.data.duration}</p>
                         </div>
                       </div>
                       <div className="flex items-center space-x-3 p-4 bg-purple-50 rounded-xl">
                         <Package className="w-6 h-6 text-purple-600" />
                         <div>
-                          <p className="text-sm text-gray-500">Category</p>
-                          <p className="font-semibold text-gray-900">{(selectedItem.data as Package).category}</p>
+                          <p className="text-sm !text-gray-500">Category</p>
+                          <p className="!font-semibold !text-gray-900">{(selectedItem.data as Package).category}</p>
                         </div>
                       </div>
                       <div className="flex items-center space-x-3 p-4 bg-orange-50 rounded-xl">
                         <Calendar className="w-6 h-6 text-orange-600" />
                         <div>
-                          <p className="text-sm text-gray-500">Itinerary Days</p>
-                          <p className="font-semibold text-gray-900">{(selectedItem.data.itinerary || []).length} Days</p>
+                          <p className="text-sm !text-gray-500">Itinerary Days</p>
+                          <p className="!font-semibold !text-gray-900">{(selectedItem.data.itinerary || []).length} Days</p>
                         </div>
                       </div>
                   </>
@@ -1258,29 +1451,29 @@ const AdminItinerary = () => {
                       <div className="flex items-center space-x-3 p-4 bg-orange-50 rounded-xl">
                         <MapPin className="w-6 h-6 text-orange-600" />
                         <div>
-                          <p className="text-sm text-gray-500">Location</p>
-                          <p className="font-semibold text-gray-900">{(selectedItem.data as PopularDestinationPackage).location}</p>
+                          <p className="!text-sm !text-gray-500">Location</p>
+                          <p className="!font-semibold !text-gray-900">{(selectedItem.data as PopularDestinationPackage).location}</p>
                         </div>
                       </div>
                       <div className="flex items-center space-x-3 p-4 bg-blue-50 rounded-xl">
                         <Clock className="w-6 h-6 text-blue-600" />
                         <div>
-                          <p className="text-sm text-gray-500">Duration</p>
-                          <p className="font-semibold text-gray-900">{(selectedItem.data as PopularDestinationPackage).duration}</p>
+                          <p className="!text-sm !text-gray-500">Duration</p>
+                          <p className="!font-semibold !text-gray-900">{(selectedItem.data as PopularDestinationPackage).duration}</p>
                         </div>
                       </div>
                       <div className="flex items-center space-x-3 p-4 bg-green-50 rounded-xl">
                         <Mountain className="w-6 h-6 text-green-600" />
                         <div>
-                          <p className="text-sm text-gray-500">Country</p>
-                          <p className="font-semibold text-gray-900">{(selectedItem.data as PopularDestinationPackage).country}</p>
+                          <p className="!text-sm !text-gray-500">Country</p>
+                          <p className="!font-semibold !text-gray-900">{(selectedItem.data as PopularDestinationPackage).country}</p>
                         </div>
                       </div>
                       <div className="flex items-center space-x-3 p-4 bg-purple-50 rounded-xl">
                         <Calendar className="w-6 h-6 text-purple-600" />
                         <div>
-                          <p className="text-sm text-gray-500">Itinerary Days</p>
-                          <p className="font-semibold text-gray-900">{(selectedItem.data.itinerary || []).length} Days</p>
+                          <p className="!text-sm !text-gray-500">Itinerary Days</p>
+                          <p className="!font-semibold !text-gray-900">{(selectedItem.data.itinerary || []).length} Days</p>
                         </div>
                       </div>
                   </>
@@ -1328,7 +1521,7 @@ const AdminItinerary = () => {
                   <div className="flex items-center justify-between">
                     <div className="flex items-center space-x-3">
                       <div className="p-2 bg-white bg-opacity-20 rounded-lg">
-                        <Star className="w-5 h-5 text-white" />
+                        <Star className="w-5 h-5 text-red-400" />
                       </div>
                       <h3 className="text-lg font-bold text-white">Highlights</h3>
                     </div>
@@ -1337,7 +1530,7 @@ const AdminItinerary = () => {
                       variant="ghost"
                   size="sm"
                   disabled={isSaving}
-                      className="text-white hover:bg-white hover:bg-opacity-20"
+                      className="text-white hover:bg-white  hover:text-slate-900 hover:bg-opacity-20"
                 >
                       <Edit className="w-4 h-4 mr-2" />
                       Edit
@@ -1362,7 +1555,7 @@ const AdminItinerary = () => {
                         onClick={handleEditHighlights}
                         variant="outline"
                         size="sm"
-                        className="mt-3 text-green-600 border-green-200 hover:bg-green-50"
+                        className="mt-3 text-green-600 border-green-200 hover:bg-green-500"
                       >
                         Add Highlights
                       </Button>
@@ -1377,7 +1570,7 @@ const AdminItinerary = () => {
                   <div className="flex items-center justify-between">
                     <div className="flex items-center space-x-3">
                       <div className="p-2 bg-white bg-opacity-20 rounded-lg">
-                        <CheckCircle className="w-5 h-5 text-white" />
+                        <CheckCircle className="w-5 h-5 text-green-600" />
                       </div>
                       <h3 className="text-lg font-bold text-white">Inclusions</h3>
                     </div>
@@ -1386,7 +1579,7 @@ const AdminItinerary = () => {
                       variant="ghost"
                   size="sm"
                   disabled={isSaving}
-                      className="text-white hover:bg-white hover:bg-opacity-20"
+                      className="text-white hover:bg-white hover:text-slate-900 hover:bg-opacity-20"
                 >
                       <Edit className="w-4 h-4 mr-2" />
                       Edit
@@ -1411,7 +1604,7 @@ const AdminItinerary = () => {
                         onClick={handleEditInclusions}
                         variant="outline"
                         size="sm"
-                        className="mt-3 text-blue-600 border-blue-200 hover:bg-blue-50"
+                        className="mt-3 text-blue-600 border-blue-200 hover:bg-blue-500"
                       >
                         Add Inclusions
                       </Button>
@@ -1426,7 +1619,7 @@ const AdminItinerary = () => {
                   <div className="flex items-center justify-between">
                     <div className="flex items-center space-x-3">
                       <div className="p-2 bg-white bg-opacity-20 rounded-lg">
-                        <X className="w-5 h-5 text-white" />
+                        <X className="w-5 h-5 text-blue-500" />
                       </div>
                       <h3 className="text-lg font-bold text-white">Exclusions</h3>
                     </div>
@@ -1435,7 +1628,7 @@ const AdminItinerary = () => {
                       variant="ghost"
                   size="sm"
                   disabled={isSaving}
-                      className="text-white hover:bg-white hover:bg-opacity-20"
+                      className="text-white hover:bg-white hover:text-slate-900 hover:bg-opacity-20"
                 >
                       <Edit className="w-4 h-4 mr-2" />
                       Edit
@@ -1460,7 +1653,7 @@ const AdminItinerary = () => {
                         onClick={handleEditExclusions}
                         variant="outline"
                         size="sm"
-                        className="mt-3 text-red-600 border-red-200 hover:bg-red-50"
+                        className="mt-3 text-red-600 border-red-200 hover:bg-red-500"
                       >
                         Add Exclusions
                       </Button>
@@ -1518,7 +1711,7 @@ const AdminItinerary = () => {
                       size="sm"
                       onClick={addPackageHighlight}
                       disabled={isSaving}
-                      className="text-white border-gray-300"
+                      className="text-slate-900 border-gray-300"
                     >
                       <Plus className="w-4 h-4 mr-2" />
                       Add Highlight
@@ -1531,7 +1724,7 @@ const AdminItinerary = () => {
                     variant="outline"
                     onClick={() => setIsEditingHighlights(false)}
                     disabled={isSaving}
-                    className="text-white"
+                    className="text-slate-900"
                   >
                     Cancel
                   </Button>
@@ -1615,7 +1808,7 @@ const AdminItinerary = () => {
                     variant="outline"
                     onClick={() => setIsEditingInclusions(false)}
                     disabled={isSaving}
-                    className="text-white"
+                    className="text-slate-900"
                   >
                     Cancel
                   </Button>
@@ -1699,7 +1892,7 @@ const AdminItinerary = () => {
                     variant="outline"
                     onClick={() => setIsEditingExclusions(false)}
                     disabled={isSaving}
-                    className="text-white"
+                    className="text-slate-900"
                   >
                     Cancel
                   </Button>
@@ -1727,7 +1920,7 @@ const AdminItinerary = () => {
               <div className="flex items-center justify-between">
                 <div>
                   <h3 className="text-xl font-bold text-gray-900">Itinerary Management</h3>
-                  <p className="text-gray-600 mt-1">Add and manage day-wise activities for your travel package</p>
+                  <p className="!text-gray-600 mt-1">Add and manage day-wise activities for your travel package</p>
                 </div>
             <Button
               onClick={() => setIsAddingDay(true)}
@@ -1786,7 +1979,7 @@ const AdminItinerary = () => {
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium text-gray-900 mb-2">
+                  <label className="block text-sm font-medium  mb-2">
                     Activities
                   </label>
                   <div className="space-y-2">
@@ -1864,7 +2057,7 @@ const AdminItinerary = () => {
                     </div>
                     <h3 className="text-2xl font-bold text-gray-900 mb-3">No Itinerary Days</h3>
                     <p className="text-gray-600 mb-8 max-w-md mx-auto">
-                      This {selectedItem.type === 'package' ? 'package' : selectedItem.type === 'holiday' ? 'holiday type' : selectedItem.type === 'fixed-departure' ? 'fixed departure' : selectedItem.type === 'popular-destination' ? 'popular destination package' : 'adventure tour'} doesn&apos;t have any itinerary days yet. Start by adding your first day!
+                      This {selectedItem.type === 'trending' ? 'trending package' : selectedItem.type === 'premium' ? 'premium package' : selectedItem.type === 'package' ? 'package' : selectedItem.type === 'holiday' ? 'holiday type' : selectedItem.type === 'fixed-departure' ? 'fixed departure' : selectedItem.type === 'popular-destination' ? 'popular destination package' : 'adventure tour'} doesn&apos;t have any itinerary days yet. Start by adding your first day!
                     </p>
                   <Button
                     onClick={() => setIsAddingDay(true)}
@@ -1889,11 +2082,11 @@ const AdminItinerary = () => {
                     <div className="flex items-center justify-between">
                           <div className="flex items-center space-x-4">
                             <div className="bg-white bg-opacity-20 rounded-xl px-4 py-2">
-                              <span className="text-2xl font-bold text-white">Day {day.day}</span>
+                              <span className="text-2xl font-bold text-slate-900">Day {day.day}</span>
                             </div>
                             <div>
                               <h3 className="text-xl font-bold text-white">{day.title}</h3>
-                              <p className="text-blue-100 text-sm">
+                              <p className="!text-blue-100 text-sm">
                                 {Array.isArray(day.activities) ? day.activities.length : 0} Activities
                               </p>
                             </div>
@@ -1903,7 +2096,7 @@ const AdminItinerary = () => {
                           variant="ghost"
                           size="sm"
                           onClick={() => handleEditDay(day)}
-                              className="text-white hover:bg-white hover:bg-opacity-20 rounded-lg p-2"
+                              className="text-white hover:bg-white hover:text-slate-900 hover:bg-opacity-20 rounded-lg p-2"
                           disabled={isSaving}
                         >
                               <Edit className="w-5 h-5" />
@@ -1967,11 +2160,11 @@ const AdminItinerary = () => {
               <div className="flex items-center justify-between">
                 <div className="flex items-center space-x-3">
                   <div className="p-2 bg-white bg-opacity-20 rounded-lg">
-                    <Edit className="w-6 h-6 text-white" />
+                    <Edit className="w-6 h-6 text-red-500" />
                   </div>
                   <div>
                     <h2 className="text-2xl font-bold text-white">Edit Day {editingDay.day}</h2>
-                    <p className="text-blue-100 text-sm">Modify activities and details for this day</p>
+                    <p className="!text-blue-100 text-sm">Modify activities and details for this day</p>
                   </div>
                 </div>
                 <Button
@@ -1979,7 +2172,7 @@ const AdminItinerary = () => {
                   size="sm"
                   onClick={() => setIsEditing(false)}
                   disabled={isSaving}
-                  className="text-white hover:bg-white hover:bg-opacity-20 rounded-lg p-2"
+                  className="text-white hover:bg-white hover:text-slate-900 hover:bg-opacity-20 rounded-lg p-2"
                 >
                   <X className="w-6 h-6" />
                 </Button>
@@ -2039,19 +2232,19 @@ const AdminItinerary = () => {
                     }}
                     disabled={isSaving}
                   >
-                    <Plus className="w-4 h-4 mr-2" />
-                    Add Activity
+                    <Plus className="w-4 h-4 mr-2 text-slate-900" />
+                    <div className="text-slate-900">Add Activity</div>
                   </Button>
                 </div>
               </div>
 
-              <div className="flex justify-end space-x-2 pt-4">
+              <div className="flex justify-end space-x-2 pt-4 ">
                 <Button
                   variant="outline"
                   onClick={() => setIsEditing(false)}
                   disabled={isSaving}
                 >
-                  Cancel
+                   <div className="text-slate-900">Cancel</div>
                 </Button>
                 <Button
                   onClick={handleSaveDay}

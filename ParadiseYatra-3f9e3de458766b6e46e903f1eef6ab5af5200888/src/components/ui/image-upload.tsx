@@ -15,6 +15,7 @@ interface ImageUploadProps {
   onUpload?: (file: File) => Promise<string>;
   label?: string;
   className?: string;
+  contentType?: string; // Content type for folder organization (e.g., 'blogs', 'destinations', 'packages')
 }
 
 const ImageUpload = ({
@@ -23,6 +24,7 @@ const ImageUpload = ({
   onUpload,
   label = "Image",
   className = "",
+  contentType,
 }: ImageUploadProps) => {
   const [isUploading, setIsUploading] = useState(false);
   const [previewUrl, setPreviewUrl] = useState<string | null>(value || null);
@@ -58,6 +60,11 @@ const ImageUpload = ({
         // Default upload to backend
         const formData = new FormData();
         formData.append("image", file);
+        
+        // Add contentType if provided (for folder organization in Cloudinary)
+        if (contentType) {
+          formData.append("contentType", contentType);
+        }
 
         const token = localStorage.getItem("adminToken");
         const response = await fetch("/api/upload/image", {
@@ -69,11 +76,52 @@ const ImageUpload = ({
         });
 
         if (!response.ok) {
-          throw new Error("Upload failed");
+          let errorMessage = "Upload failed";
+          
+          try {
+            const errorData = await response.json();
+            console.error("❌ Upload error response:", errorData);
+            
+            // Handle different error response formats
+            if (errorData.message) {
+              errorMessage = errorData.message;
+            } else if (errorData.error) {
+              errorMessage = errorData.error;
+            } else if (typeof errorData === 'string') {
+              errorMessage = errorData;
+            } else if (Object.keys(errorData).length > 0) {
+              // If errorData has properties but no message, try to extract useful info
+              errorMessage = JSON.stringify(errorData);
+            } else {
+              // Empty object or no useful data, use status text
+              errorMessage = response.statusText || `Server returned ${response.status} status`;
+            }
+          } catch (jsonError) {
+            // If JSON parsing fails, try to get text
+            try {
+              const errorText = await response.text();
+              errorMessage = errorText || response.statusText || `Server returned ${response.status} status`;
+            } catch (textError) {
+              errorMessage = response.statusText || `Server returned ${response.status} status`;
+            }
+            console.error("❌ Failed to parse error response:", jsonError);
+          }
+          
+          throw new Error(errorMessage);
         }
 
         const data = await response.json();
-        imageUrl = data.imageUrl;
+        
+        // Handle different response formats
+        if (data.imageUrl) {
+          imageUrl = data.imageUrl;
+        } else if (data.url) {
+          imageUrl = data.url;
+        } else if (data.image) {
+          imageUrl = data.image;
+        } else {
+          throw new Error("Invalid response format from server");
+        }
       }
 
       onChange(imageUrl);
@@ -81,7 +129,8 @@ const ImageUpload = ({
       toast.success("Image uploaded successfully!");
     } catch (error) {
       console.error("Upload error:", error);
-      toast.error("Failed to upload image. Please try again.");
+      const errorMessage = error instanceof Error ? error.message : "Failed to upload image. Please try again.";
+      toast.error(errorMessage);
     } finally {
       setIsUploading(false);
     }

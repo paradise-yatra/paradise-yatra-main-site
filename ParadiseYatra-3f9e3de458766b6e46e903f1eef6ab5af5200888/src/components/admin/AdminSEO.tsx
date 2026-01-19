@@ -520,6 +520,7 @@ const AdminSEO = () => {
                     value={activeTab === 'packages-dynamic' ? (dynamicSeoData?.ogImage || '') : seoData[activeTab].ogImage}
                     onChange={(value) => handleInputChange('ogImage', value)}
                     label="Upload OG Image"
+                    contentType="misc"
                   />
                   <p className="text-xs text-gray-600 mt-1">
                     Recommended size: 1200x630 pixels

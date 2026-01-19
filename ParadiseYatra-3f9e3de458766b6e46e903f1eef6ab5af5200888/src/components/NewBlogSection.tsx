@@ -30,7 +30,9 @@ interface BlogPost {
   likes: number;
   isPublished: boolean;
   isFeatured: boolean;
-  createdAt: string;
+  createdAt?: string;
+  publishDate?: string;
+  updatedAt?: string;
 }
 
 // Function to generate slug from title
@@ -44,54 +46,65 @@ const generateSlug = (title: string): string => {
 };
 
 const NewBlogSection = () => {
-  const [blogPosts, setBlogPosts] = useState<BlogPost[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [currentIndex, setCurrentIndex] = useState(0);
   const [allBlogPosts, setAllBlogPosts] = useState<BlogPost[]>([]);
   const [isMobile, setIsMobile] = useState(false);
-  const [activeScrollIndex, setActiveScrollIndex] = useState(0);
+  const [isTransitioning, setIsTransitioning] = useState(false);
+  const [newCardIndex, setNewCardIndex] = useState<number | null>(null);
   const scrollContainerRef = useRef<HTMLDivElement>(null);
+  const isScrollingProgrammatically = useRef(false);
 
   // Update mobile state based on screen size
   useEffect(() => {
-    const updateMobileState = () => {
-      setIsMobile(window.innerWidth < 768); // md breakpoint
-    };
-
+    const updateMobileState = () => setIsMobile(window.innerWidth < 768);
     updateMobileState();
     window.addEventListener("resize", updateMobileState);
     return () => window.removeEventListener("resize", updateMobileState);
   }, []);
 
-  // Handle scroll position for mobile indicators
+  // Mobile Scroll Handler with debouncing
   useEffect(() => {
     if (!isMobile || !scrollContainerRef.current) return;
 
-    const handleScroll = () => {
-      const container = scrollContainerRef.current;
-      if (!container) return;
+    const container = scrollContainerRef.current;
+    let scrollTimeout: NodeJS.Timeout;
 
-      const scrollLeft = container.scrollLeft;
-      const cardWidth = container.offsetWidth * 0.85; // 85vw
-      const gap = 16; // 4 * 4px gap
-      const adjustedCardWidth = cardWidth + gap;
-      const newIndex = Math.round(scrollLeft / adjustedCardWidth);
-      setActiveScrollIndex(
-        Math.min(Math.max(0, newIndex), allBlogPosts.length - 1)
-      );
+    const handleScroll = () => {
+      if (isScrollingProgrammatically.current) return;
+
+      clearTimeout(scrollTimeout);
+
+      scrollTimeout = setTimeout(() => {
+        const scrollLeft = container.scrollLeft;
+        const itemElement = container.firstElementChild as HTMLElement;
+
+        if (itemElement) {
+          const itemWidth = itemElement.offsetWidth + 20; // 20px gap
+          const newIndex = Math.round(scrollLeft / itemWidth);
+
+          if (newIndex !== currentIndex && newIndex >= 0 && newIndex < allBlogPosts.length) {
+            setCurrentIndex(newIndex);
+          }
+        }
+      }, 50);
     };
 
-    const container = scrollContainerRef.current;
-    container.addEventListener("scroll", handleScroll);
-    return () => container.removeEventListener("scroll", handleScroll);
-  }, [isMobile, allBlogPosts.length]);
+    container.addEventListener('scroll', handleScroll, { passive: true });
+    return () => {
+      container.removeEventListener('scroll', handleScroll);
+      clearTimeout(scrollTimeout);
+    };
+  }, [isMobile, currentIndex, allBlogPosts.length]);
 
   useEffect(() => {
     const fetchBlogs = async () => {
       try {
         setLoading(true);
-        const response = await fetch("/api/blogs?featured=true");
+        // Fetch latest 10 published blogs, show 3 at a time with pagination
+        // Use published=true to get latest blogs regardless of featured status
+        const response = await fetch("/api/blogs?published=true&limit=10");
 
         if (!response.ok) {
           throw new Error("Failed to fetch blogs");
@@ -100,24 +113,42 @@ const NewBlogSection = () => {
         const data = await response.json();
 
         // Handle both direct array and object with blogs array
+        let blogsArray: BlogPost[] = [];
         if (Array.isArray(data)) {
-          setAllBlogPosts(data);
-          setBlogPosts(data.slice(0, 3)); // Show only first 3 blogs initially
-          setError(null);
+          blogsArray = data;
         } else if (data.blogs && Array.isArray(data.blogs)) {
-          setAllBlogPosts(data.blogs);
-          setBlogPosts(data.blogs.slice(0, 3));
-          setError(null);
+          blogsArray = data.blogs;
         } else {
           console.error("Unexpected data structure:", data);
-          setBlogPosts([]);
           setAllBlogPosts([]);
           setError("Invalid data format received");
+          setLoading(false);
+          return;
         }
+
+        // Sort by createdAt (latest first) - same logic as AdminBlogs
+        // Use fallback to publishDate or updatedAt if createdAt is missing
+        blogsArray.sort((a, b) => {
+          const dateA = new Date(
+            a.publishDate || 
+            a.createdAt || 
+            a.updatedAt || 
+            0
+          ).getTime();
+          const dateB = new Date(
+            b.publishDate || 
+            b.createdAt || 
+            b.updatedAt || 
+            0
+          ).getTime();
+          return dateB - dateA; // Latest first (descending order)
+        });
+
+        setAllBlogPosts(blogsArray);
+        setError(null);
       } catch (err) {
         console.error("Error fetching blogs:", err);
         setError("Failed to load blogs");
-        setBlogPosts([]); // Don't show static data, show empty state
         setAllBlogPosts([]);
       } finally {
         setLoading(false);
@@ -127,30 +158,60 @@ const NewBlogSection = () => {
     fetchBlogs();
   }, []);
 
-  // Calculate total groups for desktop navigation
-  const totalGroups = Math.ceil(allBlogPosts.length / 3);
+  const visibleBlogPosts = allBlogPosts.slice(currentIndex, currentIndex + 3);
+  const canGoPrevious = currentIndex > 0;
+  const canGoNext = currentIndex < allBlogPosts.length - 3;
+  const totalDesktopDots = Math.max(0, allBlogPosts.length - 2);
+  const totalMobileDots = allBlogPosts.length;
 
-  // Handle desktop navigation
   const handlePrevious = () => {
-    if (isMobile) return;
-    const newIndex = Math.max(0, currentIndex - 1);
-    setCurrentIndex(newIndex);
-
-    const startIndex = newIndex * 3;
-    const endIndex = startIndex + 3;
-    const newBlogPosts = allBlogPosts.slice(startIndex, endIndex);
-    setBlogPosts(newBlogPosts);
+    if (isMobile || isTransitioning || currentIndex === 0) return;
+    setIsTransitioning(true);
+    setNewCardIndex(0);
+    setCurrentIndex((prev) => prev - 1);
+    setTimeout(() => {
+      setIsTransitioning(false);
+      setNewCardIndex(null);
+    }, 400);
   };
 
   const handleNext = () => {
-    if (isMobile) return;
-    const newIndex = Math.min(totalGroups - 1, currentIndex + 1);
-    setCurrentIndex(newIndex);
+    if (isMobile || isTransitioning || currentIndex >= allBlogPosts.length - 3) return;
+    setIsTransitioning(true);
+    setNewCardIndex(2);
+    setCurrentIndex((prev) => prev + 1);
+    setTimeout(() => {
+      setIsTransitioning(false);
+      setNewCardIndex(null);
+    }, 400);
+  };
 
-    const startIndex = newIndex * 3;
-    const endIndex = startIndex + 3;
-    const newBlogPosts = allBlogPosts.slice(startIndex, endIndex);
-    setBlogPosts(newBlogPosts);
+  const handleDotClick = (index: number) => {
+    if (isTransitioning) return;
+
+    if (isMobile && scrollContainerRef.current) {
+      const container = scrollContainerRef.current;
+      const itemElement = container.firstElementChild as HTMLElement;
+      if (itemElement) {
+        const itemWidth = itemElement.offsetWidth + 20;
+        isScrollingProgrammatically.current = true;
+
+        container.scrollTo({
+          left: index * itemWidth,
+          behavior: 'smooth'
+        });
+
+        setCurrentIndex(index);
+
+        setTimeout(() => {
+          isScrollingProgrammatically.current = false;
+        }, 500);
+      }
+    } else {
+      setIsTransitioning(true);
+      setCurrentIndex(index);
+      setTimeout(() => setIsTransitioning(false), 500);
+    }
   };
 
   if (loading) {
@@ -171,173 +232,193 @@ const NewBlogSection = () => {
     );
   }
 
-  // Don't render if blogPosts is not an array
-  if (!Array.isArray(blogPosts)) {
+  // Don't render if allBlogPosts is not an array
+  if (!Array.isArray(allBlogPosts)) {
     return null;
   }
 
   return (
-    <section className="py-20 bg-slate-50">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="text-center mb-4">
-          <Badge className="mb-4 !bg-blue-100 !text-blue-800 !rounded-md hover:bg-blue-100 !px-1 !py-1">
-            Travel Insights
-          </Badge>
-          <h2
-            className="text-slate-900 mb-4"
-            style={{
-              fontSize: "48px",
-              fontWeight: 700,
-              lineHeight: "48px",
-            }}
-          >
-            Travel Insights & Guides
-          </h2>
-          <p className="text-[20px] text-slate-600 max-w-3xl mx-auto">
-            Discover expert tips, local insights, and comprehensive guides to
-            make your journey unforgettable
+    <section className="py-16 bg-slate-50">
+      <style jsx global>{`
+        @keyframes fadeInSoft {
+          from { opacity: 0; transform: translateY(10px); }
+          to { opacity: 1; transform: translateY(0); }
+        }
+        .card-enter {
+          animation: fadeInSoft 0.35s ease-out forwards;
+        }
+        @media (min-width: 768px) {
+          .desktop-card {
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+          }
+          .desktop-card:hover {
+            transform: translateY(-8px);
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.12);
+          }
+          .desktop-card-image {
+            overflow: hidden;
+          }
+          .desktop-card-button {
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+          }
+          .desktop-card:hover .desktop-card-button {
+            transform: translateX(4px);
+            box-shadow: 0 4px 12px rgba(37, 99, 235, 0.25);
+          }
+        }
+        .mobile-scroll-container {
+          scroll-snap-type: x mandatory;
+          display: flex;
+          overflow-x: auto;
+          gap: 0.75rem;
+          padding: 0 0.5rem 1.5rem !important;
+          scrollbar-width: none;
+          scroll-behavior: smooth;
+          -webkit-overflow-scrolling: touch;
+          scroll-padding-left: 0.5rem;
+          scroll-padding-right: 0.5rem;
+        }
+        .mobile-scroll-container::-webkit-scrollbar { 
+          display: none; 
+        }
+        .mobile-scroll-item { 
+          scroll-snap-align: center;
+          scroll-snap-stop: always;
+          flex-shrink: 0; 
+          width: 88vw !important; 
+          max-width: 340px !important;
+        }
+        
+        .pagination-dot {
+          width: 8px;
+          height: 8px;
+          border-radius: 50%;
+          background-color: #cbd5e1;
+          transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+          cursor: pointer;
+          border: none;
+        }
+        
+        .pagination-dot.active {
+          background-color: #3b82f6;
+          width: 24px;
+          border-radius: 4px;
+        }
+        
+        .pagination-dot.mobile-active {
+          background-color: #3b82f6;
+          width: 20px;
+          border-radius: 4px;
+        }
+      `}</style>
+
+      <div className="max-w-7xl mx-auto">
+        <div className="text-center mb-4 relative">
+          <div className="absolute left-1/2 -top-10 -translate-x-1/2 w-32 h-32 bg-blue-100/40 blur-3xl rounded-full -z-10" />
+
+          <div className="flex flex-col items-center gap-2 mb-4">
+            <h2 className="!text-3xl md:!text-5xl !font-extrabold text-slate-900 tracking-tight">
+              <span className="bg-gradient-to-r from-blue-600 to-indigo-600 bg-clip-text text-transparent">
+                Travel
+              </span>{" "}
+              Insights & Guides
+            </h2>
+
+            <div className="flex items-center gap-2 mt-1">
+              <div className="h-[2px] w-8 bg-gradient-to-r from-transparent to-blue-500 rounded-full" />
+              <div className="h-1.5 w-1.5 rounded-full bg-indigo-600 shadow-[0_0_8px_rgba(79,70,229,0.6)]" />
+              <div className="h-[2px] w-8 bg-gradient-to-l from-transparent to-blue-500 rounded-full" />
+            </div>
+          </div>
+
+          <p className="!text-sm md:!text-lg !text-slate-500 max-w-2xl mx-auto leading-relaxed px-4">
+            Discover expert tips, local insights, and comprehensive guides to make your journey unforgettable
           </p>
         </div>
 
-        {/* Desktop Pagination */}
         {!isMobile && (
           <div className="flex justify-between items-center mb-8">
             <button
               onClick={handlePrevious}
-              disabled={currentIndex === 0}
-              className={`w-10 h-10 border rounded-full flex items-center justify-center transition-all duration-200 shadow-sm ${
-                currentIndex === 0
-                  ? "bg-gray-100 border-gray-200 text-gray-400 cursor-not-allowed"
-                  : "bg-white border-gray-200 text-gray-600 hover:bg-gray-50 hover:border-gray-300"
-              }`}
+              disabled={!canGoPrevious || isTransitioning}
+              className={`w-8 h-10 border border-gray-200 rounded-sm flex items-center justify-center shadow-sm duration-300 cursor-pointer ${!canGoPrevious
+                ? "bg-gray-100 border-gray-200 text-gray-400"
+                : "bg-white border-blue-200 text-blue-600 hover:bg-blue-50 hover:border-blue-400 hover:scale-110"
+                }`}
             >
-              <ChevronLeft className="w-5 h-5" />
+              <ChevronLeft className="w-6 h-6" />
             </button>
-
             <button
               onClick={handleNext}
-              disabled={currentIndex === totalGroups - 1}
-              className={`w-10 h-10 border rounded-full flex items-center justify-center transition-all duration-200 shadow-sm ${
-                currentIndex === totalGroups - 1
-                  ? "bg-gray-100 border-gray-200 text-gray-400 cursor-not-allowed"
-                  : "bg-white border-gray-200 text-gray-600 hover:bg-gray-50 hover:border-gray-300"
-              }`}
+              disabled={!canGoNext || isTransitioning}
+              className={`w-8 h-10 border border-gray-200 rounded-sm flex items-center justify-center shadow-sm cursor-pointer ${!canGoNext
+                ? "bg-gray-100 border-gray-200 text-gray-400"
+                : "bg-white border-blue-200 text-blue-600 hover:bg-blue-50 hover:border-blue-400 hover:shadow-xl hover:scale-110"
+                }`}
             >
-              <ChevronRight className="w-5 h-5" />
+              <ChevronRight className="w-6 h-6" />
             </button>
           </div>
         )}
 
-        {/* Packages Container */}
         {isMobile ? (
-          // Mobile: Snap-scroll flex layout (match Trending)
-          <div className="md:hidden">
-            <div
-              ref={scrollContainerRef}
-              className="flex overflow-x-auto gap-0 pb-4 w-full scrollbar-hide"
-              style={{
-                scrollSnapType: "x mandatory",
-                scrollBehavior: "smooth",
-                WebkitOverflowScrolling: "touch",
-                msOverflowStyle: "none",
-                scrollbarWidth: "none",
-              }}
-            >
+          <div className="md:hidden w-full overflow-x-hidden">
+            <div className="mobile-scroll-container" ref={scrollContainerRef} style={{ paddingLeft: '0.5rem', paddingRight: '0.5rem' }}>
               {allBlogPosts.map((post) => (
-                <div
-                  key={post._id}
-                  className="pl-4 flex-shrink-0 snap-start h-full basis-[80%] sm:basis-[85%]"
-                  style={{ maxWidth: "85%" }}
-                >
-                  <Link
-                    href={`/blog/${generateSlug(post.title)}`}
-                    className="block w-full"
-                  >
-                    <Card className="overflow-hidden hover:shadow-[0_25px_50px_-12px_rgba(0,0,0,0.25)] transition-all duration-300 border-0">
-                      <div className="relative overflow-hidden">
+                <div key={post._id} className="mobile-scroll-item">
+                  <Link href={`/blog/${generateSlug(post.title)}`} className="block h-full">
+                    <Card className="overflow-hidden border border-gray-200 h-full bg-white flex flex-col shadow-md">
+                      <div className="relative h-52 w-full overflow-hidden">
                         <Image
-                          src={
-                            post.image && getImageUrl(post.image)
-                              ? getImageUrl(post.image)!
-                              : "/placeholder-blog.jpg"
-                          }
+                          src={post.image && getImageUrl(post.image) ? getImageUrl(post.image)! : "https://images.unsplash.com/photo-1524492412937-b28074a5d7da?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80"}
                           alt={post.title}
-                          width={800}
-                          height={400}
-                          className="w-full h-64 object-cover"
+                          fill
+                          className="object-cover"
                           onError={(e) => {
-                            console.error("Image failed to load:", post.image);
                             const target = e.target as HTMLImageElement;
-                            target.src =
-                              "https://images.unsplash.com/photo-1524492412937-b28074a5d7da?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80";
+                            target.src = "https://images.unsplash.com/photo-1524492412937-b28074a5d7da?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80";
                           }}
                         />
                         <div className="absolute top-4 left-4">
-                          <Badge className=" !bg-[#3B82F6] text-white">
+                          <Badge className="!bg-blue-600 text-white">
                             {post.category}
                           </Badge>
                         </div>
                       </div>
-
-                      <CardContent className="p-6">
-                        {/* Publication Details */}
-                        <div className="flex items-center text-slate-500 text-sm mb-3">
-                          <Calendar className="h-4 w-4 mr-1" />
+                      <CardContent className="flex flex-col flex-grow p-4">
+                        <div className="flex items-center text-slate-500 text-xs mb-1">
+                          <Calendar className="h-3 w-3 mr-1" />
                           <span className="mr-2">
-                            {new Date(post.createdAt).toLocaleDateString(
-                              "en-US",
-                              {
-                                month: "long",
-                                day: "numeric",
-                                year: "numeric",
-                              }
-                            )}
+                            {new Date(post.createdAt || post.publishDate || post.updatedAt || new Date().toISOString()).toLocaleDateString("en-US", {
+                              month: "short",
+                              day: "numeric",
+                              year: "numeric",
+                            })}
                           </span>
                           <span className="mr-2">•</span>
-                          <Clock className="h-4 w-4 mr-1" />
-                          <span>{post.readTime} min read</span>
+                          <Clock className="h-3 w-3 mr-1" />
+                          <span>{post.readTime} min</span>
                         </div>
-
-                        {/* Title */}
-                        {/* <h3 className="text-xl font-bold text-gray-900 mb-3 group-hover:text-blue-600 transition-colors line-clamp-2">
-                          {post.title}
-                        </h3> */}
-
-                        <h3
-                          className="text-slate-900 mb-2 group-hover:!text-[#2563EB] transition-colors truncate"
-                          style={{
-                            fontSize: "20px",
-                            fontWeight: 700,
-                            lineHeight: "28px",
-                            fontFamily:
-                              '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif',
-                          }}
-                        >
+                        <h3 className="!text-lg !font-bold text-slate-900 mb-2 truncate">
                           {post.title}
                         </h3>
-
-                        {/* Description */}
-                        <p className="text-gray-600 text-sm mb-4 line-clamp-2">
-                          {post.excerpt || post.content.substring(0, 150)}...
+                        <p className="!text-gray-600 !text-xs mb-3 line-clamp-2">
+                          {post.excerpt || post.content.substring(0, 120)}...
                         </p>
-
-                        {/* Author Section */}
-                        <div className="flex items-center justify-between">
+                        <div className="mt-auto flex items-center justify-between pt-2">
                           <div className="flex items-center">
-                            <div className="w-8 h-8 rounded-full bg-gradient-to-br from-blue-400 to-purple-500 flex items-center justify-center text-white font-bold text-xs mr-2">
+                            <div className="w-6 h-6 rounded-full bg-gradient-to-br from-blue-400 to-purple-500 flex items-center justify-center text-white font-bold text-xs mr-2">
                               {post.author.charAt(0).toUpperCase()}
                             </div>
-                            <span className="text-sm text-gray-700 font-medium">
+                            <span className="text-xs text-slate-700 font-medium">
                               {post.author}
                             </span>
                           </div>
-
                           <Button
                             variant="outline"
-                            className="hover:bg-blue-50 hover:border-blue-500 hover:text-blue-600"
+                            className="border-slate-900 border text-slate-900 bg-transparent hover:bg-blue-600 hover:text-white hover:border-blue-600 transition-all duration-300 cursor-pointer px-3 h-8 text-xs"
                           >
-                            Read More
-                            <ArrowRight className="ml-2 h-4 w-4" />
+                            Read <ArrowRight className="ml-1 h-3 w-3" />
                           </Button>
                         </div>
                       </CardContent>
@@ -347,119 +428,65 @@ const NewBlogSection = () => {
               ))}
             </div>
 
-            {/* Mobile scroll indicators */}
-            <div className="flex justify-center mt-4">
-              <div className="flex space-x-2">
+            {totalMobileDots > 1 && (
+              <div className="flex justify-center items-center gap-2 mt-3">
                 {allBlogPosts.map((_, index) => (
-                  <div
+                  <button
                     key={index}
-                    className={`h-2 rounded-full transition-all duration-300 ease-in-out ${
-                      index === activeScrollIndex
-                        ? "bg-blue-600 w-8"
-                        : "bg-gray-300 w-2 hover:bg-gray-400"
-                    }`}
+                    onClick={() => handleDotClick(index)}
+                    className={`pagination-dot ${currentIndex === index ? 'mobile-active' : ''}`}
+                    aria-label={`Go to blog ${index + 1}`}
                   />
                 ))}
               </div>
-              <div className="ml-4 text-xs text-gray-500 flex items-center">
-                <span>Swipe to explore more</span>
-              </div>
-            </div>
+            )}
           </div>
         ) : (
-          // Desktop: grid layout
-          <div className="hidden md:block">
-            <div className="md:grid md:grid-cols-2 lg:grid-cols-3 gap-8">
-              {blogPosts.map((post) => (
-                <div key={post._id} className="h-full flex flex-col">
-                  <Link
-                    href={`/blog/${generateSlug(post.title)}`}
-                    className="block h-full"
-                  >
-                    <Card className="overflow-hidden hover:shadow-[0_25px_50px_-12px_rgba(0,0,0,0.25)] transition-all duration-300 transform hover:-translate-y-1 group h-full border-[1px] border-[#E5E5E5]">
-                      <div className="relative overflow-hidden">
+          <>
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+              {visibleBlogPosts.map((post, index) => (
+                <div key={post._id} className={newCardIndex === index ? 'card-enter' : ''}>
+                  <Link href={`/blog/${generateSlug(post.title)}`} className="block h-full">
+                    <Card className="desktop-card overflow-hidden border border-gray-200 group h-full bg-white">
+                      <div className="desktop-card-image relative h-64 overflow-hidden">
                         <Image
-                          src={
-                            post.image && getImageUrl(post.image)
-                              ? getImageUrl(post.image)!
-                              : "/placeholder-blog.jpg"
-                          }
+                          src={post.image && getImageUrl(post.image) ? getImageUrl(post.image)! : "https://images.unsplash.com/photo-1524492412937-b28074a5d7da?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80"}
                           alt={post.title}
-                          width={800}
-                          height={400}
-                          className="w-full h-[192px] object-cover group-hover:scale-110 transition-transform duration-500"
+                          fill
+                          className="object-cover"
                           onError={(e) => {
-                            console.error("Image failed to load:", post.image);
                             const target = e.target as HTMLImageElement;
-                            if (!target.src.includes("unsplash.com")) {
-                              target.src =
-                                "https://images.unsplash.com/photo-1524492412937-b28074a5d7da?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80";
-                            }
+                            target.src = "https://images.unsplash.com/photo-1524492412937-b28074a5d7da?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80";
                           }}
                         />
                         <div className="absolute top-4 left-4">
-                          <Badge className="!bg-blue-500 text-white rounded-md">
+                          <Badge className="!bg-blue-600 text-white">
                             {post.category}
                           </Badge>
                         </div>
                       </div>
-
                       <CardContent className="p-6">
-                        {/* Publication Details */}
-                        <div className="flex items-center text-slate-500 text-sm mb-3">
+                        <div className="flex items-center text-slate-500 text-sm mb-2">
                           <Calendar className="h-4 w-4 mr-1" />
                           <span className="mr-2">
-                            {new Date(post.createdAt).toLocaleDateString(
-                              "en-US",
-                              {
-                                month: "long",
-                                day: "numeric",
-                                year: "numeric",
-                              }
-                            )}
+                            {new Date(post.createdAt || post.publishDate || post.updatedAt || new Date().toISOString()).toLocaleDateString("en-US", {
+                              month: "short",
+                              day: "numeric",
+                              year: "numeric",
+                            })}
                           </span>
                           <span className="mr-2">•</span>
                           <Clock className="h-4 w-4 mr-1" />
-                          <span>{post.readTime} min read</span>
+                          <span>{post.readTime} min</span>
                         </div>
-
-                        {/* Title */}
-                        {/* <h3 className="text-xl font-bold text-gray-900 mb-3 group-hover:text-blue-600 transition-colors line-clamp-2">
-                          {post.title}
-                        </h3> */}
-
-                        <h3
-                          className="text-slate-900 mb-2 group-hover:!text-[#2563EB] transition-colors line-clamp-2"
-                          style={{
-                            fontSize: "20px",
-                            fontWeight: 700,
-                            lineHeight: "28px",
-                            fontFamily:
-                              '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif',
-                          }}
-                        >
+                        <h3 className="!text-xl !font-bold text-slate-900 mb-2 truncate group-hover:text-blue-600 transition-colors duration-300">
                           {post.title}
                         </h3>
-
-                        {/* Description */}
-                        <p
-                          className="text-[#475569] text-sm mb-4 line-clamp-3"
-                          style={{
-                            fontSize: "16px",
-                            lineHeight: "26px",
-                            fontWeight: 400,
-                          }}
-                        >
+                        <p className="text-slate-500 text-sm mb-4 line-clamp-3">
                           {post.excerpt || post.content.substring(0, 150)}...
                         </p>
-
-                        {/* Author Section */}
                         <div className="flex items-center justify-between">
                           <div className="flex items-center">
-                            {/* <div className="w-8 h-8 rounded-full bg-gradient-to-br from-blue-400 to-purple-500 flex items-center justify-center text-white font-bold text-xs mr-2">
-                              {post.author.charAt(0).toUpperCase()}
-                            </div> */}
-
                             <Image
                               src="/l1.webp"
                               alt="author"
@@ -467,23 +494,15 @@ const NewBlogSection = () => {
                               height={32}
                               className="rounded-full"
                             />
-                            <span className="text-sm text-gray-700 font-medium">
+                            <span className="text-sm text-slate-700 font-medium ml-2">
                               {post.author}
                             </span>
                           </div>
-
                           <Button
                             variant="outline"
-                            className="py-2 px-4 hover:bg-blue-50 border-[1px] border-[#E5E5E5]   text-[#0A0A0A] hover:border-blue-500 hover:text-blue-600"
-                            style={{
-                              fontSize: "12px",
-                              fontWeight: 500,
-                              lineHeight: "16px",
-                              fontFamily:
-                                '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif',
-                            }}
+                            className="desktop-card-button border border-slate-900 text-slate-900 bg-transparent hover:bg-blue-600 hover:text-white hover:border-blue-600 transition-all duration-300 cursor-pointer px-6"
                           >
-                            Read More
+                            Read More <ArrowRight className="ml-2 h-4 w-4 transition-transform duration-300 group-hover:translate-x-1" />
                           </Button>
                         </div>
                       </CardContent>
@@ -492,11 +511,23 @@ const NewBlogSection = () => {
                 </div>
               ))}
             </div>
-          </div>
+
+            {totalDesktopDots > 1 && (
+              <div className="flex justify-center items-center gap-2 mt-8">
+                {Array.from({ length: totalDesktopDots }).map((_, index) => (
+                  <button
+                    key={index}
+                    onClick={() => handleDotClick(index)}
+                    className={`pagination-dot ${currentIndex === index ? 'active' : ''}`}
+                    aria-label={`Go to page ${index + 1}`}
+                  />
+                ))}
+              </div>
+            )}
+          </>
         )}
 
-        {/* Empty state */}
-        {blogPosts.length === 0 && !loading && (
+        {allBlogPosts.length === 0 && !loading && (
           <div className="text-center">
             <p className="text-gray-500">
               {error
@@ -507,11 +538,16 @@ const NewBlogSection = () => {
         )}
 
         <div className="text-center mt-12">
-          <Link href="/blog">
-            <Button className="bg-gradient-to-r from-blue-500 to-indigo-600 hover:from-blue-600 hover:to-indigo-700 text-white px-8">
-              View All Blog Posts
-              <ArrowRight className="ml-2 h-4 w-4" />
-            </Button>
+          <Link href="/blog" className="inline-block group">
+            <button
+              className="relative overflow-hidden rounded-full w-full sm:w-auto shadow-xl transition-all duration-300 bg-gradient-to-r from-blue-500 via-blue-600 to-indigo-600"
+            >
+              <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-1000"></div>
+              <span className="relative flex items-center justify-center gap-2 px-8 py-4 text-white font-semibold text-base">
+                View All Blog Posts
+                <ArrowRight className="w-5 h-5 transition-transform duration-300 group-hover:translate-x-1" />
+              </span>
+            </button>
           </Link>
         </div>
       </div>

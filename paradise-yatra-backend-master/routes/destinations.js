@@ -229,6 +229,9 @@ router.put('/:id', adminAuth, uploadSingleImage, handleUploadError, async (req, 
       price,
       duration,
       highlights,
+      itinerary,      // ✅ NEW - Itinerary array
+      inclusions,      // ✅ NEW - Inclusions array
+      exclusions,      // ✅ NEW - Exclusions array
       isActive,
       isTrending
     } = req.body;
@@ -250,6 +253,33 @@ router.put('/:id', adminAuth, uploadSingleImage, handleUploadError, async (req, 
       destination.highlights = typeof highlights === 'string' 
         ? highlights.split(',').map(h => h.trim()).filter(h => h)
         : Array.isArray(highlights) ? highlights : [];
+    }
+    // ✅ Handle itinerary
+    if (itinerary !== undefined) {
+      destination.itinerary = typeof itinerary === 'string' 
+        ? JSON.parse(itinerary) 
+        : Array.isArray(itinerary) 
+          ? itinerary 
+          : [];
+      console.log('✅ Updated destination itinerary:', destination.itinerary?.length || 0, 'days');
+    }
+    // ✅ Handle inclusions
+    if (inclusions !== undefined) {
+      destination.inclusions = typeof inclusions === 'string' 
+        ? JSON.parse(inclusions) 
+        : Array.isArray(inclusions) 
+          ? inclusions 
+          : [];
+      console.log('✅ Updated destination inclusions:', destination.inclusions?.length || 0, 'items');
+    }
+    // ✅ Handle exclusions
+    if (exclusions !== undefined) {
+      destination.exclusions = typeof exclusions === 'string' 
+        ? JSON.parse(exclusions) 
+        : Array.isArray(exclusions) 
+          ? exclusions 
+          : [];
+      console.log('✅ Updated destination exclusions:', destination.exclusions?.length || 0, 'items');
     }
     
     if (isActive !== undefined) {
@@ -294,7 +324,10 @@ router.put('/:id', adminAuth, uploadSingleImage, handleUploadError, async (req, 
     }
 
     await destination.save();
-    console.log('✅ Destination updated successfully');
+    console.log('✅ Destination saved successfully with ID:', destination._id);
+    console.log('✅ Destination itinerary count:', destination.itinerary?.length || 0);
+    console.log('✅ Destination inclusions count:', destination.inclusions?.length || 0);
+    console.log('✅ Destination exclusions count:', destination.exclusions?.length || 0);
     console.log('✅ Current image:', destination.image);
     
     res.json({

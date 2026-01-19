@@ -321,6 +321,7 @@ const AdminTestimonials = () => {
                   value={formData.image}
                   onChange={(value) => setFormData(prev => ({ ...prev, image: value }))}
                   label="Profile Image"
+                  contentType="testimonials"
                 />
               </div>
               <div>
