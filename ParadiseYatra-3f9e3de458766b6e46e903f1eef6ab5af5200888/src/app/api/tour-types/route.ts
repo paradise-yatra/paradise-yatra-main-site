@@ -422,6 +422,16 @@ export async function GET() {
     });
   } catch (error) {
     console.error('Tour types API error:', error);
-    return NextResponse.json({ message: 'Internal server error' }, { status: 500 });
+    console.error('Error details:', {
+      message: error instanceof Error ? error.message : 'Unknown error',
+      stack: error instanceof Error ? error.stack : undefined,
+      backendUrl: API_CONFIG.BACKEND_URL,
+      env: process.env.NODE_ENV,
+      nextPublicBackendUrl: process.env.NEXT_PUBLIC_BACKEND_URL
+    });
+    return NextResponse.json({ 
+      message: 'Internal server error',
+      error: process.env.NODE_ENV === 'development' ? (error instanceof Error ? error.message : 'Unknown error') : undefined
+    }, { status: 500 });
   }
 }

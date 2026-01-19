@@ -5,7 +5,13 @@
 
 export const API_CONFIG = {
   // Backend URL - can be overridden by environment variable
-  BACKEND_URL: process.env.NEXT_PUBLIC_BACKEND_URL || (typeof window !== 'undefined' ? '' : 'http://localhost:5000'),
+  // In production server-side, use 127.0.0.1:5001 if NEXT_PUBLIC_BACKEND_URL is not set
+  BACKEND_URL: process.env.NEXT_PUBLIC_BACKEND_URL || 
+    (typeof window !== 'undefined' 
+      ? '' 
+      : process.env.NODE_ENV === 'production' 
+        ? 'http://127.0.0.1:5001' 
+        : 'http://localhost:5000'),
 
   // API endpoints
   ENDPOINTS: {
