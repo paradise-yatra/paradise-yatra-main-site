@@ -46,7 +46,7 @@ const Pagination = ({ currentPage, totalPages, onPageChange, className = "" }: P
   const getPageNumbers = () => {
     const pages = [];
     const maxVisiblePages = 5;
-    
+
     if (totalPages <= maxVisiblePages) {
       for (let i = 1; i <= totalPages; i++) {
         pages.push(i);
@@ -74,7 +74,7 @@ const Pagination = ({ currentPage, totalPages, onPageChange, className = "" }: P
         pages.push(totalPages);
       }
     }
-    
+
     return pages;
   };
 
@@ -88,7 +88,7 @@ const Pagination = ({ currentPage, totalPages, onPageChange, className = "" }: P
       >
         Previous
       </Button>
-      
+
       {getPageNumbers().map((page, index) => (
         <div key={index}>
           {page === '...' ? (
@@ -98,18 +98,17 @@ const Pagination = ({ currentPage, totalPages, onPageChange, className = "" }: P
               variant={currentPage === page ? "default" : "outline"}
               size="sm"
               onClick={() => handlePageChange(page as number)}
-              className={`px-3 py-2 ${
-                currentPage === page 
-                  ? 'bg-blue-600 text-white hover:bg-blue-700 border-0' 
+              className={`px-3 py-2 ${currentPage === page
+                  ? 'bg-blue-600 text-white hover:bg-blue-700 border-0'
                   : 'bg-blue-500 text-white hover:bg-blue-600 border-0'
-              }`}
+                }`}
             >
               {page}
             </Button>
           )}
         </div>
       ))}
-      
+
       <Button
         size="sm"
         onClick={() => handlePageChange(currentPage + 1)}
@@ -226,13 +225,13 @@ export default function PackagesPageClient({ params }: PackagesPageClientProps) 
   const prevSlideRef = useRef(0);
   const [newCardIndex, setNewCardIndex] = useState<number | null>(null);
   const isScrollingProgrammatically = useRef(false);
-  
+
   // Filter states
   const [ratingFilter, setRatingFilter] = useState<string>('all');
   const [durationFilter, setDurationFilter] = useState<string>('all');
   const [priceFilter, setPriceFilter] = useState<string>('all');
   const [sortBy, setSortBy] = useState<string>('recommended');
-  
+
   // Pagination states
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 6;
@@ -242,20 +241,20 @@ export default function PackagesPageClient({ params }: PackagesPageClientProps) 
       try {
         setLoading(true);
         setError(null);
-        
+
         const decodedState = decodeURIComponent(state.replace(/-/g, ' '))
           .replace(/&/g, 'and')
           .replace(/\s+/g, ' ')
           .trim();
-        
+
         setState(decodedState);
-        
+
         // For international tours, use 'country' parameter instead of 'state'
         const locationParam = tourType === 'international' ? 'country' : 'state';
         const locationValue = tourType === 'international' ? decodedState : decodedState;
-        
+
         console.log('Fetching packages:', { tourType, [locationParam]: locationValue });
-        
+
         // Fetch both destinations and packages
         const [destinationsResponse, packagesResponse] = await Promise.all([
           fetch(
@@ -267,10 +266,10 @@ export default function PackagesPageClient({ params }: PackagesPageClientProps) 
             { cache: 'no-store' }
           )
         ]);
-        
+
         let destinations = [];
         let packages = [];
-        
+
         if (destinationsResponse.ok) {
           const destinationsData = await destinationsResponse.json();
           destinations = destinationsData.destinations || [];
@@ -278,7 +277,7 @@ export default function PackagesPageClient({ params }: PackagesPageClientProps) 
         } else {
           console.error('Destinations fetch failed:', destinationsResponse.status, destinationsResponse.statusText);
         }
-        
+
         if (packagesResponse.ok) {
           const packagesData = await packagesResponse.json();
           packages = packagesData.packages || [];
@@ -286,7 +285,7 @@ export default function PackagesPageClient({ params }: PackagesPageClientProps) 
         } else {
           console.error('Packages fetch failed:', packagesResponse.status, packagesResponse.statusText);
         }
-        
+
         // Combine destinations and packages
         const combinedItems = [
           ...destinations.map((dest: any) => ({
@@ -330,7 +329,7 @@ export default function PackagesPageClient({ params }: PackagesPageClientProps) 
         console.log('Combined items:', combinedItems.length);
         setAllItems(combinedItems);
         setFilteredItems(combinedItems);
-        
+
         // Fetch suggestions from destinations
         try {
           const suggestionsResponse = await fetch(`/api/destinations?limit=9`, { cache: 'no-store' });
@@ -343,7 +342,7 @@ export default function PackagesPageClient({ params }: PackagesPageClientProps) 
         } catch (error) {
           console.error('Error fetching suggestions:', error);
         }
-        
+
         setLoading(false);
       } catch (error) {
         console.error('Error fetching packages:', error);
@@ -548,7 +547,7 @@ export default function PackagesPageClient({ params }: PackagesPageClientProps) 
   return (
     <div className="min-h-screen bg-slate-50">
       <Header />
-      <div className="pt-20 md:pt-28">
+      <div className="">
         <Suspense fallback={<PackagesLoadingSkeleton />}>
           {/* Header Section */}
           <section className="bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50 py-12 px-4 sm:px-6 lg:px-8">
@@ -568,9 +567,9 @@ export default function PackagesPageClient({ params }: PackagesPageClientProps) 
               <div className="flex flex-col lg:flex-row gap-6">
                 {/* Mobile Filter Button */}
                 <div className="lg:hidden mb-4">
-                  <Button 
-                    onClick={() => setIsFiltersOpen(true)} 
-                    variant="outline" 
+                  <Button
+                    onClick={() => setIsFiltersOpen(true)}
+                    variant="outline"
                     className="w-full border border-slate-300 text-slate-900 hover:bg-slate-50"
                   >
                     <Filter className="mr-2 h-4 w-4" />
@@ -689,8 +688,8 @@ export default function PackagesPageClient({ params }: PackagesPageClientProps) 
                       </div>
                     </div>
                     <div className="p-6 pt-4 flex-shrink-0 border-t border-slate-200">
-                      <Button 
-                        variant="outline" 
+                      <Button
+                        variant="outline"
                         className="w-full"
                         onClick={() => {
                           setRatingFilter('all');
@@ -714,8 +713,8 @@ export default function PackagesPageClient({ params }: PackagesPageClientProps) 
                     </p>
                     <div className="flex items-center gap-3">
                       <span className="text-sm font-medium text-slate-600">Sort by:</span>
-                      <Select 
-                        value={sortBy === 'rating-desc' ? 'recommended' : sortBy === 'price-asc' ? 'price-low' : sortBy === 'price-desc' ? 'price-high' : sortBy === 'duration-asc' ? 'duration' : 'recommended'} 
+                      <Select
+                        value={sortBy === 'rating-desc' ? 'recommended' : sortBy === 'price-asc' ? 'price-low' : sortBy === 'price-desc' ? 'price-high' : sortBy === 'duration-asc' ? 'duration' : 'recommended'}
                         onValueChange={(value) => {
                           if (value === 'recommended') setSortBy('rating-desc');
                           else if (value === 'price-low') setSortBy('price-asc');
@@ -766,7 +765,7 @@ export default function PackagesPageClient({ params }: PackagesPageClientProps) 
                                     </div>
                                   </div>
                                 )}
-                            
+
                                 <div className="absolute top-3 left-3 flex items-center gap-1 bg-black/50 backdrop-blur-sm px-2 py-1 rounded-full">
                                   <Star className="h-4 w-4 fill-yellow-400 text-yellow-400" />
                                   <span className="text-white text-sm font-semibold">{item.displayRating.toFixed(1)}</span>
@@ -781,11 +780,11 @@ export default function PackagesPageClient({ params }: PackagesPageClientProps) 
                                     <span>{item.displayLocation}</span>
                                   </div>
                                 </div>
-                                
+
                                 <h3 className="!text-xl md:text-2xl !font-bold text-slate-900 mb-2">
                                   {item.displayName}
                                 </h3>
-                                
+
                                 <div className="flex items-center gap-2 mb-2">
                                   <div className="flex items-center gap-1 text-slate-600">
                                     <Clock className="h-4 w-4" />
@@ -814,7 +813,7 @@ export default function PackagesPageClient({ params }: PackagesPageClientProps) 
                           </Link>
                         </Card>
                       ))}
-                  
+
                       {/* Pagination */}
                       {totalPages > 1 && (
                         <div className="mt-8">
@@ -864,10 +863,10 @@ export default function PackagesPageClient({ params }: PackagesPageClientProps) 
                     Explore more amazing destinations and create unforgettable memories
                   </p>
                 </div>
-                
+
                 {/* Mobile: Horizontal scrollable container */}
                 <div className="lg:hidden">
-                  <div 
+                  <div
                     ref={mobileScrollRef}
                     className="flex overflow-x-auto gap-4 pb-4 scrollbar-hide snap-x snap-mandatory"
                     style={{ scrollBehavior: 'smooth' }}
@@ -897,7 +896,7 @@ export default function PackagesPageClient({ params }: PackagesPageClientProps) 
                               </div>
                             </div>
                           )}
-                          
+
                           <div className="absolute top-3 right-3 flex flex-col items-end space-y-2">
                             <div className="bg-white/95 backdrop-blur-sm px-2 py-1 rounded-lg flex items-center shadow-sm">
                               <span className="text-amber-500 mr-1">
@@ -907,12 +906,12 @@ export default function PackagesPageClient({ params }: PackagesPageClientProps) 
                               </span>
                               <span className="text-gray-700 text-xs font-medium">{suggestion.rating || 4.5}</span>
                             </div>
-                            
+
                             <div className="bg-blue-50 text-blue-700 text-xs px-2 py-1 rounded-lg font-medium">
                               {suggestion.location}
                             </div>
                           </div>
-                          
+
                           <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/70 to-transparent p-4">
                             <div className="text-white text-xs opacity-90 mb-1 flex items-center">
                               <svg className="w-3 h-3 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -1006,7 +1005,7 @@ export default function PackagesPageClient({ params }: PackagesPageClientProps) 
                       border-radius: 4px;
                     }
                   `}</style>
-                  
+
                   {/* Navigation controls */}
                   <div className="flex justify-between items-center mb-4">
                     <h3 className="text-lg font-semibold text-gray-800">Explore More Destinations</h3>
@@ -1020,7 +1019,7 @@ export default function PackagesPageClient({ params }: PackagesPageClientProps) 
                       >
                         <ChevronLeft className="w-5 h-5 text-gray-700" />
                       </button>
-                      
+
                       <button
                         type="button"
                         onClick={nextSlide}
@@ -1066,7 +1065,7 @@ export default function PackagesPageClient({ params }: PackagesPageClientProps) 
                                 </div>
                               </div>
                             )}
-                            
+
                             <div className="absolute top-3 right-3 flex flex-col items-end space-y-2">
                               <div className="bg-white/95 backdrop-blur-sm px-2 py-1 rounded-lg flex items-center shadow-sm">
                                 <span className="text-amber-500 mr-1">
@@ -1076,12 +1075,12 @@ export default function PackagesPageClient({ params }: PackagesPageClientProps) 
                                 </span>
                                 <span className="text-gray-700 text-xs font-medium">{suggestion.rating || 4.5}</span>
                               </div>
-                              
+
                               <div className="bg-blue-50 text-blue-700 text-xs px-2 py-1 rounded-lg font-medium">
                                 {suggestion.location}
                               </div>
                             </div>
-                            
+
                             <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/70 to-transparent p-4">
                               <div className="text-white text-xs opacity-90 mb-1 flex items-center">
                                 <svg className="w-3 h-3 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -1163,7 +1162,7 @@ export default function PackagesPageClient({ params }: PackagesPageClientProps) 
                   </Button>
                 </div>
               </DialogHeader>
-              
+
               <div className="flex-1 overflow-y-auto px-6 pt-4">
                 {/* Rating Filter */}
                 <div className="mb-6">
@@ -1267,8 +1266,8 @@ export default function PackagesPageClient({ params }: PackagesPageClientProps) 
               </div>
 
               <div className="p-6 pt-4 flex-shrink-0 border-t border-slate-200 flex gap-3">
-                <Button 
-                  variant="outline" 
+                <Button
+                  variant="outline"
                   className="flex-1"
                   onClick={() => {
                     setRatingFilter('all');
@@ -1279,7 +1278,7 @@ export default function PackagesPageClient({ params }: PackagesPageClientProps) 
                 >
                   Clear All
                 </Button>
-                <Button 
+                <Button
                   className="flex-1 bg-gradient-to-r from-blue-500 to-indigo-600 hover:from-blue-600 hover:to-indigo-700 text-white"
                   onClick={() => setIsFiltersOpen(false)}
                 >

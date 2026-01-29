@@ -152,3 +152,11 @@ export const LazyAdminFooter = createLazyComponent(
   }),
   <Loading size="lg" className="min-h-[400px]" />
 );
+
+export const LazyAdminTags = createLazyComponent(
+  () => import("./admin/AdminTags").catch(err => {
+    console.error("Failed to load AdminTags:", err);
+    return Promise.reject(err);
+  }),
+  <Loading size="lg" className="min-h-[400px]" />
+);

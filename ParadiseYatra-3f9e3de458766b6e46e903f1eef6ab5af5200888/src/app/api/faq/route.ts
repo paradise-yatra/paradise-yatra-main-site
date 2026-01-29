@@ -5,7 +5,7 @@ export async function GET(request: NextRequest) {
     const { searchParams } = new URL(request.url);
     
     // Forward the request to the backend
-    const API_BASE_URL = process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:5000';
+    const API_BASE_URL = process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:5001';
     const backendUrl = `${API_BASE_URL}/api/faq?${searchParams.toString()}`;
     
     const response = await fetch(backendUrl, {
@@ -40,7 +40,7 @@ export async function POST(request: NextRequest) {
     const authHeader = request.headers.get('authorization');
 
     // Forward the request to the backend
-    const API_BASE_URL = process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:5000';
+    const API_BASE_URL = process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:5001';
     const response = await fetch(`${API_BASE_URL}/api/faq`, {
       method: 'POST',
       headers: {

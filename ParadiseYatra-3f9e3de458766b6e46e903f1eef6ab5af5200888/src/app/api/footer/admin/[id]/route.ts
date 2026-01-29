@@ -16,7 +16,7 @@ export async function PUT(
     }
 
     const body = await request.json();
-    const backendUrl = process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:5000';
+    const backendUrl = process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:5001';
     const response = await fetch(`${backendUrl}/api/footer/admin/${id}`, {
       method: 'PUT',
       headers: {
@@ -56,7 +56,7 @@ export async function DELETE(
       );
     }
 
-    const backendUrl = process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:5000';
+    const backendUrl = process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:5001';
     const response = await fetch(`${backendUrl}/api/footer/admin/${id}`, {
       method: 'DELETE',
       headers: {

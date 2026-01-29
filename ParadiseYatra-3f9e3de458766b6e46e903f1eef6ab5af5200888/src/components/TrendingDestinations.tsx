@@ -80,14 +80,14 @@ const TrendingDestinations = () => {
     const fetchTrendingPackages = async () => {
       try {
         setLoading(true);
-        const response = await fetch('/api/packages?category=Trending%20Destinations');
-        
+        const response = await fetch('/api/packages?category=Trending%20Destinations&limit=100');
+
         if (!response.ok) {
           throw new Error('Failed to fetch trending packages');
         }
-        
+
         const data = await response.json();
-        
+
         // Ensure data is an array before calling slice
         if (Array.isArray(data)) {
           setAllPackages(data);
@@ -124,7 +124,7 @@ const TrendingDestinations = () => {
     if (isMobile) return;
     const newIndex = Math.max(0, currentIndex - 1);
     setCurrentIndex(newIndex);
-    
+
     const startIndex = newIndex * 3;
     const endIndex = startIndex + 3;
     const newPackages = allPackages.slice(startIndex, endIndex);
@@ -135,7 +135,7 @@ const TrendingDestinations = () => {
     if (isMobile) return;
     const newIndex = Math.min(totalGroups - 1, currentIndex + 1);
     setCurrentIndex(newIndex);
-    
+
     const startIndex = newIndex * 3;
     const endIndex = startIndex + 3;
     const newPackages = allPackages.slice(startIndex, endIndex);
@@ -175,14 +175,14 @@ const TrendingDestinations = () => {
   return (
     <section className="section-padding bg-white px-4 sm:px-6">
       <div className="container mx-auto">
-        <motion.div 
+        <motion.div
           initial={{ opacity: 0, y: 30 }}
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true }}
           transition={{ duration: 0.8 }}
           className="text-center mb-8 sm:mb-12"
         >
-          <motion.div 
+          <motion.div
             animate={{ rotate: 360, }}
             transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
             className="flex items-center justify-center mb-2"
@@ -191,7 +191,7 @@ const TrendingDestinations = () => {
           >
             <Compass className="w-5 h-5 text-blue-600" />
           </motion.div>
-          <motion.h2 
+          <motion.h2
             initial={{ opacity: 0, y: 20 }}
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
@@ -200,7 +200,7 @@ const TrendingDestinations = () => {
           >
             Trending Packages
           </motion.h2>
-          <motion.p 
+          <motion.p
             initial={{ opacity: 0, y: 10 }}
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
@@ -209,7 +209,7 @@ const TrendingDestinations = () => {
           >
             Handpicked packages for your next trip
           </motion.p>
-          <motion.p 
+          <motion.p
             initial={{ opacity: 0, y: 20 }}
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
@@ -223,34 +223,32 @@ const TrendingDestinations = () => {
         {/* Desktop Navigation */}
         {!isMobile && (
           <div className="flex justify-between items-center mb-6 sm:mb-8">
-            <motion.button 
+            <motion.button
               onClick={handlePrevious}
               disabled={currentIndex === 0}
               whileHover={{ scale: currentIndex === 0 ? 1 : 1.1 }}
               whileTap={{ scale: currentIndex === 0 ? 1 : 0.9 }}
-              className={`w-8 h-8 sm:w-10 sm:h-10 border rounded-full flex items-center justify-center transition-all duration-200 shadow-sm ${
-                currentIndex === 0 
-                  ? 'bg-gray-100 border-gray-200 text-gray-400 cursor-not-allowed' 
-                  : 'bg-white border-gray-200 text-gray-600 hover:bg-gray-50 hover:border-gray-300'
-              }`}
+              className={`w-8 h-8 sm:w-10 sm:h-10 border rounded-full flex items-center justify-center transition-all duration-200 shadow-sm ${currentIndex === 0
+                ? 'bg-gray-100 border-gray-200 text-gray-400 cursor-not-allowed'
+                : 'bg-white border-gray-200 text-gray-600 hover:bg-gray-50 hover:border-gray-300'
+                }`}
             >
               <ChevronLeft className="w-4 h-4 sm:w-5 sm:h-5" />
             </motion.button>
-            
+
             <div className="text-sm text-gray-500 font-medium">
               {currentIndex + 1} of {totalGroups}
             </div>
-            
-            <motion.button 
+
+            <motion.button
               onClick={handleNext}
               disabled={currentIndex === totalGroups - 1}
               whileHover={{ scale: currentIndex === totalGroups - 1 ? 1 : 1.1 }}
               whileTap={{ scale: currentIndex === totalGroups - 1 ? 1 : 0.9 }}
-              className={`w-8 h-8 sm:w-10 sm:h-10 border rounded-full flex items-center justify-center transition-all duration-200 shadow-sm ${
-                currentIndex === totalGroups - 1 
-                  ? 'bg-gray-100 border-gray-200 text-gray-400 cursor-not-allowed' 
-                  : 'bg-white border-gray-200 text-gray-600 hover:bg-gray-50 hover:border-gray-300'
-              }`}
+              className={`w-8 h-8 sm:w-10 sm:h-10 border rounded-full flex items-center justify-center transition-all duration-200 shadow-sm ${currentIndex === totalGroups - 1
+                ? 'bg-gray-100 border-gray-200 text-gray-400 cursor-not-allowed'
+                : 'bg-white border-gray-200 text-gray-600 hover:bg-gray-50 hover:border-gray-300'
+                }`}
             >
               <ChevronRight className="w-4 h-4 sm:w-5 sm:h-5" />
             </motion.button>
@@ -261,7 +259,7 @@ const TrendingDestinations = () => {
         {isMobile ? (
           // Mobile: Snap-scroll flex layout
           <div className="md:hidden">
-            <div 
+            <div
               ref={scrollContainerRef}
               className="flex overflow-x-auto gap-0 pb-4 w-full scrollbar-hide"
               style={{
@@ -285,87 +283,86 @@ const TrendingDestinations = () => {
                 >
                   <Link href={`/itinerary/${pkg.slug || pkg._id}`} className="block w-full">
                     <Card className="group overflow-hidden modern-card hover-lift rounded-3xl shadow-xl border-0 relative bg-gradient-to-br from-white via-blue-50 to-blue-100 flex flex-col min-h-[580px] w-full cursor-pointer">
-                    {/* Fixed height image container */}
-                    <div className="relative h-60 overflow-hidden card-image rounded-t-3xl w-full flex-shrink-0">
-                      <Image 
-                        src={getImageUrl(pkg.images?.[0]) || "https://images.unsplash.com/photo-1524492412937-b28074a5d7da?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80"} 
-                        alt={pkg.title}
-                        fill
-                        className="object-cover transition-transform duration-500 group-hover:scale-110"
-                        onError={(e) => {
-                          console.error('Image failed to load:', pkg.images?.[0]);
-                          const target = e.target as HTMLImageElement;
-                          target.src = "https://images.unsplash.com/photo-1524492412937-b28074a5d7da?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80";
-                        }}
-                      />
-                      <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-transparent to-transparent z-10" />
-                      
-                      <div className="absolute top-3 sm:top-4 left-3 sm:left-4 z-20">
-                        <Badge className="badge bg-blue-600 text-white px-2 sm:px-3 py-1 text-xs font-bold shadow-md">
-                          {pkg.category === 'trending' ? 'Trending' : pkg.category.charAt(0).toUpperCase() + pkg.category.slice(1)}
-                        </Badge>
-                      </div>
-                      
-                    </div>
-                    
-                    {/* Content container with flexbox layout */}
-                    <CardContent className="p-4 sm:p-5 flex flex-col flex-1">
-                      <div className="flex-1">
-                        <h3 className="text-lg sm:text-xl font-bold text-gray-900 mb-3 line-clamp-2 group-hover:text-blue-700 transition-colors duration-200">
-                          {pkg.title}
-                        </h3>
-
-                        <TruncatedText 
-                          text={pkg.shortDescription}
-                          maxWords={18}
-                          className="text-gray-700 text-sm leading-relaxed font-medium line-clamp-3 mb-4"
-                          buttonClassName="text-blue-600 hover:text-blue-700 font-semibold"
+                      {/* Fixed height image container */}
+                      <div className="relative h-60 overflow-hidden card-image rounded-t-3xl w-full flex-shrink-0">
+                        <Image
+                          src={getImageUrl(pkg.images?.[0]) || "https://images.unsplash.com/photo-1524492412937-b28074a5d7da?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80"}
+                          alt={pkg.title}
+                          fill
+                          className="object-cover transition-transform duration-500 group-hover:scale-110"
+                          onError={(e) => {
+                            console.error('Image failed to load:', pkg.images?.[0]);
+                            const target = e.target as HTMLImageElement;
+                            target.src = "https://images.unsplash.com/photo-1524492412937-b28074a5d7da?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80";
+                          }}
                         />
+                        <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-transparent to-transparent z-10" />
 
-                        <div className="space-y-2 text-xs text-gray-500 mb-4">
-                          <div className="flex items-center space-x-2">
-                            <Clock className="w-3 h-3 text-blue-500 flex-shrink-0" />
-                            <span className="font-semibold truncate">{pkg.duration}</span>
-                          </div>
-                          <div className="flex items-center space-x-2">
-                            <MapPin className="w-3 h-3 text-blue-500 flex-shrink-0" />
-                            <span className="font-semibold truncate">{pkg.destination}</span>
-                          </div>
-                        </div>
-                      </div>
-
-                      {/* Bottom always aligned */}
-                      <div className="mt-auto">
-                        <div className="mb-4">
-                          <div className="text-lg sm:text-xl font-extrabold text-blue-700">₹{pkg.price.toLocaleString()}</div>
-                          {pkg.originalPrice && (
-                            <div className="line-through text-gray-400 text-xs">₹{pkg.originalPrice.toLocaleString()}</div>
-                          )}
-                          <div className="text-xs text-gray-500">Starting From Per Person</div>
+                        <div className="absolute top-3 sm:top-4 left-3 sm:left-4 z-20">
+                          <Badge className="badge bg-blue-600 text-white px-2 sm:px-3 py-1 text-xs font-bold shadow-md">
+                            {pkg.category === 'trending' ? 'Trending' : pkg.category.charAt(0).toUpperCase() + pkg.category.slice(1)}
+                          </Badge>
                         </div>
 
-                        <Button className="w-full py-3 text-sm font-bold bg-gradient-to-r from-blue-600 to-blue-400 text-white rounded-xl shadow-lg hover:cursor-pointer hover:from-blue-700 hover:to-blue-500 transition-all duration-200">
-                         View Details 
-                        </Button>
                       </div>
-                    </CardContent>
-                  </Card>
+
+                      {/* Content container with flexbox layout */}
+                      <CardContent className="p-4 sm:p-5 flex flex-col flex-1">
+                        <div className="flex-1">
+                          <h3 className="text-lg sm:text-xl font-bold text-gray-900 mb-3 line-clamp-2 group-hover:text-blue-700 transition-colors duration-200">
+                            {pkg.title}
+                          </h3>
+
+                          <TruncatedText
+                            text={pkg.shortDescription}
+                            maxWords={18}
+                            className="text-gray-700 text-sm leading-relaxed font-medium line-clamp-3 mb-4"
+                            buttonClassName="text-blue-600 hover:text-blue-700 font-semibold"
+                          />
+
+                          <div className="space-y-2 text-xs text-gray-500 mb-4">
+                            <div className="flex items-center space-x-2">
+                              <Clock className="w-3 h-3 text-blue-500 flex-shrink-0" />
+                              <span className="font-semibold truncate">{pkg.duration}</span>
+                            </div>
+                            <div className="flex items-center space-x-2">
+                              <MapPin className="w-3 h-3 text-blue-500 flex-shrink-0" />
+                              <span className="font-semibold truncate">{pkg.destination}</span>
+                            </div>
+                          </div>
+                        </div>
+
+                        {/* Bottom always aligned */}
+                        <div className="mt-auto">
+                          <div className="mb-4">
+                            <div className="text-lg sm:text-xl font-extrabold text-blue-700">₹{pkg.price.toLocaleString()}</div>
+                            {pkg.originalPrice && (
+                              <div className="line-through text-gray-400 text-xs">₹{pkg.originalPrice.toLocaleString()}</div>
+                            )}
+                            <div className="text-xs text-gray-500">Starting From Per Person</div>
+                          </div>
+
+                          <Button className="w-full py-3 text-sm font-bold bg-gradient-to-r from-blue-600 to-blue-400 text-white rounded-xl shadow-lg hover:cursor-pointer hover:from-blue-700 hover:to-blue-500 transition-all duration-200">
+                            View Details
+                          </Button>
+                        </div>
+                      </CardContent>
+                    </Card>
                   </Link>
                 </motion.div>
               ))}
             </div>
-            
+
             {/* Mobile scroll indicators */}
             <div className="flex justify-center mt-4">
               <div className="flex space-x-2">
                 {allPackages.map((_, index) => (
-                  <div 
+                  <div
                     key={index}
-                    className={`h-2 rounded-full transition-all duration-300 ease-in-out ${
-                      index === activeScrollIndex 
-                        ? 'bg-blue-600 w-8' 
-                        : 'bg-gray-300 w-2 hover:bg-gray-400'
-                    }`}
+                    className={`h-2 rounded-full transition-all duration-300 ease-in-out ${index === activeScrollIndex
+                      ? 'bg-blue-600 w-8'
+                      : 'bg-gray-300 w-2 hover:bg-gray-400'
+                      }`}
                   />
                 ))}
               </div>
@@ -390,86 +387,86 @@ const TrendingDestinations = () => {
                 >
                   <Link href={`/itinerary/${pkg.slug || pkg._id}`} className="block h-full">
                     <Card className="h-full flex flex-col group overflow-hidden modern-card hover-lift rounded-3xl shadow-xl border-0 bg-gradient-to-br from-white via-blue-50 to-blue-100 min-h-[580px] cursor-pointer">
-                    <div className="relative h-60 overflow-hidden card-image rounded-t-3xl w-full flex-shrink-0">
-                      <Image 
-                        src={getImageUrl(pkg.images?.[0]) || "https://images.unsplash.com/photo-1524492412937-b28074a5d7da?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80"} 
-                        alt={pkg.title}
-                        fill
-                        className="object-cover transition-transform duration-500 group-hover:scale-110"
-                        onError={(e) => {
-                          console.error('Image failed to load:', pkg.images?.[0]);
-                          const target = e.target as HTMLImageElement;
-                          // Prevent infinite loops by checking if we're already using fallback
-                          if (!target.src.includes('unsplash.com')) {
-                            target.src = "https://images.unsplash.com/photo-1524492412937-b28074a5d7da?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80";
-                          }
-                        }}
-                        onLoad={() => {
-                          // Log successful image loads for debugging
-                          console.log('Image loaded successfully:', pkg.images?.[0]);
-                        }}
-                      />
-                      <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-transparent to-transparent z-10" />
-                      
-                      <div className="absolute top-3 sm:top-4 left-3 sm:left-4 z-20">
-                        <Badge className="badge bg-blue-600 text-white px-2 sm:px-3 py-1 text-xs font-bold shadow-md">
-                          {pkg.category === 'trending' ? 'Trending' : pkg.category.charAt(0).toUpperCase() + pkg.category.slice(1)}
-                        </Badge>
-                      </div>
-                    
-                      
-                    </div>
-                    
-                    <CardContent className="p-4 sm:p-5 md:p-6 flex flex-col flex-1">
-                      <div className="flex-1">
-                        <h3 className="text-lg sm:text-xl font-bold text-gray-900 mb-3 line-clamp-2 group-hover:text-blue-700 transition-colors duration-200">
-                          {pkg.title}
-                        </h3>
-
-                        <TruncatedText 
-                          text={pkg.shortDescription}
-                          maxWords={18}
-                          className="text-gray-700 text-sm leading-relaxed font-medium line-clamp-3 mb-4"
-                          buttonClassName="text-blue-600 hover:text-blue-700 font-semibold"
+                      <div className="relative h-60 overflow-hidden card-image rounded-t-3xl w-full flex-shrink-0">
+                        <Image
+                          src={getImageUrl(pkg.images?.[0]) || "https://images.unsplash.com/photo-1524492412937-b28074a5d7da?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80"}
+                          alt={pkg.title}
+                          fill
+                          className="object-cover transition-transform duration-500 group-hover:scale-110"
+                          onError={(e) => {
+                            console.error('Image failed to load:', pkg.images?.[0]);
+                            const target = e.target as HTMLImageElement;
+                            // Prevent infinite loops by checking if we're already using fallback
+                            if (!target.src.includes('unsplash.com')) {
+                              target.src = "https://images.unsplash.com/photo-1524492412937-b28074a5d7da?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80";
+                            }
+                          }}
+                          onLoad={() => {
+                            // Log successful image loads for debugging
+                            console.log('Image loaded successfully:', pkg.images?.[0]);
+                          }}
                         />
+                        <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-transparent to-transparent z-10" />
 
-                        <div className="space-y-2 text-xs text-gray-500 mb-4">
-                          <div className="flex items-center space-x-2">
-                            <Clock className="w-3 h-3 text-blue-500 flex-shrink-0" />
-                            <span className="font-semibold truncate">{pkg.duration}</span>
-                          </div>
-                          <div className="flex items-center space-x-2">
-                            <MapPin className="w-3 h-3 text-blue-500 flex-shrink-0" />
-                            <span className="font-semibold truncate">{pkg.destination}</span>
-                          </div>
-                        </div>
-                      </div>
-
-                      {/* Bottom always aligned */}
-                      <div className="mt-auto">
-                        <div className="mb-4">
-                          <div className="text-lg sm:text-xl font-extrabold text-blue-700">₹{pkg.price.toLocaleString()}</div>
-                          {pkg.originalPrice && (
-                            <div className="line-through text-gray-400 text-xs">₹{pkg.originalPrice.toLocaleString()}</div>
-                          )}
-                          <div className="text-xs text-gray-500">Starting From Per Person</div>
+                        <div className="absolute top-3 sm:top-4 left-3 sm:left-4 z-20">
+                          <Badge className="badge bg-blue-600 text-white px-2 sm:px-3 py-1 text-xs font-bold shadow-md">
+                            {pkg.category === 'trending' ? 'Trending' : pkg.category.charAt(0).toUpperCase() + pkg.category.slice(1)}
+                          </Badge>
                         </div>
 
-                        <Button className="w-full py-3 text-sm font-bold bg-gradient-to-r from-blue-600 to-blue-400 text-white rounded-xl shadow-lg hover:cursor-pointer hover:from-blue-700 hover:to-blue-500 transition-all duration-200">
-                          View Details
-                        </Button>
+
                       </div>
-                    </CardContent>
-                  </Card>
+
+                      <CardContent className="p-4 sm:p-5 md:p-6 flex flex-col flex-1">
+                        <div className="flex-1">
+                          <h3 className="text-lg sm:text-xl font-bold text-gray-900 mb-3 line-clamp-2 group-hover:text-blue-700 transition-colors duration-200">
+                            {pkg.title}
+                          </h3>
+
+                          <TruncatedText
+                            text={pkg.shortDescription}
+                            maxWords={18}
+                            className="text-gray-700 text-sm leading-relaxed font-medium line-clamp-3 mb-4"
+                            buttonClassName="text-blue-600 hover:text-blue-700 font-semibold"
+                          />
+
+                          <div className="space-y-2 text-xs text-gray-500 mb-4">
+                            <div className="flex items-center space-x-2">
+                              <Clock className="w-3 h-3 text-blue-500 flex-shrink-0" />
+                              <span className="font-semibold truncate">{pkg.duration}</span>
+                            </div>
+                            <div className="flex items-center space-x-2">
+                              <MapPin className="w-3 h-3 text-blue-500 flex-shrink-0" />
+                              <span className="font-semibold truncate">{pkg.destination}</span>
+                            </div>
+                          </div>
+                        </div>
+
+                        {/* Bottom always aligned */}
+                        <div className="mt-auto">
+                          <div className="mb-4">
+                            <div className="text-lg sm:text-xl font-extrabold text-blue-700">₹{pkg.price.toLocaleString()}</div>
+                            {pkg.originalPrice && (
+                              <div className="line-through text-gray-400 text-xs">₹{pkg.originalPrice.toLocaleString()}</div>
+                            )}
+                            <div className="text-xs text-gray-500">Starting From Per Person</div>
+                          </div>
+
+                          <Button className="w-full py-3 text-sm font-bold bg-gradient-to-r from-blue-600 to-blue-400 text-white rounded-xl shadow-lg hover:cursor-pointer hover:from-blue-700 hover:to-blue-500 transition-all duration-200">
+                            View Details
+                          </Button>
+                        </div>
+                      </CardContent>
+                    </Card>
                   </Link>
                 </motion.div>
               ))}
             </div>
           </div>
         )}
-        
+
         {/* View All Trending Packages Button */}
-        <motion.div 
+        <motion.div
           initial={{ opacity: 0, y: 20 }}
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true }}

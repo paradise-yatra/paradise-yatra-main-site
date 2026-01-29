@@ -13,7 +13,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Forward the request to the backend
-    const backendUrl = process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:5000';
+    const backendUrl = process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:5001';
     const response = await fetch(`${backendUrl}/api/upload/image`, {
       method: 'POST',
       headers: {

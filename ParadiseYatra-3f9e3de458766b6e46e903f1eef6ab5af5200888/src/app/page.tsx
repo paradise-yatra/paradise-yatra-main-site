@@ -1,21 +1,21 @@
 import type { Metadata } from "next";
 import HomePageClient from "@/components/HomePageClient";
 
-// Force dynamic rendering for SEO metadata
-export const dynamic = "force-dynamic";
+// Use ISR instead of force-dynamic - regenerate every 60 seconds
+export const revalidate = 60;
 
 // Function to fetch SEO data from API
 async function getSEOMetadata(): Promise<Metadata> {
   try {
     const API_BASE_URL =
-      process.env.NEXT_PUBLIC_BACKEND_URL || "http://localhost:5000";
+      process.env.NEXT_PUBLIC_BACKEND_URL || "http://localhost:5001";
     const response = await fetch(`${API_BASE_URL}/api/seo/homepage`, {
       method: "GET",
       headers: {
         "Content-Type": "application/json",
       },
-      // Disable caching for dynamic SEO updates
-      cache: "no-store",
+      // Use ISR caching - revalidate every 60 seconds
+      next: { revalidate: 60 },
     });
 
     if (response.ok) {

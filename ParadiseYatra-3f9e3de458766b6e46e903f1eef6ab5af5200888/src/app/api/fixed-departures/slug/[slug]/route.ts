@@ -6,7 +6,7 @@ export async function GET(
 ) {
   try {
     const { slug } = await params;
-    const response = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:5000'}/api/fixed-departures/slug/${slug}`, {
+    const response = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:5001'}/api/fixed-departures/slug/${slug}`, {
       method: 'GET',
       headers: {
         'Content-Type': 'application/json',

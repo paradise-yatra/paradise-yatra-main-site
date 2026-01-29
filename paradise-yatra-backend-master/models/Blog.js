@@ -68,6 +68,11 @@ const blogSchema = new mongoose.Schema(
         type: String,
       },
     ],
+    slug: {
+      type: String,
+      unique: true,
+      sparse: true, // Allow nulls for existing entries initially
+    },
   },
   {
     timestamps: true,

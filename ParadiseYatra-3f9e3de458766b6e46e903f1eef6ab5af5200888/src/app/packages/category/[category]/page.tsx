@@ -66,7 +66,7 @@ const Pagination = ({ currentPage, totalPages, onPageChange, className = "" }: P
     const getPageNumbers = () => {
         const pages = [];
         const maxVisiblePages = 5;
-        
+
         if (totalPages <= maxVisiblePages) {
             for (let i = 1; i <= totalPages; i++) {
                 pages.push(i);
@@ -94,7 +94,7 @@ const Pagination = ({ currentPage, totalPages, onPageChange, className = "" }: P
                 pages.push(totalPages);
             }
         }
-        
+
         return pages;
     };
 
@@ -108,7 +108,7 @@ const Pagination = ({ currentPage, totalPages, onPageChange, className = "" }: P
             >
                 Previous
             </Button>
-            
+
             {getPageNumbers().map((page, index) => (
                 <div key={index}>
                     {page === '...' ? (
@@ -118,18 +118,17 @@ const Pagination = ({ currentPage, totalPages, onPageChange, className = "" }: P
                             variant={currentPage === page ? "default" : "outline"}
                             size="sm"
                             onClick={() => handlePageChange(page as number)}
-                            className={`px-3 py-2 ${
-                                currentPage === page 
-                                    ? 'bg-blue-600 text-white hover:bg-blue-700 hover:cursor-pointer border-0' 
-                                    : 'bg-blue-500 text-white hover:bg-blue-600 hover:cursor-pointer border-0'
-                            }`}
+                            className={`px-3 py-2 ${currentPage === page
+                                ? 'bg-blue-600 text-white hover:bg-blue-700 hover:cursor-pointer border-0'
+                                : 'bg-blue-500 text-white hover:bg-blue-600 hover:cursor-pointer border-0'
+                                }`}
                         >
                             {page}
                         </Button>
                     )}
                 </div>
             ))}
-            
+
             <Button
                 size="sm"
                 onClick={() => handlePageChange(currentPage + 1)}
@@ -250,7 +249,7 @@ const ModernDropdown = ({ options, value, onChange, placeholder, className = "" 
 const PackagesLoadingSkeleton = () => (
     <div className="min-h-screen bg-gray-50">
         <div className="container mx-auto px-4 py-8">
-            
+
             {/* Header skeleton */}
             <div className="text-center mb-8">
                 <div className="h-10 bg-gray-200 rounded w-80 mx-auto mb-4 animate-pulse"></div>
@@ -342,7 +341,7 @@ export default function CategoryPage({ params }: CategoryPageProps) {
     // Get color scheme based on category
     const getCategoryColors = (category: string) => {
         const categoryLower = category.toLowerCase();
-        
+
         if (categoryLower.includes('trending')) {
             return {
                 primary: 'blue',
@@ -496,7 +495,7 @@ export default function CategoryPage({ params }: CategoryPageProps) {
     const startIndex = (currentPage - 1) * itemsPerPage;
     const endIndex = startIndex + itemsPerPage;
     const paginatedPackages = filteredPackages.slice(startIndex, endIndex);
-    
+
     // Debug: Log when filteredPackages changes
     console.log('Rendering with filtered packages:', {
         filteredCount: filteredPackages.length,
@@ -517,17 +516,17 @@ export default function CategoryPage({ params }: CategoryPageProps) {
 
                 // Use destinations API for Popular Destinations, packages API for others
                 // Map "Popular Destinations" to "Popular Packages" for backend compatibility
-                const categoryForAPI = decodedCategory.toLowerCase() === 'popular destinations' 
-                    ? 'Popular Packages' 
+                const categoryForAPI = decodedCategory.toLowerCase() === 'popular destinations'
+                    ? 'Popular Packages'
                     : decodedCategory;
-                
-                const response = decodedCategory.toLowerCase() === 'popular destinations' 
+
+                const response = decodedCategory.toLowerCase() === 'popular destinations'
                     ? await fetch('/api/destinations').then(res => res.json())
                     : await packagesAPI.getByCategory(categoryForAPI, { limit: 100 });
 
                 // Handle response data properly
                 let packagesData: Package[] = [];
-                
+
                 if (decodedCategory.toLowerCase() === 'popular destinations') {
                     // Destinations API returns { destinations: [...] }
                     if (response && response.destinations && Array.isArray(response.destinations)) {
@@ -565,23 +564,23 @@ export default function CategoryPage({ params }: CategoryPageProps) {
                     } else if (response && response.data && Array.isArray(response.data)) {
                         packagesData = response.data;
                     }
-                    
+
                     // Ensure ratings are properly converted to numbers
                     packagesData = packagesData.map(pkg => ({
                         ...pkg,
                         rating: typeof pkg.rating === 'string' ? parseFloat(pkg.rating) : (pkg.rating || 0)
                     }));
                 }
-                
+
                 if (!Array.isArray(packagesData)) {
                     throw new Error('Invalid data format received from API');
                 }
 
                 // Filter out packages without required fields
-                const validPackages = packagesData.filter(pkg => 
-                    pkg.title && 
-                    pkg.price && 
-                    pkg.destination && 
+                const validPackages = packagesData.filter(pkg =>
+                    pkg.title &&
+                    pkg.price &&
+                    pkg.destination &&
                     pkg.duration
                 );
 
@@ -645,10 +644,10 @@ export default function CategoryPage({ params }: CategoryPageProps) {
             const minRating = parseFloat(ratingFilter);
             filtered = filtered.filter(pkg => {
                 // Ensure rating is a number and handle string values
-                const packageRating = typeof pkg.rating === 'string' 
-                    ? parseFloat(pkg.rating) 
+                const packageRating = typeof pkg.rating === 'string'
+                    ? parseFloat(pkg.rating)
                     : (pkg.rating || 0);
-                
+
                 return packageRating >= minRating;
             });
         }
@@ -683,7 +682,7 @@ export default function CategoryPage({ params }: CategoryPageProps) {
 
             filtered = filtered.filter(pkg => {
                 const days = extractDays(pkg.duration || '');
-                
+
                 switch (durationFilter) {
                     case '1-3':
                         return days >= 1 && days <= 3;
@@ -779,7 +778,7 @@ export default function CategoryPage({ params }: CategoryPageProps) {
     return (
         <div className="min-h-screen bg-slate-50">
             <LazyHeader />
-            <div className="pt-20 md:pt-28">
+            <div>
                 <Suspense fallback={<PackagesLoadingSkeleton />}>
                     {/* Header Section */}
                     <section className="bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50 py-12 px-4 sm:px-6 lg:px-8">
@@ -799,9 +798,9 @@ export default function CategoryPage({ params }: CategoryPageProps) {
                             <div className="flex flex-col lg:flex-row gap-6 ">
                                 {/* Mobile Filter Button */}
                                 <div className="lg:hidden mb-4">
-                                    <Button 
-                                        onClick={() => setIsFiltersOpen(true)} 
-                                        variant="outline" 
+                                    <Button
+                                        onClick={() => setIsFiltersOpen(true)}
+                                        variant="outline"
                                         className="w-full border border-slate-300 text-slate-900 hover:bg-slate-50 hover:text-slate-900"
                                     >
                                         <Filter className="mr-2 h-4 w-4 text-slate-900" />
@@ -944,8 +943,8 @@ export default function CategoryPage({ params }: CategoryPageProps) {
                                             )}
                                         </div>
                                         <div className="p-6 pt-4 flex-shrink-0 border-t border-slate-200">
-                                            <Button 
-                                                variant="outline" 
+                                            <Button
+                                                variant="outline"
                                                 className="w-full"
                                                 onClick={() => {
                                                     setSortBy('rating-desc');
@@ -971,8 +970,8 @@ export default function CategoryPage({ params }: CategoryPageProps) {
                                         </p>
                                         <div className="flex items-center gap-3">
                                             <span className="text-sm font-medium text-slate-600">Sort by:</span>
-                                            <Select 
-                                                value={sortBy === 'rating-desc' ? 'recommended' : sortBy === 'price-asc' ? 'price-low' : sortBy === 'price-desc' ? 'price-high' : sortBy === 'duration-asc' ? 'duration' : 'recommended'} 
+                                            <Select
+                                                value={sortBy === 'rating-desc' ? 'recommended' : sortBy === 'price-asc' ? 'price-low' : sortBy === 'price-desc' ? 'price-high' : sortBy === 'duration-asc' ? 'duration' : 'recommended'}
                                                 onValueChange={(value) => {
                                                     if (value === 'recommended') setSortBy('rating-desc');
                                                     else if (value === 'price-low') setSortBy('price-asc');
@@ -1024,7 +1023,7 @@ export default function CategoryPage({ params }: CategoryPageProps) {
                                                                         </div>
                                                                     </div>
                                                                 )}
-                            
+
                                                                 <div className="absolute top-3 left-3 flex items-center gap-1 bg-black/50 backdrop-blur-sm px-2 py-1 rounded-full">
                                                                     <Star className="h-4 w-4 fill-yellow-400 text-yellow-400" />
                                                                     <span className="text-white text-sm font-semibold">{pkg.rating || 4.5}</span>
@@ -1039,18 +1038,18 @@ export default function CategoryPage({ params }: CategoryPageProps) {
                                                                         <span>{pkg.destination}</span>
                                                                     </div>
                                                                 </div>
-                                                                
+
                                                                 <h3 className="!text-xl md:text-2xl !font-bold text-slate-900 mb-2">
                                                                     {pkg.title}
                                                                 </h3>
-                                                                
+
                                                                 <div className="flex items-center gap-2 mb-2">
-                                                                <div className="flex items-center gap-1 text-slate-600">
-                                                                    <Clock className="h-4 w-4" />
-                                                                    <span className="text-sm">
-                                                                        {formatDurationDisplay(pkg.duration || '')}
-                                                                    </span>
-                                                                </div>
+                                                                    <div className="flex items-center gap-1 text-slate-600">
+                                                                        <Clock className="h-4 w-4" />
+                                                                        <span className="text-sm">
+                                                                            {formatDurationDisplay(pkg.duration || '')}
+                                                                        </span>
+                                                                    </div>
                                                                 </div>
 
                                                                 <p className="!text-slate-600 text-sm mb-3 line-clamp-2">
@@ -1072,40 +1071,40 @@ export default function CategoryPage({ params }: CategoryPageProps) {
                                                     </Link>
                                                 </Card>
                                             ))}
-                                        
-                                        {/* Pagination */}
-                                        {totalPages > 1 && (
-                                            <div className="mt-8">
-                                                <Pagination
-                                                    currentPage={currentPage}
-                                                    totalPages={totalPages}
-                                                    onPageChange={setCurrentPage}
-                                                    className="mt-6"
-                                                />
-                                            </div>
-                                        )}
-                                    </div>
-                                ) : (
-                                    <div className="text-center py-16 bg-white rounded-2xl shadow-md">
-                                        <div className="text-gray-300 text-6xl mb-4">🏔️</div>
-                                        <h3 className="text-xl font-semibold text-gray-600 mb-3">No packages found</h3>
-                                        <p className="text-gray-500 max-w-md mx-auto mb-6">
-                                            We couldn't find any packages matching your filters.
-                                        </p>
-                                        <button
-                                            onClick={() => {
-                                                setSortBy('rating-desc');
-                                                setPriceRange([0, 100000]);
-                                                setDurationFilter('all');
-                                                setDestinationFilter('all');
-                                                setRatingFilter('all');
-                                                setPriceFilter('all');
-                                            }}
-                                            className="bg-blue-600 text-white px-6 py-2 rounded-lg hover:bg-blue-700 transition-colors"
-                                        >
-                                            Clear Filters
-                                        </button>
-                                    </div>
+
+                                            {/* Pagination */}
+                                            {totalPages > 1 && (
+                                                <div className="mt-8">
+                                                    <Pagination
+                                                        currentPage={currentPage}
+                                                        totalPages={totalPages}
+                                                        onPageChange={setCurrentPage}
+                                                        className="mt-6"
+                                                    />
+                                                </div>
+                                            )}
+                                        </div>
+                                    ) : (
+                                        <div className="text-center py-16 bg-white rounded-2xl shadow-md">
+                                            <div className="text-gray-300 text-6xl mb-4">🏔️</div>
+                                            <h3 className="text-xl font-semibold text-gray-600 mb-3">No packages found</h3>
+                                            <p className="text-gray-500 max-w-md mx-auto mb-6">
+                                                We couldn't find any packages matching your filters.
+                                            </p>
+                                            <button
+                                                onClick={() => {
+                                                    setSortBy('rating-desc');
+                                                    setPriceRange([0, 100000]);
+                                                    setDurationFilter('all');
+                                                    setDestinationFilter('all');
+                                                    setRatingFilter('all');
+                                                    setPriceFilter('all');
+                                                }}
+                                                className="bg-blue-600 text-white px-6 py-2 rounded-lg hover:bg-blue-700 transition-colors"
+                                            >
+                                                Clear Filters
+                                            </button>
+                                        </div>
                                     )}
                                 </div>
                             </div>
@@ -1124,10 +1123,10 @@ export default function CategoryPage({ params }: CategoryPageProps) {
                                         Explore more amazing destinations and create unforgettable memories
                                     </p>
                                 </div>
-                                
+
                                 {/* Mobile: Horizontal scrollable container */}
                                 <div className="lg:hidden">
-                                    <div 
+                                    <div
                                         ref={mobileScrollRef}
                                         className="flex overflow-x-auto gap-4 pb-4 scrollbar-hide snap-x snap-mandatory"
                                         style={{ scrollBehavior: 'smooth' }}
@@ -1158,7 +1157,7 @@ export default function CategoryPage({ params }: CategoryPageProps) {
                                                             </div>
                                                         </div>
                                                     )}
-                                                    
+
                                                     <div className="absolute top-3 right-3 flex flex-col items-end space-y-2">
                                                         <div className="bg-white/95 backdrop-blur-sm px-2 py-1 rounded-lg flex items-center shadow-sm">
                                                             <span className="text-amber-500 mr-1">
@@ -1168,12 +1167,12 @@ export default function CategoryPage({ params }: CategoryPageProps) {
                                                             </span>
                                                             <span className="text-gray-700 text-xs font-medium">{suggestion.rating || 4.5}</span>
                                                         </div>
-                                                        
+
                                                         <div className="bg-blue-50 text-blue-700 text-xs px-2 py-1 rounded-lg font-medium">
                                                             {suggestion.location}
                                                         </div>
                                                     </div>
-                                                    
+
                                                     <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/70 to-transparent p-4">
                                                         <div className="text-white text-xs opacity-90 mb-1 flex items-center">
                                                             <svg className="w-3 h-3 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -1267,7 +1266,7 @@ export default function CategoryPage({ params }: CategoryPageProps) {
                                             border-radius: 4px;
                                         }
                                     `}</style>
-                                    
+
                                     {/* Navigation controls above carousel */}
                                     <div className="flex justify-between items-center mb-4">
                                         <h3 className="text-lg font-semibold text-gray-800">Explore More Destinations</h3>
@@ -1281,7 +1280,7 @@ export default function CategoryPage({ params }: CategoryPageProps) {
                                             >
                                                 <ChevronLeft className="w-5 h-5 text-gray-700" />
                                             </button>
-                                            
+
                                             <button
                                                 type="button"
                                                 onClick={nextSlide}
@@ -1299,7 +1298,7 @@ export default function CategoryPage({ params }: CategoryPageProps) {
                                         {suggestions.slice(currentSlide, currentSlide + 5).map((suggestion, index) => {
                                             // Determine if this is a new card (appearing for the first time)
                                             const isNewCard = newCardIndex === index;
-                                            
+
                                             return (
                                                 <Card
                                                     key={`${suggestion._id || suggestion.name}-${currentSlide}-${index}`}
@@ -1335,14 +1334,14 @@ export default function CategoryPage({ params }: CategoryPageProps) {
                                                             <h3 className="!text-base !font-bold !text-slate-900 mb-1.5 group-hover:text-blue-600 transition-colors line-clamp-2">
                                                                 {formatCategoryTitle(suggestion.name || '')}
                                                             </h3>
-                                                            
+
                                                             <div className="flex items-center gap-2 text-xs text-slate-500 mb-2">
                                                                 <div className="flex items-center gap-1">
                                                                     <MapPin className="h-3 w-3" />
                                                                     <span className="truncate">{suggestion.location}</span>
                                                                 </div>
                                                             </div>
-                                                            
+
                                                             <div className="flex items-center justify-between">
                                                                 <div>
                                                                     <div className="text-xs text-slate-500">Starting from</div>
@@ -1351,7 +1350,7 @@ export default function CategoryPage({ params }: CategoryPageProps) {
                                                                     </div>
                                                                 </div>
                                                                 <Button size="sm" className="bg-gradient-to-r from-blue-500 to-indigo-600 hover:from-blue-600 hover:to-indigo-700 text-white text-xs px-2 py-1 h-auto">
-                                                                      Explore
+                                                                    Explore
                                                                     <ChevronRight className="ml-1 h-3 w-3" />
                                                                 </Button>
                                                             </div>
@@ -1381,171 +1380,171 @@ export default function CategoryPage({ params }: CategoryPageProps) {
                     )}
 
                     {/* Mobile Filter Dialog */}
-                        <Dialog open={isFiltersOpen} onOpenChange={setIsFiltersOpen}>
-                            <DialogContent className="max-w-md max-h-[80vh] flex flex-col p-0">
-                                <DialogHeader className="p-6 pb-4 flex-shrink-0 border-b">
-                                    <div className="flex items-center justify-between">
-                                        <DialogTitle className="flex items-center gap-2">
-                                            <div className="w-1 h-6 bg-blue-600 rounded"></div>
-                                            <span className='text-black'>Filters</span>
-                                        </DialogTitle>
-                                        <Button variant="ghost" size="sm" onClick={() => setIsFiltersOpen(false)}>
-                                            <X className="h-4 w-4 text-black" />
-                                        </Button>
+                    <Dialog open={isFiltersOpen} onOpenChange={setIsFiltersOpen}>
+                        <DialogContent className="max-w-md max-h-[80vh] flex flex-col p-0">
+                            <DialogHeader className="p-6 pb-4 flex-shrink-0 border-b">
+                                <div className="flex items-center justify-between">
+                                    <DialogTitle className="flex items-center gap-2">
+                                        <div className="w-1 h-6 bg-blue-600 rounded"></div>
+                                        <span className='text-black'>Filters</span>
+                                    </DialogTitle>
+                                    <Button variant="ghost" size="sm" onClick={() => setIsFiltersOpen(false)}>
+                                        <X className="h-4 w-4 text-black" />
+                                    </Button>
+                                </div>
+                            </DialogHeader>
+
+                            <div className="flex-1 overflow-y-auto px-6 pt-4">
+                                {/* Rating Filter */}
+                                <div className="mb-6">
+                                    <div className="flex items-center gap-2 mb-3">
+                                        <div className="w-1 h-4 bg-blue-600 rounded"></div>
+                                        <Label className="text-sm font-semibold text-slate-700">RATING</Label>
                                     </div>
-                                </DialogHeader>
-                                
-                                <div className="flex-1 overflow-y-auto px-6 pt-4">
-                                    {/* Rating Filter */}
+                                    <RadioGroup value={ratingFilter} onValueChange={(value) => setRatingFilter(value)}>
+                                        <div className="space-y-2">
+                                            <div className="flex items-center space-x-2">
+                                                <RadioGroupItem value="all" id="mobile-rating-any" />
+                                                <Label htmlFor="mobile-rating-any" className="text-sm text-slate-600 cursor-pointer">Any</Label>
+                                            </div>
+                                            <div className="flex items-center space-x-2">
+                                                <RadioGroupItem value="4.5" id="mobile-rating-4.5" />
+                                                <Label htmlFor="mobile-rating-4.5" className="text-sm text-slate-600 cursor-pointer">4.5+</Label>
+                                            </div>
+                                            <div className="flex items-center space-x-2">
+                                                <RadioGroupItem value="4.0" id="mobile-rating-4.0" />
+                                                <Label htmlFor="mobile-rating-4.0" className="text-sm text-slate-600 cursor-pointer">4.0+</Label>
+                                            </div>
+                                            <div className="flex items-center space-x-2">
+                                                <RadioGroupItem value="3.5" id="mobile-rating-3.5" />
+                                                <Label htmlFor="mobile-rating-3.5" className="text-sm text-slate-600 cursor-pointer">3.5+</Label>
+                                            </div>
+                                            <div className="flex items-center space-x-2">
+                                                <RadioGroupItem value="3.0" id="mobile-rating-3.0" />
+                                                <Label htmlFor="mobile-rating-3.0" className="text-sm text-slate-600 cursor-pointer">3.0+</Label>
+                                            </div>
+                                        </div>
+                                    </RadioGroup>
+                                </div>
+
+                                {/* Duration Filter */}
+                                <div className="mb-6">
+                                    <div className="flex items-center gap-2 mb-3">
+                                        <div className="w-1 h-4 bg-blue-600 rounded"></div>
+                                        <Label className="text-sm font-semibold text-slate-700">DURATION</Label>
+                                    </div>
+                                    <RadioGroup value={durationFilter} onValueChange={(value) => setDurationFilter(value)}>
+                                        <div className="space-y-2">
+                                            <div className="flex items-center space-x-2">
+                                                <RadioGroupItem value="all" id="mobile-duration-any" />
+                                                <Label htmlFor="mobile-duration-any" className="text-sm text-slate-600 cursor-pointer">Any</Label>
+                                            </div>
+                                            <div className="flex items-center space-x-2">
+                                                <RadioGroupItem value="1-3" id="mobile-duration-1-3" />
+                                                <Label htmlFor="mobile-duration-1-3" className="text-sm text-slate-600 cursor-pointer">1-3 Days</Label>
+                                            </div>
+                                            <div className="flex items-center space-x-2">
+                                                <RadioGroupItem value="4-6" id="mobile-duration-4-6" />
+                                                <Label htmlFor="mobile-duration-4-6" className="text-sm text-slate-600 cursor-pointer">4-6 Days</Label>
+                                            </div>
+                                            <div className="flex items-center space-x-2">
+                                                <RadioGroupItem value="7-9" id="mobile-duration-7-9" />
+                                                <Label htmlFor="mobile-duration-7-9" className="text-sm text-slate-600 cursor-pointer">7-9 Days</Label>
+                                            </div>
+                                            <div className="flex items-center space-x-2">
+                                                <RadioGroupItem value="10-12" id="mobile-duration-10-12" />
+                                                <Label htmlFor="mobile-duration-10-12" className="text-sm text-slate-600 cursor-pointer">10-12 Days</Label>
+                                            </div>
+                                            <div className="flex items-center space-x-2">
+                                                <RadioGroupItem value="13+" id="mobile-duration-13+" />
+                                                <Label htmlFor="mobile-duration-13+" className="text-sm text-slate-600 cursor-pointer">13+ Days</Label>
+                                            </div>
+                                        </div>
+                                    </RadioGroup>
+                                </div>
+
+                                {/* Price Filter */}
+                                <div className="mb-6">
+                                    <div className="flex items-center gap-2 mb-3">
+                                        <div className="w-1 h-4 bg-blue-600 rounded"></div>
+                                        <Label className="text-sm font-semibold text-slate-700">PRICE</Label>
+                                    </div>
+                                    <RadioGroup value={priceFilter} onValueChange={(value) => setPriceFilter(value)}>
+                                        <div className="space-y-2">
+                                            <div className="flex items-center space-x-2">
+                                                <RadioGroupItem value="all" id="mobile-price-any" />
+                                                <Label htmlFor="mobile-price-any" className="text-sm text-slate-600 cursor-pointer">Any</Label>
+                                            </div>
+                                            <div className="flex items-center space-x-2">
+                                                <RadioGroupItem value="0-1000" id="mobile-price-0-1000" />
+                                                <Label htmlFor="mobile-price-0-1000" className="text-sm text-slate-600 cursor-pointer">₹ 0 - ₹ 1,000</Label>
+                                            </div>
+                                            <div className="flex items-center space-x-2">
+                                                <RadioGroupItem value="1000-2500" id="mobile-price-1000-2500" />
+                                                <Label htmlFor="mobile-price-1000-2500" className="text-sm text-slate-600 cursor-pointer">₹ 1,000 - ₹ 2,500</Label>
+                                            </div>
+                                            <div className="flex items-center space-x-2">
+                                                <RadioGroupItem value="2500-5000" id="mobile-price-2500-5000" />
+                                                <Label htmlFor="mobile-price-2500-5000" className="text-sm text-slate-600 cursor-pointer">₹ 2,500 - ₹ 5,000</Label>
+                                            </div>
+                                            <div className="flex items-center space-x-2">
+                                                <RadioGroupItem value="5000+" id="mobile-price-5000+" />
+                                                <Label htmlFor="mobile-price-5000+" className="text-sm text-slate-600 cursor-pointer">₹ 5,000+</Label>
+                                            </div>
+                                        </div>
+                                    </RadioGroup>
+                                </div>
+
+                                {/* Destination Filter */}
+                                {destinations.length > 0 && (
                                     <div className="mb-6">
                                         <div className="flex items-center gap-2 mb-3">
                                             <div className="w-1 h-4 bg-blue-600 rounded"></div>
-                                            <Label className="text-sm font-semibold text-slate-700">RATING</Label>
+                                            <Label className="text-sm font-semibold text-slate-700">DESTINATION</Label>
                                         </div>
-                                        <RadioGroup value={ratingFilter} onValueChange={(value) => setRatingFilter(value)}>
+                                        <RadioGroup value={destinationFilter} onValueChange={(value) => setDestinationFilter(value)}>
                                             <div className="space-y-2">
                                                 <div className="flex items-center space-x-2">
-                                                    <RadioGroupItem value="all" id="mobile-rating-any" />
-                                                    <Label htmlFor="mobile-rating-any" className="text-sm text-slate-600 cursor-pointer">Any</Label>
+                                                    <RadioGroupItem value="all" id="mobile-destination-any" />
+                                                    <Label htmlFor="mobile-destination-any" className="text-sm text-slate-600 cursor-pointer">Any</Label>
                                                 </div>
-                                                <div className="flex items-center space-x-2">
-                                                    <RadioGroupItem value="4.5" id="mobile-rating-4.5" />
-                                                    <Label htmlFor="mobile-rating-4.5" className="text-sm text-slate-600 cursor-pointer">4.5+</Label>
-                                                </div>
-                                                <div className="flex items-center space-x-2">
-                                                    <RadioGroupItem value="4.0" id="mobile-rating-4.0" />
-                                                    <Label htmlFor="mobile-rating-4.0" className="text-sm text-slate-600 cursor-pointer">4.0+</Label>
-                                                </div>
-                                                <div className="flex items-center space-x-2">
-                                                    <RadioGroupItem value="3.5" id="mobile-rating-3.5" />
-                                                    <Label htmlFor="mobile-rating-3.5" className="text-sm text-slate-600 cursor-pointer">3.5+</Label>
-                                                </div>
-                                                <div className="flex items-center space-x-2">
-                                                    <RadioGroupItem value="3.0" id="mobile-rating-3.0" />
-                                                    <Label htmlFor="mobile-rating-3.0" className="text-sm text-slate-600 cursor-pointer">3.0+</Label>
-                                                </div>
-                                            </div>
-                                        </RadioGroup>
-                                    </div>
-
-                                    {/* Duration Filter */}
-                                    <div className="mb-6">
-                                        <div className="flex items-center gap-2 mb-3">
-                                            <div className="w-1 h-4 bg-blue-600 rounded"></div>
-                                            <Label className="text-sm font-semibold text-slate-700">DURATION</Label>
-                                        </div>
-                                        <RadioGroup value={durationFilter} onValueChange={(value) => setDurationFilter(value)}>
-                                            <div className="space-y-2">
-                                                <div className="flex items-center space-x-2">
-                                                    <RadioGroupItem value="all" id="mobile-duration-any" />
-                                                    <Label htmlFor="mobile-duration-any" className="text-sm text-slate-600 cursor-pointer">Any</Label>
-                                                </div>
-                                                <div className="flex items-center space-x-2">
-                                                    <RadioGroupItem value="1-3" id="mobile-duration-1-3" />
-                                                    <Label htmlFor="mobile-duration-1-3" className="text-sm text-slate-600 cursor-pointer">1-3 Days</Label>
-                                                </div>
-                                                <div className="flex items-center space-x-2">
-                                                    <RadioGroupItem value="4-6" id="mobile-duration-4-6" />
-                                                    <Label htmlFor="mobile-duration-4-6" className="text-sm text-slate-600 cursor-pointer">4-6 Days</Label>
-                                                </div>
-                                                <div className="flex items-center space-x-2">
-                                                    <RadioGroupItem value="7-9" id="mobile-duration-7-9" />
-                                                    <Label htmlFor="mobile-duration-7-9" className="text-sm text-slate-600 cursor-pointer">7-9 Days</Label>
-                                                </div>
-                                                <div className="flex items-center space-x-2">
-                                                    <RadioGroupItem value="10-12" id="mobile-duration-10-12" />
-                                                    <Label htmlFor="mobile-duration-10-12" className="text-sm text-slate-600 cursor-pointer">10-12 Days</Label>
-                                                </div>
-                                                <div className="flex items-center space-x-2">
-                                                    <RadioGroupItem value="13+" id="mobile-duration-13+" />
-                                                    <Label htmlFor="mobile-duration-13+" className="text-sm text-slate-600 cursor-pointer">13+ Days</Label>
-                                                </div>
-                                            </div>
-                                        </RadioGroup>
-                                    </div>
-
-                                    {/* Price Filter */}
-                                    <div className="mb-6">
-                                        <div className="flex items-center gap-2 mb-3">
-                                            <div className="w-1 h-4 bg-blue-600 rounded"></div>
-                                            <Label className="text-sm font-semibold text-slate-700">PRICE</Label>
-                                        </div>
-                                        <RadioGroup value={priceFilter} onValueChange={(value) => setPriceFilter(value)}>
-                                            <div className="space-y-2">
-                                                <div className="flex items-center space-x-2">
-                                                    <RadioGroupItem value="all" id="mobile-price-any" />
-                                                    <Label htmlFor="mobile-price-any" className="text-sm text-slate-600 cursor-pointer">Any</Label>
-                                                </div>
-                                                <div className="flex items-center space-x-2">
-                                                    <RadioGroupItem value="0-1000" id="mobile-price-0-1000" />
-                                                    <Label htmlFor="mobile-price-0-1000" className="text-sm text-slate-600 cursor-pointer">₹ 0 - ₹ 1,000</Label>
-                                                </div>
-                                                <div className="flex items-center space-x-2">
-                                                    <RadioGroupItem value="1000-2500" id="mobile-price-1000-2500" />
-                                                    <Label htmlFor="mobile-price-1000-2500" className="text-sm text-slate-600 cursor-pointer">₹ 1,000 - ₹ 2,500</Label>
-                                                </div>
-                                                <div className="flex items-center space-x-2">
-                                                    <RadioGroupItem value="2500-5000" id="mobile-price-2500-5000" />
-                                                    <Label htmlFor="mobile-price-2500-5000" className="text-sm text-slate-600 cursor-pointer">₹ 2,500 - ₹ 5,000</Label>
-                                                </div>
-                                                <div className="flex items-center space-x-2">
-                                                    <RadioGroupItem value="5000+" id="mobile-price-5000+" />
-                                                    <Label htmlFor="mobile-price-5000+" className="text-sm text-slate-600 cursor-pointer">₹ 5,000+</Label>
-                                                </div>
-                                            </div>
-                                        </RadioGroup>
-                                    </div>
-
-                                    {/* Destination Filter */}
-                                    {destinations.length > 0 && (
-                                        <div className="mb-6">
-                                            <div className="flex items-center gap-2 mb-3">
-                                                <div className="w-1 h-4 bg-blue-600 rounded"></div>
-                                                <Label className="text-sm font-semibold text-slate-700">DESTINATION</Label>
-                                            </div>
-                                            <RadioGroup value={destinationFilter} onValueChange={(value) => setDestinationFilter(value)}>
-                                                <div className="space-y-2">
-                                                    <div className="flex items-center space-x-2">
-                                                        <RadioGroupItem value="all" id="mobile-destination-any" />
-                                                        <Label htmlFor="mobile-destination-any" className="text-sm text-slate-600 cursor-pointer">Any</Label>
+                                                {destinations.map((dest) => (
+                                                    <div key={dest} className="flex items-center space-x-2">
+                                                        <RadioGroupItem value={dest} id={`mobile-destination-${dest}`} />
+                                                        <Label htmlFor={`mobile-destination-${dest}`} className="text-sm text-slate-600 cursor-pointer">{dest}</Label>
                                                     </div>
-                                                    {destinations.map((dest) => (
-                                                        <div key={dest} className="flex items-center space-x-2">
-                                                            <RadioGroupItem value={dest} id={`mobile-destination-${dest}`} />
-                                                            <Label htmlFor={`mobile-destination-${dest}`} className="text-sm text-slate-600 cursor-pointer">{dest}</Label>
-                                                        </div>
-                                                    ))}
-                                                </div>
-                                            </RadioGroup>
-                                        </div>
-                                    )}
-                                </div>
+                                                ))}
+                                            </div>
+                                        </RadioGroup>
+                                    </div>
+                                )}
+                            </div>
 
-                                <div className="p-6 pt-4 flex-shrink-0 border-t border-slate-200 flex gap-3 text-black">
-                                    <Button 
-                                        variant="outline" 
-                                        className="flex-1"
-                                        onClick={() => {
-                                            setSortBy('rating-desc');
-                                            setPriceRange([0, 100000]);
-                                            setDurationFilter('all');
-                                            setDestinationFilter('all');
-                                            setRatingFilter('all');
-                                            setPriceFilter('all');
-                                        }}
-                                    >
-                                        Clear All
-                                    </Button>
-                                    <Button 
-                                        className="flex-1 bg-gradient-to-r from-blue-500 to-indigo-600 hover:from-blue-600 hover:to-indigo-700 text-white"
-                                        onClick={() => setIsFiltersOpen(false)}
-                                    >
-                                        Apply Filters
-                                    </Button>
-                                </div>
-                            </DialogContent>
-                        </Dialog>
-                    </Suspense>
+                            <div className="p-6 pt-4 flex-shrink-0 border-t border-slate-200 flex gap-3 text-black">
+                                <Button
+                                    variant="outline"
+                                    className="flex-1"
+                                    onClick={() => {
+                                        setSortBy('rating-desc');
+                                        setPriceRange([0, 100000]);
+                                        setDurationFilter('all');
+                                        setDestinationFilter('all');
+                                        setRatingFilter('all');
+                                        setPriceFilter('all');
+                                    }}
+                                >
+                                    Clear All
+                                </Button>
+                                <Button
+                                    className="flex-1 bg-gradient-to-r from-blue-500 to-indigo-600 hover:from-blue-600 hover:to-indigo-700 text-white"
+                                    onClick={() => setIsFiltersOpen(false)}
+                                >
+                                    Apply Filters
+                                </Button>
+                            </div>
+                        </DialogContent>
+                    </Dialog>
+                </Suspense>
             </div>
         </div>
     );

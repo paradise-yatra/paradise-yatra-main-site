@@ -12,6 +12,7 @@ import Loading from "@/components/ui/loading";
 
 interface BlogPost {
   _id: string;
+  slug?: string;
   title: string;
   content: string;
   excerpt: string;
@@ -36,6 +37,10 @@ const generateSlug = (title: string): string => {
     .trim();
 };
 
+const getPostSlug = (post: BlogPost): string => {
+  return post.slug || generateSlug(post.title);
+};
+
 const getImageUrl = (image: string | undefined): string => {
   if (!image) return "/fallback.jpg";
   if (image.startsWith("http")) return image;
@@ -50,7 +55,7 @@ interface BlogDetailClientProps {
 
 const BlogDetailClient = ({ post, slug }: BlogDetailClientProps) => {
   const [relatedPosts, setRelatedPosts] = useState<BlogPost[]>([]);
-  const [loading, setLoading] = useState(true);
+  const [loadingRelated, setLoadingRelated] = useState(false); // Changed to false - don't block page
   const [error, setError] = useState<string | null>(null);
   const [imageErrors, setImageErrors] = useState<Set<string>>(new Set());
 
@@ -68,12 +73,35 @@ const BlogDetailClient = ({ post, slug }: BlogDetailClientProps) => {
   };
 
   useEffect(() => {
+    let isMounted = true;
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 8000); // 8 second timeout (reduced since it's not blocking)
+
     const fetchRelatedPosts = async () => {
       try {
-        setLoading(true);
+        if (!isMounted) return;
+        setLoadingRelated(true); // Only show loading for related posts section
 
-        // Fetch all blogs to get related posts
-        const allBlogsResponse = await fetch("/api/blogs?published=true&limit=100");
+        let allBlogsResponse;
+        try {
+          // Fetch a few blogs from the same category to get related posts (reduced limit for faster load)
+          allBlogsResponse = await fetch(`/api/blogs?published=true&limit=6&category=${post.category}`, {
+            signal: controller.signal,
+            cache: 'default', // Use cache to reduce requests
+          });
+          clearTimeout(timeoutId);
+        } catch (fetchError) {
+          clearTimeout(timeoutId);
+          if (fetchError instanceof Error && fetchError.name === 'AbortError') {
+            if (isMounted) {
+              console.warn('Related posts fetch timed out');
+              setLoadingRelated(false);
+            }
+            return;
+          }
+          throw fetchError;
+        }
+
         if (!allBlogsResponse.ok) {
           throw new Error("Failed to fetch blogs");
         }
@@ -87,24 +115,31 @@ const BlogDetailClient = ({ post, slug }: BlogDetailClientProps) => {
         const related = allBlogs
           .filter((blog: BlogPost) => blog._id !== post._id)
           .slice(0, 3);
-        setRelatedPosts(related);
 
-        setError(null);
+        if (isMounted) {
+          setRelatedPosts(related);
+          setError(null);
+          setLoadingRelated(false);
+        }
       } catch (err) {
-        console.error("Error fetching related posts:", err);
-        setError("Failed to load related posts");
-      } finally {
-        setLoading(false);
+        if (isMounted) {
+          console.error("Error fetching related posts:", err);
+          setLoadingRelated(false);
+          // Don't set error - just don't show related posts
+        }
       }
     };
 
     fetchRelatedPosts();
-  }, [post._id]);
 
-  if (loading) {
-    return <Loading size="lg" className="min-h-[400px]" />;
-  }
+    return () => {
+      isMounted = false;
+      clearTimeout(timeoutId);
+      controller.abort();
+    };
+  }, [post._id, post.category]);
 
+  // Don't block page render - show content immediately
   return (
     <>
       {/* JSON-LD Structured Data for SEO */}
@@ -144,7 +179,7 @@ const BlogDetailClient = ({ post, slug }: BlogDetailClientProps) => {
         }}
       />
 
-      <div className="min-h-screen bg-white pt-16">
+      <div className="min-h-screen bg-white">
         <Header />
 
         <div className="max-w-7xl mx-auto px-3 sm:px-4 md:px-6 py-8 md:py-12">
@@ -248,7 +283,22 @@ const BlogDetailClient = ({ post, slug }: BlogDetailClientProps) => {
               </motion.article>
 
               {/* Related Articles */}
-              {relatedPosts.length > 0 && (
+              {loadingRelated && (
+                <motion.section
+                  initial={{ opacity: 0, y: 30 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ duration: 0.6, delay: 0.2 }}
+                  className="mb-8"
+                >
+                  <h2 className="text-2xl md:text-3xl !font-extrabold text-slate-900 mb-6 md:mb-8 tracking-tight">
+                    Related Articles
+                  </h2>
+                  <div className="flex items-center justify-center py-8">
+                    <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+                  </div>
+                </motion.section>
+              )}
+              {!loadingRelated && relatedPosts.length > 0 && (
                 <motion.section
                   initial={{ opacity: 0, y: 30 }}
                   animate={{ opacity: 1, y: 0 }}
@@ -262,7 +312,8 @@ const BlogDetailClient = ({ post, slug }: BlogDetailClientProps) => {
                     {relatedPosts.map((relatedPost, index) => (
                       <Link
                         key={relatedPost._id}
-                        href={`/blog/${generateSlug(relatedPost.title)}`}
+                        href={`/blog/${getPostSlug(relatedPost)}`}
+                        prefetch={true}
                       >
                         <motion.article
                           initial={{ opacity: 0, y: 20 }}
@@ -350,35 +401,42 @@ const BlogDetailClient = ({ post, slug }: BlogDetailClientProps) => {
                   <h3 className="!text-lg !font-bold text-slate-900 mb-4">
                     Popular Posts
                   </h3>
-                  <div className="space-y-4">
-                    {relatedPosts.slice(0, 3).map((popularPost) => (
-                      <Link
-                        key={popularPost._id}
-                        href={`/blog/${generateSlug(popularPost.title)}`}
-                      >
-                        <div className="flex items-center gap-3 group cursor-pointer">
-                          <div className="relative w-14 h-14 rounded-lg overflow-hidden flex-shrink-0">
-                            <Image
-                              src={getSafeImageUrl(popularPost.image, popularPost._id)}
-                              alt={popularPost.title}
-                              fill
-                              className="object-cover transition-transform duration-300 group-hover:scale-110"
-                              sizes="56px"
-                              onError={(e) => handleImageError(popularPost._id, e)}
-                            />
+                  {loadingRelated ? (
+                    <div className="flex items-center justify-center py-8">
+                      <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-blue-600"></div>
+                    </div>
+                  ) : (
+                    <div className="space-y-4">
+                      {relatedPosts.slice(0, 3).map((popularPost) => (
+                        <Link
+                          key={popularPost._id}
+                          href={`/blog/${getPostSlug(popularPost)}`}
+                          prefetch={true}
+                        >
+                          <div className="flex items-center gap-3 group cursor-pointer">
+                            <div className="relative w-14 h-14 rounded-lg overflow-hidden flex-shrink-0">
+                              <Image
+                                src={getSafeImageUrl(popularPost.image, popularPost._id)}
+                                alt={popularPost.title}
+                                fill
+                                className="object-cover transition-transform duration-300 group-hover:scale-110"
+                                sizes="56px"
+                                onError={(e) => handleImageError(popularPost._id, e)}
+                              />
+                            </div>
+                            <div className="flex-1 min-w-0">
+                              <h4 className="font-semibold text-slate-900 group-hover:text-blue-600 transition-colors line-clamp-2 text-sm leading-tight">
+                                {popularPost.title}
+                              </h4>
+                              <p className="text-xs text-slate-500 mt-1">
+                                {popularPost.readTime || 5} min read
+                              </p>
+                            </div>
                           </div>
-                          <div className="flex-1 min-w-0">
-                            <h4 className="font-semibold text-slate-900 group-hover:text-blue-600 transition-colors line-clamp-2 text-sm leading-tight">
-                              {popularPost.title}
-                            </h4>
-                            <p className="text-xs text-slate-500 mt-1">
-                              {popularPost.readTime || 5} min read
-                            </p>
-                          </div>
-                        </div>
-                      </Link>
-                    ))}
-                  </div>
+                        </Link>
+                      ))}
+                    </div>
+                  )}
                 </div>
 
                 {/* Newsletter Signup */}

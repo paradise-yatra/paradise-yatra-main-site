@@ -1,6 +1,9 @@
 import { Metadata } from "next";
 import ItineraryPageClient from "./ItineraryPageClient";
 
+// Enable ISR with 60 second revalidation
+export const revalidate = 60;
+
 interface DayItinerary {
   day: number;
   title: string;
@@ -17,7 +20,7 @@ interface PackageOrDestination {
   title?: string;
   name?: string; // For destinations
   slug: string;
-  description: string;
+  description?: string;
   shortDescription?: string;
   price?: number;
   originalPrice?: number;
@@ -25,7 +28,7 @@ interface PackageOrDestination {
   duration?: string;
   destination?: string; // For packages
   location?: string; // For destinations
-  category: string;
+  category?: string;
   images?: string[];
   image?: string; // For destinations (single image)
   highlights?: string[];
@@ -58,47 +61,87 @@ async function getPackage(slug: string): Promise<PackageOrDestination | null> {
   try {
     // Get the backend URL from environment variable
     let baseUrl = process.env.NEXT_PUBLIC_BACKEND_URL || '';
-    
+
     // Remove /api suffix if it exists to avoid double /api/api/ in URL
     if (baseUrl && baseUrl.endsWith('/api')) {
       baseUrl = baseUrl.replace(/\/api$/, '');
     }
-    
+
     // If still no baseUrl, use empty string for relative URLs
     if (!baseUrl) {
       baseUrl = '';
     }
-    
+
+    console.log(`[ItineraryPage] Fetching data for slug: ${slug}, using baseUrl: ${baseUrl}`);
+
+    // Aggressive unwrapping logic to find the actual data object
+    const unwrap = (obj: any): any => {
+      if (!obj || typeof obj !== 'object' || Array.isArray(obj)) return obj;
+
+      // Known keys that wrap the actual data
+      const wrapperKeys = ['package', 'destination', 'data', 'result', 'item'];
+      for (const key of wrapperKeys) {
+        if (obj[key] && typeof obj[key] === 'object' && !Array.isArray(obj[key])) {
+          return unwrap(obj[key]);
+        }
+      }
+
+      // If it's a list wrapper like { packages: [...] }
+      const listKeys = ['packages', 'destinations', 'items', 'results'];
+      for (const key of listKeys) {
+        if (Array.isArray(obj[key]) && obj[key].length > 0) {
+          return unwrap(obj[key][0]);
+        }
+      }
+
+      return obj;
+    };
+
     // First try to fetch as package by slug
     let response = await fetch(`${baseUrl}/api/packages/slug/${slug}`, {
-      cache: 'no-store'
+      next: { revalidate: 60 } // Cache for 60 seconds
     });
-    
+
+    let data;
+
+    // If package fetch succeeds, process it
+    if (response.ok) {
+      data = await response.json();
+      console.log(`[ItineraryPage] Successfully fetched package for slug: ${slug}`);
+      return unwrap(data);
+    }
+
     // If package fetch fails with 404, try to fetch as destination by slug
-    if (!response.ok && response.status === 404) {
+    if (response.status === 404) {
+      console.log(`[ItineraryPage] Package not found for slug: ${slug}, trying destinations...`);
       response = await fetch(`${baseUrl}/api/destinations/slug/${slug}`, {
-        cache: 'no-store'
+        next: { revalidate: 60 } // Cache for 60 seconds
       });
-    }
-    
-    // If both endpoints failed, log error and return null
-    if (!response.ok) {
-      if (response.status === 404) {
-        // Only log in development, not in production
-        if (process.env.NODE_ENV === 'development') {
-          console.log(`Package/destination not found with slug: ${slug}`);
-        }
-      } else {
-        // Log actual errors (non-404)
-        console.error(`Failed to fetch package/destination with slug: ${slug}, Status: ${response.status}`);
+
+      if (response.ok) {
+        data = await response.json();
+        console.log(`[ItineraryPage] Successfully fetched destination for slug: ${slug}`);
+        return unwrap(data);
       }
-      return null;
     }
-    
-    const data = await response.json();
-    return data;
+
+    // Try one more fallback: direct ID match if it's a destination
+    if (response.status === 404) {
+      console.log(`[ItineraryPage] Slug not found in destinations/slug, trying direct destinations/:id...`);
+      response = await fetch(`${baseUrl}/api/destinations/${slug}`, {
+        next: { revalidate: 60 } // Cache for 60 seconds
+      });
+
+      if (response.ok) {
+        data = await response.json();
+        return unwrap(data);
+      }
+    }
+
+    // Final fallback
+    return null;
   } catch (error) {
-    console.error('Error fetching package/destination:', error);
+    console.error('[ItineraryPage] Error fetching package/destination:', error);
     return null;
   }
 }
@@ -107,7 +150,7 @@ async function getPackage(slug: string): Promise<PackageOrDestination | null> {
 export async function generateMetadata({ params }: { params: Promise<{ slug: string }> }): Promise<Metadata> {
   const resolvedParams = await params;
   const packageData = await getPackage(resolvedParams.slug);
-  
+
   if (!packageData) {
     return {
       title: 'Package Not Found | Paradise Yatra',
@@ -118,12 +161,12 @@ export async function generateMetadata({ params }: { params: Promise<{ slug: str
   const displayTitle = packageData.title || packageData.name || 'Travel Package';
   const displayDestination = packageData.destination || packageData.location || 'Travel Destination';
   const title = packageData.seoTitle || `${displayTitle} | Paradise Yatra Travel Package`;
-  const description = packageData.seoDescription || packageData.shortDescription || packageData.description.substring(0, 160) + '...';
+  const description = packageData.seoDescription || packageData.shortDescription || (packageData.description ? packageData.description.substring(0, 160) + '...' : '');
   const keywords = packageData.seoKeywords || [
     'travel package',
     'travel tour',
     displayDestination.toLowerCase(),
-    packageData.category.toLowerCase(),
+    packageData.category?.toLowerCase() || 'travel',
     'adventure travel',
     'vacation package',
     'Paradise Yatra'
@@ -135,7 +178,7 @@ export async function generateMetadata({ params }: { params: Promise<{ slug: str
     keywords: keywords,
     authors: [{ name: packageData.seoAuthor || 'Paradise Yatra' }],
     creator: packageData.seoAuthor || 'Paradise Yatra',
-    publisher: packageData.seoPublisher || 'Paradise Yatra',
+    publisher: packageData.seoAuthor || 'Paradise Yatra',
     formatDetection: {
       email: false,
       address: false,
@@ -189,7 +232,7 @@ export async function generateMetadata({ params }: { params: Promise<{ slug: str
 const ItineraryPage = async ({ params }: { params: Promise<{ slug: string }> }) => {
   const resolvedParams = await params;
   const packageData = await getPackage(resolvedParams.slug);
-  
+
   if (!packageData) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-50 flex items-center justify-center">
@@ -211,15 +254,16 @@ const ItineraryPage = async ({ params }: { params: Promise<{ slug: string }> }) 
   const normalizedData = {
     ...packageData,
     title: packageData.title || packageData.name || 'Travel Package',
-    shortDescription: packageData.shortDescription || packageData.description.substring(0, 200) + '...',
+    description: packageData.description || packageData.shortDescription || 'No description available.',
+    shortDescription: packageData.shortDescription || (packageData.description ? packageData.description.substring(0, 200) + '...' : 'Tour details coming soon.'),
     destination: packageData.destination || packageData.location || 'Travel Destination',
-    images: packageData.images || (packageData.image ? [packageData.image] : []),
+    images: Array.isArray(packageData.images) && packageData.images.length > 0 ? packageData.images : (packageData.image ? [packageData.image] : []),
     price: packageData.price || 0,
     originalPrice: packageData.originalPrice || 0,
     discount: packageData.discount || 0,
     duration: packageData.duration || 'N/A',
     category: packageData.category || 'Travel',
-    highlights: packageData.highlights || [],
+    highlights: Array.isArray(packageData.highlights) ? packageData.highlights : (typeof packageData.highlights === 'string' ? (packageData.highlights as string).split(',').map(h => h.trim()) : []),
     // Use exact database values - don't override with empty array if they exist
     inclusions: Array.isArray(packageData.inclusions) ? packageData.inclusions : (packageData.inclusions ? [packageData.inclusions] : []),
     exclusions: Array.isArray(packageData.exclusions) ? packageData.exclusions : (packageData.exclusions ? [packageData.exclusions] : []),
@@ -227,11 +271,15 @@ const ItineraryPage = async ({ params }: { params: Promise<{ slug: string }> }) 
     reviews: packageData.reviews || [],
     isActive: packageData.isActive !== false,
     isFeatured: packageData.isFeatured || false,
+    itinerary: Array.isArray(packageData.itinerary) ? packageData.itinerary : [],
   };
 
   // Debug log to verify data
-  console.log('Normalized Data - Inclusions:', normalizedData.inclusions);
-  console.log('Normalized Data - Exclusions:', normalizedData.exclusions);
+  console.log('[ItineraryPage] Final Normalized Data - Title:', normalizedData.title);
+  console.log('[ItineraryPage] Final Normalized Data - Inclusions:', normalizedData.inclusions?.length);
+  console.log('[ItineraryPage] Final Normalized Data - Exclusions:', normalizedData.exclusions?.length);
+  console.log('[ItineraryPage] Final Normalized Data - Itinerary:', normalizedData.itinerary?.length);
+
 
   return <ItineraryPageClient packageData={normalizedData} slug={resolvedParams.slug} />;
 };

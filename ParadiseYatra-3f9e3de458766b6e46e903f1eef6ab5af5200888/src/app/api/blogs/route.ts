@@ -1,11 +1,16 @@
 import { NextRequest, NextResponse } from 'next/server';
 
-const BACKEND_URL = process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:5000';
+const BACKEND_URL = process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:5001';
+
+// Cache blogs for 30 seconds
+export const revalidate = 30;
 
 export async function GET(request: NextRequest) {
   try {
     const { searchParams } = new URL(request.url);
     const featured = searchParams.get('featured');
+    const published = searchParams.get('published');
+    const category = searchParams.get('category');
     const limit = searchParams.get('limit');
     const page = searchParams.get('page');
 
@@ -27,21 +32,52 @@ export async function GET(request: NextRequest) {
 
     // Add query parameters if provided
     const queryParams = new URLSearchParams();
+    if (published) queryParams.append('published', published);
+    if (category) queryParams.append('category', category);
     if (limit) queryParams.append('limit', limit);
     if (page) queryParams.append('page', page);
     if (featured && featured !== 'true') queryParams.append('featured', featured);
-    
+
     if (queryParams.toString()) {
       url += `?${queryParams.toString()}`;
     }
 
-    const response = await fetch(url);
-    const data = await response.json();
+    // Add timeout to prevent hanging requests - reduced for faster fallback
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 10000); // 10 second timeout
 
-    if (!response.ok) {
-      return NextResponse.json({ message: data.message || 'Failed to fetch blogs' }, { status: response.status });
+    let response;
+    try {
+      response = await fetch(url, {
+        signal: controller.signal,
+        next: { revalidate: 30 }, // Cache for 30 seconds
+      });
+      clearTimeout(timeoutId);
+    } catch (fetchError) {
+      clearTimeout(timeoutId);
+      if (fetchError instanceof Error && fetchError.name === 'AbortError') {
+        return NextResponse.json(
+          { message: 'Request timeout - please try again', blogs: [] },
+          { status: 504 }
+        );
+      }
+      throw fetchError;
     }
 
+    if (!response.ok) {
+      let errorData;
+      try {
+        errorData = await response.json();
+      } catch {
+        errorData = { message: 'Failed to fetch blogs' };
+      }
+      return NextResponse.json(
+        { message: errorData.message || 'Failed to fetch blogs' },
+        { status: response.status }
+      );
+    }
+
+    const data = await response.json();
     return NextResponse.json(data);
   } catch (error) {
     console.error('Blogs API error:', error);
@@ -53,13 +89,13 @@ export async function POST(request: NextRequest) {
   try {
     // Check Content-Type to determine how to parse the request
     const contentType = request.headers.get('content-type') || '';
-    
+
     let response;
-    
+
     if (contentType.includes('multipart/form-data')) {
       // Handle FormData requests (file uploads)
       const formData = await request.formData();
-      
+
       response = await fetch(`${BACKEND_URL}/api/blogs`, {
         method: 'POST',
         headers: {
@@ -71,7 +107,7 @@ export async function POST(request: NextRequest) {
     } else {
       // Handle JSON requests
       const body = await request.json();
-      
+
       response = await fetch(`${BACKEND_URL}/api/blogs`, {
         method: 'POST',
         headers: {
@@ -81,16 +117,16 @@ export async function POST(request: NextRequest) {
         body: JSON.stringify(body),
       });
     }
-    
+
     const data = await response.json();
-    
+
     if (!response.ok) {
       return NextResponse.json(
         { message: data.message || 'Failed to create blog' },
         { status: response.status }
       );
     }
-    
+
     return NextResponse.json(data, { status: 201 });
   } catch (error) {
     console.error('Blogs API error:', error);

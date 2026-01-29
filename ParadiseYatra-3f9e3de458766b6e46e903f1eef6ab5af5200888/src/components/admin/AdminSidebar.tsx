@@ -1,19 +1,20 @@
 "use client";
 
-import { 
-  BarChart3, 
-  FolderOpen, 
-  Settings, 
-  FileText, 
-  Mountain, 
-  Calendar, 
-  Star, 
+import {
+  BarChart3,
+  FolderOpen,
+  Settings,
+  FileText,
+  Mountain,
+  Calendar,
+  Star,
   Compass,
   ChevronDown,
   ChevronRight,
   LogOut,
   Map,
-  HelpCircle
+  HelpCircle,
+  Tag
 } from "lucide-react";
 import Image from "next/image";
 
@@ -25,10 +26,10 @@ interface AdminSidebarProps {
   onLogout?: () => void;
 }
 
-const AdminSidebar = ({ 
-  activeSection, 
-  setActiveSection, 
-  expandedSections, 
+const AdminSidebar = ({
+  activeSection,
+  setActiveSection,
+  expandedSections,
   toggleSection,
   onLogout
 }: AdminSidebarProps) => {
@@ -145,6 +146,13 @@ const AdminSidebar = ({
       hasNotification: false,
     },
     {
+      id: "tags",
+      label: "Tags Management",
+      icon: Tag,
+      hasSubmenu: false,
+      hasNotification: false,
+    },
+    {
       id: "recently-booked",
       label: "Recently Booked",
       icon: Calendar,
@@ -195,7 +203,7 @@ const AdminSidebar = ({
 
   const handleItemClick = (itemId: string) => {
     if (itemId === "addons") return; // Don't do anything for header
-    
+
     if (menuItems.find(item => item.id === itemId)?.hasSubmenu) {
       toggleSection(itemId);
     } else {
@@ -226,11 +234,10 @@ const AdminSidebar = ({
               <div>
                 <button
                   onClick={() => handleItemClick(item.id)}
-                  className={`w-full hover:cursor-pointer flex items-center justify-between px-3 py-2 rounded-lg transition-colors ${
-                    activeSection === item.id
-                      ? "bg-blue-700 text-white"
-                      : "text-gray-300 hover:bg-blue-800 hover:text-white"
-                  }`}
+                  className={`w-full hover:cursor-pointer flex items-center justify-between px-3 py-2 rounded-lg transition-colors ${activeSection === item.id
+                    ? "bg-blue-700 text-white"
+                    : "text-gray-300 hover:bg-blue-800 hover:text-white"
+                    }`}
                 >
                   <div className="flex items-center space-x-3">
                     {item.icon && <item.icon className="w-5 h-5" />}
@@ -264,11 +271,10 @@ const AdminSidebar = ({
                             window.dispatchEvent(new CustomEvent('blogAction', { detail: 'create' }));
                           }
                         }}
-                        className={`w-full text-left px-3 py-2 hover:cursor-pointer rounded-lg transition-colors ${
-                          activeSection === "blogs"
-                            ? "bg-blue-700 text-white"
-                            : "text-gray-300 hover:bg-blue-800 hover:text-white"
-                        }`}
+                        className={`w-full text-left px-3 py-2 hover:cursor-pointer rounded-lg transition-colors ${activeSection === "blogs"
+                          ? "bg-blue-700 text-white"
+                          : "text-gray-300 hover:bg-blue-800 hover:text-white"
+                          }`}
                       >
                         {subItem.label}
                       </button>

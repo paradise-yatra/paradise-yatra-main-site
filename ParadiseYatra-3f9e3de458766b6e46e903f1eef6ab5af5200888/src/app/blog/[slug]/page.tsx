@@ -1,4 +1,5 @@
 import { Metadata } from "next";
+import { cache } from "react";
 import BlogDetailClient from "./BlogDetailClient";
 
 interface BlogPost {
@@ -40,46 +41,52 @@ const stripHtml = (html: string): string => {
     .trim();
 };
 
-// Function to fetch blog post by slug
-async function getBlogPost(slug: string): Promise<BlogPost | null> {
+// Function to fetch blog post by slug with timeout
+// IMPORTANT: This must call the *Next.js app* (not the backend) because `/api/blogs/[id]`
+// is a Next route that proxies to the backend.
+const getBlogPost = cache(async (slug: string): Promise<BlogPost | null> => {
   try {
-    // For server-side rendering, we need to construct the full URL
-    let baseUrl =
-      process.env.NEXT_PUBLIC_API_URL || process.env.NEXT_PUBLIC_BACKEND_URL;
+    // For server-side rendering, we need to construct the full URL to THIS Next app.
+    // Never use NEXT_PUBLIC_BACKEND_URL here.
+    const baseUrl =
+      process.env.NEXT_PUBLIC_SITE_URL ||
+      (process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : "") ||
+      (process.env.NODE_ENV === "production"
+        ? "https://paradiseyatra.com"
+        : "http://localhost:3000");
 
-    // If no environment variable is set, construct the URL based on environment
-    if (!baseUrl) {
-      if (typeof window === "undefined") {
-        // Server-side rendering - use the production domain or localhost
-        baseUrl =
-          process.env.NODE_ENV === "production"
-            ? "https://paradiseyatra.com"
-            : "http://localhost:3000";
-      } else {
-        // Client-side - use relative URL
-        baseUrl = "";
+    // Add timeout to prevent hanging
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 10000); // 10 second timeout
+
+    let response;
+    try {
+      response = await fetch(`${baseUrl}/api/blogs/${slug}`, {
+        signal: controller.signal,
+        next: { revalidate: 3600 }, // Cache for 1 hour
+        cache: 'force-cache', // Use cache aggressively
+      });
+      clearTimeout(timeoutId);
+    } catch (fetchError) {
+      clearTimeout(timeoutId);
+      if (fetchError instanceof Error && fetchError.name === 'AbortError') {
+        console.error("Blog fetch timed out");
+        return null;
       }
+      throw fetchError;
     }
-
-    const response = await fetch(`${baseUrl}/api/blogs`, {
-      cache: "no-store", // Ensure fresh data for SEO
-    });
 
     if (!response.ok) {
       return null;
     }
 
-    const data = await response.json();
-    const blogs = Array.isArray(data) ? data : data.blogs || [];
-
-    return (
-      blogs.find((blog: BlogPost) => generateSlug(blog.title) === slug) || null
-    );
+    const blog = await response.json();
+    return blog;
   } catch (error) {
     console.error("Error fetching blog post:", error);
     return null;
   }
-}
+});
 
 // Generate metadata for SEO
 export async function generateMetadata({
@@ -113,14 +120,14 @@ export async function generateMetadata({
       post.seoKeywords && post.seoKeywords.length > 0
         ? post.seoKeywords
         : [
-            "travel blog",
-            "travel tips",
-            post.category.toLowerCase(),
-            "adventure travel",
-            "destination guide",
-            "travel experience",
-            "Paradise Yatra",
-          ],
+          "travel blog",
+          "travel tips",
+          post.category.toLowerCase(),
+          "adventure travel",
+          "destination guide",
+          "travel experience",
+          "Paradise Yatra",
+        ],
     authors: [{ name: post.author }],
     creator: post.author,
     publisher: "Paradise Yatra",

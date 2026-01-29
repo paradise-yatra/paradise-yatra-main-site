@@ -634,22 +634,22 @@ const Destination = require("../models/Destination");
 const getAllDestinations = async (req, res) => {
   try {
     const { tourType, state, country, category, limit, isActive, isTrending } = req.query;
-    
+
     const filter = {};
-    
+
     if (tourType) filter.tourType = tourType;
     if (state) filter.state = state;
     if (country) filter.country = country;
     if (category) filter.category = category;
     if (isActive !== undefined) filter.isActive = isActive === 'true';
     if (isTrending !== undefined) filter.isTrending = isTrending === 'true';
-    
+
     const limitNum = limit ? parseInt(limit) : 100;
-    
+
     const destinations = await Destination.find(filter)
       .sort({ createdAt: -1 })
       .limit(limitNum);
-    
+
     res.json({ destinations, count: destinations.length });
   } catch (error) {
     console.error("Get all destinations error:", error);
@@ -661,22 +661,27 @@ const getAllDestinations = async (req, res) => {
 const getDestination = async (req, res) => {
   try {
     const { id } = req.params;
-    
-    // Try to find by ID first, then by slug
-    let destination = await Destination.findById(id);
-    
-    if (!destination) {
+
+    // Check if it's a valid ObjectId (24 character hex string)
+    const isObjectId = /^[0-9a-fA-F]{24}$/.test(id);
+
+    let destination;
+    if (isObjectId) {
+      // Query by ObjectId
+      destination = await Destination.findById(id);
+    } else {
+      // Query by slug
       destination = await Destination.findOne({ slug: id });
     }
-    
+
     if (!destination) {
       return res.status(404).json({ message: "Destination not found" });
     }
-    
+
     // Increment visit count
     destination.visitCount = (destination.visitCount || 0) + 1;
     await destination.save();
-    
+
     res.json({ destination });
   } catch (error) {
     console.error("Get destination error:", error);
@@ -689,14 +694,14 @@ const getTrendingDestinations = async (req, res) => {
   try {
     const { limit } = req.query;
     const limitNum = limit ? parseInt(limit) : 10;
-    
-    const destinations = await Destination.find({ 
+
+    const destinations = await Destination.find({
       isTrending: true,
-      isActive: true 
+      isActive: true
     })
       .sort({ visitCount: -1, rating: -1 })
       .limit(limitNum);
-    
+
     res.json({ destinations, count: destinations.length });
   } catch (error) {
     console.error("Get trending destinations error:", error);
@@ -708,9 +713,9 @@ const getTrendingDestinations = async (req, res) => {
 const searchDestinations = async (req, res) => {
   try {
     const { q, tourType, country, minPrice, maxPrice } = req.query;
-    
+
     const filter = { isActive: true };
-    
+
     if (q) {
       filter.$or = [
         { name: { $regex: q, $options: 'i' } },
@@ -719,20 +724,20 @@ const searchDestinations = async (req, res) => {
         { highlights: { $regex: q, $options: 'i' } }
       ];
     }
-    
+
     if (tourType) filter.tourType = tourType;
     if (country) filter.country = country;
-    
+
     if (minPrice || maxPrice) {
       filter.price = {};
       if (minPrice) filter.price.$gte = parseFloat(minPrice);
       if (maxPrice) filter.price.$lte = parseFloat(maxPrice);
     }
-    
+
     const destinations = await Destination.find(filter)
       .sort({ rating: -1, visitCount: -1 })
       .limit(50);
-    
+
     res.json({ destinations, count: destinations.length });
   } catch (error) {
     console.error("Search destinations error:", error);
@@ -746,14 +751,14 @@ const getDestinationsByTourType = async (req, res) => {
     const { tourType } = req.params;
     const { limit } = req.query;
     const limitNum = limit ? parseInt(limit) : 50;
-    
-    const destinations = await Destination.find({ 
+
+    const destinations = await Destination.find({
       tourType,
-      isActive: true 
+      isActive: true
     })
       .sort({ rating: -1, visitCount: -1 })
       .limit(limitNum);
-    
+
     res.json({ destinations, count: destinations.length });
   } catch (error) {
     console.error("Get destinations by tour type error:", error);
@@ -767,14 +772,14 @@ const getDestinationsByCountry = async (req, res) => {
     const { country } = req.params;
     const { limit } = req.query;
     const limitNum = limit ? parseInt(limit) : 50;
-    
-    const destinations = await Destination.find({ 
+
+    const destinations = await Destination.find({
       country,
-      isActive: true 
+      isActive: true
     })
       .sort({ rating: -1, visitCount: -1 })
       .limit(limitNum);
-    
+
     res.json({ destinations, count: destinations.length });
   } catch (error) {
     console.error("Get destinations by country error:", error);
@@ -788,14 +793,14 @@ const getDestinationsByState = async (req, res) => {
     const { state } = req.params;
     const { limit } = req.query;
     const limitNum = limit ? parseInt(limit) : 50;
-    
-    const destinations = await Destination.find({ 
+
+    const destinations = await Destination.find({
       state,
-      isActive: true 
+      isActive: true
     })
       .sort({ rating: -1, visitCount: -1 })
       .limit(limitNum);
-    
+
     res.json({ destinations, count: destinations.length });
   } catch (error) {
     console.error("Get destinations by state error:", error);
@@ -829,10 +834,10 @@ const getAvailableTourTypes = async (req, res) => {
 const getAvailableStates = async (req, res) => {
   try {
     const { country } = req.query;
-    
+
     const filter = { isActive: true };
     if (country) filter.country = country;
-    
+
     const states = await Destination.distinct('state', filter);
     res.json({ states: states.filter(s => s).sort() });
   } catch (error) {

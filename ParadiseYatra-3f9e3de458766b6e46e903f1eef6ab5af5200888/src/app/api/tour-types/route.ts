@@ -1,12 +1,13 @@
 import { NextResponse } from 'next/server';
 import { API_CONFIG } from '@/config/api';
 
+// Cache the response for 60 seconds to prevent hammering the backend
+export const revalidate = 60;
+
 export async function GET() {
   try {
     const backendUrl = API_CONFIG.getFullUrl('');
     console.log('Tour Types API - Backend URL:', backendUrl);
-    console.log('Tour Types API - Environment:', process.env.NODE_ENV);
-    console.log('Tour Types API - NEXT_PUBLIC_BACKEND_URL:', process.env.NEXT_PUBLIC_BACKEND_URL);
 
     // Fetch tour types, countries, states, and fixed departures in parallel
     const tourTypesUrl = `${API_CONFIG.getFullUrl(API_CONFIG.ENDPOINTS.DESTINATIONS.TOUR_TYPES)}`;
@@ -14,67 +15,47 @@ export async function GET() {
     const statesUrl = `${API_CONFIG.getFullUrl(API_CONFIG.ENDPOINTS.DESTINATIONS.STATES)}`;
     const fixedDeparturesUrl = `${API_CONFIG.getFullUrl(API_CONFIG.ENDPOINTS.FIXED_DEPARTURES.ALL)}?limit=100`;
 
-    console.log('Fetching from URLs:', {
-      tourTypes: tourTypesUrl,
-      countries: countriesUrl,
-      states: statesUrl,
-      fixedDepartures: fixedDeparturesUrl,
-    });
+    // Add timeout to prevent hanging requests - reduced to 8 seconds for faster fallback
+    const fetchWithTimeout = (url: string, timeout = 8000) => {
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), timeout);
 
-    const [tourTypesResponse, countriesResponse, statesResponse, fixedDeparturesResponse] = await Promise.all([
-      fetch(tourTypesUrl, { 
-        cache: 'no-store',
-        headers: { 'Content-Type': 'application/json' }
-      }),
-      fetch(countriesUrl, { 
-        cache: 'no-store',
-        headers: { 'Content-Type': 'application/json' }
-      }),
-      fetch(statesUrl, { 
-        cache: 'no-store',
-        headers: { 'Content-Type': 'application/json' }
-      }),
-      fetch(fixedDeparturesUrl, { 
-        cache: 'no-store',
-        headers: { 'Content-Type': 'application/json' }
-      })
+      return fetch(url, {
+        next: { revalidate: 60 }, // Cache for 60 seconds
+        headers: { 'Content-Type': 'application/json' },
+        signal: controller.signal,
+      }).finally(() => clearTimeout(timeoutId));
+    };
+
+    const [tourTypesResponse, countriesResponse, statesResponse, fixedDeparturesResponse] = await Promise.allSettled([
+      fetchWithTimeout(tourTypesUrl).catch(() => ({ ok: false, json: async () => ({ tourTypes: [] }) } as Response)),
+      fetchWithTimeout(countriesUrl).catch(() => ({ ok: false, json: async () => ({ countries: [] }) } as Response)),
+      fetchWithTimeout(statesUrl).catch(() => ({ ok: false, json: async () => ({ states: [] }) } as Response)),
+      fetchWithTimeout(fixedDeparturesUrl).catch(() => ({ ok: false, json: async () => ({ fixedDepartures: [] }) } as Response))
     ]);
 
+    // Extract responses from settled promises
+    const tourTypesRes = tourTypesResponse.status === 'fulfilled' ? tourTypesResponse.value : { ok: false, json: async () => ({ tourTypes: [] }) } as Response;
+    const countriesRes = countriesResponse.status === 'fulfilled' ? countriesResponse.value : { ok: false, json: async () => ({ countries: [] }) } as Response;
+    const statesRes = statesResponse.status === 'fulfilled' ? statesResponse.value : { ok: false, json: async () => ({ states: [] }) } as Response;
+    const fixedDeparturesRes = fixedDeparturesResponse.status === 'fulfilled' ? fixedDeparturesResponse.value : { ok: false, json: async () => ({ fixedDepartures: [] }) } as Response;
+
     // Check each response individually for better error reporting
-    if (!tourTypesResponse.ok) {
-      const errorText = await tourTypesResponse.text();
-      console.error('Tour Types fetch failed:', {
-        status: tourTypesResponse.status,
-        statusText: tourTypesResponse.statusText,
-        url: tourTypesUrl,
-        error: errorText,
-      });
-      throw new Error(`Failed to fetch tour types: ${tourTypesResponse.status} ${tourTypesResponse.statusText}`);
+    const tourTypesData = tourTypesRes.ok ? await tourTypesRes.json().catch(() => ({ tourTypes: [] })) : { tourTypes: [] };
+    const countriesData = countriesRes.ok ? await countriesRes.json().catch(() => ({ countries: [] })) : { countries: [] };
+    const statesData = statesRes.ok ? await statesRes.json().catch(() => ({ states: [] })) : { states: [] };
+    const fixedDeparturesData = fixedDeparturesRes.ok ? await fixedDeparturesRes.json().catch(() => ({ fixedDepartures: [] })) : { fixedDepartures: [] };
+
+    if (!tourTypesRes.ok) {
+      console.error('Tour Types fetch failed but continuing with defaults:', tourTypesRes.status);
     }
 
-    if (!countriesResponse.ok) {
-      console.warn('Countries fetch failed:', countriesResponse.status, countriesResponse.statusText);
-    }
-
-    if (!statesResponse.ok) {
-      console.warn('States fetch failed:', statesResponse.status, statesResponse.statusText);
-    }
-
-    if (!fixedDeparturesResponse.ok) {
-      console.warn('Fixed Departures fetch failed:', fixedDeparturesResponse.status, fixedDeparturesResponse.statusText);
-    }
-
-    const tourTypesData = await tourTypesResponse.json();
-    const countriesData = countriesResponse.ok ? await countriesResponse.json() : { countries: [] };
-    const statesData = statesResponse.ok ? await statesResponse.json() : { states: [] };
-    const fixedDeparturesData = fixedDeparturesResponse.ok ? await fixedDeparturesResponse.json() : { fixedDepartures: [] };
-
-    console.log('Tour types API - Successfully fetched data:', {
+    console.log('Tour types API - Data status:', {
       backendUrl: API_CONFIG.BACKEND_URL,
-      tourTypesCount: tourTypesData?.tourTypes?.length || 0,
-      countriesCount: countriesData?.countries?.length || 0,
-      statesCount: statesData?.states?.length || 0,
-      fixedDeparturesCount: fixedDeparturesData?.fixedDepartures?.length || 0,
+      tourTypes: tourTypesRes.ok ? 'OK' : 'FAILED',
+      countries: countriesRes.ok ? 'OK' : 'FAILED',
+      states: statesRes.ok ? 'OK' : 'FAILED',
+      fixedDepartures: fixedDeparturesRes.ok ? 'OK' : 'FAILED',
     });
 
     // Ensure we have both international and india tour types
@@ -85,15 +66,15 @@ export async function GET() {
     // Fetch destinations and packages for each tour type
     const tourTypeData = await Promise.all(
       allTourTypes.map(async (tourType: string) => {
-        // Fetch destinations
-        const destinationsResponse = await fetch(
+        // Fetch destinations with timeout
+        const destinationsResponse = await fetchWithTimeout(
           `${API_CONFIG.getFullUrl(API_CONFIG.ENDPOINTS.DESTINATIONS.ALL)}?tourType=${tourType}&limit=100`
-        );
+        ).catch(() => ({ ok: false, json: async () => ({ destinations: [] }) } as Response));
 
-        // Fetch packages
-        const packagesResponse = await fetch(
+        // Fetch packages with timeout
+        const packagesResponse = await fetchWithTimeout(
           `${API_CONFIG.getFullUrl(API_CONFIG.ENDPOINTS.PACKAGES.ALL)}?tourType=${tourType}&limit=100`
-        );
+        ).catch(() => ({ ok: false, json: async () => ({ packages: [] }) } as Response));
 
         let destinations = [];
         let packages = [];
@@ -429,7 +410,7 @@ export async function GET() {
       env: process.env.NODE_ENV,
       nextPublicBackendUrl: process.env.NEXT_PUBLIC_BACKEND_URL
     });
-    return NextResponse.json({ 
+    return NextResponse.json({
       message: 'Internal server error',
       error: process.env.NODE_ENV === 'development' ? (error instanceof Error ? error.message : 'Unknown error') : undefined
     }, { status: 500 });
