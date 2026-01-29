@@ -45,7 +45,7 @@ export async function GET(request: NextRequest) {
       });
     } else {
       // Handle relative URLs by redirecting to the backend
-      const backendUrl = process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:5000';
+      const backendUrl = process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:5001';
       const fullUrl = `${backendUrl}${imageUrl}`;
       
       console.log(`Redirecting relative URL to: ${fullUrl}`);

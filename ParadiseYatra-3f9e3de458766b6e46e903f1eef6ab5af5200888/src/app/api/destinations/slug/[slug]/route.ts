@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 
-const BACKEND_URL = process.env.NEXT_PUBLIC_BACKEND_URL || process.env.BACKEND_URL || 'http://localhost:5000';
+const BACKEND_URL = process.env.NEXT_PUBLIC_BACKEND_URL || process.env.BACKEND_URL || 'http://localhost:5001';
 
 export async function GET(
   request: NextRequest,
@@ -9,10 +9,10 @@ export async function GET(
   try {
     const { slug } = await params;
     const backendUrl = `${BACKEND_URL}/api/destinations/${slug}`;
-    
+
     console.log(`Fetching destination with slug: ${slug}`);
     console.log(`Backend URL: ${backendUrl}`);
-    
+
     const response = await fetch(backendUrl);
     const data = await response.json();
 

@@ -77,15 +77,6 @@ const fallbackNavItems: NavigationItem[] = [
       { name: "East India", href: "/packages/india" },
     ],
   },
-  {
-    name: "Fixed Departure",
-    icon: "Calendar",
-    submenu: [
-      { name: "Upcoming Tours", href: "/fixed-departures" },
-      { name: "Featured Tours", href: "/fixed-departures" },
-      { name: "Special Offers", href: "/fixed-departures" },
-    ],
-  },
 ];
 
 export const useNavigation = () => {
@@ -94,42 +85,71 @@ export const useNavigation = () => {
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
+    let isMounted = true;
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 8000); // Reduced to 8 seconds for faster fallback
+
     const fetchNavigationData = async () => {
       try {
+        if (!isMounted) return;
         setLoading(true);
         setError(null);
 
-        // Fetch tour types with state categorization
-        const tourTypesResponse = await fetch('/api/tour-types', {
-          cache: 'no-store', // Ensure fresh data in production
-          headers: {
-            'Content-Type': 'application/json',
-          },
-        });
-        
-        if (!tourTypesResponse.ok) {
-          const errorText = await tourTypesResponse.text();
-          console.error('Navigation API Error:', {
-            status: tourTypesResponse.status,
-            statusText: tourTypesResponse.statusText,
-            error: errorText,
+        // Fetch tour types with state categorization (with timeout)
+
+        let tourTypesResponse;
+        try {
+          tourTypesResponse = await fetch('/api/tour-types', {
+            cache: 'force-cache', // Use cache for better performance
+            headers: {
+              'Content-Type': 'application/json',
+            },
+            signal: controller.signal,
           });
-          throw new Error(`Failed to fetch tour type data: ${tourTypesResponse.status} ${tourTypesResponse.statusText}`);
+          clearTimeout(timeoutId);
+        } catch (fetchError) {
+          clearTimeout(timeoutId);
+          if (fetchError instanceof Error && fetchError.name === 'AbortError') {
+            console.warn('Navigation API request timed out - using fallback navigation');
+            // Don't throw, just use fallback
+            if (isMounted) {
+              setNavItems(fallbackNavItems);
+              setLoading(false);
+            }
+            return;
+          }
+          // For other errors, also use fallback instead of throwing
+          console.warn('Navigation API request failed - using fallback navigation:', fetchError);
+          if (isMounted) {
+            setNavItems(fallbackNavItems);
+            setLoading(false);
+          }
+          return;
+        }
+
+        if (!tourTypesResponse.ok) {
+          // Don't throw error, use fallback instead
+          console.warn('Using fallback navigation items due to API error');
+          if (isMounted) {
+            setNavItems(fallbackNavItems);
+            setLoading(false);
+          }
+          return;
         }
 
         const tourTypesData = await tourTypesResponse.json();
-        
+
         // Validate response data
         if (!tourTypesData || !tourTypesData.tourTypes || !Array.isArray(tourTypesData.tourTypes)) {
           console.error('Invalid navigation data structure:', tourTypesData);
           throw new Error('Invalid navigation data structure');
         }
-        
+
         console.log('Navigation data fetched successfully:', {
           tourTypesCount: tourTypesData.tourTypes.length,
           tourTypes: tourTypesData.tourTypes.map((t: TourType) => t.tourType),
         });
-        
+
         // Create navigation items from tour types
         const dynamicNavItems: NavigationItem[] = [];
 
@@ -146,7 +166,7 @@ export const useNavigation = () => {
         sortedTourTypes.forEach((tourType: TourType) => {
           const icon = tourType.tourType === 'international' ? 'Globe' : 'MapPin';
           const name = tourType.tourType === 'international' ? 'International Tour' : 'India Tour Package';
-          
+
           let submenu: Array<{
             name: string;
             href: string;
@@ -161,7 +181,7 @@ export const useNavigation = () => {
               name: country.name,
               href: `/packages/${tourType.tourType}/${country.name.toLowerCase().replace(/\s+/g, '-')}`,
               destinations: country.states.flatMap(state => state.destinations),
-              featured: country.states.some(state => 
+              featured: country.states.some(state =>
                 state.destinations.some(dest => dest.isTrending)
               ),
               // Add states information for display in header
@@ -187,58 +207,34 @@ export const useNavigation = () => {
           });
         });
 
-        // Fetch fixed departure data for navigation
-        const fixedDeparturesResponse = await fetch('/api/fixed-departures/navigation');
-        let fixedDeparturesData = {
-          upcoming: [],
-          featured: [],
-          specialOffers: []
-        };
-
-        if (fixedDeparturesResponse.ok) {
-          fixedDeparturesData = await fixedDeparturesResponse.json();
-        }
-
-        // Add Fixed Departure section with dynamic data
-        dynamicNavItems.push({
-          name: "Fixed Departure",
-          icon: "Calendar",
-          submenu: [
-            { 
-              name: "Upcoming Tours", 
-              href: "/fixed-departures",
-              fixedDepartures: fixedDeparturesData.upcoming
-            },
-            { 
-              name: "Featured Tours", 
-              href: "/fixed-departures",
-              fixedDepartures: fixedDeparturesData.featured
-            },
-            { 
-              name: "Special Offers", 
-              href: "/fixed-departures",
-              fixedDepartures: fixedDeparturesData.specialOffers
-            },
-          ]
-        });
 
         // If we have dynamic data, use it; otherwise keep fallback
-        if (dynamicNavItems.length > 0) {
-          setNavItems(dynamicNavItems);
-        } else {
-          setNavItems(fallbackNavItems);
+        if (isMounted) {
+          if (dynamicNavItems.length > 0) {
+            setNavItems(dynamicNavItems);
+          } else {
+            setNavItems(fallbackNavItems);
+          }
+          setLoading(false);
         }
       } catch (err) {
-        console.error('Error fetching navigation data:', err);
-        setError(err instanceof Error ? err.message : 'Failed to fetch navigation data');
-        // Keep fallback navigation items on error
-        setNavItems(fallbackNavItems);
-      } finally {
-        setLoading(false);
+        if (isMounted) {
+          console.error('Error fetching navigation data:', err);
+          setError(err instanceof Error ? err.message : 'Failed to fetch navigation data');
+          // Keep fallback navigation items on error
+          setNavItems(fallbackNavItems);
+          setLoading(false);
+        }
       }
     };
 
     fetchNavigationData();
+
+    return () => {
+      isMounted = false;
+      clearTimeout(timeoutId);
+      controller.abort();
+    };
   }, []);
 
   return { navItems, loading, error };

@@ -100,10 +100,36 @@ const BlogSection = () => {
   }, [isMobile, allBlogPosts.length, activeScrollIndex]);
 
   useEffect(() => {
+    let isMounted = true;
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 15000); // 15 second timeout
+
     const fetchBlogs = async () => {
       try {
+        if (!isMounted) return;
         setLoading(true);
-        const response = await fetch("/api/blogs?featured=true");
+        
+        let response;
+        try {
+          response = await fetch("/api/blogs?featured=true", {
+            signal: controller.signal,
+            cache: 'default', // Use cache to reduce requests
+          });
+          clearTimeout(timeoutId);
+        } catch (fetchError) {
+          clearTimeout(timeoutId);
+          if (fetchError instanceof Error && fetchError.name === 'AbortError') {
+            if (isMounted) {
+              console.warn('Blog fetch timed out');
+              setError("Request timeout - please refresh the page");
+              setBlogPosts([]);
+              setAllBlogPosts([]);
+              setLoading(false);
+            }
+            return;
+          }
+          throw fetchError;
+        }
 
         if (!response.ok) {
           throw new Error("Failed to fetch blogs");
@@ -112,31 +138,41 @@ const BlogSection = () => {
         const data = await response.json();
 
         // Handle both direct array and object with blogs array
-        if (Array.isArray(data)) {
-          setAllBlogPosts(data);
-          setBlogPosts(data.slice(0, 3)); // Show only first 3 blogs initially
-          setError(null);
-        } else if (data.blogs && Array.isArray(data.blogs)) {
-          setAllBlogPosts(data.blogs);
-          setBlogPosts(data.blogs.slice(0, 3));
-          setError(null);
-        } else {
-          console.error("Unexpected data structure:", data);
-          setBlogPosts([]);
-          setAllBlogPosts([]);
-          setError("Invalid data format received");
+        if (isMounted) {
+          if (Array.isArray(data)) {
+            setAllBlogPosts(data);
+            setBlogPosts(data.slice(0, 3)); // Show only first 3 blogs initially
+            setError(null);
+          } else if (data.blogs && Array.isArray(data.blogs)) {
+            setAllBlogPosts(data.blogs);
+            setBlogPosts(data.blogs.slice(0, 3));
+            setError(null);
+          } else {
+            console.error("Unexpected data structure:", data);
+            setBlogPosts([]);
+            setAllBlogPosts([]);
+            setError("Invalid data format received");
+          }
+          setLoading(false);
         }
       } catch (err) {
-        console.error("Error fetching blogs:", err);
-        setError("Failed to load blogs");
-        setBlogPosts([]); // Don't show static data, show empty state
-        setAllBlogPosts([]);
-      } finally {
-        setLoading(false);
+        if (isMounted) {
+          console.error("Error fetching blogs:", err);
+          setError("Failed to load blogs");
+          setBlogPosts([]); // Don't show static data, show empty state
+          setAllBlogPosts([]);
+          setLoading(false);
+        }
       }
     };
 
     fetchBlogs();
+
+    return () => {
+      isMounted = false;
+      clearTimeout(timeoutId);
+      controller.abort();
+    };
   }, []);
 
   // Calculate total groups for desktop navigation

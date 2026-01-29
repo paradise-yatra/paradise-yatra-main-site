@@ -7,7 +7,7 @@ export async function GET(
   try {
     const resolvedParams = await params;
     const imagePath = resolvedParams.path.join('/');
-    const backendUrl = process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:5000';
+    const backendUrl = process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:5001';
     const fullUrl = `${backendUrl}/${imagePath}`;
 
     // Add request deduplication to prevent multiple simultaneous requests for the same image

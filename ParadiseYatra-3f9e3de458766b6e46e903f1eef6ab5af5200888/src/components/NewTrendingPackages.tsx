@@ -37,6 +37,18 @@ const cleanTitle = (title: string): string => {
     .trim();
 };
 
+// Robust helper to extract ID from any format
+const getPackageId = (item: any): string => {
+  if (!item) return "";
+  if (typeof item === 'string') return item;
+  if (typeof item === 'object') {
+    const id = item._id || item.id;
+    if (id && typeof id === 'object' && id.$oid) return id.$oid;
+    if (id) return String(id);
+  }
+  return "";
+};
+
 const NewTrendingDestinations = () => {
   const [allPackages, setAllPackages] = useState<Package[]>([]);
   const [loading, setLoading] = useState(true);
@@ -61,11 +73,94 @@ const NewTrendingDestinations = () => {
     const fetchTrendingPackages = async () => {
       try {
         setLoading(true);
-        const response = await fetch("/api/packages?category=Trending%20Destinations&limit=10");
-        if (!response.ok) throw new Error("Failed to fetch trending packages");
-        const data = await response.json();
-        let packagesToSet = Array.isArray(data) ? data : (data.packages || []);
-        setAllPackages(packagesToSet);
+        // 1. Fetch all tags to find the trending tag
+        const tagsRes = await fetch("/api/tags");
+        const tagsData = await tagsRes.json();
+
+        const allTags = Array.isArray(tagsData) ? tagsData : (tagsData.data || []);
+        const success = Array.isArray(tagsData) || tagsData.success;
+
+        if (!tagsRes.ok || !success) {
+          console.error("Failed to fetch tags", tagsData);
+          return;
+        }
+
+        const trendingTag = allTags.find((tag: any) =>
+          tag.slug.toLowerCase().includes("trending") ||
+          tag.name.toLowerCase().includes("trending")
+        );
+
+        if (!trendingTag || !trendingTag.packages || trendingTag.packages.length === 0) {
+          console.warn("Trending tag not found or has no packages", trendingTag);
+          setAllPackages([]);
+          setLoading(false);
+          return;
+        }
+
+        // 2. Fetch all possible data sources to match IDs
+        let matchedPackages = [];
+
+        if (typeof trendingTag.packages[0] === 'object') {
+          matchedPackages = trendingTag.packages;
+        } else {
+          // It's an array of IDs, we need to fetch all possible sources
+          const [packagesRes, holidayRes, destinationsRes, fixedRes] = await Promise.all([
+            fetch("/api/packages?limit=100"),
+            fetch("/api/holiday-types?limit=100"),
+            fetch("/api/destinations?limit=100"),
+            fetch("/api/fixed-departures?limit=100")
+          ]);
+
+          const [packagesData, holidayData, destinationsData, fixedData] = await Promise.all([
+            packagesRes.json().catch(() => ({})),
+            holidayRes.json().catch(() => ([])),
+            destinationsRes.json().catch(() => ({})),
+            fixedRes.json().catch(() => ({}))
+          ]);
+
+          const normalize = (data: any) => {
+            if (Array.isArray(data)) return data;
+            if (data && data.packages) return data.packages;
+            if (data && data.destinations) return data.destinations;
+            if (data && data.fixedDepartures) return data.fixedDepartures;
+            return [];
+          };
+
+          const allItems = [
+            ...normalize(packagesData),
+            ...normalize(holidayData),
+            ...normalize(destinationsData),
+            ...normalize(fixedData)
+          ];
+
+          // Normalize tagged package IDs to ensure consistent matching
+          const taggedIds = (trendingTag.packages || []).map((p: any) => getPackageId(p)).filter((id: string) => id !== "");
+
+          matchedPackages = allItems.filter((item: any) => {
+            const itemId = getPackageId(item);
+            return itemId && taggedIds.includes(itemId);
+          });
+
+          // Remove duplicates based on ID
+          matchedPackages = Array.from(new Map(matchedPackages.map((pkg: any) => [getPackageId(pkg), pkg])).values());
+        }
+
+        // 3. Map to Package format
+        const mappedPackages: Package[] = matchedPackages.map((pkg: any) => ({
+          _id: pkg._id || pkg.id,
+          title: pkg.title || pkg.name || "Exciting Tour",
+          duration: pkg.duration || "5N/6D",
+          destination: pkg.destination || pkg.location || pkg.state || pkg.title || "India",
+          price: typeof pkg.price === 'string' ? parseInt(pkg.price.replace(/[^\d]/g, '')) : (pkg.price || 0),
+          originalPrice: pkg.originalPrice,
+          images: pkg.images || [pkg.image || pkg.thumbnail || FALLBACK_IMAGE],
+          category: pkg.category || "Tour",
+          shortDescription: pkg.shortDescription || pkg.description || "",
+          slug: pkg.slug || pkg._id || pkg.id,
+          rating: pkg.rating || 4.5
+        }));
+
+        setAllPackages(mappedPackages);
       } catch (err) {
         setError(err instanceof Error ? err.message : "Failed to load");
       } finally {
@@ -471,7 +566,7 @@ const NewTrendingDestinations = () => {
                 <span className="text-white font-bold text-sm sm:text-md pl-8 pr-4 whitespace-nowrap">
                   View All Packages
                 </span>
-                <div className="bg-white rounded-full p-2 m-1.5 transition-all duration-300 group-hover:-rotate-45 group-hover:scale-110 shadow-md">
+                <div className="bg-xwhite rounded-full p-2 m-1.5 transition-all duration-300 group-hover:-rotate-45 group-hover:scale-110 shadow-md">
                   <ArrowRight className="w-4 h-4 text-indigo-600" strokeWidth={2.5} />
                 </div>
               </div>

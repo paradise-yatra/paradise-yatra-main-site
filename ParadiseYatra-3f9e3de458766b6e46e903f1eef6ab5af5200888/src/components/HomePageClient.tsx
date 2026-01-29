@@ -31,6 +31,21 @@ import NewAdventureEscapes from "./NewAdventureEscapes";
 import NewDestinationsGrid from "./NewDestinationsGrid";
 import NewPremiumPackages from "./NewPremiumPackages";
 import NewBlogSection from "./NewBlogSection";
+import IndiaTourPackages from "./IndiaTourPackages";
+import InternationalTourPackages from "./InternationalTourPackages";
+import HoneymoonPackages from "./HoneymoonPackages";
+import TrendingPackagesSection from "./TrendingPackagesSection";
+import WhyChooseParadiseYatra from "./WhyChooseParadiseYatra";
+import IndiaTourPackagesSection from "./IndiaTourPackagesSection";
+import InternationalTourPackagesSection from "./InternationalTourPackagesSection";
+import LuxuryPackagesSection from "./LuxuryPackagesSection";
+import SpiritualJourneysSection from "./SpiritualJourneysSection";
+import FestivalSection from "./FestivalSection";
+import TestimonialsSection from "./TestimonialsSection";
+import BlogSectionNew from "./BlogSectionNew";
+import RecentlyBookedItineraries from "./RecentlyBookedItineraries";
+import WildlifeTourPackagesSection from "./WildlifeTourPackagesSection";
+
 
 const HomePageClient = memo(() => {
   const prefersReducedMotion = useReducedMotion();
@@ -64,29 +79,47 @@ const HomePageClient = memo(() => {
       {/* <div className="min-h-72 bg-gray-100 w-full"></div> */}
       <LazyHeroSection />
       {/* <LazyFixedDepartureCarousel /> */}
-      <NewTrendingDestinations />
+      <HoneymoonPackages />
+      <TrendingPackagesSection />
+      <WhyChooseParadiseYatra />
+      <IndiaTourPackagesSection />
+      <InternationalTourPackagesSection />
+      <SpiritualJourneysSection />
+      <LuxuryPackagesSection />
 
-  
+      <WildlifeTourPackagesSection />
+      <FestivalSection />
+      <TestimonialsSection />
+      <BlogSectionNew />
+      {/* <RecentlyBookedItineraries /> */}
+      {/* <IndiaTourPackages /> */}
+      {/* <InternationalTourPackages /> */}
+
+
+      {/* <RecentlyBookedItineraries /> */}
+      {/* <NewTrendingDestinations /> */}
+
+
       {/* <LazyTrendingDestinations /> */}
       {/* <LazyHolidaysSection /> */}
 
-      <NewHolidaysSection />
+      {/* <NewHolidaysSection /> */}
       {/* <LazyDestinationsGrid /> */}
-      <NewDestinationsGrid />
+      {/* <NewDestinationsGrid /> */}
 
       {/* <LazyPremiumPackages /> */}
-      <NewPremiumPackages />
+      {/* <NewPremiumPackages /> */}
 
       {/* <LazyAdventureEscapes /> */}
-      <NewAdventureEscapes />
+      {/* <NewAdventureEscapes /> */}
 
-      <DreamsReality />
-      <WhoWeAre />
+      {/* <DreamsReality /> */}
+      {/* <WhoWeAre /> */}
 
       {/* <LazyBlogSection /> */}
-      <NewBlogSection />
+      {/* <NewBlogSection /> */}
 
-      <NewTestimonial />
+      {/* <NewTestimonial /> */}
       {/* <LazyTestimonialSection />
       <LazyCTASection /> */}
       <NewsletterSubscribe />

@@ -54,7 +54,7 @@ export async function GET(request: NextRequest) {
       );
     }
 
-    let url = `${process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:5000'}/api/fixed-departures?page=${page}&limit=${limit}`;
+    let url = `${process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:5001'}/api/fixed-departures?page=${page}&limit=${limit}`;
     
     if (status) {
       url += `&status=${status}`;

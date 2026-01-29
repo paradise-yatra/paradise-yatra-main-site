@@ -21,6 +21,7 @@ import {
   LazyAdminStats,
   LazyAdminItinerary,
   LazyAdminPopularDestinations,
+  LazyAdminTags,
 } from "@/components/lazy-admin-components";
 import AdminFAQ from "@/components/admin/AdminFAQ";
 
@@ -43,7 +44,8 @@ type AdminSection =
   | "holiday-types"
   | "fixed-departures"
   | "itinerary"
-  | "faq";
+  | "faq"
+  | "tags";
 
 const AdminPage = () => {
   const [activeSection, setActiveSection] = useState<AdminSection>("dashboard");
@@ -178,6 +180,8 @@ const AdminPage = () => {
         return <LazyAdminItinerary />;
       case "faq":
         return <AdminFAQ />;
+      case "tags":
+        return <LazyAdminTags />;
 
       default:
         return <LazyAdminDashboard />;

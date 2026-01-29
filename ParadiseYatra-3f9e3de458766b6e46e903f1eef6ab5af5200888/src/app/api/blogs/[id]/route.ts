@@ -8,17 +8,44 @@ export async function GET(
 ) {
   try {
     const { id } = await params;
-    const response = await fetch(`${BACKEND_URL}/api/blogs/${id}`);
 
-    const data = await response.json();
+    // Add timeout to prevent hanging requests
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 10000); // 10 second timeout
+
+    let response;
+    try {
+      response = await fetch(`${BACKEND_URL}/api/blogs/${id}`, {
+        signal: controller.signal,
+        cache: 'force-cache', // Use cache aggressively
+        next: { revalidate: 3600 }, // Cache for 1 hour
+      });
+      clearTimeout(timeoutId);
+    } catch (fetchError) {
+      clearTimeout(timeoutId);
+      if (fetchError instanceof Error && fetchError.name === 'AbortError') {
+        return NextResponse.json(
+          { message: 'Request timeout - please try again' },
+          { status: 504 }
+        );
+      }
+      throw fetchError;
+    }
 
     if (!response.ok) {
+      let errorData;
+      try {
+        errorData = await response.json();
+      } catch {
+        errorData = { message: 'Blog not found' };
+      }
       return NextResponse.json(
-        { message: data.message || 'Blog not found' },
+        { message: errorData.message || 'Blog not found' },
         { status: response.status }
       );
     }
 
+    const data = await response.json();
     return NextResponse.json(data);
   } catch (error) {
     console.error('Blogs API error:', error);
@@ -35,16 +62,16 @@ export async function PUT(
 ) {
   try {
     const { id } = await params;
-    
+
     // Check Content-Type to determine how to parse the request
     const contentType = request.headers.get('content-type') || '';
-    
+
     let response;
-    
+
     if (contentType.includes('multipart/form-data')) {
       // Handle FormData requests (file uploads)
       const formData = await request.formData();
-      
+
       response = await fetch(`${BACKEND_URL}/api/blogs/${id}`, {
         method: 'PUT',
         headers: {
@@ -56,7 +83,7 @@ export async function PUT(
     } else {
       // Handle JSON requests
       const body = await request.json();
-      
+
       response = await fetch(`${BACKEND_URL}/api/blogs/${id}`, {
         method: 'PUT',
         headers: {

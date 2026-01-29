@@ -12,7 +12,7 @@ export async function POST(request: NextRequest) {
       );
     }
 
-            const response = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:5000'}/api/fixed-departures`, {
+            const response = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:5001'}/api/fixed-departures`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',

@@ -1,7 +1,7 @@
 // import { NextRequest, NextResponse } from 'next/server';
 // import { validateApiParams } from '@/lib/validation';
 
-// const BACKEND_URL = process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:5000';
+// const BACKEND_URL = process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:5001';
 
 // export async function GET(request: NextRequest) {
 //   try {
@@ -9,7 +9,7 @@
 //     const tourType = searchParams.get('tourType');
 //     const state = searchParams.get('state');
 //     const limit = searchParams.get('limit');
-    
+
 //     // Validate parameters
 //     const validation = validateApiParams({ tourType, state, limit });
 //     if (!validation.isValid) {
@@ -21,7 +21,7 @@
 //         { status: 400 }
 //       );
 //     }
-    
+
 //     // Clean and normalize state parameter
 //     let normalizedState = state;
 //     if (state) {
@@ -31,23 +31,23 @@
 //         .replace(/\s+/g, ' ') // Normalize multiple spaces to single space
 //         .trim(); // Remove leading/trailing spaces
 //     }
-    
+
 //     // Build query string with filters
 //     const queryParams = new URLSearchParams();
 //     if (tourType) queryParams.append('tourType', tourType);
 //     if (normalizedState) queryParams.append('state', normalizedState);
 //     if (limit) queryParams.append('limit', limit);
-    
+
 //     const queryString = queryParams.toString();
 //     const apiUrl = queryString ? `${BACKEND_URL}/api/destinations?${queryString}` : `${BACKEND_URL}/api/destinations`;
-    
+
 //     const response = await fetch(apiUrl);
 //     const data = await response.json();
-    
+
 //     if (!response.ok) {
 //       return NextResponse.json({ message: data.message || 'Failed to fetch destinations' }, { status: response.status });
 //     }
-    
+
 //     // The backend returns { destinations: [...], pagination: {...} }
 //     // Return the data as-is to maintain consistency with backend format
 //     return NextResponse.json(data);
@@ -82,62 +82,102 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { validateApiParams } from '@/lib/validation';
 
-const BACKEND_URL = process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:5000';
+const BACKEND_URL = process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:5001';
+
+// Cache destinations for 30 seconds
+export const revalidate = 30;
 
 export async function GET(request: NextRequest) {
   try {
     const { searchParams } = new URL(request.url);
     const tourType = searchParams.get('tourType');
     const state = searchParams.get('state');
+    const country = searchParams.get('country');
     const limit = searchParams.get('limit');
-    
+
     // Validate parameters
-    const validation = validateApiParams({ tourType, state, limit });
+    // (Validation helper doesn't know about `country`; treat it like `state` for validation.)
+    const validation = validateApiParams({ tourType, state: state || country, limit });
     if (!validation.isValid) {
       return NextResponse.json(
-        { 
-          message: 'Invalid parameters', 
-          errors: validation.errors 
-        }, 
+        {
+          message: 'Invalid parameters',
+          errors: validation.errors,
+          destinations: []
+        },
         { status: 400 }
       );
     }
-    
-    // Clean and normalize state parameter
+
+    // Clean and normalize state/country parameter
     let normalizedState = state;
+    let normalizedCountry = country;
     if (state) {
       normalizedState = decodeURIComponent(state)
         .replace(/&/g, 'and')
         .replace(/\s+/g, ' ')
         .trim();
     }
-    
+    if (country) {
+      normalizedCountry = decodeURIComponent(country)
+        .replace(/&/g, 'and')
+        .replace(/\s+/g, ' ')
+        .trim();
+    }
+
     // Build query string with filters
     const queryParams = new URLSearchParams();
     if (tourType) queryParams.append('tourType', tourType);
-    if (normalizedState) queryParams.append('state', normalizedState);
+    if (normalizedCountry) {
+      queryParams.append('country', normalizedCountry);
+    } else if (normalizedState) {
+      queryParams.append('state', normalizedState);
+    }
     if (limit) queryParams.append('limit', limit);
-    
+
     const queryString = queryParams.toString();
     const apiUrl = queryString ? `${BACKEND_URL}/api/destinations?${queryString}` : `${BACKEND_URL}/api/destinations`;
-    
-    const response = await fetch(apiUrl, {
-      cache: 'no-store',
-      headers: {
-        'Authorization': request.headers.get('Authorization') || '',
+
+    // Add timeout handling
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 10000); // 10 second timeout
+
+    try {
+      const response = await fetch(apiUrl, {
+        signal: controller.signal,
+        next: { revalidate: 30 }, // Cache for 30 seconds
+        headers: {
+          'Authorization': request.headers.get('Authorization') || '',
+        }
+      });
+      clearTimeout(timeoutId);
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        return NextResponse.json({
+          message: data.message || 'Failed to fetch destinations',
+          destinations: []
+        }, { status: response.status });
       }
-    });
-    
-    const data = await response.json();
-    
-    if (!response.ok) {
-      return NextResponse.json({ message: data.message || 'Failed to fetch destinations' }, { status: response.status });
+
+      return NextResponse.json(data);
+    } catch (fetchError) {
+      clearTimeout(timeoutId);
+      if (fetchError instanceof Error && fetchError.name === 'AbortError') {
+        return NextResponse.json({
+          message: 'Request timeout - please try again',
+          destinations: []
+        }, { status: 504 });
+      }
+      throw fetchError;
     }
-    
-    return NextResponse.json(data);
   } catch (error) {
     console.error('Destinations API error:', error);
-    return NextResponse.json({ message: 'Internal server error' }, { status: 500 });
+    return NextResponse.json({
+      message: 'Internal server error',
+      destinations: []
+    }, { status: 500 });
   }
 }
 
@@ -145,7 +185,7 @@ export async function GET(request: NextRequest) {
 export async function POST(request: NextRequest) {
   try {
     const formData = await request.formData();
-    
+
     const response = await fetch(`${BACKEND_URL}/api/destinations`, {
       method: 'POST',
       headers: {
@@ -153,13 +193,13 @@ export async function POST(request: NextRequest) {
       },
       body: formData, // Send FormData directly for file upload
     });
-    
+
     const data = await response.json();
-    
+
     if (!response.ok) {
       return NextResponse.json({ message: data.message || 'Failed to create destination' }, { status: response.status });
     }
-    
+
     return NextResponse.json(data, { status: 201 });
   } catch (error) {
     console.error('Destinations API error:', error);

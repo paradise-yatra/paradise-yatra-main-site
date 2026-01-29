@@ -1,15 +1,13 @@
 "use client";
 
-import { motion, AnimatePresence } from "framer-motion";
-import { CheckCircle, Loader2, Clock, MapPin, Star, Users, Calendar, Award, Bed, Utensils, Car, Eye, Check, ChevronDown, ChevronUp, Sparkles, Plane, Camera, Shield, ArrowRight } from "lucide-react";
+import { motion } from "framer-motion";
+import { Loader2, Clock, MapPin, Users, Calendar, Award, Shield, ArrowRight, Plane, Utensils, Camera, Sparkles, Check, AlertCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 import { useState, useEffect } from "react";
-import { DayItineraryCard, InclusionList, PackageHeader } from "@/components/itinerary";
 import { useRouter } from "next/navigation";
+import Link from "next/link";
 import LeadCaptureForm from "@/components/LeadCaptureForm";
 import Header from "@/components/Header";
 
@@ -43,24 +41,7 @@ interface Package {
   reviews: unknown[];
   isActive: boolean;
   isFeatured: boolean;
-  // SEO fields
-  seoTitle?: string;
-  seoDescription?: string;
-  seoKeywords?: string[];
-  seoOgTitle?: string;
-  seoOgDescription?: string;
-  seoOgImage?: string;
-  seoTwitterTitle?: string;
-  seoTwitterDescription?: string;
-  seoTwitterImage?: string;
-  seoCanonicalUrl?: string;
-  seoRobotsIndex?: boolean;
-  seoRobotsFollow?: boolean;
-  seoAuthor?: string;
-  seoPublisher?: string;
 }
-
-type SectionType = 'overview' | 'itinerary' | 'included' | 'packages';
 
 interface ItineraryPageClientProps {
   packageData: Package;
@@ -73,139 +54,48 @@ const ItineraryPageClient = ({ packageData, slug }: ItineraryPageClientProps) =>
   const [otherPackages, setOtherPackages] = useState<any[]>([]);
   const [packagesLoading, setPackagesLoading] = useState(false);
   const router = useRouter();
-  
-  // Get gallery images or use single image
-  const galleryImages = packageData?.images && packageData.images.length > 0 
-    ? packageData.images 
-    : packageData?.images?.[0] 
-      ? [packageData.images[0]] 
-      : ["https://images.unsplash.com/photo-1488646953014-85cb44e25828?w=1920&q=80"];
 
-  // Debug: Log inclusions and exclusions to verify data
-  useEffect(() => {
-    console.log('Package Data Inclusions:', packageData?.inclusions);
-    console.log('Package Data Exclusions:', packageData?.exclusions);
-    console.log('Full Package Data:', packageData);
-  }, [packageData]);
+  const galleryImages = packageData?.images && packageData.images.length > 0
+    ? packageData.images
+    : ["https://images.unsplash.com/photo-1488646953014-85cb44e25828?w=1920&q=80"];
 
-  // Ensure we're using the exact database values
   const inclusions = Array.isArray(packageData?.inclusions) ? packageData.inclusions : [];
   const exclusions = Array.isArray(packageData?.exclusions) ? packageData.exclusions : [];
 
   useEffect(() => {
-    // Small delay is sometimes needed after client navigation
-    const timer = setTimeout(() => {
-      window.scrollTo({
-        top: 0,
-        left: 0,
-        behavior: "instant"   // instant = no animation
-      })
-    }, 0)
+    window.scrollTo({ top: 0, left: 0, behavior: "instant" });
+  }, []);
 
-    return () => clearTimeout(timer)
-  }, [])
-
-  // Fetch other packages
   useEffect(() => {
     const fetchOtherPackages = async () => {
-      if (otherPackages.length === 0) {
-        try {
-          setPackagesLoading(true);
-          
-          // Try destinations API first, then fallback to packages API
-          let response = await fetch('/api/destinations');
-          let data = null;
-          
-          if (response.ok) {
-            data = await response.json();
-            console.log('Destinations API Response:', data);
-            console.log('Response status:', response.status);
-            console.log('Response headers:', Object.fromEntries(response.headers.entries()));
-          } else {
-            console.log('Destinations API failed, trying packages API...');
-            // Fallback to packages API
-            response = await fetch('/api/packages');
-            if (response.ok) {
-              data = await response.json();
-              console.log('Packages API Response:', data);
-            }
-          }
-          
-          if (data && Array.isArray(data)) {
-            // Filter out the current package and limit to 3 packages
-            const filteredPackages = data
-              .filter((pkg: any) => pkg._id !== packageData?._id)
-              .slice(0, 3);
-            setOtherPackages(filteredPackages);
-          } else if (data && typeof data === 'object') {
-            // Check if data is wrapped in a property
-            const possibleArrayKeys = ['destinations', 'data', 'results', 'packages', 'items'];
-            let foundArray = null;
-            
-            for (const key of possibleArrayKeys) {
-              if (Array.isArray(data[key])) {
-                foundArray = data[key];
-                console.log('Found array in property:', key, foundArray);
-                break;
-              }
-            }
-            
-            if (foundArray) {
-              const filteredPackages = foundArray
-                .filter((pkg: any) => pkg._id !== packageData?._id)
-                .slice(0, 3);
-              setOtherPackages(filteredPackages);
-            } else {
-              console.error('API response structure:', data);
-              console.error('No array found in response. Expected array or object with array property.');
-              setOtherPackages([]);
-            }
-          } else {
-            console.error('API response is not an array or object:', data);
-            setOtherPackages([]);
-          }
-        } catch (error) {
-          console.error('Error fetching other packages:', error);
-          setOtherPackages([]);
-        } finally {
-          setPackagesLoading(false);
-        }
+      try {
+        setPackagesLoading(true);
+        const response = await fetch('/api/packages?limit=4');
+        const data = await response.json();
+
+        // Extract array from possible response formats
+        let packagesArray = [];
+        if (Array.isArray(data)) packagesArray = data;
+        else if (data.data && Array.isArray(data.data)) packagesArray = data.data;
+        else if (data.packages && Array.isArray(data.packages)) packagesArray = data.packages;
+
+        setOtherPackages(packagesArray.filter((pkg: any) => pkg._id !== packageData._id).slice(0, 3));
+      } catch (error) {
+        console.error('Error fetching other packages:', error);
+      } finally {
+        setPackagesLoading(false);
       }
     };
-
     fetchOtherPackages();
-  }, [packageData?._id, otherPackages.length]);
+  }, [packageData._id]);
 
-  const formatPrice = (price: number) => {
-    return `₹${price.toLocaleString('en-IN')}`;
-  };
-
-  // Calculate discount percentage if not provided or is 0
-  const getDiscount = () => {
-    if (
-      packageData.originalPrice &&
-      packageData.originalPrice > packageData.price
-    ) {
-      return Math.round(
-        ((packageData.originalPrice - packageData.price) / packageData.originalPrice) * 100
-      );
-    }
-    return packageData.discount || 0;
-  };
-
-  const discount = getDiscount();
-
-  const calculateDiscountedPrice = () => {
-    if (discount > 0) {
-      return packageData.price;
-    }
-    return packageData.price;
-  };
-
-  const discountedPrice = calculateDiscountedPrice();
+  const formatPrice = (price: number) => `₹${price.toLocaleString('en-IN')}`;
+  const discount = packageData.originalPrice && packageData.originalPrice > packageData.price
+    ? Math.round(((packageData.originalPrice - packageData.price) / packageData.originalPrice) * 100)
+    : packageData.discount || 0;
 
   return (
-    <motion.div 
+    <motion.div
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
       transition={{ duration: 0.1, ease: 'easeOut' }}
@@ -214,390 +104,299 @@ const ItineraryPageClient = ({ packageData, slug }: ItineraryPageClientProps) =>
       <Header />
 
       {/* Image Gallery */}
-      <section className="relative pt-24 sm:pt-28 lg:pt-32">
+      <section className="relative pt-6 sm:pt-8 bg-slate-50/50">
         <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.3 }}
-          className="grid grid-cols-1 lg:grid-cols-3 gap-2 h-60 lg:h-[350px] max-w-7xl mx-auto px-4 sm:px-6"
+          initial={{ opacity: 0, scale: 0.95 }}
+          animate={{ opacity: 1, scale: 1 }}
+          transition={{ duration: 0.5 }}
+          className="max-w-6xl mx-auto px-4 md:px-8"
         >
-          <div className="lg:col-span-2 relative overflow-hidden rounded-lg">
-            <img 
-              src={galleryImages[selectedImage]} 
+          <div className="relative group overflow-hidden rounded-lg shadow-xl h-[350px] sm:h-[400px] lg:h-[480px]">
+            <img
+              src={galleryImages[selectedImage]}
               alt={packageData.title}
-              className="w-full h-full object-cover"
+              className="w-full h-full object-cover transition-transform duration-1000 group-hover:scale-105"
             />
-            <div className="absolute top-4 left-4">
-              <Badge className="!bg-blue-500 text-white text-sm">
-                {packageData.category}
-              </Badge>
-            </div>
-          </div>
-          <div className="hidden lg:flex flex-col gap-2">
-            {galleryImages.slice(1, 3).map((image, index) => (
-              <div 
-                key={index + 1}
-                className="flex-1 relative overflow-hidden rounded-lg cursor-pointer"
-                onClick={() => setSelectedImage(index + 1)}
-              >
-                <img 
-                  src={image} 
-                  alt={`${packageData.title} ${index + 2}`}
-                  className="w-full h-full object-cover hover:scale-110 transition-transform duration-300"
-                />
-              </div>
-            ))}
-            {galleryImages.length > 3 && (
-              <div className="flex-1 relative overflow-hidden rounded-lg cursor-pointer bg-slate-800 flex items-center justify-center">
-                <span className="text-white font-semibold">+{galleryImages.length - 3} Photos</span>
-              </div>
-            )}
+            <div className="absolute inset-0 bg-gradient-to-t from-black/40 via-transparent to-transparent opacity-60"></div>
           </div>
         </motion.div>
       </section>
 
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+      <div className="max-w-6xl mx-auto px-4 md:px-8 py-12">
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-12 items-start">
           {/* Main Content */}
-          <div className="lg:col-span-2 space-y-8">
-            {/* Header */}
+          <div className="lg:col-span-2 space-y-16">
+            {/* Header Section */}
             <motion.div
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.2 }}
+              transition={{ duration: 0.4 }}
+              className="space-y-6"
             >
-              <div className="flex items-center text-slate-500 text-xs sm:text-sm mb-2">
-                <MapPin className="h-3 w-3 sm:h-4 sm:w-4 mr-1" />
+              <div className="inline-flex items-center px-2 py-1 bg-blue-50 text-blue-700 rounded-full text-xs font-bold uppercase tracking-widest border border-blue-100 mb-2">
+                <MapPin className="h-3.5 w-3.5 mr-2" />
                 {packageData.destination}
               </div>
-              <h1 className="!text-2xl sm:!text-3xl lg:!text-4xl !font-bold !text-slate-900 mb-4">{packageData.title}</h1>
-              <div className="flex flex-wrap items-center gap-3 sm:gap-6 mb-6">
-                <div className="flex items-center space-x-1">
-                  <Star className="h-4 w-4 sm:h-5 sm:w-5 fill-yellow-400 text-yellow-400" />
-                  <span className="!font-semibold text-slate-900 text-sm sm:text-base">{packageData.rating || 4.8}</span>
-                  <span className="text-slate-500 text-xs sm:text-sm">({packageData.reviews?.length || 0} reviews)</span>
+
+              <div className="space-y-4">
+                <h1 className="!text-xl sm:!text-2xl font-black text-slate-900 leading-[1.1] tracking-tight">
+                  {packageData.title}
+                </h1>
+                <p className="!text-md !text-slate-500 font-medium max-w-2xl leading-relaxed">
+                  {packageData.shortDescription || packageData.description?.substring(0, 160) + '...'}
+                </p>
+              </div>
+
+              <div className="flex flex-wrap items-center gap-4 sm:gap-8 py-6 border-y border-slate-100">
+                <div className="flex items-center gap-3">
+                  <div className="h-10 w-10 rounded-lg bg-blue-50 flex items-center justify-center border border-blue-100">
+                    <Clock className="h-5 w-5 text-blue-600" />
+                  </div>
+                  <div>
+                    <p className="text-xs font-bold !text-slate-700 uppercase tracking-tighter">Duration</p>
+                    <p className="!text-slate-900 font-bold">{packageData.duration}</p>
+                  </div>
                 </div>
-                <div className="flex items-center text-slate-500 text-xs sm:text-sm">
-                  <Calendar className="h-4 w-4 sm:h-5 sm:w-5 mr-1" />
-                  {packageData.duration}
-                </div>
-                <div className="flex items-center text-slate-500 text-xs sm:text-sm">
-                  <Users className="h-4 w-4 sm:h-5 sm:w-5 mr-1" />
-                  2-12 People
+                <div className="flex items-center gap-3">
+                  <div className="h-10 w-10 rounded-lg bg-emerald-50 flex items-center justify-center border border-emerald-100">
+                    <Users className="h-5 w-5 text-emerald-600" />
+                  </div>
+                  <div>
+                    <p className="text-xs font-bold !text-slate-700 uppercase tracking-tighter">Group Size</p>
+                    <p className="!text-slate-900 font-bold">2-12 Explorer</p>
+                  </div>
                 </div>
               </div>
             </motion.div>
 
-            {/* Tabs */}
-            <Tabs defaultValue="overview" className="w-full">
-              <TabsList className="grid w-full grid-cols-2 sm:grid-cols-4 gap-1 sm:gap-0 h-auto">
-                <TabsTrigger value="overview" className="text-sm sm:text-sm px-2 sm:px-3 py-2 sm:py-1.5 whitespace-nowrap">Overview</TabsTrigger>
-                <TabsTrigger value="itinerary" className="text-sm sm:text-sm px-2 sm:px-3 py-2 sm:py-1.5 whitespace-nowrap">Itinerary</TabsTrigger>
-                <TabsTrigger value="included" className="text-sm sm:text-sm px-2 sm:px-3 py-2 sm:py-1.5 whitespace-nowrap">Included</TabsTrigger>
-                <TabsTrigger value="packages" className="text-sm sm:text-sm px-2 sm:px-3 py-2 sm:py-1.5 whitespace-nowrap">Other Packages</TabsTrigger>
-              </TabsList>
+            {/* Overview Section */}
+            <motion.section
+              initial={{ opacity: 0, y: 20 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true }}
+              className="scroll-mt-32"
+            >
+              <div className="flex items-center gap-3 mb-6">
+                <div className="p-2 bg-blue-100 rounded-lg">
+                  <Sparkles className="h-6 w-6 text-blue-600" />
+                </div>
+                <h2 className="!text-2xl !font-bold text-slate-900">Experience Highlights</h2>
+              </div>
 
-              <TabsContent value="overview" className="space-y-6 mt-6">
-                <motion.div
-                  initial={{ opacity: 0, y: 10 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ duration: 0.3 }}
-                >
-                  <h3 className="!text-2xl !font-bold text-slate-900 mb-4">Package Highlights</h3>
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    {packageData.highlights && packageData.highlights.length > 0 ? (
-                      packageData.highlights.map((highlight: string, index: number) => (
-                        <motion.div
-                          key={index}
-                          initial={{ opacity: 0, x: -20 }}
-                          animate={{ opacity: 1, x: 0 }}
-                          transition={{ duration: 0.3, delay: index * 0.1 }}
-                          className="flex items-center space-x-3 p-4 bg-blue-50 rounded-lg"
-                        >
-                          <Check className="h-5 w-5 text-blue-600 flex-shrink-0" />
-                          <span className="text-slate-700 text-base">{highlight}</span>
-                        </motion.div>
-                      ))
-                    ) : (
-                      <p className="text-slate-600">No highlights available</p>
-                    )}
-                  </div>
-                </motion.div>
+              <p className="!text-md font-medium !text-slate-500 leading-relaxed mb-8">
+                {packageData.description}
+              </p>
 
-                <motion.div
-                  initial={{ opacity: 0, y: 10 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ duration: 0.3, delay: 0.2 }}
-                >
-                  <h3 className="!text-2xl !font-bold text-slate-900 mb-4">About This Tour</h3>
-                  <p className="!text-slate-600 leading-relaxed">
-                    {packageData.description || packageData.shortDescription}
-                  </p>
-                </motion.div>
-              </TabsContent>
-
-              <TabsContent value="itinerary" className="mt-6">
-                <motion.div
-                  initial={{ opacity: 0, y: 10 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ duration: 0.3 }}
-                >
-                  <h3 className="!text-2xl !font-bold text-slate-900 mb-6">Detailed Itinerary</h3>
-                  {packageData?.itinerary && packageData.itinerary.length > 0 ? (
-                    <Accordion type="single" collapsible className="space-y-4">
-                      {packageData.itinerary.map((day: DayItinerary, index: number) => (
-                        <AccordionItem key={index} value={`day-${day.day}`} className="border border-slate-200 rounded-lg">
-                          <AccordionTrigger className="px-6 py-4 hover:bg-slate-50 cursor-pointer">
-                            <div className="flex items-center space-x-4">
-                              <div className="bg-blue-100 text-blue-800 px-3 py-1 rounded-full text-sm font-semibold">
-                                Day {day.day}
-                              </div>
-                              <h4 className="!text-lg !font-semibold !text-left text-slate-900">{day.title}</h4>
-                            </div>
-                          </AccordionTrigger>
-                          <AccordionContent className="px-6 pb-4">
-                            <ul className="space-y-3">
-                              {Array.isArray(day.activities) && day.activities.length > 0 ? (
-                                day.activities.map((activity, actIndex) => (
-                                  <li key={actIndex} className="flex items-start space-x-3">
-                                    <Clock className="h-4 w-4 text-blue-600 mt-1 flex-shrink-0" />
-                                    <span className="text-slate-600">{activity}</span>
-                                  </li>
-                                ))
-                              ) : (
-                                <li className="text-slate-600">No activities specified</li>
-                              )}
-                            </ul>
-                          </AccordionContent>
-                        </AccordionItem>
-                      ))}
-                    </Accordion>
-                  ) : (
-                    <div className="text-center py-8 text-slate-500">
-                      No itinerary available for this package
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                {packageData.highlights?.map((highlight, index) => (
+                  <div key={index} className="flex items-center space-x-3 p-4 bg-blue-50/50 border border-blue-100/50 rounded-lg group hover:bg-blue-50 transition-colors">
+                    <div className="h-8 w-8 rounded-full bg-blue-100 flex items-center justify-center group-hover:bg-blue-600 transition-colors">
+                      <Check className="h-5 w-5 text-blue-600 group-hover:text-white" />
                     </div>
-                  )}
-                </motion.div>
-              </TabsContent>
+                    <span className="!text-md text-slate-700 font-medium">{highlight}</span>
+                  </div>
+                ))}
+              </div>
+            </motion.section>
 
-              <TabsContent value="included" className="mt-6">
-                <motion.div
-                  initial={{ opacity: 0, y: 10 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ duration: 0.3 }}
-                  className="grid grid-cols-1 md:grid-cols-2 gap-8"
-                >
-                  <div>
-                    <h3 className="!text-2xl !font-bold text-slate-900 mb-6">What's Included</h3>
-                    <ul className="space-y-3">
-                      {inclusions.length > 0 ? (
-                        inclusions.map((item: string, index: number) => (
-                          <li key={index} className="flex items-start space-x-3">
-                            <Check className="h-5 w-5 text-blue-600 mt-0.5 flex-shrink-0" />
-                            <span className="text-slate-600 text-md">{item?.trim() || item}</span>
+            {/* Itinerary Section */}
+            <motion.section
+              initial={{ opacity: 0, y: 20 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true }}
+              className="scroll-mt-32"
+            >
+              <div className="flex items-center gap-3 mb-8">
+                <div className="p-2 bg-blue-100 rounded-lg">
+                  <Calendar className="h-6 w-6 text-blue-600" />
+                </div>
+                <h2 className="!text-2xl !font-bold text-slate-900">Detailed Itinerary</h2>
+              </div>
+
+              <div className="relative space-y-8 before:absolute before:inset-0 before:ml-5 before:-translate-x-px md:before:mx-auto md:before:translate-x-0 before:h-full before:w-0.5 before:bg-gradient-to-b before:from-transparent before:via-blue-200 before:to-transparent">
+                {packageData.itinerary?.map((day, index) => (
+                  <div key={index} className="relative flex items-center justify-between md:justify-normal md:odd:flex-row-reverse group">
+                    <div className="flex items-center justify-center w-10 h-10 rounded-full border border-white bg-blue-600 text-white shadow shrink-0 md:order-1 md:group-odd:-translate-x-1/2 md:group-even:translate-x-1/2">
+                      <span className="text-xs font-bold">{day.day}</span>
+                    </div>
+                    <div className="w-[calc(100%-4rem)] md:w-[calc(50%-2.5rem)] p-4 rounded-lg border border-slate-200 bg-white shadow-sm hover:shadow-md transition-shadow">
+                      <div className="font-bold text-slate-900 !text-md mb-2">{day.title}</div>
+                      <ul className="space-y-2">
+                        {day.activities?.map((activity, actIndex) => (
+                          <li key={actIndex} className="flex items-start gap-2 text-slate-600 !text-md">
+                            <div className="min-w-[12px] mt-1.5 h-1.5 w-1.5 rounded-full bg-blue-400"></div>
+                            <span>{activity}</span>
                           </li>
-                        ))
-                      ) : (
-                        <li className="text-slate-500 italic">No inclusions specified</li>
-                      )}
-                    </ul>
-                  </div>
-                  
-                  <div>
-                    <h3 className="!text-2xl !font-bold text-slate-900 mb-6">What to Expect</h3>
-                    <div className="space-y-4">
-                      <div className="flex items-center space-x-3 p-3 border rounded-lg">
-                        <Plane className="h-5 w-5 text-blue-600" />
-                        <span className="text-slate-600">Pick-up and drop-off included</span>
-                      </div>
-                      <div className="flex items-center space-x-3 p-3 border rounded-lg">
-                        <Utensils className="h-5 w-5 text-orange-600" />
-                        <span className="text-slate-600">Local cuisine experiences</span>
-                      </div>
-                      <div className="flex items-center space-x-3 p-3 border rounded-lg">
-                        <Camera className="h-5 w-5 text-purple-600" />
-                        <span className="text-slate-600">Professional photo opportunities</span>
-                      </div>
-                      <div className="flex items-center space-x-3 p-3 border rounded-lg">
-                        <Shield className="h-5 w-5 text-green-600" />
-                        <span className="text-slate-600">24/7 support & safety</span>
-                      </div>
+                        ))}
+                      </ul>
                     </div>
                   </div>
-                </motion.div>
+                ))}
+              </div>
+            </motion.section>
 
-                {/* Not Included Section */}
-                <motion.div
-                  initial={{ opacity: 0, y: 10 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ duration: 0.3, delay: 0.2 }}
-                  className="mt-12"
-                >
-                  <h3 className="!text-2xl !font-bold text-slate-900 mb-6">Not Included</h3>
-                  {exclusions.length > 0 ? (
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                      {exclusions.length <= 4 ? (
-                        // Single column if 4 or fewer items
-                        <ul className="space-y-3">
-                          {exclusions.map((item: string, index: number) => (
-                            <li key={index} className="flex items-start space-x-3">
-                              <div className="h-5 w-5 rounded-full border-2 border-red-500 flex items-center justify-center mt-0.5 flex-shrink-0">
-                                <div className="h-2 w-2 bg-red-500 rounded-full"></div>
-                              </div>
-                              <span className="text-slate-600 text-md">{item?.trim() || item}</span>
-                            </li>
-                          ))}
-                        </ul>
-                      ) : (
-                        // Two columns if more than 4 items
-                        <>
-                          <ul className="space-y-3">
-                            {exclusions.slice(0, Math.ceil(exclusions.length / 2)).map((item: string, index: number) => (
-                              <li key={index} className="flex items-start space-x-3">
-                                <div className="h-5 w-5 rounded-full border-2 border-red-500 flex items-center justify-center mt-0.5 flex-shrink-0">
-                                  <div className="h-2 w-2 bg-red-500 rounded-full"></div>
-                                </div>
-                                <span className="text-slate-600 text-md">{item?.trim() || item}</span>
-                              </li>
-                            ))}
-                          </ul>
-                          <ul className="space-y-3">
-                            {exclusions.slice(Math.ceil(exclusions.length / 2)).map((item: string, index: number) => (
-                              <li key={index + Math.ceil(exclusions.length / 2)} className="flex items-start space-x-3">
-                                <div className="h-5 w-5 rounded-full border-2 border-red-500 flex items-center justify-center mt-0.5 flex-shrink-0">
-                                  <div className="h-2 w-2 bg-red-500 rounded-full"></div>
-                                </div>
-                                <span className="text-slate-600 text-md">{item?.trim() || item}</span>
-                              </li>
-                            ))}
-                          </ul>
-                        </>
-                      )}
+            {/* Inclusions & Exclusions */}
+            <motion.section
+              initial={{ opacity: 0, y: 20 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true }}
+              className="scroll-mt-32"
+            >
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                <div className="bg-slate-50/50 rounded-lg p-6 border border-slate-100">
+                  <div className="flex items-center gap-3 mb-6">
+                    <div className="p-2 bg-green-100 rounded-lg">
+                      <Check className="h-5 w-5 text-green-600" />
                     </div>
-                  ) : (
-                    <p className="text-slate-500 italic">No exclusions specified</p>
-                  )}
-                </motion.div>
-              </TabsContent>
+                    <h3 className="!text-2xl !font-bold text-slate-900">What's Included</h3>
+                  </div>
+                  <ul className="space-y-4">
+                    {inclusions.map((item, index) => (
+                      <li key={index} className="flex items-start space-x-3 group">
+                        <div className="mt-1 h-5 w-5 rounded-full bg-green-100 flex items-center justify-center shrink-0 group-hover:bg-green-600 transition-colors">
+                          <Check className="h-3 w-3 text-green-600 group-hover:text-white" />
+                        </div>
+                        <span className="text-slate-600 !text-md">{item}</span>
+                      </li>
+                    ))}
+                  </ul>
+                </div>
 
-              <TabsContent value="packages" className="mt-6">
-                <motion.div
-                  initial={{ opacity: 0, y: 10 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ duration: 0.3 }}
-                >
-                  <h3 className="!text-2xl !font-bold text-slate-900 mb-6">Similar Packages</h3>
-                  {packagesLoading ? (
-                    <div className="text-center py-8 text-slate-500">
-                      <Loader2 className="w-8 h-8 animate-spin mx-auto mb-4 text-blue-600" />
-                      <p>Loading packages...</p>
+                <div className="bg-slate-50/50 rounded-lg p-6 border border-slate-100">
+                  <div className="flex items-center gap-3 mb-6">
+                    <div className="p-2 bg-red-100 rounded-lg">
+                      <AlertCircle className="h-5 w-5 text-red-600" />
                     </div>
-                  ) : otherPackages.length > 0 ? (
-                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                      {otherPackages.map((pkg: any, index: number) => (
-                        <motion.div
-                          key={index}
-                          initial={{ opacity: 0, scale: 0.9 }}
-                          animate={{ opacity: 1, scale: 1 }}
-                          transition={{ duration: 0.3, delay: index * 0.1 }}
-                        >
-                          <Card className="overflow-hidden hover:shadow-lg transition-shadow duration-300 group">
-                            <img 
-                              src={pkg.image || pkg.images?.[0] || "https://images.unsplash.com/photo-1488646953014-85cb44e25828?w=500&q=80"} 
-                              alt={pkg.title || pkg.name}
-                              className="w-full h-48 object-cover"
-                            />
-                            <CardContent className="p-4">
-                              <div className="flex items-center text-slate-500 text-sm mb-2">
-                                <MapPin className="h-4 w-4 mr-1" />
-                                {pkg.destination || pkg.location}
-                              </div>
-                              <h4 className="font-semibold text-slate-900 mb-2 line-clamp-2 group-hover:text-blue-600 transition-colors">{pkg.title || pkg.name}</h4>
-                              <div className="flex items-center space-x-1 mb-3">
-                                <Star className="h-4 w-4 fill-yellow-400 text-yellow-400" />
-                                <span className="text-sm font-medium">{pkg.rating || 4.8}</span>
-                                <span className="text-sm text-slate-500">({pkg.reviews || 0})</span>
-                              </div>
-                              <div className="flex items-center justify-between">
-                                <div>
-                                  <span className="text-lg font-bold text-slate-900">{formatPrice(pkg.price)}</span>
-                                  {pkg.originalPrice > pkg.price && (
-                                    <span className="text-sm text-slate-500 line-through ml-2">{formatPrice(pkg.originalPrice)}</span>
-                                  )}
-                                </div>
-                                <Button 
-                                  onClick={() => router.push(`/itinerary/${pkg.slug || pkg._id}`)}
-                                  size="sm" 
-                                  className="bg-gradient-to-r from-blue-500 to-indigo-600 hover:from-blue-600 hover:to-indigo-700 text-white"
-                                >
-                                  View Details
-                                </Button>
-                              </div>
-                            </CardContent>
-                          </Card>
-                        </motion.div>
-                      ))}
-                    </div>
-                  ) : (
-                    <p className="text-slate-600 text-center py-8">No similar packages found.</p>
-                  )}
-                </motion.div>
-              </TabsContent>
-            </Tabs>
+                    <h3 className="!text-2xl !font-bold text-slate-900">What's Excluded</h3>
+                  </div>
+                  <ul className="space-y-4">
+                    {exclusions.map((item, index) => (
+                      <li key={index} className="flex items-start space-x-3 group">
+                        <div className="mt-1 h-5 w-5 rounded-full bg-red-100 flex items-center justify-center shrink-0 group-hover:bg-red-600 transition-colors">
+                          <div className="h-1 w-2.5 bg-red-600 group-hover:bg-white rounded-full"></div>
+                        </div>
+                        <span className="text-slate-600 !text-md">{item}</span>
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              </div>
 
+              <div className="mt-8 grid grid-cols-2 lg:grid-cols-4 gap-4">
+                {[
+                  { icon: Plane, label: "All Transfers", color: "text-blue-600", bg: "bg-blue-50" },
+                  { icon: Utensils, label: "Local Meals", color: "text-orange-600", bg: "bg-orange-50" },
+                  { icon: Camera, label: "Photo Stops", color: "text-purple-600", bg: "bg-purple-50" },
+                  { icon: Shield, label: "24/7 Support", color: "text-emerald-600", bg: "bg-emerald-50" }
+                ].map((amenity, idx) => (
+                  <div key={idx} className={`${amenity.bg} p-4 rounded-lg flex flex-col items-center gap-2 border border-black/5`}>
+                    <amenity.icon className={`h-6 w-6 ${amenity.color}`} />
+                    <span className="!text-md font-semibold text-slate-700">{amenity.label}</span>
+                  </div>
+                ))}
+              </div>
+            </motion.section>
+
+            {/* Other Packages Section */}
+            <motion.section
+              initial={{ opacity: 0, y: 20 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true }}
+              className="scroll-mt-32"
+            >
+              <div className="flex items-center gap-3 mb-8">
+                <div className="p-2 bg-blue-100 rounded-lg">
+                  <MapPin className="h-6 w-6 text-blue-600" />
+                </div>
+                <h2 className="!text-2xl !font-bold text-slate-900">Explore Other Packages</h2>
+              </div>
+
+              {packagesLoading ? (
+                <div className="flex justify-center py-10"><Loader2 className="animate-spin text-blue-600" /></div>
+              ) : (
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+                  {otherPackages.map((pkg, index) => (
+                    <Link key={index} href={`/itinerary/${pkg.slug || pkg._id}`} className="block h-full">
+                      <Card className="group cursor-pointer bg-white rounded-lg overflow-hidden border border-slate-200 transition-all duration-300 relative shadow-sm hover:shadow-xl hover:border-blue-100 h-full">
+                        <div className="relative h-64 w-full overflow-hidden">
+                          <img src={pkg.images?.[0] || pkg.image} alt={pkg.title} className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110" />
+                          <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-transparent to-transparent opacity-80" />
+                          <div className="absolute bottom-4 left-4 right-4 text-white">
+                            <div className="flex items-center gap-1.5 mb-1.5 opacity-90 text-[10px] font-bold uppercase tracking-wider">
+                              <MapPin className="h-3.5 w-3.5 text-white" /> {pkg.destination}
+                            </div>
+                            <h4 className="!text-md font-bold leading-snug line-clamp-2">{pkg.title}</h4>
+                          </div>
+                        </div>
+                        <div className="p-5">
+                          <div className="flex items-center justify-between mb-4">
+                            <div className="flex flex-col">
+                              <span className="text-[10px] !text-slate-700 font-bold uppercase tracking-wide">Duration</span>
+                              <span className="!text-sm font-bold text-slate-800 flex items-center gap-1">
+                                <div className="w-1.5 h-1.5 rounded-full bg-blue-600"></div> {pkg.duration}
+                              </span>
+                            </div>
+                            <div className="flex flex-col items-end">
+                              <span className="text-[10px] text-slate-700 font-bold uppercase tracking-wide">Starts from</span>
+                              <span className="!text-lg font-black text-blue-600">{formatPrice(pkg.price)}</span>
+                            </div>
+                          </div>
+                          <div className="pt-4 border-t border-dashed border-slate-100 flex items-center justify-between">
+                            <span className="text-[10px] text-slate-700 font-bold">Per Person</span>
+                            <div className="!text-sm font-bold text-slate-900 group-hover:text-blue-600 transition-all flex items-center gap-2">
+                              View Details <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-1" />
+                            </div>
+                          </div>
+                        </div>
+                      </Card>
+                    </Link>
+                  ))}
+                </div>
+              )}
+            </motion.section>
           </div>
 
-          {/* Booking Sidebar */}
+          {/* Sidebar */}
           <div className="lg:col-span-1">
-            <motion.div 
-              initial={{ opacity: 0, x: 20 }}
-              animate={{ opacity: 1, x: 0 }}
-              transition={{ duration: 0.4 }}
-              className="sticky top-20 sm:top-24 lg:top-28 z-10 self-start"
-            >
-              <Card className="p-6 shadow-lg">
-                <CardContent className="p-0">
-                  <div className="text-center mb-6">
-                    <div className="flex items-center justify-center space-x-2 mb-2">
-                      <span className="text-3xl font-bold text-slate-900">{formatPrice(discountedPrice)}</span>
-                      {packageData.originalPrice && packageData.originalPrice > packageData.price && (
-                        <span className="text-lg text-slate-500 line-through">{formatPrice(packageData.originalPrice)}</span>
-                      )}
+            <motion.div initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} className="sticky top-28">
+              <Card className="p-0 border-none shadow-[0_32px_64px_-16px_rgba(37,99,235,0.2)] rounded-lg overflow-hidden bg-white">
+                <div className="bg-blue-600 p-8 text-white text-center relative overflow-hidden">
+                  <div className="absolute top-0 right-0 -translate-y-1/2 translate-x-1/2 w-32 h-32 bg-white/10 rounded-full blur-2xl"></div>
+                  <p className="!text-blue-100 !font-bold uppercase tracking-widest text-xs mb-2">Exclusive Offer</p>
+                  <div className="text-4xl font-black mb-1">{formatPrice(packageData.price)}</div>
+                  <p className="!text-blue-100/80 !text-sm !font-medium">Starting from per person</p>
+                  {discount > 0 && <div className="mt-4 bg-white/20 backdrop-blur-md rounded-full py-1 px-4 inline-block text-xs font-bold">Special {discount}% Off</div>}
+                </div>
+                <CardContent className="p-8 space-y-6">
+                  <div className="space-y-4">
+                    <div className="flex items-center gap-3">
+                      <div className="w-10 h-10 rounded-lg bg-blue-50 flex items-center justify-center"><Clock className="w-5 h-5 text-blue-600" /></div>
+                      <div>
+                        <p className="!text-xs !font-bold !text-slate-700 uppercase tracking-tighter">Duration</p>
+                        <p className="!text-slate-900 !font-bold">{packageData.duration}</p>
+                      </div>
                     </div>
-                    <p className="!text-sm !text-slate-500">per person</p>
-                    {discount > 0 && (
-                      <Badge variant="destructive" className="bg-red-500 text-white mt-2">
-                        Save {discount}%
-                      </Badge>
-                    )}
+                    <div className="flex items-center gap-3">
+                      <div className="w-10 h-10 rounded-lg bg-blue-50 flex items-center justify-center"><Users className="w-5 h-5 text-blue-600" /></div>
+                      <div>
+                        <p className="!text-xs !font-bold !text-slate-700 uppercase tracking-tighter">Group Size</p>
+                        <p className="!text-slate-900 !font-bold">2-12 Explorer</p>
+                      </div>
+                    </div>
                   </div>
-
-                  <div className="space-y-4 mb-6">
-                    <Button 
-                      onClick={() => setIsLeadFormOpen(true)}
-                      className="w-full bg-gradient-to-r from-blue-500 to-indigo-600 hover:from-blue-600 hover:to-indigo-700 text-white py-6 text-lg"
-                    >
-                      Book This Package
-                      <ArrowRight className="ml-2 h-5 w-5" />
-                    </Button>
-                  </div>
-
-                  <div className="border-t pt-6">
-                    <h4 className="font-semibold text-slate-900 mb-4">Why Book With Us?</h4>
-                    <ul className="space-y-3 text-sm">
-                      <li className="flex items-center space-x-2">
-                        <Shield className="h-4 w-4 text-blue-600" />
-                        <span>100% Safe & Secure</span>
-                      </li>
-                      <li className="flex items-center space-x-2">
-                        <Award className="h-4 w-4 text-blue-600" />
-                        <span>Award-Winning Service</span>
-                      </li>
-                      <li className="flex items-center space-x-2">
-                        <Check className="h-4 w-4 text-blue-600" />
-                        <span>24/7 Customer Support</span>
-                      </li>
-                    </ul>
+                  <Button onClick={() => setIsLeadFormOpen(true)} className="w-full h-16 bg-blue-600 hover:bg-blue-700 text-white rounded-lg !text-lg !font-black transition-all hover:-translate-y-1">
+                    Book Your Trip <ArrowRight className="ml-2 h-6 w-6" />
+                  </Button>
+                  <div className="space-y-4 pt-4 border-t border-slate-100">
+                    {[{ icon: Shield, text: "Secure Booking Guarantee", sub: "100% encrypted" }, { icon: Award, text: "Best Price Guaranteed", sub: "Verified quotes" }].map((item, idx) => (
+                      <div key={idx} className="flex gap-3">
+                        <item.icon className="w-5 h-5 text-blue-600 shrink-0" />
+                        <div>
+                          <p className="!text-sm !font-bold !text-slate-900 leading-tight">{item.text}</p>
+                          <p className="!text-xs !text-slate-500">{item.sub}</p>
+                        </div>
+                      </div>
+                    ))}
                   </div>
                 </CardContent>
               </Card>
@@ -606,91 +405,34 @@ const ItineraryPageClient = ({ packageData, slug }: ItineraryPageClientProps) =>
         </div>
 
         {/* Terms and Conditions Section */}
-        <section className="mt-8 sm:mt-16 pt-8 sm:pt-16 border-t border-slate-200">
-          <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
-            <h2 className="!text-2xl sm:!text-3xl !font-bold text-slate-900 mb-4 sm:mb-8">Terms and Conditions</h2>
-            
-            <Accordion type="single" collapsible className="space-y-2 sm:space-y-4">
-              <AccordionItem value="booking" className="border border-slate-200 rounded-lg">
-                <AccordionTrigger className="px-3 sm:px-6 py-3 sm:py-4 hover:bg-slate-50">
-                  <h3 className="!text-base sm:!text-xl !font-semibold text-slate-900 text-left">Booking and Payment</h3>
-                </AccordionTrigger>
-                <AccordionContent className="px-3 sm:px-6 pb-3 sm:pb-4">
-                  <ul className="space-y-1.5 sm:space-y-2 text-sm sm:text-base text-slate-600">
-                    <li>• A deposit of 30% is required to confirm your booking</li>
-                    <li>• Full payment must be completed 30 days before departure</li>
-                    <li>• All prices are in INR and include taxes unless otherwise stated</li>
-                    <li>• Payment can be made via credit card, bank transfer, or UPI</li>
-                  </ul>
-                </AccordionContent>
-              </AccordionItem>
-
-              <AccordionItem value="cancellation" className="border border-slate-200 rounded-lg">
-                <AccordionTrigger className="px-3 sm:px-6 py-3 sm:py-4 hover:bg-slate-50">
-                  <h3 className="!text-base sm:!text-xl !font-semibold text-slate-900 text-left">Cancellation Policy</h3>
-                </AccordionTrigger>
-                <AccordionContent className="px-3 sm:px-6 pb-3 sm:pb-4">
-                  <ul className="space-y-1.5 sm:space-y-2 text-sm sm:text-base text-slate-600">
-                    <li>• Cancellation 60+ days before departure: Full refund minus ₹100 processing fee</li>
-                    <li>• Cancellation 30-59 days before departure: 75% refund</li>
-                    <li>• Cancellation 15-29 days before departure: 50% refund</li>
-                    <li>• Cancellation less than 15 days: No refund</li>
-                  </ul>
-                </AccordionContent>
-              </AccordionItem>
-
-              <AccordionItem value="documents" className="border border-slate-200 rounded-lg">
-                <AccordionTrigger className="px-3 sm:px-6 py-3 sm:py-4 hover:bg-slate-50">
-                  <h3 className="!text-base sm:!text-xl !font-semibold text-slate-900 text-left">Travel Documents</h3>
-                </AccordionTrigger>
-                <AccordionContent className="px-3 sm:px-6 pb-3 sm:pb-4">
-                  <ul className="space-y-1.5 sm:space-y-2 text-sm sm:text-base text-slate-600">
-                    <li>• Valid passport required (minimum 6 months validity)</li>
-                    <li>• Visa requirements vary by destination - check with embassy</li>
-                    <li>• Travel insurance is strongly recommended</li>
-                    <li>• All travelers must provide accurate personal information</li>
-                  </ul>
-                </AccordionContent>
-              </AccordionItem>
-
-              <AccordionItem value="health" className="border border-slate-200 rounded-lg">
-                <AccordionTrigger className="px-3 sm:px-6 py-3 sm:py-4 hover:bg-slate-50">
-                  <h3 className="!text-base sm:!text-xl !font-semibold text-slate-900 text-left">Health and Safety</h3>
-                </AccordionTrigger>
-                <AccordionContent className="px-3 sm:px-6 pb-3 sm:pb-4">
-                  <ul className="space-y-1.5 sm:space-y-2 text-sm sm:text-base text-slate-600">
-                    <li>• Participants must be in good physical condition for adventure activities</li>
-                    <li>• Medical conditions must be disclosed before booking</li>
-                    <li>• Follow all safety instructions provided by guides</li>
-                    <li>• Company is not liable for personal injury due to negligence</li>
-                  </ul>
-                </AccordionContent>
-              </AccordionItem>
-
-              <AccordionItem value="force-majeure" className="border border-slate-200 rounded-lg">
-                <AccordionTrigger className="px-3 sm:px-6 py-3 sm:py-4 hover:bg-slate-50">
-                  <h3 className="!text-base sm:!text-xl !font-semibold text-slate-900 text-left">Force Majeure</h3>
-                </AccordionTrigger>
-                <AccordionContent className="px-3 sm:px-6 pb-3 sm:pb-4">
-                  <ul className="space-y-1.5 sm:space-y-2 text-sm sm:text-base text-slate-600">
-                    <li>• Tours may be modified or cancelled due to weather, natural disasters, or political unrest</li>
-                    <li>• Alternative arrangements will be provided when possible</li>
-                    <li>• Refunds will be processed according to circumstances</li>
-                    <li>• Travel insurance is recommended to cover unforeseen events</li>
-                  </ul>
-                </AccordionContent>
-              </AccordionItem>
-
+        <section className="mt-16 pt-16 border-t border-slate-200">
+          <div className="max-w-6xl mx-auto px-4 md:px-8">
+            <h2 className="!text-2xl !font-bold text-slate-900 mb-8">Terms and Conditions</h2>
+            <Accordion type="single" collapsible className="space-y-4">
+              {[
+                { title: "Booking and Payment", content: ["A deposit of 30% is required to confirm your booking", "Full payment must be completed 30 days before departure", "All prices are in INR and include taxes", "Payment via credit card, bank transfer, or UPI"] },
+                { title: "Cancellation Policy", content: ["Cancellation 60+ days: Full refund minus fee", "Cancellation 30-59 days: 75% refund", "Cancellation 15-29 days: 50% refund", "Less than 15 days: No refund"] },
+                { title: "Travel Documents", content: ["Valid passport required (min 6 months)", "Visa requirements vary by destination", "Travel insurance strongly recommended", "Accurate personal details required"] }
+              ].map((item, idx) => (
+                <AccordionItem key={idx} value={`item-${idx}`} className="border border-slate-200 rounded-lg">
+                  <AccordionTrigger className="!px-4 !py-3 hover:bg-slate-50">
+                    <h3 className="!text-lg !font-bold text-slate-900 text-left">{item.title}</h3>
+                  </AccordionTrigger>
+                  <AccordionContent className="!px-4 !pb-4">
+                    <ul className="space-y-2 !text-sm text-slate-600">
+                      {item.content.map((point, pIdx) => <li key={pIdx}>• {point}</li>)}
+                    </ul>
+                  </AccordionContent>
+                </AccordionItem>
+              ))}
               <AccordionItem value="important" className="border border-slate-200 rounded-lg">
-                <AccordionTrigger className="px-3 sm:px-6 py-3 sm:py-4 hover:bg-slate-50">
-                  <h3 className="!text-base sm:!text-xl !font-semibold text-slate-900 text-left">Important Notes</h3>
+                <AccordionTrigger className="!px-4 !py-3 hover:bg-slate-50">
+                  <h3 className="!text-lg !font-bold text-slate-900 text-left">Important Notes</h3>
                 </AccordionTrigger>
-                <AccordionContent className="px-3 sm:px-6 pb-3 sm:pb-4">
-                  <div className="bg-blue-50 p-4 sm:p-6 rounded-lg">
-                    <p className="text-sm sm:text-base text-slate-600 leading-relaxed">
-                      By booking this package, you agree to these terms and conditions. We reserve the right to modify 
-                      itineraries due to local conditions while maintaining the quality of your experience. For any 
-                      questions or clarifications, please contact our customer service team.
+                <AccordionContent className="!px-4 !pb-4">
+                  <div className="bg-blue-50 p-6 rounded-lg">
+                    <p className="!text-sm text-slate-600 leading-relaxed">
+                      By booking this package, you agree to these terms. We reserve the right to modify itineraries due to local conditions while maintaining quality.
                     </p>
                   </div>
                 </AccordionContent>
@@ -700,13 +442,7 @@ const ItineraryPageClient = ({ packageData, slug }: ItineraryPageClientProps) =>
         </section>
       </div>
 
-      {/* Lead Capture Form */}
-      <LeadCaptureForm
-        isOpen={isLeadFormOpen}
-        onClose={() => setIsLeadFormOpen(false)}
-        packageTitle={packageData?.title}
-        packagePrice={packageData ? formatPrice(discountedPrice) : undefined}
-      />
+      <LeadCaptureForm isOpen={isLeadFormOpen} onClose={() => setIsLeadFormOpen(false)} packageTitle={packageData?.title} packagePrice={formatPrice(packageData.price)} />
     </motion.div>
   );
 };

@@ -1,6 +1,8 @@
 const Blog = require("../models/Blog");
+const mongoose = require("mongoose");
 const { processSingleImage } = require("../utils/imageUtils");
 const { uploadToCloudinary, extractPublicId } = require("../utils/cloudinaryUpload");
+const { slugify } = require("../utils/slugify");
 
 // Helper function to transform image paths to full URLs
 const transformBlogImageUrl = (blog) => {
@@ -57,7 +59,23 @@ const getAllBlogs = async (req, res) => {
 // Get single blog
 const getBlog = async (req, res) => {
   try {
-    const blog = await Blog.findById(req.params.id);
+    const { id } = req.params;
+    let blog;
+
+    if (mongoose.Types.ObjectId.isValid(id)) {
+      blog = await Blog.findById(id);
+    } else {
+      blog = await Blog.findOne({ slug: id });
+    }
+
+    if (!blog) {
+      // If not found by slug, try to find by title as fallback (for legacy)
+      const allBlogs = await Blog.find({ isPublished: true });
+      blog = allBlogs.find(b => {
+        const generatedSlug = b.title.toLowerCase().replace(/[^a-z0-9\s-]/g, "").replace(/\s+/g, "-").replace(/-+/g, "-").trim();
+        return generatedSlug === id;
+      });
+    }
 
     if (!blog) {
       return res.status(404).json({ message: "Blog not found." });
@@ -83,25 +101,25 @@ const createBlog = async (req, res) => {
     console.log('📝 Creating blog...');
     console.log('📝 Request body:', JSON.stringify(req.body, null, 2));
     console.log('📝 Request files:', req.files ? Object.keys(req.files) : 'No files');
-    
+
     // Validate required fields
     const requiredFields = ['title', 'content', 'excerpt', 'author', 'category', 'image'];
     const missingFields = requiredFields.filter(field => !req.body[field] || (typeof req.body[field] === 'string' && !req.body[field].trim()));
-    
+
     if (missingFields.length > 0) {
       console.error('❌ Missing required fields:', missingFields);
-      return res.status(400).json({ 
-        message: `Missing required fields: ${missingFields.join(', ')}` 
+      return res.status(400).json({
+        message: `Missing required fields: ${missingFields.join(', ')}`
       });
     }
-    
+
     // Handle image upload
     if (req.files && req.files.image) {
       const file = req.files.image;
-      
+
       // Handle both formidable v2 (file.path) and v3 (file.filepath)
       const filePath = file.filepath || file.path;
-      
+
       if (!filePath) {
         console.error('❌ No file path found in file object:', file);
         return res.status(400).json({ message: 'Invalid file upload' });
@@ -111,7 +129,7 @@ const createBlog = async (req, res) => {
       console.log('🔥 File path:', filePath);
       console.log('🔥 File object keys:', Object.keys(file));
       console.log('🔥 Calling uploadToCloudinary with: filePath, "blogs", null, null');
-      
+
       // Upload to Cloudinary using the utility function - pass 'blogs' as content type
       // IMPORTANT: First parameter is contentType, must be exactly 'blogs'
       const result = await uploadToCloudinary(filePath, 'blogs', null, null);
@@ -133,6 +151,11 @@ const createBlog = async (req, res) => {
     }
 
     console.log('💾 Saving blog to database...');
+    // Generate slug from title
+    if (!req.body.slug) {
+      req.body.slug = slugify(req.body.title);
+    }
+
     const blog = new Blog(req.body);
     await blog.save();
     console.log('✅ Blog saved successfully with ID:', blog._id);
@@ -151,17 +174,17 @@ const createBlog = async (req, res) => {
       name: error.name,
       stack: error.stack,
     });
-    
+
     // Handle validation errors
     if (error.name === 'ValidationError') {
       const validationErrors = Object.values(error.errors).map(err => err.message).join(', ');
-      return res.status(400).json({ 
+      return res.status(400).json({
         message: `Validation error: ${validationErrors}`,
-        errors: error.errors 
+        errors: error.errors
       });
     }
-    
-    res.status(500).json({ 
+
+    res.status(500).json({
       message: error.message || "Server error during blog creation.",
       error: process.env.NODE_ENV === 'development' ? error.stack : undefined
     });
@@ -173,7 +196,7 @@ const updateBlog = async (req, res) => {
   try {
     // Get existing blog to extract old image public_id
     const existingBlog = await Blog.findById(req.params.id);
-    
+
     if (!existingBlog) {
       return res.status(404).json({ message: "Blog not found." });
     }
@@ -181,10 +204,10 @@ const updateBlog = async (req, res) => {
     // Handle image upload if provided
     if (req.files && req.files.image) {
       const file = req.files.image;
-      
+
       // Handle both formidable v2 (file.path) and v3 (file.filepath)
       const filePath = file.filepath || file.path;
-      
+
       if (!filePath) {
         console.error('❌ No file path found in file object:', file);
         return res.status(400).json({ message: 'Invalid file upload' });
@@ -193,14 +216,14 @@ const updateBlog = async (req, res) => {
       console.log('🔥 New blog image detected for update');
       console.log('🔥 Uploading to Cloudinary folder: paradise-yatra/blogs');
       console.log('🔥 File path:', filePath);
-      
+
       // Extract old image public_id for deletion
       const oldPublicId = existingBlog.image ? extractPublicId(existingBlog.image) : null;
       console.log('🗑️ Old blog image public_id for deletion:', oldPublicId);
-      
+
       // Upload new image to paradise-yatra/blogs and delete old one
       const result = await uploadToCloudinary(filePath, 'blogs', null, oldPublicId);
-      
+
       console.log('✅ Upload result:', result);
       console.log('✅ New blog image URL:', result.url);
       console.log('✅ New public ID:', result.public_id);
@@ -216,6 +239,11 @@ const updateBlog = async (req, res) => {
         console.error('❌ Got:', req.body.image);
         return res.status(500).json({ message: 'Blog image uploaded to incorrect Cloudinary folder' });
       }
+    }
+
+    // Generate slug from title if title is updated and slug is not provided
+    if (req.body.title && !req.body.slug) {
+      req.body.slug = slugify(req.body.title);
     }
 
     const blog = await Blog.findByIdAndUpdate(req.params.id, req.body, {

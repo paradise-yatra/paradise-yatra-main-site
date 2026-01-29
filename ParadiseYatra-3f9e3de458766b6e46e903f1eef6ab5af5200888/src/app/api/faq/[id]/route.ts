@@ -9,7 +9,7 @@ export async function GET(
     const { id } = params;
     
     // Forward the request to the backend
-    const API_BASE_URL = process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:5000';
+    const API_BASE_URL = process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:5001';
     const response = await fetch(`${API_BASE_URL}/api/faq/${id}`, {
       method: 'GET',
       headers: {
@@ -47,7 +47,7 @@ export async function PUT(
     const authHeader = request.headers.get('authorization');
     
     // Forward the request to the backend
-    const API_BASE_URL = process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:5000';
+    const API_BASE_URL = process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:5001';
     const response = await fetch(`${API_BASE_URL}/api/faq/${id}`, {
       method: 'PUT',
       headers: {
@@ -86,7 +86,7 @@ export async function DELETE(
     const authHeader = request.headers.get('authorization');
     
     // Forward the request to the backend
-    const API_BASE_URL = process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:5000';
+    const API_BASE_URL = process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:5001';
     const response = await fetch(`${API_BASE_URL}/api/faq/${id}`, {
       method: 'DELETE',
       headers: {
@@ -124,7 +124,7 @@ export async function DELETE(
 //     const { id } = params;
     
 //     // Forward the request to the backend
-//     const API_BASE_URL = process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:5000';
+//     const API_BASE_URL = process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:5001';
 //     const response = await fetch(`${API_BASE_URL}/api/faq/${id}`, {
 //       method: 'GET',
 //       headers: {
@@ -161,7 +161,7 @@ export async function DELETE(
 //     const authHeader = request.headers.get('authorization');
 
 //     // Forward the request to the backend
-//     const API_BASE_URL = process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:5000';
+//     const API_BASE_URL = process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:5001';
 //     const response = await fetch(`${API_BASE_URL}/api/faq/${id}`, {
 //       method: 'PUT',
 //       headers: {
@@ -199,7 +199,7 @@ export async function DELETE(
 //     const authHeader = request.headers.get('authorization');
 
 //     // Forward the request to the backend
-//     const API_BASE_URL = process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:5000';
+//     const API_BASE_URL = process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:5001';
 //     const response = await fetch(`${API_BASE_URL}/api/faq/${id}`, {
 //       method: 'DELETE',
 //       headers: {

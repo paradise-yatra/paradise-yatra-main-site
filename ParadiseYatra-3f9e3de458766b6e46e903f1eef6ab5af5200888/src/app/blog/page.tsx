@@ -14,6 +14,7 @@ import Loading from "@/components/ui/loading";
 
 interface BlogPost {
   _id: string;
+  slug?: string;
   title: string;
   content: string;
   excerpt: string;
@@ -37,6 +38,10 @@ const generateSlug = (title: string): string => {
     .replace(/\s+/g, "-")
     .replace(/-+/g, "-")
     .trim();
+};
+
+const getPostSlug = (post: BlogPost): string => {
+  return post.slug || generateSlug(post.title);
 };
 
 const getImageUrl = (image: string | undefined): string => {
@@ -68,13 +73,39 @@ const BlogPage = () => {
   };
 
   useEffect(() => {
+    let isMounted = true;
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 8000); // Reduced to 8 seconds
+
     const fetchBlogs = async () => {
       try {
+        if (!isMounted) return;
         setLoading(true);
-        const response = await fetch("/api/blogs?published=true&limit=100");
+
+        let response;
+        try {
+          response = await fetch("/api/blogs?published=true&limit=24", {
+            signal: controller.signal,
+            cache: 'force-cache', // Use cache for better performance
+          });
+          clearTimeout(timeoutId);
+        } catch (fetchError) {
+          clearTimeout(timeoutId);
+          if (fetchError instanceof Error && fetchError.name === 'AbortError') {
+            if (isMounted) {
+              console.warn('Blog fetch timed out');
+              setError("Request timeout - please refresh the page");
+              setBlogPosts([]);
+              setLoading(false);
+            }
+            return;
+          }
+          throw fetchError;
+        }
+
         if (!response.ok) throw new Error("Failed to fetch blogs");
         const data = await response.json();
-        
+
         let blogsArray: BlogPost[] = [];
         if (Array.isArray(data)) {
           blogsArray = data;
@@ -93,17 +124,28 @@ const BlogPage = () => {
           return dateB - dateA;
         });
 
-        setBlogPosts(blogsArray);
-        setError(null);
+        if (isMounted) {
+          setBlogPosts(blogsArray);
+          setError(null);
+          setLoading(false);
+        }
       } catch (err) {
-        console.error(err);
-        setError("Failed to load blogs");
-        setBlogPosts([]);
-      } finally {
-        setLoading(false);
+        if (isMounted) {
+          console.error(err);
+          setError("Failed to load blogs");
+          setBlogPosts([]);
+          setLoading(false);
+        }
       }
     };
+
     fetchBlogs();
+
+    return () => {
+      isMounted = false;
+      clearTimeout(timeoutId);
+      controller.abort();
+    };
   }, []);
 
   // Extract unique categories with counts
@@ -140,7 +182,7 @@ const BlogPage = () => {
   if (loading) return <Loading size="lg" className="min-h-[400px]" />;
 
   return (
-    <div className="min-h-screen bg-white pt-16">
+    <div className="min-h-screen bg-white">
       <Header />
 
       {/* Main Content */}
@@ -155,10 +197,10 @@ const BlogPage = () => {
               Read Our Blog
             </span>
             <h1 className="text-4xl md:text-5xl font-extrabold mt-4 mb-4 tracking-tight text-slate-900">
-             Travel Blog & Guides
+              Travel Blog & Guides
             </h1>
             <p className="!text-lg !text-slate-500 max-w-2xl">
-            Discover expert tips, local insights, and guides to make your journey unforgettable.
+              Discover expert tips, local insights, and guides to make your journey unforgettable.
             </p>
           </motion.div>
         </header>
@@ -171,7 +213,10 @@ const BlogPage = () => {
             transition={{ delay: 0.2 }}
             className="relative group cursor-pointer overflow-hidden rounded-2xl mb-16 min-h-[500px] md:aspect-[21/9] md:min-h-0"
           >
-            <Link href={`/blog/${generateSlug(featuredPost.title)}`}>
+            <Link
+              href={`/blog/${getPostSlug(featuredPost)}`}
+              prefetch={true}
+            >
               <div className="relative w-full h-full min-h-[500px] md:min-h-[450px]">
                 <Image
                   src={getSafeImageUrl(featuredPost)}
@@ -182,7 +227,7 @@ const BlogPage = () => {
                   sizes="(max-width: 768px) 100vw, (max-width: 1200px) 80vw, 1280px"
                   onError={(e) => handleImageError(featuredPost._id, e)}
                 />
-                
+
                 {/* Glass Effect Overlay - Positioned at bottom */}
                 <div className="absolute left-0 right-0 bottom-0 p-2 md:p-4 lg:p-6 z-10">
                   <div className="bg-white/10 backdrop-blur-md border border-white/20 p-4 sm:p-5 md:p-6 lg:p-8 rounded-xl sm:rounded-2xl md:rounded-3xl text-white relative">
@@ -190,7 +235,7 @@ const BlogPage = () => {
                     <div className="absolute top-3 right-3 sm:top-4 sm:right-4 md:top-6 md:right-6 lg:top-8 lg:right-8">
                       <ArrowUpRight className="w-5 h-5 sm:w-6 sm:h-6 md:w-7 md:h-7 lg:w-8 lg:h-8 font-light opacity-80" />
                     </div>
-                    
+
                     <div className="max-w-3xl pr-8 sm:pr-10 md:pr-12 lg:pr-16">
                       <h2 className="!text-lg sm:!text-xl md:!text-2xl lg:!text-3xl !font-bold mb-2 md:mb-3 leading-tight">
                         {featuredPost.title}
@@ -198,7 +243,7 @@ const BlogPage = () => {
                       <p className="!text-xs sm:!text-sm !text-white/80 mb-4 md:mb-6 hidden md:block line-clamp-2">
                         {featuredPost.excerpt}
                       </p>
-                      
+
                       {/* Author and Date */}
                       <div className="flex flex-col sm:flex-row sm:items-center gap-4 md:gap-6">
                         <div className="flex items-center gap-2 sm:gap-3">
@@ -221,7 +266,7 @@ const BlogPage = () => {
                             </div>
                           </div>
                         </div>
-                        
+
                         {/* Category Tags */}
                         <div className="flex flex-wrap gap-1.5 sm:gap-2 md:ml-auto">
                           {featuredPost.category && (
@@ -245,11 +290,10 @@ const BlogPage = () => {
           <div className="flex items-center gap-8 overflow-x-auto w-full md:w-auto scrollbar-hide">
             <button
               onClick={() => setSelectedCategory("All")}
-              className={`text-sm font-semibold pb-4 whitespace-nowrap transition-colors ${
-                selectedCategory === "All"
-                  ? "text-blue-600 border-b-2 border-blue-600"
-                  : "text-slate-400 hover:text-slate-600"
-              }`}
+              className={`text-sm font-semibold pb-4 whitespace-nowrap transition-colors ${selectedCategory === "All"
+                ? "text-blue-600 border-b-2 border-blue-600"
+                : "text-slate-400 hover:text-slate-600"
+                }`}
             >
               All
             </button>
@@ -257,11 +301,10 @@ const BlogPage = () => {
               <button
                 key={category}
                 onClick={() => setSelectedCategory(category)}
-                className={`text-sm font-medium pb-4 whitespace-nowrap transition-colors ${
-                  selectedCategory === category
-                    ? "text-blue-600 border-b-2 border-blue-600"
-                    : "text-slate-400 hover:text-slate-600"
-                }`}
+                className={`text-sm font-medium pb-4 whitespace-nowrap transition-colors ${selectedCategory === category
+                  ? "text-blue-600 border-b-2 border-blue-600"
+                  : "text-slate-400 hover:text-slate-600"
+                  }`}
               >
                 {category}
                 {count > 0 && (
@@ -299,7 +342,10 @@ const BlogPage = () => {
                     transition={{ delay: index * 0.05, duration: 0.4 }}
                     className="group cursor-pointer"
                   >
-                    <Link href={`/blog/${generateSlug(post.title)}`}>
+                    <Link
+                      href={`/blog/${getPostSlug(post)}`}
+                      prefetch={true}
+                    >
                       {/* Image */}
                       <div className="overflow-hidden rounded-2xl mb-5 aspect-[4/3] relative">
                         <Image
@@ -308,6 +354,7 @@ const BlogPage = () => {
                           fill
                           className="object-cover group-hover:scale-105 transition-transform duration-500"
                           sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
+                          loading={index < 6 ? "eager" : "lazy"} // Load first 6 images eagerly
                           onError={(e) => handleImageError(post._id, e)}
                         />
                       </div>

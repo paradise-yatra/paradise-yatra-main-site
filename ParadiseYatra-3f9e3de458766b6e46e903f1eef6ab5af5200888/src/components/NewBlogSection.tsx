@@ -99,12 +99,37 @@ const NewBlogSection = () => {
   }, [isMobile, currentIndex, allBlogPosts.length]);
 
   useEffect(() => {
+    let isMounted = true;
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 15000); // 15 second timeout
+
     const fetchBlogs = async () => {
       try {
+        if (!isMounted) return;
         setLoading(true);
-        // Fetch latest 10 published blogs, show 3 at a time with pagination
-        // Use published=true to get latest blogs regardless of featured status
-        const response = await fetch("/api/blogs?published=true&limit=10");
+        
+        let response;
+        try {
+          // Fetch latest 10 published blogs, show 3 at a time with pagination
+          // Use published=true to get latest blogs regardless of featured status
+          response = await fetch("/api/blogs?published=true&limit=10", {
+            signal: controller.signal,
+            cache: 'default', // Use cache to reduce requests
+          });
+          clearTimeout(timeoutId);
+        } catch (fetchError) {
+          clearTimeout(timeoutId);
+          if (fetchError instanceof Error && fetchError.name === 'AbortError') {
+            if (isMounted) {
+              console.warn('Blog fetch timed out');
+              setError("Request timeout - please refresh the page");
+              setAllBlogPosts([]);
+              setLoading(false);
+            }
+            return;
+          }
+          throw fetchError;
+        }
 
         if (!response.ok) {
           throw new Error("Failed to fetch blogs");
@@ -119,10 +144,12 @@ const NewBlogSection = () => {
         } else if (data.blogs && Array.isArray(data.blogs)) {
           blogsArray = data.blogs;
         } else {
-          console.error("Unexpected data structure:", data);
-          setAllBlogPosts([]);
-          setError("Invalid data format received");
-          setLoading(false);
+          if (isMounted) {
+            console.error("Unexpected data structure:", data);
+            setAllBlogPosts([]);
+            setError("Invalid data format received");
+            setLoading(false);
+          }
           return;
         }
 
@@ -144,18 +171,28 @@ const NewBlogSection = () => {
           return dateB - dateA; // Latest first (descending order)
         });
 
-        setAllBlogPosts(blogsArray);
-        setError(null);
+        if (isMounted) {
+          setAllBlogPosts(blogsArray);
+          setError(null);
+          setLoading(false);
+        }
       } catch (err) {
-        console.error("Error fetching blogs:", err);
-        setError("Failed to load blogs");
-        setAllBlogPosts([]);
-      } finally {
-        setLoading(false);
+        if (isMounted) {
+          console.error("Error fetching blogs:", err);
+          setError("Failed to load blogs");
+          setAllBlogPosts([]);
+          setLoading(false);
+        }
       }
     };
 
     fetchBlogs();
+
+    return () => {
+      isMounted = false;
+      clearTimeout(timeoutId);
+      controller.abort();
+    };
   }, []);
 
   const visibleBlogPosts = allBlogPosts.slice(currentIndex, currentIndex + 3);
