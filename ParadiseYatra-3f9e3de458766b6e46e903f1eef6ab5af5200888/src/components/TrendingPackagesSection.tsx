@@ -320,7 +320,7 @@ const TrendingPackagesSection = () => {
                     >
                         <div
                             ref={carouselRef}
-                            className="flex gap-6 overflow-x-auto scroll-smooth pb-8 pt-4 scrollbar-hide px-2 touch-pan-x"
+                            className="flex gap-6 overflow-x-auto pb-8 pt-4 scrollbar-hide px-2 touch-auto"
                             style={{
                                 scrollbarWidth: "none",
                                 msOverflowStyle: "none",

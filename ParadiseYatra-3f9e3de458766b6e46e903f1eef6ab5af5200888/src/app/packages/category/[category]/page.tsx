@@ -1,25 +1,23 @@
 "use client";
 
 import { Suspense, useState, useEffect, useRef } from 'react';
-import { createPortal } from 'react-dom';
-import { LazyHeader } from '@/components/lazy-components';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Star, MapPin, Clock, Heart, Filter, SortAsc, SortDesc, Grid, List, ChevronDown, Check, ChevronLeft, ChevronRight, X, ArrowRight } from 'lucide-react';
+import { MapPin, Clock, Filter, ChevronDown, Check, ChevronLeft, ChevronRight, X, ArrowRight, Star } from 'lucide-react';
 import Loading from '@/components/ui/loading';
 import Link from 'next/link';
 import Image from 'next/image';
 import { getImageUrl } from '@/lib/utils';
-import { packagesAPI } from '@/lib/api';
-import { Package } from '@/types/package';
-import { Destination } from '@/types/destination';
 import { urlToCategory } from '@/lib/categoryUtils';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { Label } from '@/components/ui/label';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import Header from '@/components/Header';
+import { Package } from '@/types/package';
+import { Destination } from '@/types/destination';
+import { packagesAPI } from '@/lib/api';
 
 // Helper to format category title (capitalize each word)
 const formatCategoryTitle = (value: string) => {
@@ -141,109 +139,6 @@ const Pagination = ({ currentPage, totalPages, onPageChange, className = "" }: P
     );
 };
 
-// Custom Modern Dropdown Component
-interface DropdownOption {
-    value: string;
-    label: string;
-}
-
-interface ModernDropdownProps {
-    options: DropdownOption[];
-    value: string;
-    onChange: (value: string) => void;
-    placeholder?: string;
-    className?: string;
-}
-
-const ModernDropdown = ({ options, value, onChange, placeholder, className = "" }: ModernDropdownProps) => {
-    const [isOpen, setIsOpen] = useState(false);
-    const [buttonRect, setButtonRect] = useState<DOMRect | null>(null);
-    const buttonRef = useRef<HTMLButtonElement>(null);
-    const selectedOption = options.find(option => option.value === value);
-
-    const handleToggle = () => {
-        if (!isOpen && buttonRef.current) {
-            setButtonRect(buttonRef.current.getBoundingClientRect());
-        }
-        setIsOpen(!isOpen);
-    };
-
-    const handleClose = () => {
-        setIsOpen(false);
-        setButtonRect(null);
-    };
-
-    return (
-        <>
-            <div className={`relative ${className}`}>
-                <button
-                    ref={buttonRef}
-                    type="button"
-                    onClick={handleToggle}
-                    className="w-full px-4 py-2.5 bg-white border border-gray-300 rounded-xl text-sm text-blue-500 hover:bg-blue-50 hover:cursor-pointer focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200 shadow-sm hover:shadow-md cursor-pointer flex items-center justify-between"
-                >
-                    <span className="truncate">
-                        {selectedOption ? selectedOption.label : placeholder}
-                    </span>
-                    <ChevronDown
-                        className={`w-4 h-4 text-gray-500 transition-transform duration-200 ${isOpen ? 'rotate-180' : ''
-                            }`}
-                    />
-                </button>
-            </div>
-
-            {isOpen && buttonRect &&
-                createPortal(
-                    <AnimatePresence>
-                        <>
-                            {/* Backdrop */}
-                            <motion.div
-                                initial={{ opacity: 0 }}
-                                animate={{ opacity: 1 }}
-                                exit={{ opacity: 0 }}
-                                className="fixed inset-0 z-[99998]"
-                                onClick={handleClose}
-                            />
-
-                            {/* Dropdown Menu - Fixed positioning */}
-                            <motion.div
-                                initial={{ opacity: 0, y: -10, scale: 0.95 }}
-                                animate={{ opacity: 1, y: 0, scale: 1 }}
-                                exit={{ opacity: 0, y: -10, scale: 0.95 }}
-                                transition={{ duration: 0.15 }}
-                                className="fixed bg-white border border-gray-200 rounded-xl shadow-2xl z-[999999] overflow-hidden"
-                                style={{
-                                    top: buttonRect.bottom + 4,
-                                    left: buttonRect.left,
-                                    width: buttonRect.width,
-                                    minWidth: '180px'
-                                }}
-                            >
-                                {options.map((option) => (
-                                    <button
-                                        key={option.value}
-                                        type="button"
-                                        onClick={() => {
-                                            onChange(option.value);
-                                            handleClose();
-                                        }}
-                                        className="w-full px-4 py-3 text-left text-sm text-blue-500 hover:bg-blue-50 hover:cursor-pointer hover:text-blue-700 transition-colors duration-150 flex items-center justify-between group"
-                                    >
-                                        <span className="truncate">{option.label}</span>
-                                        {value === option.value && (
-                                            <Check className="w-4 h-4 text-blue-600 hover:cursor-pointer" />
-                                        )}
-                                    </button>
-                                ))}
-                            </motion.div>
-                        </>
-                    </AnimatePresence>,
-                    document.body
-                )
-            }
-        </>
-    );
-};
 
 // Loading skeleton component
 const PackagesLoadingSkeleton = () => (
@@ -741,7 +636,7 @@ export default function CategoryPage({ params }: CategoryPageProps) {
     if (loading) {
         return (
             <div className="min-h-screen bg-gray-50">
-                <LazyHeader />
+                <Header />
                 <div className="pt-20">
                     <PackagesLoadingSkeleton />
                 </div>
@@ -752,7 +647,7 @@ export default function CategoryPage({ params }: CategoryPageProps) {
     if (error || packages.length === 0) {
         return (
             <div className="min-h-screen bg-gray-50">
-                <LazyHeader />
+                <Header />
                 <div className="pt-20">
                     <div className="container mx-auto px-4 py-8">
                         <div className="text-center py-16 bg-white rounded-2xl shadow-md">
@@ -777,16 +672,17 @@ export default function CategoryPage({ params }: CategoryPageProps) {
 
     return (
         <div className="min-h-screen bg-slate-50">
-            <LazyHeader />
+            <Header />
             <div>
                 <Suspense fallback={<PackagesLoadingSkeleton />}>
                     {/* Header Section */}
-                    <section className="bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50 py-12 px-4 sm:px-6 lg:px-8">
+                    <section className="bg-blue-50/50 py-12 px-4 sm:px-6 lg:px-8">
                         <div className="max-w-7xl mx-auto text-center">
-                            <h1 className="text-4xl sm:text-5xl lg:text-6xl font-bold text-slate-900 mb-4">
-                                {formatCategoryTitle(category)} Packages
+                            <h1 className="!text-4xl !font-black text-slate-900 mb-4">
+
+                                <span className="text-blue-600"> {formatCategoryTitle(category)}</span> Packages
                             </h1>
-                            <p className="text-md sm:text-xl !text-slate-600 max-w-3xl mx-auto">
+                            <p className="!text-md !font-semibold !text-slate-600 max-w-3xl mx-auto">
                                 Discover amazing destinations around the world with our handpicked collection of premium travel packages
                             </p>
                         </div>
@@ -813,48 +709,15 @@ export default function CategoryPage({ params }: CategoryPageProps) {
                                     <Card className="sticky top-24 flex flex-col h-[calc(100vh-8rem)] border border-slate-200 shadow-sm">
                                         <div className="p-6 pb-4 flex-shrink-0">
                                             <div className="flex items-center gap-2">
-                                                <div className="w-1 h-6 bg-blue-600 rounded"></div>
-                                                <h2 className="!text-xl font-bold text-slate-900">Filters</h2>
+                                                <h2 className="!text-lg !font-bold text-slate-900">Filters</h2>
                                             </div>
                                         </div>
                                         <div className="flex-1 overflow-y-auto px-6">
-                                            {/* Rating Filter */}
-                                            <div className="mb-6">
-                                                <div className="flex items-center gap-2 mb-3">
-                                                    <div className="w-1 h-4 bg-blue-600 rounded"></div>
-                                                    <Label className="text-sm font-semibold text-slate-700">RATING</Label>
-                                                </div>
-                                                <RadioGroup value={ratingFilter} onValueChange={(value) => setRatingFilter(value)}>
-                                                    <div className="space-y-2">
-                                                        <div className="flex items-center space-x-2">
-                                                            <RadioGroupItem value="all" id="rating-any" />
-                                                            <Label htmlFor="rating-any" className="text-sm text-slate-600 cursor-pointer">Any</Label>
-                                                        </div>
-                                                        <div className="flex items-center space-x-2">
-                                                            <RadioGroupItem value="4.5" id="rating-4.5" />
-                                                            <Label htmlFor="rating-4.5" className="text-sm text-slate-600 cursor-pointer">4.5+</Label>
-                                                        </div>
-                                                        <div className="flex items-center space-x-2">
-                                                            <RadioGroupItem value="4.0" id="rating-4.0" />
-                                                            <Label htmlFor="rating-4.0" className="text-sm text-slate-600 cursor-pointer">4.0+</Label>
-                                                        </div>
-                                                        <div className="flex items-center space-x-2">
-                                                            <RadioGroupItem value="3.5" id="rating-3.5" />
-                                                            <Label htmlFor="rating-3.5" className="text-sm text-slate-600 cursor-pointer">3.5+</Label>
-                                                        </div>
-                                                        <div className="flex items-center space-x-2">
-                                                            <RadioGroupItem value="3.0" id="rating-3.0" />
-                                                            <Label htmlFor="rating-3.0" className="text-sm text-slate-600 cursor-pointer">3.0+</Label>
-                                                        </div>
-                                                    </div>
-                                                </RadioGroup>
-                                            </div>
-
                                             {/* Duration Filter */}
                                             <div className="mb-6">
                                                 <div className="flex items-center gap-2 mb-3">
                                                     <div className="w-1 h-4 bg-blue-600 rounded"></div>
-                                                    <Label className="text-sm font-semibold text-slate-700">DURATION</Label>
+                                                    <Label className="!text-sm !font-bold text-slate-700">DURATION</Label>
                                                 </div>
                                                 <RadioGroup value={durationFilter} onValueChange={(value) => setDurationFilter(value)}>
                                                     <div className="space-y-2">
@@ -890,7 +753,7 @@ export default function CategoryPage({ params }: CategoryPageProps) {
                                             <div className="mb-6">
                                                 <div className="flex items-center gap-2 mb-3">
                                                     <div className="w-1 h-4 bg-blue-600 rounded"></div>
-                                                    <Label className="text-sm font-semibold text-slate-700">PRICE</Label>
+                                                    <Label className="text-sm font-bold text-slate-700">PRICE</Label>
                                                 </div>
                                                 <RadioGroup value={priceFilter} onValueChange={(value) => setPriceFilter(value)}>
                                                     <div className="space-y-2">
@@ -899,60 +762,37 @@ export default function CategoryPage({ params }: CategoryPageProps) {
                                                             <Label htmlFor="price-any" className="text-sm text-slate-600 cursor-pointer">Any</Label>
                                                         </div>
                                                         <div className="flex items-center space-x-2">
-                                                            <RadioGroupItem value="0-1000" id="price-0-1000" />
-                                                            <Label htmlFor="price-0-1000" className="text-sm text-slate-600 cursor-pointer">₹ 0 - ₹ 1,000</Label>
+                                                            <RadioGroupItem value="0-10000" id="price-0-10000" />
+                                                            <Label htmlFor="price-0-10000" className="text-sm text-slate-600 cursor-pointer">₹ 0 - ₹ 10,000</Label>
                                                         </div>
                                                         <div className="flex items-center space-x-2">
-                                                            <RadioGroupItem value="1000-2500" id="price-1000-2500" />
-                                                            <Label htmlFor="price-1000-2500" className="text-sm text-slate-600 cursor-pointer">₹ 1,000 - ₹ 2,500</Label>
+                                                            <RadioGroupItem value="10000-20000" id="price-10000-20000" />
+                                                            <Label htmlFor="price-10000-20000" className="text-sm text-slate-600 cursor-pointer">₹ 10,000 - ₹ 20,000</Label>
                                                         </div>
                                                         <div className="flex items-center space-x-2">
-                                                            <RadioGroupItem value="2500-5000" id="price-2500-5000" />
-                                                            <Label htmlFor="price-2500-5000" className="text-sm text-slate-600 cursor-pointer">₹ 2,500 - ₹ 5,000</Label>
+                                                            <RadioGroupItem value="20000-35000" id="price-20000-35000" />
+                                                            <Label htmlFor="price-20000-35000" className="text-sm text-slate-600 cursor-pointer">₹ 20,000 - ₹ 35,000</Label>
                                                         </div>
                                                         <div className="flex items-center space-x-2">
-                                                            <RadioGroupItem value="5000+" id="price-5000+" />
-                                                            <Label htmlFor="price-5000+" className="text-sm text-slate-600 cursor-pointer">₹ 5,000+</Label>
+                                                            <RadioGroupItem value="35000-50000" id="price-35000-50000" />
+                                                            <Label htmlFor="price-35000-50000" className="text-sm text-slate-600 cursor-pointer">₹ 35,000 - ₹ 50,000</Label>
+                                                        </div>
+                                                        <div className="flex items-center space-x-2">
+                                                            <RadioGroupItem value="50000+" id="price-50000+" />
+                                                            <Label htmlFor="price-50000+" className="text-sm text-slate-600 cursor-pointer">₹ 50,000+</Label>
                                                         </div>
                                                     </div>
                                                 </RadioGroup>
                                             </div>
-
-                                            {/* Destination Filter */}
-                                            {destinations.length > 0 && (
-                                                <div className="mb-6">
-                                                    <div className="flex items-center gap-2 mb-3">
-                                                        <div className="w-1 h-4 bg-blue-600 rounded"></div>
-                                                        <Label className="text-sm font-semibold text-slate-700">DESTINATION</Label>
-                                                    </div>
-                                                    <RadioGroup value={destinationFilter} onValueChange={(value) => setDestinationFilter(value)}>
-                                                        <div className="space-y-2">
-                                                            <div className="flex items-center space-x-2">
-                                                                <RadioGroupItem value="all" id="destination-any" />
-                                                                <Label htmlFor="destination-any" className="text-sm text-slate-600 cursor-pointer">Any</Label>
-                                                            </div>
-                                                            {destinations.map((dest) => (
-                                                                <div key={dest} className="flex items-center space-x-2">
-                                                                    <RadioGroupItem value={dest} id={`destination-${dest}`} />
-                                                                    <Label htmlFor={`destination-${dest}`} className="text-sm text-slate-600 cursor-pointer">{dest}</Label>
-                                                                </div>
-                                                            ))}
-                                                        </div>
-                                                    </RadioGroup>
-                                                </div>
-                                            )}
                                         </div>
                                         <div className="p-6 pt-4 flex-shrink-0 border-t border-slate-200">
                                             <Button
                                                 variant="outline"
                                                 className="w-full"
                                                 onClick={() => {
-                                                    setSortBy('rating-desc');
-                                                    setPriceRange([0, 100000]);
                                                     setDurationFilter('all');
-                                                    setDestinationFilter('all');
-                                                    setRatingFilter('all');
                                                     setPriceFilter('all');
+                                                    setSortBy('rating-desc');
                                                 }}
                                             >
                                                 Clear All Filters
@@ -965,30 +805,23 @@ export default function CategoryPage({ params }: CategoryPageProps) {
                                 <div className="flex-1">
                                     {/* Sort and Count Header */}
                                     <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6">
-                                        <p className="text-sm !text-slate-600">
+                                        <p className="!text-sm font-bold !text-slate-600">
                                             Showing {startIndex + 1}-{Math.min(endIndex, filteredPackages.length)} of {filteredPackages.length} results
                                         </p>
                                         <div className="flex items-center gap-3">
-                                            <span className="text-sm font-medium text-slate-600">Sort by:</span>
+                                            <span className="text-sm font-bold text-slate-700">Sort By:</span>
                                             <Select
-                                                value={sortBy === 'rating-desc' ? 'recommended' : sortBy === 'price-asc' ? 'price-low' : sortBy === 'price-desc' ? 'price-high' : sortBy === 'duration-asc' ? 'duration' : 'recommended'}
-                                                onValueChange={(value) => {
-                                                    if (value === 'recommended') setSortBy('rating-desc');
-                                                    else if (value === 'price-low') setSortBy('price-asc');
-                                                    else if (value === 'price-high') setSortBy('price-desc');
-                                                    else if (value === 'rating') setSortBy('rating-desc');
-                                                    else if (value === 'duration') setSortBy('duration-asc');
-                                                }}
+                                                value={sortBy === 'rating-desc' ? 'Rating-desc' : sortBy === 'price-asc' ? 'Price-asc' : sortBy === 'price-desc' ? 'Price-desc' : sortBy === 'duration-asc' ? 'Duration-asc' : 'Rating-desc'}
+                                                onValueChange={(value) => setSortBy(value as SortOption)}
                                             >
-                                                <SelectTrigger className="w-[180px]">
-                                                    <SelectValue placeholder="Sort by" />
+                                                <SelectTrigger className="w-[200px] bg-white border-slate-200 font-medium text-slate-700">
+                                                    <SelectValue placeholder="Sort By" />
                                                 </SelectTrigger>
                                                 <SelectContent>
-                                                    <SelectItem value="recommended">Recommended</SelectItem>
-                                                    <SelectItem value="price-low">Price: Low to High</SelectItem>
-                                                    <SelectItem value="price-high">Price: High to Low</SelectItem>
-                                                    <SelectItem value="rating">Highest Rated</SelectItem>
-                                                    <SelectItem value="duration">Duration</SelectItem>
+                                                    <SelectItem value="rating-desc">Recommended</SelectItem>
+                                                    <SelectItem value="price-asc">Price: Low to High</SelectItem>
+                                                    <SelectItem value="price-desc">Price: High to Low</SelectItem>
+                                                    <SelectItem value="duration-asc">Duration</SelectItem>
                                                 </SelectContent>
                                             </Select>
                                         </div>
@@ -998,78 +831,72 @@ export default function CategoryPage({ params }: CategoryPageProps) {
                                     {filteredPackages.length > 0 ? (
                                         <div className="space-y-6">
                                             {paginatedPackages.map((pkg, index) => (
-                                                <Card key={pkg._id || index} className="overflow-hidden hover:shadow-xl transition-all duration-300">
-                                                    <Link href={category.toLowerCase() === 'popular destinations' ? `/destinations/${pkg.slug || pkg._id}` : `/itinerary/${pkg.slug || pkg._id}`} className="block">
-                                                        <div className="flex flex-col md:flex-row">
-                                                            {/* Image */}
-                                                            <div className="relative w-full md:w-80 h-48 md:h-auto overflow-hidden flex-shrink-0" style={{ minHeight: '200px' }}>
-                                                                {getImageUrl(pkg.images?.[0]) ? (
-                                                                    <Image
-                                                                        src={getImageUrl(pkg.images?.[0])!}
-                                                                        alt={pkg.title || `Travel package to ${pkg.destination || 'destination'}`}
-                                                                        width={320}
-                                                                        height={200}
-                                                                        className="w-full h-full object-cover hover:scale-105 transition-transform duration-300"
-                                                                    />
-                                                                ) : (
-                                                                    <div className="w-full h-full bg-gray-200 flex items-center justify-center">
-                                                                        <div className="text-center text-gray-500">
-                                                                            <div className="w-12 h-12 mx-auto mb-2 bg-gray-300 rounded-full flex items-center justify-center">
-                                                                                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
-                                                                                </svg>
-                                                                            </div>
-                                                                            <span className="text-sm">Image unavailable</span>
+                                                <div key={pkg._id || index} className="group relative bg-white rounded-lg border border-slate-100 shadow-sm hover:shadow-xl hover:shadow-blue-900/5 transition-all duration-300 overflow-hidden">
+                                                    <Link href={category.toLowerCase() === 'popular destinations' ? `/destinations/${pkg.slug || pkg._id}` : `/itinerary/${pkg.slug || pkg._id}`} className="flex flex-col md:flex-row h-full">
+                                                        {/* Image Section */}
+                                                        <div className="relative w-full md:w-72 lg:w-80 h-64 md:h-auto flex-shrink-0 overflow-hidden">
+                                                            {getImageUrl(pkg.images?.[0]) ? (
+                                                                <Image
+                                                                    src={getImageUrl(pkg.images?.[0])!}
+                                                                    alt={pkg.title || `Travel package to ${pkg.destination || 'destination'}`}
+                                                                    fill
+                                                                    className="object-cover group-hover:scale-110 transition-transform duration-700"
+                                                                />
+                                                            ) : (
+                                                                <div className="w-full h-full bg-slate-100 flex items-center justify-center">
+                                                                    <div className="text-slate-400 flex flex-col items-center">
+                                                                        <div className="w-12 h-12 bg-slate-200 rounded-full flex items-center justify-center mb-2">
+                                                                            <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                                                                            </svg>
                                                                         </div>
+                                                                        <span className="text-sm font-medium">Image unavailable</span>
                                                                     </div>
-                                                                )}
-
-                                                                <div className="absolute top-3 left-3 flex items-center gap-1 bg-black/50 backdrop-blur-sm px-2 py-1 rounded-full">
-                                                                    <Star className="h-4 w-4 fill-yellow-400 text-yellow-400" />
-                                                                    <span className="text-white text-sm font-semibold">{pkg.rating || 4.5}</span>
                                                                 </div>
+                                                            )}
+
+                                                            <div className="absolute top-4 left-4 bg-white/95 backdrop-blur-sm px-3 py-1.5 rounded-full text-xs font-bold text-blue-600 flex items-center gap-1.5 shadow-sm border border-blue-50/50">
+                                                                <MapPin className="w-3.5 h-3.5" />
+                                                                {pkg.destination}
                                                             </div>
+                                                        </div>
 
-                                                            {/* Content */}
-                                                            <div className="flex-1 p-4 md:p-6">
-                                                                <div className="flex items-start gap-3 mb-2">
-                                                                    <div className="flex items-center gap-1 text-slate-600 text-sm">
-                                                                        <MapPin className="h-4 w-4" />
-                                                                        <span>{pkg.destination}</span>
-                                                                    </div>
+                                                        {/* Content Section */}
+                                                        <div className="flex-1 p-6 md:py-8 md:px-8 flex flex-col justify-between">
+                                                            <div>
+                                                                <div className="flex items-center flex-wrap gap-2 text-xs font-semibold text-slate-500 mb-4">
+                                                                    <span className="flex items-center gap-1.5 bg-slate-50 px-2.5 py-1 rounded-md text-slate-600 border border-slate-100">
+                                                                        <Clock className="w-3.5 h-3.5 text-blue-500" />
+                                                                        {formatDurationDisplay(pkg.duration || '')}
+                                                                    </span>
                                                                 </div>
 
-                                                                <h3 className="!text-xl md:text-2xl !font-bold text-slate-900 mb-2">
+                                                                <h3 className="!text-xl !font-bold text-slate-900 mb-1 group-hover:text-blue-600 transition-colors leading-tight">
                                                                     {pkg.title}
                                                                 </h3>
 
-                                                                <div className="flex items-center gap-2 mb-2">
-                                                                    <div className="flex items-center gap-1 text-slate-600">
-                                                                        <Clock className="h-4 w-4" />
-                                                                        <span className="text-sm">
-                                                                            {formatDurationDisplay(pkg.duration || '')}
-                                                                        </span>
-                                                                    </div>
-                                                                </div>
-
-                                                                <p className="!text-slate-600 text-sm mb-3 line-clamp-2">
+                                                                <p className="!text-slate-600 !font-semibold !text-sm leading-relaxed line-clamp-2 mb-6">
                                                                     {pkg.shortDescription || pkg.description || `Discover ${pkg.destination}, a beautiful destination with amazing experiences and unforgettable memories.`}
                                                                 </p>
+                                                            </div>
 
-                                                                <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
-                                                                    <div>
-                                                                        <p className="text-xs !text-slate-500 mb-1">STARTING FROM</p>
-                                                                        <p className="!text-xl md:text-2xl !font-bold !text-blue-600">₹ {(pkg.price || 0).toLocaleString()}</p>
+                                                            <div className="flex items-end justify-between pt-2 border-t border-dashed border-slate-200">
+                                                                <div className="flex flex-col">
+                                                                    <span className="text-xs font-bold !text-slate-600 uppercase tracking-wider mb-1">Starting From</span>
+                                                                    <span className="text-2xl font-black text-transparent bg-clip-text bg-gradient-to-r from-blue-600 to-indigo-600">
+                                                                        ₹ {(pkg.price || 0).toLocaleString()}
+                                                                    </span>
+                                                                </div>
+                                                                <div className="flex items-center gap-2 text-sm font-bold text-slate-900 group-hover:translate-x-1 transition-transform">
+                                                                    View Itinerary
+                                                                    <div className="bg-gradient-to-r from-blue-600 to-indigo-600 text-white p-2 rounded-full shadow-md shadow-blue-500/20">
+                                                                        <ArrowRight className="w-4 h-4" />
                                                                     </div>
-                                                                    <Button className="bg-gradient-to-r from-blue-500 to-indigo-600 hover:from-blue-600 hover:to-indigo-700 text-white text-sm">
-                                                                        View Details
-                                                                        <ArrowRight className="ml-2 h-4 w-4" />
-                                                                    </Button>
                                                                 </div>
                                                             </div>
                                                         </div>
                                                     </Link>
-                                                </Card>
+                                                </div>
                                             ))}
 
                                             {/* Pagination */}
@@ -1085,22 +912,19 @@ export default function CategoryPage({ params }: CategoryPageProps) {
                                             )}
                                         </div>
                                     ) : (
-                                        <div className="text-center py-16 bg-white rounded-2xl shadow-md">
+                                        <div className="text-center py-16 bg-white rounded-lg shadow-md">
                                             <div className="text-gray-300 text-6xl mb-4">🏔️</div>
-                                            <h3 className="text-xl font-semibold text-gray-600 mb-3">No packages found</h3>
-                                            <p className="text-gray-500 max-w-md mx-auto mb-6">
+                                            <h3 className="!text-xl !font-semibold text-gray-600 mb-3">No packages found</h3>
+                                            <p className="!text-gray-500 !font-semibold max-w-md mx-auto mb-6">
                                                 We couldn't find any packages matching your filters.
                                             </p>
                                             <button
                                                 onClick={() => {
-                                                    setSortBy('rating-desc');
-                                                    setPriceRange([0, 100000]);
                                                     setDurationFilter('all');
-                                                    setDestinationFilter('all');
-                                                    setRatingFilter('all');
                                                     setPriceFilter('all');
+                                                    setSortBy('rating-desc');
                                                 }}
-                                                className="bg-blue-600 text-white px-6 py-2 rounded-lg hover:bg-blue-700 transition-colors"
+                                                className="bg-blue-600 text-sm text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors"
                                             >
                                                 Clear Filters
                                             </button>
@@ -1395,43 +1219,11 @@ export default function CategoryPage({ params }: CategoryPageProps) {
                             </DialogHeader>
 
                             <div className="flex-1 overflow-y-auto px-6 pt-4">
-                                {/* Rating Filter */}
-                                <div className="mb-6">
-                                    <div className="flex items-center gap-2 mb-3">
-                                        <div className="w-1 h-4 bg-blue-600 rounded"></div>
-                                        <Label className="text-sm font-semibold text-slate-700">RATING</Label>
-                                    </div>
-                                    <RadioGroup value={ratingFilter} onValueChange={(value) => setRatingFilter(value)}>
-                                        <div className="space-y-2">
-                                            <div className="flex items-center space-x-2">
-                                                <RadioGroupItem value="all" id="mobile-rating-any" />
-                                                <Label htmlFor="mobile-rating-any" className="text-sm text-slate-600 cursor-pointer">Any</Label>
-                                            </div>
-                                            <div className="flex items-center space-x-2">
-                                                <RadioGroupItem value="4.5" id="mobile-rating-4.5" />
-                                                <Label htmlFor="mobile-rating-4.5" className="text-sm text-slate-600 cursor-pointer">4.5+</Label>
-                                            </div>
-                                            <div className="flex items-center space-x-2">
-                                                <RadioGroupItem value="4.0" id="mobile-rating-4.0" />
-                                                <Label htmlFor="mobile-rating-4.0" className="text-sm text-slate-600 cursor-pointer">4.0+</Label>
-                                            </div>
-                                            <div className="flex items-center space-x-2">
-                                                <RadioGroupItem value="3.5" id="mobile-rating-3.5" />
-                                                <Label htmlFor="mobile-rating-3.5" className="text-sm text-slate-600 cursor-pointer">3.5+</Label>
-                                            </div>
-                                            <div className="flex items-center space-x-2">
-                                                <RadioGroupItem value="3.0" id="mobile-rating-3.0" />
-                                                <Label htmlFor="mobile-rating-3.0" className="text-sm text-slate-600 cursor-pointer">3.0+</Label>
-                                            </div>
-                                        </div>
-                                    </RadioGroup>
-                                </div>
-
                                 {/* Duration Filter */}
                                 <div className="mb-6">
                                     <div className="flex items-center gap-2 mb-3">
                                         <div className="w-1 h-4 bg-blue-600 rounded"></div>
-                                        <Label className="text-sm font-semibold text-slate-700">DURATION</Label>
+                                        <Label className="!text-sm !font-bold text-slate-700">DURATION</Label>
                                     </div>
                                     <RadioGroup value={durationFilter} onValueChange={(value) => setDurationFilter(value)}>
                                         <div className="space-y-2">
@@ -1467,7 +1259,7 @@ export default function CategoryPage({ params }: CategoryPageProps) {
                                 <div className="mb-6">
                                     <div className="flex items-center gap-2 mb-3">
                                         <div className="w-1 h-4 bg-blue-600 rounded"></div>
-                                        <Label className="text-sm font-semibold text-slate-700">PRICE</Label>
+                                        <Label className="text-sm font-bold text-slate-700">PRICE</Label>
                                     </div>
                                     <RadioGroup value={priceFilter} onValueChange={(value) => setPriceFilter(value)}>
                                         <div className="space-y-2">
@@ -1476,48 +1268,28 @@ export default function CategoryPage({ params }: CategoryPageProps) {
                                                 <Label htmlFor="mobile-price-any" className="text-sm text-slate-600 cursor-pointer">Any</Label>
                                             </div>
                                             <div className="flex items-center space-x-2">
-                                                <RadioGroupItem value="0-1000" id="mobile-price-0-1000" />
-                                                <Label htmlFor="mobile-price-0-1000" className="text-sm text-slate-600 cursor-pointer">₹ 0 - ₹ 1,000</Label>
+                                                <RadioGroupItem value="0-10000" id="mobile-price-0-10000" />
+                                                <Label htmlFor="mobile-price-0-10000" className="text-sm text-slate-600 cursor-pointer">₹ 0 - ₹ 10,000</Label>
                                             </div>
                                             <div className="flex items-center space-x-2">
-                                                <RadioGroupItem value="1000-2500" id="mobile-price-1000-2500" />
-                                                <Label htmlFor="mobile-price-1000-2500" className="text-sm text-slate-600 cursor-pointer">₹ 1,000 - ₹ 2,500</Label>
+                                                <RadioGroupItem value="10000-20000" id="mobile-price-10000-20000" />
+                                                <Label htmlFor="mobile-price-10000-20000" className="text-sm text-slate-600 cursor-pointer">₹ 10,000 - ₹ 20,000</Label>
                                             </div>
                                             <div className="flex items-center space-x-2">
-                                                <RadioGroupItem value="2500-5000" id="mobile-price-2500-5000" />
-                                                <Label htmlFor="mobile-price-2500-5000" className="text-sm text-slate-600 cursor-pointer">₹ 2,500 - ₹ 5,000</Label>
+                                                <RadioGroupItem value="20000-35000" id="mobile-price-20000-35000" />
+                                                <Label htmlFor="mobile-price-20000-35000" className="text-sm text-slate-600 cursor-pointer">₹ 20,000 - ₹ 35,000</Label>
                                             </div>
                                             <div className="flex items-center space-x-2">
-                                                <RadioGroupItem value="5000+" id="mobile-price-5000+" />
-                                                <Label htmlFor="mobile-price-5000+" className="text-sm text-slate-600 cursor-pointer">₹ 5,000+</Label>
+                                                <RadioGroupItem value="35000-50000" id="mobile-price-35000-50000" />
+                                                <Label htmlFor="mobile-price-35000-50000" className="text-sm text-slate-600 cursor-pointer">₹ 35,000 - ₹ 50,000</Label>
+                                            </div>
+                                            <div className="flex items-center space-x-2">
+                                                <RadioGroupItem value="50000+" id="mobile-price-50000+" />
+                                                <Label htmlFor="mobile-price-50000+" className="text-sm text-slate-600 cursor-pointer">₹ 50,000+</Label>
                                             </div>
                                         </div>
                                     </RadioGroup>
                                 </div>
-
-                                {/* Destination Filter */}
-                                {destinations.length > 0 && (
-                                    <div className="mb-6">
-                                        <div className="flex items-center gap-2 mb-3">
-                                            <div className="w-1 h-4 bg-blue-600 rounded"></div>
-                                            <Label className="text-sm font-semibold text-slate-700">DESTINATION</Label>
-                                        </div>
-                                        <RadioGroup value={destinationFilter} onValueChange={(value) => setDestinationFilter(value)}>
-                                            <div className="space-y-2">
-                                                <div className="flex items-center space-x-2">
-                                                    <RadioGroupItem value="all" id="mobile-destination-any" />
-                                                    <Label htmlFor="mobile-destination-any" className="text-sm text-slate-600 cursor-pointer">Any</Label>
-                                                </div>
-                                                {destinations.map((dest) => (
-                                                    <div key={dest} className="flex items-center space-x-2">
-                                                        <RadioGroupItem value={dest} id={`mobile-destination-${dest}`} />
-                                                        <Label htmlFor={`mobile-destination-${dest}`} className="text-sm text-slate-600 cursor-pointer">{dest}</Label>
-                                                    </div>
-                                                ))}
-                                            </div>
-                                        </RadioGroup>
-                                    </div>
-                                )}
                             </div>
 
                             <div className="p-6 pt-4 flex-shrink-0 border-t border-slate-200 flex gap-3 text-black">
@@ -1525,12 +1297,9 @@ export default function CategoryPage({ params }: CategoryPageProps) {
                                     variant="outline"
                                     className="flex-1"
                                     onClick={() => {
-                                        setSortBy('rating-desc');
-                                        setPriceRange([0, 100000]);
                                         setDurationFilter('all');
-                                        setDestinationFilter('all');
-                                        setRatingFilter('all');
                                         setPriceFilter('all');
+                                        setSortBy('rating-desc');
                                     }}
                                 >
                                     Clear All
@@ -1546,6 +1315,6 @@ export default function CategoryPage({ params }: CategoryPageProps) {
                     </Dialog>
                 </Suspense>
             </div>
-        </div>
+        </div >
     );
 }
