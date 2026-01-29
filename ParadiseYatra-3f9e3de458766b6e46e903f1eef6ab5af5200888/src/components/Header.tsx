@@ -323,7 +323,7 @@ const Header = () => {
                                             .toLowerCase()
                                             .replace(/\s+/g, "-")}`}
                                           onClick={() => setIsNavigating(true)}
-                                          className="text-xs cursor-pointer text-slate-900 hover:text-blue-600 font-bold py-1 px-1.5 rounded-sm hover:bg-gradient-to-r hover:from-blue-50/80 hover:to-indigo-50/80 transition-all duration-200 truncate whitespace-nowrap border border-transparent hover:border-blue-100"
+                                          className="text-sm cursor-pointer text-slate-900 hover:text-blue-600 font-bold py-1 px-1.5 rounded-sm hover:bg-gradient-to-r hover:from-blue-50/80 hover:to-indigo-50/80 transition-all duration-200 truncate whitespace-nowrap border border-transparent hover:border-blue-100"
                                           title={stateItem.name}
                                         >
                                           {stateItem.name}
@@ -354,7 +354,7 @@ const Header = () => {
                                             .toLowerCase()
                                             .replace(/\s+/g, "-")}`}
                                           onClick={() => setIsNavigating(true)}
-                                          className="text-xs cursor-pointer text-slate-900 hover:text-blue-600 font-bold py-1 px-1.5 rounded-sm hover:bg-gradient-to-r hover:from-blue-50/80 hover:to-indigo-50/80 transition-all duration-200 truncate whitespace-nowrap border border-transparent hover:border-blue-100"
+                                          className="text-sm cursor-pointer text-slate-900 hover:text-blue-600 font-bold py-1 px-1.5 rounded-sm hover:bg-gradient-to-r hover:from-blue-50/80 hover:to-indigo-50/80 transition-all duration-200 truncate whitespace-nowrap border border-transparent hover:border-blue-100"
                                           title={countryItem.name}
                                         >
                                           {countryItem.name}
@@ -451,13 +451,13 @@ const Header = () => {
                 );
               })}
               <a
-                href="/blog"
+                href="/fixed-departures"
                 className={`transition-colors ${isTransparent
                   ? "text-white hover:text-[#FDA800]"
                   : "text-gray-700 hover:text-[#FDA800]"
                   }`}
               >
-                Blog
+                Fixed Departure
               </a>
             </nav>
 

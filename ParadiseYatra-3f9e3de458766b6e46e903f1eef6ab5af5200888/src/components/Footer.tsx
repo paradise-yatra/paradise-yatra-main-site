@@ -464,9 +464,7 @@ const Footer = () => {
         className="fixed bottom-4 right-4 md:bottom-6 md:right-6 z-50 group"
       >
         <a
-          href={`https://wa.me/${footerData?.companyInfo?.whatsapp?.replace(/\D/g, "") ||
-            "919873391733"
-            }?text=Hi, I'm interested in your tour packages. Can you help me?`}
+          href="https://wa.me/919873391733?text=Hi, I'm interested in your tour packages. Can you help me?"
           target="_blank"
           rel="noopener noreferrer"
           className="flex items-center bg-gradient-to-r from-blue-600 to-blue-500 hover:from-blue-700 hover:to-blue-600 text-white p-1.5 md:pl-1.5 md:pr-6 md:py-2 rounded-full shadow-2xl transition-all duration-300 hover:scale-105 active:scale-95 group border border-white/20"

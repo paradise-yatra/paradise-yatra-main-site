@@ -98,17 +98,17 @@ const FixedDeparturesPage = () => {
                       </Badge>
                     )}
                   </div>
-                  
+
                   <div className="flex items-center text-sm text-gray-600">
                     <MapPin className="w-4 h-4 mr-2" />
                     {departure.destination}
                   </div>
-                  
+
                   <div className="flex items-center text-sm text-gray-600">
                     <Calendar className="w-4 h-4 mr-2" />
                     {new Date(departure.departureDate).toLocaleDateString()} - {new Date(departure.returnDate).toLocaleDateString()}
                   </div>
-                  
+
                   <div className="flex items-center justify-between">
                     <div className="flex items-center text-sm text-gray-600">
                       <Users className="w-4 h-4 mr-2" />
@@ -118,11 +118,11 @@ const FixedDeparturesPage = () => {
                       {departure.status}
                     </Badge>
                   </div>
-                  
+
                   <p className="text-gray-600 text-sm line-clamp-3">
                     {departure.shortDescription}
                   </p>
-                  
+
                   <div className="flex justify-between items-center pt-4 border-t">
                     <div className="text-2xl font-bold text-blue-600">
                       ₹{departure.price.toLocaleString()}

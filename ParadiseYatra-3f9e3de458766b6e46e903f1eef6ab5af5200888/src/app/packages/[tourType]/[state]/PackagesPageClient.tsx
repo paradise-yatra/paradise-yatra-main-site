@@ -2,7 +2,7 @@
 
 import { Suspense, useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Star, MapPin, Clock, Filter, ChevronDown, Check, ChevronLeft, ChevronRight, X, ArrowRight } from 'lucide-react';
+import { MapPin, Clock, Filter, ChevronDown, Check, ChevronLeft, ChevronRight, X, ArrowRight } from 'lucide-react';
 import Loading from '@/components/ui/loading';
 import Link from 'next/link';
 import Image from 'next/image';
@@ -99,8 +99,8 @@ const Pagination = ({ currentPage, totalPages, onPageChange, className = "" }: P
               size="sm"
               onClick={() => handlePageChange(page as number)}
               className={`px-3 py-2 ${currentPage === page
-                  ? 'bg-blue-600 text-white hover:bg-blue-700 border-0'
-                  : 'bg-blue-500 text-white hover:bg-blue-600 border-0'
+                ? 'bg-blue-600 text-white hover:bg-blue-700 border-0'
+                : 'bg-blue-500 text-white hover:bg-blue-600 border-0'
                 }`}
             >
               {page}
@@ -227,7 +227,6 @@ export default function PackagesPageClient({ params }: PackagesPageClientProps) 
   const isScrollingProgrammatically = useRef(false);
 
   // Filter states
-  const [ratingFilter, setRatingFilter] = useState<string>('all');
   const [durationFilter, setDurationFilter] = useState<string>('all');
   const [priceFilter, setPriceFilter] = useState<string>('all');
   const [sortBy, setSortBy] = useState<string>('recommended');
@@ -358,12 +357,6 @@ export default function PackagesPageClient({ params }: PackagesPageClientProps) 
   useEffect(() => {
     let filtered = [...allItems];
 
-    // Filter by rating
-    if (ratingFilter !== 'all') {
-      const minRating = parseFloat(ratingFilter);
-      filtered = filtered.filter(item => item.displayRating >= minRating);
-    }
-
     // Filter by duration
     if (durationFilter !== 'all') {
       const extractDays = (duration: string): number => {
@@ -400,14 +393,16 @@ export default function PackagesPageClient({ params }: PackagesPageClientProps) 
       filtered = filtered.filter(item => {
         const price = item.displayPrice;
         switch (priceFilter) {
-          case '0-1000':
-            return price >= 0 && price <= 1000;
-          case '1000-2500':
-            return price > 1000 && price <= 2500;
-          case '2500-5000':
-            return price > 2500 && price <= 5000;
-          case '5000+':
-            return price > 5000;
+          case '0-10000':
+            return price >= 0 && price <= 10000;
+          case '10000-20000':
+            return price > 10000 && price <= 20000;
+          case '20000-35000':
+            return price > 20000 && price <= 35000;
+          case '35000-50000':
+            return price > 35000 && price <= 50000;
+          case '50000+':
+            return price > 50000;
           default:
             return true;
         }
@@ -421,8 +416,6 @@ export default function PackagesPageClient({ params }: PackagesPageClientProps) 
           return (a.displayPrice || 0) - (b.displayPrice || 0);
         case 'price-desc':
           return (b.displayPrice || 0) - (a.displayPrice || 0);
-        case 'rating-desc':
-          return (b.displayRating || 0) - (a.displayRating || 0);
         case 'duration-asc':
           return (a.displayDuration || '').localeCompare(b.displayDuration || '');
         case 'duration-desc':
@@ -434,7 +427,7 @@ export default function PackagesPageClient({ params }: PackagesPageClientProps) 
 
     setFilteredItems(filtered);
     setCurrentPage(1);
-  }, [allItems, ratingFilter, durationFilter, priceFilter, sortBy]);
+  }, [allItems, durationFilter, priceFilter, sortBy]);
 
   // Calculate pagination
   const totalPages = Math.ceil(filteredItems.length / itemsPerPage);
@@ -550,12 +543,12 @@ export default function PackagesPageClient({ params }: PackagesPageClientProps) 
       <div className="">
         <Suspense fallback={<PackagesLoadingSkeleton />}>
           {/* Header Section */}
-          <section className="bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50 py-12 px-4 sm:px-6 lg:px-8">
+          <section className="bg-blue-50/50 py-12 px-4 sm:px-6 lg:px-8">
             <div className="max-w-7xl mx-auto text-center">
-              <h1 className="!text-4xl sm:!text-5xl lg:text-6xl font-bold text-slate-900 mb-4">
+              <h1 className="!text-4xl !font-black text-slate-900 mb-4">
                 {tourTypeLabel} in <span className="text-blue-600">{stateLabel}</span>
               </h1>
-              <p className="!text-md sm:!text-xl !text-slate-600 max-w-3xl mx-auto">
+              <p className="!text-md !font-semibold !text-slate-600 max-w-3xl mx-auto">
                 Discover amazing destinations in {stateLabel} with our handpicked collection of premium travel packages
               </p>
             </div>
@@ -582,48 +575,16 @@ export default function PackagesPageClient({ params }: PackagesPageClientProps) 
                   <Card className="sticky top-24 flex flex-col h-[calc(100vh-8rem)] border border-slate-200 shadow-sm">
                     <div className="p-6 pb-4 flex-shrink-0">
                       <div className="flex items-center gap-2">
-                        <div className="w-1 h-6 bg-blue-600 rounded"></div>
-                        <h2 className="!text-xl font-bold text-slate-900">Filters</h2>
+
+                        <h2 className="!text-lg !font-bold text-slate-900">Filters</h2>
                       </div>
                     </div>
                     <div className="flex-1 overflow-y-auto px-6">
-                      {/* Rating Filter */}
-                      <div className="mb-6">
-                        <div className="flex items-center gap-2 mb-3">
-                          <div className="w-1 h-4 bg-blue-600 rounded"></div>
-                          <Label className="text-sm font-semibold text-slate-700">RATING</Label>
-                        </div>
-                        <RadioGroup value={ratingFilter} onValueChange={(value) => setRatingFilter(value)}>
-                          <div className="space-y-2">
-                            <div className="flex items-center space-x-2">
-                              <RadioGroupItem value="all" id="rating-any" />
-                              <Label htmlFor="rating-any" className="text-sm text-slate-600 cursor-pointer">Any</Label>
-                            </div>
-                            <div className="flex items-center space-x-2">
-                              <RadioGroupItem value="4.5" id="rating-4.5" />
-                              <Label htmlFor="rating-4.5" className="text-sm text-slate-600 cursor-pointer">4.5+</Label>
-                            </div>
-                            <div className="flex items-center space-x-2">
-                              <RadioGroupItem value="4.0" id="rating-4.0" />
-                              <Label htmlFor="rating-4.0" className="text-sm text-slate-600 cursor-pointer">4.0+</Label>
-                            </div>
-                            <div className="flex items-center space-x-2">
-                              <RadioGroupItem value="3.5" id="rating-3.5" />
-                              <Label htmlFor="rating-3.5" className="text-sm text-slate-600 cursor-pointer">3.5+</Label>
-                            </div>
-                            <div className="flex items-center space-x-2">
-                              <RadioGroupItem value="3.0" id="rating-3.0" />
-                              <Label htmlFor="rating-3.0" className="text-sm text-slate-600 cursor-pointer">3.0+</Label>
-                            </div>
-                          </div>
-                        </RadioGroup>
-                      </div>
-
                       {/* Duration Filter */}
                       <div className="mb-6">
                         <div className="flex items-center gap-2 mb-3">
                           <div className="w-1 h-4 bg-blue-600 rounded"></div>
-                          <Label className="text-sm font-semibold text-slate-700">DURATION</Label>
+                          <Label className="!text-sm !font-bold text-slate-700">DURATION</Label>
                         </div>
                         <RadioGroup value={durationFilter} onValueChange={(value) => setDurationFilter(value)}>
                           <div className="space-y-2">
@@ -659,7 +620,7 @@ export default function PackagesPageClient({ params }: PackagesPageClientProps) 
                       <div className="mb-6">
                         <div className="flex items-center gap-2 mb-3">
                           <div className="w-1 h-4 bg-blue-600 rounded"></div>
-                          <Label className="text-sm font-semibold text-slate-700">PRICE</Label>
+                          <Label className="text-sm font-bold text-slate-700">PRICE</Label>
                         </div>
                         <RadioGroup value={priceFilter} onValueChange={(value) => setPriceFilter(value)}>
                           <div className="space-y-2">
@@ -668,20 +629,24 @@ export default function PackagesPageClient({ params }: PackagesPageClientProps) 
                               <Label htmlFor="price-any" className="text-sm text-slate-600 cursor-pointer">Any</Label>
                             </div>
                             <div className="flex items-center space-x-2">
-                              <RadioGroupItem value="0-1000" id="price-0-1000" />
-                              <Label htmlFor="price-0-1000" className="text-sm text-slate-600 cursor-pointer">₹ 0 - ₹ 1,000</Label>
+                              <RadioGroupItem value="0-10000" id="price-0-10000" />
+                              <Label htmlFor="price-0-10000" className="text-sm text-slate-600 cursor-pointer">₹ 0 - ₹ 10,000</Label>
                             </div>
                             <div className="flex items-center space-x-2">
-                              <RadioGroupItem value="1000-2500" id="price-1000-2500" />
-                              <Label htmlFor="price-1000-2500" className="text-sm text-slate-600 cursor-pointer">₹ 1,000 - ₹ 2,500</Label>
+                              <RadioGroupItem value="10000-20000" id="price-10000-20000" />
+                              <Label htmlFor="price-10000-20000" className="text-sm text-slate-600 cursor-pointer">₹ 10,000 - ₹ 20,000</Label>
                             </div>
                             <div className="flex items-center space-x-2">
-                              <RadioGroupItem value="2500-5000" id="price-2500-5000" />
-                              <Label htmlFor="price-2500-5000" className="text-sm text-slate-600 cursor-pointer">₹ 2,500 - ₹ 5,000</Label>
+                              <RadioGroupItem value="20000-35000" id="price-20000-35000" />
+                              <Label htmlFor="price-20000-35000" className="text-sm text-slate-600 cursor-pointer">₹ 20,000 - ₹ 35,000</Label>
                             </div>
                             <div className="flex items-center space-x-2">
-                              <RadioGroupItem value="5000+" id="price-5000+" />
-                              <Label htmlFor="price-5000+" className="text-sm text-slate-600 cursor-pointer">₹ 5,000+</Label>
+                              <RadioGroupItem value="35000-50000" id="price-35000-50000" />
+                              <Label htmlFor="price-35000-50000" className="text-sm text-slate-600 cursor-pointer">₹ 35,000 - ₹ 50,000</Label>
+                            </div>
+                            <div className="flex items-center space-x-2">
+                              <RadioGroupItem value="50000+" id="price-50000+" />
+                              <Label htmlFor="price-50000+" className="text-sm text-slate-600 cursor-pointer">₹ 50,000+</Label>
                             </div>
                           </div>
                         </RadioGroup>
@@ -692,7 +657,6 @@ export default function PackagesPageClient({ params }: PackagesPageClientProps) 
                         variant="outline"
                         className="w-full"
                         onClick={() => {
-                          setRatingFilter('all');
                           setDurationFilter('all');
                           setPriceFilter('all');
                           setSortBy('recommended');
@@ -708,30 +672,33 @@ export default function PackagesPageClient({ params }: PackagesPageClientProps) 
                 <div className="flex-1">
                   {/* Sort and Count Header */}
                   <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6">
-                    <p className="text-sm !text-slate-600">
+                    <p className="!text-sm font-bold !text-slate-600">
                       Showing {startIndex + 1}-{Math.min(endIndex, filteredItems.length)} of {filteredItems.length} results
                     </p>
                     <div className="flex items-center gap-3">
-                      <span className="text-sm font-medium text-slate-600">Sort by:</span>
+                      <span className="text-sm font-bold text-slate-700">Sort By:</span>
                       <Select
-                        value={sortBy === 'rating-desc' ? 'recommended' : sortBy === 'price-asc' ? 'price-low' : sortBy === 'price-desc' ? 'price-high' : sortBy === 'duration-asc' ? 'duration' : 'recommended'}
+                        value={
+                          sortBy === 'recommended' ? 'Recommended' :
+                            sortBy === 'price-asc' ? 'Price: Low to High' :
+                              sortBy === 'price-desc' ? 'Price: High to Low' :
+                                sortBy === 'duration-asc' ? 'Duration' : 'Recommended'
+                        }
                         onValueChange={(value) => {
-                          if (value === 'recommended') setSortBy('rating-desc');
-                          else if (value === 'price-low') setSortBy('price-asc');
-                          else if (value === 'price-high') setSortBy('price-desc');
-                          else if (value === 'rating') setSortBy('rating-desc');
-                          else if (value === 'duration') setSortBy('duration-asc');
+                          if (value === 'Recommended') setSortBy('recommended');
+                          else if (value === 'Price: Low to High') setSortBy('price-asc');
+                          else if (value === 'Price: High to Low') setSortBy('price-desc');
+                          else if (value === 'Duration') setSortBy('duration-asc');
                         }}
                       >
-                        <SelectTrigger className="w-[180px]">
-                          <SelectValue placeholder="Sort by" />
+                        <SelectTrigger className="w-[200px] bg-white border-slate-200 font-medium text-slate-700">
+                          <SelectValue placeholder="Sort By" />
                         </SelectTrigger>
                         <SelectContent>
-                          <SelectItem value="recommended">Recommended</SelectItem>
-                          <SelectItem value="price-low">Price: Low to High</SelectItem>
-                          <SelectItem value="price-high">Price: High to Low</SelectItem>
-                          <SelectItem value="rating">Highest Rated</SelectItem>
-                          <SelectItem value="duration">Duration</SelectItem>
+                          <SelectItem value="Recommended">Recommended</SelectItem>
+                          <SelectItem value="Price: Low to High">Price: Low to High</SelectItem>
+                          <SelectItem value="Price: High to Low">Price: High to Low</SelectItem>
+                          <SelectItem value="Duration">Duration</SelectItem>
                         </SelectContent>
                       </Select>
                     </div>
@@ -741,77 +708,72 @@ export default function PackagesPageClient({ params }: PackagesPageClientProps) 
                   {filteredItems.length > 0 ? (
                     <div className="space-y-6">
                       {paginatedItems.map((item, index) => (
-                        <Card key={`${item.type}-${item._id}`} className="overflow-hidden hover:shadow-xl transition-all duration-300">
-                          <Link href={item.detailUrl} className="block">
-                            <div className="flex flex-col md:flex-row">
-                              {/* Image */}
-                              <div className="relative w-full md:w-80 h-48 md:h-auto overflow-hidden flex-shrink-0" style={{ minHeight: '200px' }}>
-                                {getImageUrl(item.displayImage) ? (
-                                  <Image
-                                    src={getImageUrl(item.displayImage)!}
-                                    alt={item.displayName || `Travel package to ${item.displayLocation || 'destination'}`}
-                                    fill
-                                    className="object-cover hover:scale-105 transition-transform duration-300"
-                                  />
-                                ) : (
-                                  <div className="w-full h-full bg-gray-200 flex items-center justify-center">
-                                    <div className="text-center text-gray-500">
-                                      <div className="w-12 h-12 mx-auto mb-2 bg-gray-300 rounded-full flex items-center justify-center">
-                                        <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
-                                        </svg>
-                                      </div>
-                                      <span className="text-sm">Image unavailable</span>
+                        <div key={`${item.type}-${item._id}`} className="group relative bg-white rounded-lg border border-slate-100 shadow-sm hover:shadow-xl hover:shadow-blue-900/5 transition-all duration-300 overflow-hidden">
+                          <Link href={item.detailUrl} className="flex flex-col md:flex-row h-full">
+                            {/* Image Section */}
+                            <div className="relative w-full md:w-72 lg:w-80 h-64 md:h-auto flex-shrink-0 overflow-hidden">
+                              {getImageUrl(item.displayImage) ? (
+                                <Image
+                                  src={getImageUrl(item.displayImage)!}
+                                  alt={item.displayName || `Travel package to ${item.displayLocation || 'destination'}`}
+                                  fill
+                                  className="object-cover group-hover:scale-110 transition-transform duration-700"
+                                />
+                              ) : (
+                                <div className="w-full h-full bg-slate-100 flex items-center justify-center">
+                                  <div className="text-slate-400 flex flex-col items-center">
+                                    <div className="w-12 h-12 bg-slate-200 rounded-full flex items-center justify-center mb-2">
+                                      <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                                      </svg>
                                     </div>
+                                    <span className="text-xs font-medium">Image unavailable</span>
                                   </div>
-                                )}
-
-                                <div className="absolute top-3 left-3 flex items-center gap-1 bg-black/50 backdrop-blur-sm px-2 py-1 rounded-full">
-                                  <Star className="h-4 w-4 fill-yellow-400 text-yellow-400" />
-                                  <span className="text-white text-sm font-semibold">{item.displayRating.toFixed(1)}</span>
                                 </div>
+                              )}
+
+                              <div className="absolute top-4 left-4 bg-white/95 backdrop-blur-sm px-3 py-1.5 rounded-full text-xs font-bold text-blue-600 flex items-center gap-1.5 shadow-sm border border-blue-50/50">
+                                <MapPin className="w-3.5 h-3.5" />
+                                {item.displayLocation}
                               </div>
+                            </div>
 
-                              {/* Content */}
-                              <div className="flex-1 p-4 md:p-6">
-                                <div className="flex items-start gap-3 mb-2">
-                                  <div className="flex items-center gap-1 text-slate-600 text-sm">
-                                    <MapPin className="h-4 w-4" />
-                                    <span>{item.displayLocation}</span>
-                                  </div>
+                            {/* Content Section */}
+                            <div className="flex-1 p-6 md:py-8 md:px-8 flex flex-col justify-between">
+                              <div>
+                                <div className="flex items-center flex-wrap gap-2 text-xs font-semibold text-slate-500 mb-4">
+                                  <span className="flex items-center gap-1.5 bg-slate-50 px-2.5 py-1 rounded-md text-slate-600 border border-slate-100">
+                                    <Clock className="w-3.5 h-3.5 text-blue-500" />
+                                    {formatDurationDisplay(item.displayDuration || '')}
+                                  </span>
                                 </div>
 
-                                <h3 className="!text-xl md:text-2xl !font-bold text-slate-900 mb-2">
+                                <h3 className="!text-xl !font-bold text-slate-900 mb-1 group-hover:text-blue-600 transition-colors leading-tight">
                                   {item.displayName}
                                 </h3>
 
-                                <div className="flex items-center gap-2 mb-2">
-                                  <div className="flex items-center gap-1 text-slate-600">
-                                    <Clock className="h-4 w-4" />
-                                    <span className="text-sm">
-                                      {formatDurationDisplay(item.displayDuration || '')}
-                                    </span>
-                                  </div>
-                                </div>
-
-                                <p className="!text-slate-600 text-sm mb-3 line-clamp-2">
-                                  {item.displayDescription || `Discover ${item.displayLocation}, a beautiful destination with amazing experiences and unforgettable memories.`}
+                                <p className="!text-slate-600 !font-semibold !text-sm leading-relaxed line-clamp-2 mb-6">
+                                  {item.displayDescription}
                                 </p>
+                              </div>
 
-                                <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
-                                  <div>
-                                    <p className="text-xs !text-slate-500 mb-1">STARTING FROM</p>
-                                    <p className="!text-xl md:text-2xl !font-bold !text-blue-600">₹ {(item.displayPrice || 0).toLocaleString()}</p>
+                              <div className="flex items-end justify-between pt-2 border-t border-dashed border-slate-200">
+                                <div className="flex flex-col">
+                                  <span className="text-xs font-bold !text-slate-600 uppercase tracking-wider mb-1">Starting From</span>
+                                  <span className="text-2xl font-black text-transparent bg-clip-text bg-gradient-to-r from-blue-600 to-indigo-600">
+                                    ₹ {(item.displayPrice || 0).toLocaleString()}
+                                  </span>
+                                </div>
+                                <div className="flex items-center gap-2 text-sm font-bold text-slate-900 group-hover:translate-x-1 transition-transform">
+                                  View Itinerary
+                                  <div className="bg-gradient-to-r from-blue-600 to-indigo-600 text-white p-2 rounded-full shadow-md shadow-blue-500/20">
+                                    <ArrowRight className="w-4 h-4" />
                                   </div>
-                                  <Button className="bg-gradient-to-r from-blue-500 to-indigo-600 hover:from-blue-600 hover:to-indigo-700 text-white text-sm">
-                                    View Details
-                                    <ArrowRight className="ml-2 h-4 w-4" />
-                                  </Button>
                                 </div>
                               </div>
                             </div>
                           </Link>
-                        </Card>
+                        </div>
                       ))}
 
                       {/* Pagination */}
@@ -827,20 +789,19 @@ export default function PackagesPageClient({ params }: PackagesPageClientProps) 
                       )}
                     </div>
                   ) : (
-                    <div className="text-center py-16 bg-white rounded-2xl shadow-md">
+                    <div className="text-center py-16 bg-white rounded-lg shadow-md">
                       <div className="text-gray-300 text-6xl mb-4">🏔️</div>
-                      <h3 className="text-xl font-semibold text-gray-600 mb-3">No packages found</h3>
-                      <p className="text-gray-500 max-w-md mx-auto mb-6">
+                      <h3 className="!text-xl !font-semibold text-gray-600 mb-3">No packages found</h3>
+                      <p className="!text-gray-500 font-semibold max-w-md mx-auto mb-6">
                         We couldn't find any packages matching your filters.
                       </p>
                       <button
                         onClick={() => {
-                          setRatingFilter('all');
                           setDurationFilter('all');
                           setPriceFilter('all');
                           setSortBy('recommended');
                         }}
-                        className="bg-blue-600 text-white px-6 py-2 rounded-lg hover:bg-blue-700 transition-colors"
+                        className="bg-blue-600 text-sm text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors"
                       >
                         Clear Filters
                       </button>
@@ -897,20 +858,7 @@ export default function PackagesPageClient({ params }: PackagesPageClientProps) 
                             </div>
                           )}
 
-                          <div className="absolute top-3 right-3 flex flex-col items-end space-y-2">
-                            <div className="bg-white/95 backdrop-blur-sm px-2 py-1 rounded-lg flex items-center shadow-sm">
-                              <span className="text-amber-500 mr-1">
-                                <svg className="w-3 h-3" fill="currentColor" viewBox="0 0 20 20">
-                                  <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
-                                </svg>
-                              </span>
-                              <span className="text-gray-700 text-xs font-medium">{suggestion.rating || 4.5}</span>
-                            </div>
 
-                            <div className="bg-blue-50 text-blue-700 text-xs px-2 py-1 rounded-lg font-medium">
-                              {suggestion.location}
-                            </div>
-                          </div>
 
                           <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/70 to-transparent p-4">
                             <div className="text-white text-xs opacity-90 mb-1 flex items-center">
@@ -920,7 +868,7 @@ export default function PackagesPageClient({ params }: PackagesPageClientProps) 
                               </svg>
                               {suggestion.location}
                             </div>
-                            <h3 className="text-lg !font-semibold text-white">{suggestion.name}</h3>
+                            <h3 className="!text-md !font-semibold text-white">{suggestion.name}</h3>
                           </div>
                         </div>
 
@@ -1067,18 +1015,8 @@ export default function PackagesPageClient({ params }: PackagesPageClientProps) 
                             )}
 
                             <div className="absolute top-3 right-3 flex flex-col items-end space-y-2">
-                              <div className="bg-white/95 backdrop-blur-sm px-2 py-1 rounded-lg flex items-center shadow-sm">
-                                <span className="text-amber-500 mr-1">
-                                  <svg className="w-3 h-3" fill="currentColor" viewBox="0 0 20 20">
-                                    <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
-                                  </svg>
-                                </span>
-                                <span className="text-gray-700 text-xs font-medium">{suggestion.rating || 4.5}</span>
-                              </div>
 
-                              <div className="bg-blue-50 text-blue-700 text-xs px-2 py-1 rounded-lg font-medium">
-                                {suggestion.location}
-                              </div>
+
                             </div>
 
                             <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/70 to-transparent p-4">
@@ -1089,7 +1027,7 @@ export default function PackagesPageClient({ params }: PackagesPageClientProps) 
                                 </svg>
                                 {suggestion.location}
                               </div>
-                              <h3 className="text-lg !font-semibold text-white">{suggestion.name}</h3>
+                              <h3 className="!text-lg !font-semibold text-white">{suggestion.name}</h3>
                             </div>
                           </div>
 
@@ -1164,38 +1102,6 @@ export default function PackagesPageClient({ params }: PackagesPageClientProps) 
               </DialogHeader>
 
               <div className="flex-1 overflow-y-auto px-6 pt-4">
-                {/* Rating Filter */}
-                <div className="mb-6">
-                  <div className="flex items-center gap-2 mb-3">
-                    <div className="w-1 h-4 bg-blue-600 rounded"></div>
-                    <Label className="text-sm font-semibold text-slate-700">RATING</Label>
-                  </div>
-                  <RadioGroup value={ratingFilter} onValueChange={(value) => setRatingFilter(value)}>
-                    <div className="space-y-2">
-                      <div className="flex items-center space-x-2">
-                        <RadioGroupItem value="all" id="mobile-rating-any" />
-                        <Label htmlFor="mobile-rating-any" className="text-sm text-slate-600 cursor-pointer">Any</Label>
-                      </div>
-                      <div className="flex items-center space-x-2">
-                        <RadioGroupItem value="4.5" id="mobile-rating-4.5" />
-                        <Label htmlFor="mobile-rating-4.5" className="text-sm text-slate-600 cursor-pointer">4.5+</Label>
-                      </div>
-                      <div className="flex items-center space-x-2">
-                        <RadioGroupItem value="4.0" id="mobile-rating-4.0" />
-                        <Label htmlFor="mobile-rating-4.0" className="text-sm text-slate-600 cursor-pointer">4.0+</Label>
-                      </div>
-                      <div className="flex items-center space-x-2">
-                        <RadioGroupItem value="3.5" id="mobile-rating-3.5" />
-                        <Label htmlFor="mobile-rating-3.5" className="text-sm text-slate-600 cursor-pointer">3.5+</Label>
-                      </div>
-                      <div className="flex items-center space-x-2">
-                        <RadioGroupItem value="3.0" id="mobile-rating-3.0" />
-                        <Label htmlFor="mobile-rating-3.0" className="text-sm text-slate-600 cursor-pointer">3.0+</Label>
-                      </div>
-                    </div>
-                  </RadioGroup>
-                </div>
-
                 {/* Duration Filter */}
                 <div className="mb-6">
                   <div className="flex items-center gap-2 mb-3">
@@ -1245,20 +1151,24 @@ export default function PackagesPageClient({ params }: PackagesPageClientProps) 
                         <Label htmlFor="mobile-price-any" className="text-sm text-slate-600 cursor-pointer">Any</Label>
                       </div>
                       <div className="flex items-center space-x-2">
-                        <RadioGroupItem value="0-1000" id="mobile-price-0-1000" />
-                        <Label htmlFor="mobile-price-0-1000" className="text-sm text-slate-600 cursor-pointer">₹ 0 - ₹ 1,000</Label>
+                        <RadioGroupItem value="0-10000" id="mobile-price-0-10000" />
+                        <Label htmlFor="mobile-price-0-10000" className="text-sm text-slate-600 cursor-pointer">₹ 0 - ₹ 10,000</Label>
                       </div>
                       <div className="flex items-center space-x-2">
-                        <RadioGroupItem value="1000-2500" id="mobile-price-1000-2500" />
-                        <Label htmlFor="mobile-price-1000-2500" className="text-sm text-slate-600 cursor-pointer">₹ 1,000 - ₹ 2,500</Label>
+                        <RadioGroupItem value="10000-20000" id="mobile-price-10000-20000" />
+                        <Label htmlFor="mobile-price-10000-20000" className="text-sm text-slate-600 cursor-pointer">₹ 10,000 - ₹ 20,000</Label>
                       </div>
                       <div className="flex items-center space-x-2">
-                        <RadioGroupItem value="2500-5000" id="mobile-price-2500-5000" />
-                        <Label htmlFor="mobile-price-2500-5000" className="text-sm text-slate-600 cursor-pointer">₹ 2,500 - ₹ 5,000</Label>
+                        <RadioGroupItem value="20000-35000" id="mobile-price-20000-35000" />
+                        <Label htmlFor="mobile-price-20000-35000" className="text-sm text-slate-600 cursor-pointer">₹ 20,000 - ₹ 35,000</Label>
                       </div>
                       <div className="flex items-center space-x-2">
-                        <RadioGroupItem value="5000+" id="mobile-price-5000+" />
-                        <Label htmlFor="mobile-price-5000+" className="text-sm text-slate-600 cursor-pointer">₹ 5,000+</Label>
+                        <RadioGroupItem value="35000-50000" id="mobile-price-35000-50000" />
+                        <Label htmlFor="mobile-price-35000-50000" className="text-sm text-slate-600 cursor-pointer">₹ 35,000 - ₹ 50,000</Label>
+                      </div>
+                      <div className="flex items-center space-x-2">
+                        <RadioGroupItem value="50000+" id="mobile-price-50000+" />
+                        <Label htmlFor="mobile-price-50000+" className="text-sm text-slate-600 cursor-pointer">₹ 50,000+</Label>
                       </div>
                     </div>
                   </RadioGroup>
@@ -1270,7 +1180,6 @@ export default function PackagesPageClient({ params }: PackagesPageClientProps) 
                   variant="outline"
                   className="flex-1"
                   onClick={() => {
-                    setRatingFilter('all');
                     setDurationFilter('all');
                     setPriceFilter('all');
                     setSortBy('recommended');
