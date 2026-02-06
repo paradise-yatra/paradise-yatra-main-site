@@ -1,29 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { validateApiParams } from '@/lib/validation';
+import API_CONFIG from '@/config/api';
 
-const getBackendUrl = () => {
-  const nextUrl = process.env.NEXT_PUBLIC_BACKEND_URL;
-  const backUrl = process.env.BACKEND_URL;
-  let base = nextUrl || backUrl || 'http://localhost:5001';
-  if (base.endsWith('/')) base = base.slice(0, -1);
-  return base;
-};
-
-const BACKEND_URL = getBackendUrl();
-
-const getApiPath = (path: string) => {
-  const hasApiSuffix = BACKEND_URL.endsWith('/api');
-  if (hasApiSuffix && path.startsWith('/api/')) {
-    return `${BACKEND_URL}${path.substring(4)}`;
-  }
-  return `${BACKEND_URL}${path.startsWith('/') ? '' : '/'}${path}`;
-};
-
-// Cache packages for 30 seconds
-// Disable caching for packages
 export const dynamic = 'force-dynamic';
 export const revalidate = 0;
-
 
 export async function GET(request: NextRequest) {
   try {
@@ -36,7 +16,6 @@ export async function GET(request: NextRequest) {
     const holidayType = searchParams.get('holidayType');
 
     // Validate parameters
-    // (Validation helper doesn't know about `country`; treat it like `state` for validation.)
     const validation = validateApiParams({ tourType, state: state || country, category, limit });
     if (!validation.isValid) {
       return NextResponse.json(
@@ -54,9 +33,9 @@ export async function GET(request: NextRequest) {
     let normalizedCountry = country;
     if (state) {
       normalizedState = decodeURIComponent(state)
-        .replace(/&/g, 'and') // Replace & with 'and'
-        .replace(/\s+/g, ' ') // Normalize multiple spaces to single space
-        .trim(); // Remove leading/trailing spaces
+        .replace(/&/g, 'and')
+        .replace(/\s+/g, ' ')
+        .trim();
     }
     if (country) {
       normalizedCountry = decodeURIComponent(country)
@@ -78,19 +57,15 @@ export async function GET(request: NextRequest) {
     if (holidayType) params.append('holidayType', holidayType);
 
     const queryString = params.toString();
-    const url = queryString
-      ? getApiPath(`/api/packages?${queryString}`)
-      : getApiPath('/api/packages');
+    const url = API_CONFIG.getFullUrl(`${API_CONFIG.ENDPOINTS.PACKAGES.ALL}${queryString ? '?' + queryString : ''}`);
 
-    // Add timeout handling
     const controller = new AbortController();
-    const timeoutId = setTimeout(() => controller.abort(), 10000); // 10 second timeout
+    const timeoutId = setTimeout(() => controller.abort(), 10000);
 
     try {
       const response = await fetch(url, {
         signal: controller.signal,
         cache: 'no-store',
-
       });
       clearTimeout(timeoutId);
 
@@ -126,19 +101,14 @@ export async function GET(request: NextRequest) {
 export async function POST(request: NextRequest) {
   try {
     const contentType = request.headers.get('content-type') || '';
+    const url = API_CONFIG.getFullUrl(API_CONFIG.ENDPOINTS.PACKAGES.ALL);
 
-    // Check if it's FormData (multipart/form-data)
     if (contentType.includes('multipart/form-data')) {
-      // For FormData, we need to forward the raw request body
-      // Get the FormData from the request
       const formData = await request.formData();
-
-      // Forward FormData directly to backend
-      const response = await fetch(getApiPath('/api/packages'), {
+      const response = await fetch(url, {
         method: 'POST',
         headers: {
           'Authorization': request.headers.get('Authorization') || '',
-          // Don't set Content-Type header - let fetch set it with boundary
         },
         body: formData,
       });
@@ -149,9 +119,8 @@ export async function POST(request: NextRequest) {
       }
       return NextResponse.json(data, { status: 201 });
     } else {
-      // Handle JSON requests
       const body = await request.json();
-      const response = await fetch(getApiPath('/api/packages'), {
+      const response = await fetch(url, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

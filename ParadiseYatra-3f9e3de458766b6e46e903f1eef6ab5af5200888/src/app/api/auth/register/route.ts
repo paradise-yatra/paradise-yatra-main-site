@@ -1,28 +1,11 @@
 import { NextRequest, NextResponse } from 'next/server';
-
-const getBackendUrl = () => {
-    const nextUrl = process.env.NEXT_PUBLIC_BACKEND_URL;
-    const backUrl = process.env.BACKEND_URL;
-    let base = nextUrl || backUrl || 'http://localhost:5001';
-    if (base.endsWith('/')) base = base.slice(0, -1);
-    return base;
-};
-
-const BACKEND_URL = getBackendUrl();
-
-const getApiPath = (path: string) => {
-    const hasApiSuffix = BACKEND_URL.endsWith('/api');
-    if (hasApiSuffix && path.startsWith('/api/')) {
-        return `${BACKEND_URL}${path.substring(4)}`;
-    }
-    return `${BACKEND_URL}${path.startsWith('/') ? '' : '/'}${path}`;
-};
+import API_CONFIG from '@/config/api';
 
 export async function POST(request: NextRequest) {
     try {
         const body = await request.json();
 
-        const response = await fetch(getApiPath('/api/auth/register'), {
+        const response = await fetch(API_CONFIG.getFullUrl(API_CONFIG.ENDPOINTS.AUTH.REGISTER), {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',

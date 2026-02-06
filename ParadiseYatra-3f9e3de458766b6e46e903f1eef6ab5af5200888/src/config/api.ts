@@ -63,6 +63,10 @@ export const API_CONFIG = {
       NAVIGATION: '/api/fixed-departures/navigation',
     },
 
+    TAGS: {
+      ALL: '/api/tags',
+    },
+
     BLOGS: {
       ALL: '/api/blogs',
       BY_ID: '/api/blogs',
@@ -82,10 +86,6 @@ export const API_CONFIG = {
 
     UPLOAD: {
       IMAGE: '/api/upload/image',
-    },
-    WISHLIST: {
-      GET: '/api/wishlist',
-      TOGGLE: '/api/wishlist/toggle',
     },
   },
 

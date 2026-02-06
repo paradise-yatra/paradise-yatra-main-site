@@ -1,18 +1,16 @@
 import { NextRequest, NextResponse } from 'next/server';
+import API_CONFIG from '@/config/api';
 
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
-    const { email, password } = body;
 
-    // Forward the request to the backend
-    const API_BASE_URL = process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:5001';
-    const response = await fetch(`${API_BASE_URL}/api/auth/login`, {
+    const response = await fetch(API_CONFIG.getFullUrl(API_CONFIG.ENDPOINTS.AUTH.LOGIN), {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
       },
-      body: JSON.stringify({ email, password }),
+      body: JSON.stringify(body),
     });
 
     const data = await response.json();
@@ -32,4 +30,4 @@ export async function POST(request: NextRequest) {
       { status: 500 }
     );
   }
-} 
+}
