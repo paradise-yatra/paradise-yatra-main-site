@@ -83,6 +83,10 @@ export const API_CONFIG = {
     UPLOAD: {
       IMAGE: '/api/upload/image',
     },
+    WISHLIST: {
+      GET: '/api/wishlist',
+      TOGGLE: '/api/wishlist/toggle',
+    },
   },
 
   // Helper function to get full URL

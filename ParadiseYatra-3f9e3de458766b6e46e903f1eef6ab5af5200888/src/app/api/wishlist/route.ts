@@ -1,29 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-
-const getBackendUrl = () => {
-    const nextUrl = process.env.NEXT_PUBLIC_BACKEND_URL;
-    const backUrl = process.env.BACKEND_URL;
-
-    // Choose the best base URL
-    let base = nextUrl || backUrl || 'http://localhost:5001';
-
-    // Normalize: remove trailing slash
-    if (base.endsWith('/')) base = base.slice(0, -1);
-
-    // Return base URL. We'll handle /api prefix per request.
-    return base;
-};
-
-const BACKEND_URL = getBackendUrl();
-
-// Helper to get full path avoiding /api/api
-const getApiPath = (path: string) => {
-    const hasApiSuffix = BACKEND_URL.endsWith('/api');
-    if (hasApiSuffix && path.startsWith('/api/')) {
-        return `${BACKEND_URL}${path.substring(4)}`;
-    }
-    return `${BACKEND_URL}${path.startsWith('/') ? '' : '/'}${path}`;
-};
+import API_CONFIG from "@/config/api";
 
 // GET: Fetch user's wishlist
 export async function GET(request: NextRequest) {
@@ -34,7 +10,7 @@ export async function GET(request: NextRequest) {
             return NextResponse.json({ message: "Unauthorized" }, { status: 401 });
         }
 
-        const backendUrl = getApiPath('/api/wishlist');
+        const backendUrl = API_CONFIG.getFullUrl(API_CONFIG.ENDPOINTS.WISHLIST.GET);
         console.log(`Fetching wishlist from: ${backendUrl}`);
 
         const response = await fetch(backendUrl, {
@@ -54,7 +30,7 @@ export async function GET(request: NextRequest) {
 
         return NextResponse.json(data);
     } catch (error) {
-        console.error("Wishlist GET error:", error);
+        console.error("Wishlist GET proxy error:", error);
         return NextResponse.json(
             { message: "Internal server error" },
             { status: 500 }
@@ -72,7 +48,7 @@ export async function POST(request: NextRequest) {
             return NextResponse.json({ message: "Unauthorized" }, { status: 401 });
         }
 
-        const backendUrl = getApiPath('/api/wishlist/toggle');
+        const backendUrl = API_CONFIG.getFullUrl(API_CONFIG.ENDPOINTS.WISHLIST.TOGGLE);
         console.log(`Toggling wishlist at: ${backendUrl}`);
 
         const response = await fetch(backendUrl, {
@@ -94,7 +70,7 @@ export async function POST(request: NextRequest) {
 
         return NextResponse.json(data);
     } catch (error) {
-        console.error("Wishlist POST error:", error);
+        console.error("Wishlist POST proxy error:", error);
         return NextResponse.json(
             { message: "Internal server error" },
             { status: 500 }

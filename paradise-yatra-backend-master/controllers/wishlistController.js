@@ -2,7 +2,9 @@ const User = require('../models/User');
 const Signup = require('../models/Signup');
 const mongoose = require('mongoose');
 
-// Get user wishlist
+// @desc    Get user wishlist
+// @route   GET /api/wishlist
+// @access  Private
 exports.getWishlist = async (req, res) => {
     try {
         const user = req.user;
@@ -12,11 +14,13 @@ exports.getWishlist = async (req, res) => {
         res.status(200).json({ wishlist: user.wishlist || [] });
     } catch (error) {
         console.error('Error fetching wishlist:', error);
-        res.status(500).json({ message: 'Error fetching wishlist', error: error.message });
+        res.status(500).json({ message: 'Server error', error: error.message });
     }
 };
 
-// Toggle item in wishlist
+// @desc    Toggle item in wishlist
+// @route   POST /api/wishlist/toggle
+// @access  Private
 exports.toggleWishlist = async (req, res) => {
     try {
         const { packageId } = req.body;
@@ -31,9 +35,8 @@ exports.toggleWishlist = async (req, res) => {
         }
 
         console.log(`Toggling wishlist for user: ${user.email}, Package: ${packageId}`);
-        console.log(`Current wishlist length: ${user.wishlist.length}`);
 
-        // Ensure we are working with an array
+        // Initialize wishlist if it doesn't exist
         if (!user.wishlist) {
             user.wishlist = [];
         }
@@ -60,14 +63,13 @@ exports.toggleWishlist = async (req, res) => {
         const savedUser = await user.save();
         console.log(`✅ SUCCESS: Wishlist updated. New count: ${savedUser.wishlist.length}`);
 
-        console.log(`User saved successfully. New wishlist length: ${savedUser.wishlist.length}`);
-
         res.status(200).json({
+            success: true,
             message: index > -1 ? 'Removed from wishlist' : 'Added to wishlist',
             wishlist: savedUser.wishlist
         });
     } catch (error) {
         console.error('Error toggling wishlist:', error);
-        res.status(500).json({ message: 'Error toggling wishlist', error: error.message });
+        res.status(500).json({ message: 'Server error', error: error.message });
     }
 };
