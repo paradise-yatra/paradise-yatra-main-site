@@ -483,8 +483,8 @@ const Header = () => {
                           className="absolute right-0 top-full mt-2 w-56 bg-white rounded-xl shadow-xl border border-slate-200 overflow-hidden z-50 px-1 py-1"
                         >
                           <div className="px-4 py-3 border-b border-slate-100 mb-1">
-                            <p className="text-sm font-black text-slate-900 truncate">{user.name}</p>
-                            <p className="text-[10px] font-medium text-slate-500 truncate">{user.email}</p>
+                            <p className="text-sm font-black !text-slate-900 truncate">{user.name}</p>
+                            <p className="text-[10px] font-medium !text-slate-500 truncate">{user.email}</p>
                           </div>
                           <button
                             onClick={() => { logout(); setShowUserMenu(false); }}

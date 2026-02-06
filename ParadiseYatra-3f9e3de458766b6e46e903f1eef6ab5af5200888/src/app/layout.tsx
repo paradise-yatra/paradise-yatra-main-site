@@ -62,7 +62,7 @@ export const metadata: Metadata = {
     "theme-color": "#1e40af",
     sitemap: "/sitemap.xml",
     "Content-Security-Policy":
-      "default-src 'self'; script-src 'self' 'unsafe-eval' 'unsafe-inline' https://www.googletagmanager.com https://www.youtube-nocookie.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' data: https: blob:; media-src 'self' https://www.youtube-nocookie.com; frame-src 'self' https://www.youtube-nocookie.com; connect-src 'self' https://www.youtube-nocookie.com;",
+      "default-src 'self'; script-src 'self' 'unsafe-eval' 'unsafe-inline' https://www.googletagmanager.com https://www.youtube-nocookie.com https://accounts.google.com/gsi/client; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' data: https: blob:; media-src 'self' https://www.youtube-nocookie.com; frame-src 'self' https://www.youtube-nocookie.com https://accounts.google.com/gsi/; connect-src 'self' https://www.youtube-nocookie.com https://accounts.google.com/gsi/;",
   },
 };
 
