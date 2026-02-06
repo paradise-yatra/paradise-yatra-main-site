@@ -2,7 +2,7 @@
 
 import { Suspense, useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { MapPin, Clock, Filter, ChevronDown, Check, ChevronLeft, ChevronRight, X, ArrowRight } from 'lucide-react';
+import { MapPin, Clock, Filter, ChevronDown, Check, ChevronLeft, ChevronRight, X, ArrowRight, Heart } from 'lucide-react';
 import Loading from '@/components/ui/loading';
 import Link from 'next/link';
 import Image from 'next/image';
@@ -14,15 +14,22 @@ import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { Label } from '@/components/ui/label';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import Header from '@/components/Header';
+import PackageCard from '@/components/ui/PackageCard';
+import HorizontalPackageCard from '@/components/ui/HorizontalPackageCard';
+import SearchFilterSidebar from '@/components/ui/SearchFilterSidebar';
+import SearchHeader from '@/components/ui/SearchHeader';
+import { useAuth } from '@/context/AuthContext';
+import LoginAlertModal from '@/components/LoginAlertModal';
+import CarouselArrows from '@/components/ui/CarouselArrows';
 
 // Helper to format duration display (e.g. 4N/5D -> 4 Days, 5 Nights)
 const formatDurationDisplay = (duration: string) => {
   if (!duration) return '';
   const nightsDaysMatch = duration.match(/^\s*(\d+)\s*N\s*\/\s*(\d+)\s*D\s*$/i);
   if (nightsDaysMatch) {
-    const days = nightsDaysMatch[1];
-    const nights = nightsDaysMatch[2];
-    return `${days} Days, ${nights} Nights`;
+    const nights = nightsDaysMatch[1];
+    const days = nightsDaysMatch[2];
+    return `${nights}N/${days}D`;
   }
   return duration;
 };
@@ -219,12 +226,11 @@ export default function PackagesPageClient({ params }: PackagesPageClientProps) 
   const [tourType, setTourType] = useState(params.tourType);
   const [state, setState] = useState(params.state);
   const [isFiltersOpen, setIsFiltersOpen] = useState(false);
-  const mobileScrollRef = useRef<HTMLDivElement | null>(null);
-  const [currentSlide, setCurrentSlide] = useState(0);
-  const [mobileSuggestionIndex, setMobileSuggestionIndex] = useState(0);
-  const prevSlideRef = useRef(0);
-  const [newCardIndex, setNewCardIndex] = useState<number | null>(null);
-  const isScrollingProgrammatically = useRef(false);
+
+  // Carousel state
+  const carouselRef = useRef<HTMLDivElement>(null);
+  const [canScrollLeft, setCanScrollLeft] = useState(false);
+  const [canScrollRight, setCanScrollRight] = useState(true);
 
   // Filter states
   const [durationFilter, setDurationFilter] = useState<string>('all');
@@ -234,6 +240,22 @@ export default function PackagesPageClient({ params }: PackagesPageClientProps) 
   // Pagination states
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 6;
+
+  // Wishlist functionality
+  const { user, toggleWishlist: contextToggleWishlist, isInWishlist } = useAuth();
+  const [isLoginModalOpen, setIsLoginModalOpen] = useState(false);
+
+  const handleWishlistToggle = (e: React.MouseEvent, pkgId: string) => {
+    e.preventDefault();
+    e.stopPropagation();
+
+    if (!user) {
+      setIsLoginModalOpen(true);
+      return;
+    }
+
+    contextToggleWishlist(pkgId);
+  };
 
   useEffect(() => {
     const fetchData = async () => {
@@ -435,89 +457,44 @@ export default function PackagesPageClient({ params }: PackagesPageClientProps) 
   const endIndex = startIndex + itemsPerPage;
   const paginatedItems = filteredItems.slice(startIndex, endIndex);
 
-  // Carousel navigation functions
-  const nextSlide = () => {
-    if (currentSlide < suggestions.length - 5) {
-      prevSlideRef.current = currentSlide;
-      setNewCardIndex(4);
-      setCurrentSlide(currentSlide + 1);
+  // Carousel scroll handling
+  const updateScrollState = () => {
+    if (carouselRef.current) {
+      const { scrollLeft, scrollWidth, clientWidth } = carouselRef.current;
+      setCanScrollLeft(scrollLeft > 0);
+      setCanScrollRight(scrollLeft < scrollWidth - clientWidth - 1);
     }
   };
 
-  const prevSlide = () => {
-    if (currentSlide > 0) {
-      prevSlideRef.current = currentSlide;
-      setNewCardIndex(0);
-      setCurrentSlide(currentSlide - 1);
-    }
-  };
-
-  // Handle dot click for desktop suggestions
-  const handleDesktopDotClick = (index: number) => {
-    if (index === currentSlide / 5) return;
-    setNewCardIndex(index < currentSlide / 5 ? 0 : 4);
-    setCurrentSlide(index * 5);
-  };
-
-  // Handle dot click for mobile suggestions
-  const handleMobileDotClick = (index: number) => {
-    if (mobileScrollRef.current) {
-      const container = mobileScrollRef.current;
-      const itemElement = container.firstElementChild as HTMLElement;
-      if (itemElement) {
-        const itemWidth = itemElement.offsetWidth + 16;
-        isScrollingProgrammatically.current = true;
-        container.scrollTo({
-          left: index * itemWidth,
-          behavior: 'smooth'
-        });
-        setMobileSuggestionIndex(index);
-        setTimeout(() => {
-          isScrollingProgrammatically.current = false;
-        }, 500);
-      }
-    }
-  };
-
-  // Mobile scroll handler
   useEffect(() => {
-    if (!mobileScrollRef.current) return;
-    const container = mobileScrollRef.current;
-    let scrollTimeout: NodeJS.Timeout;
+    const carousel = carouselRef.current;
+    if (carousel) {
+      carousel.addEventListener("scroll", updateScrollState);
+      window.addEventListener("resize", updateScrollState);
 
-    const handleScroll = () => {
-      if (isScrollingProgrammatically.current) return;
-      clearTimeout(scrollTimeout);
-      scrollTimeout = setTimeout(() => {
-        const scrollLeft = container.scrollLeft;
-        const itemElement = container.firstElementChild as HTMLElement;
-        if (itemElement) {
-          const itemWidth = itemElement.offsetWidth + 16;
-          const newIndex = Math.round(scrollLeft / itemWidth);
-          if (newIndex !== mobileSuggestionIndex && newIndex >= 0 && newIndex < suggestions.length) {
-            setMobileSuggestionIndex(newIndex);
-          }
-        }
-      }, 50);
-    };
+      // Delay initial check to ensure content is loaded
+      setTimeout(updateScrollState, 500);
 
-    container.addEventListener('scroll', handleScroll, { passive: true });
-    return () => {
-      container.removeEventListener('scroll', handleScroll);
-      clearTimeout(scrollTimeout);
-    };
-  }, [mobileSuggestionIndex, suggestions.length]);
-
-  // Clear newCardIndex after animation
-  useEffect(() => {
-    if (newCardIndex !== null) {
-      const timer = setTimeout(() => {
-        setNewCardIndex(null);
-        prevSlideRef.current = currentSlide;
-      }, 400);
-      return () => clearTimeout(timer);
+      return () => {
+        carousel.removeEventListener("scroll", updateScrollState);
+        window.removeEventListener("resize", updateScrollState);
+      };
     }
-  }, [newCardIndex, currentSlide]);
+  }, [suggestions]);
+
+  const scrollByStep = (direction: number) => {
+    if (carouselRef.current) {
+      const card = carouselRef.current.querySelector("article");
+      const gap = 24; // Corresponds to gap-6
+      const cardWidth = card ? card.getBoundingClientRect().width : 290;
+      const step = cardWidth + gap;
+
+      carouselRef.current.scrollBy({
+        left: direction * step,
+        behavior: "smooth",
+      });
+    }
+  };
 
   if (loading) {
     return (
@@ -543,20 +520,14 @@ export default function PackagesPageClient({ params }: PackagesPageClientProps) 
       <div className="">
         <Suspense fallback={<PackagesLoadingSkeleton />}>
           {/* Header Section */}
-          <section className="bg-blue-50/50 py-12 px-4 sm:px-6 lg:px-8">
-            <div className="max-w-7xl mx-auto text-center">
-              <h1 className="!text-4xl !font-black text-slate-900 mb-4">
-                {tourTypeLabel} in <span className="text-blue-600">{stateLabel}</span>
-              </h1>
-              <p className="!text-md !font-semibold !text-slate-600 max-w-3xl mx-auto">
-                Discover amazing destinations in {stateLabel} with our handpicked collection of premium travel packages
-              </p>
-            </div>
-          </section>
+          <SearchHeader
+            title={<>{tourTypeLabel} in <span className="text-blue-600">{stateLabel}</span></>}
+            subtitle={`Discover amazing destinations in ${stateLabel} with our handpicked collection of premium travel packages`}
+          />
 
           {/* Main Content */}
-          <section className="py-8 px-4 sm:px-6 lg:px-8">
-            <div className="max-w-7xl mx-auto">
+          <section className="py-8 px-4 md:px-8">
+            <div className="max-w-6xl mx-auto">
               <div className="flex flex-col lg:flex-row gap-6">
                 {/* Mobile Filter Button */}
                 <div className="lg:hidden mb-4">
@@ -572,99 +543,18 @@ export default function PackagesPageClient({ params }: PackagesPageClientProps) 
 
                 {/* Filters Sidebar - Desktop */}
                 <aside className="hidden lg:block w-80 flex-shrink-0">
-                  <Card className="sticky top-24 flex flex-col h-[calc(100vh-8rem)] border border-slate-200 shadow-sm">
-                    <div className="p-6 pb-4 flex-shrink-0">
-                      <div className="flex items-center gap-2">
-
-                        <h2 className="!text-lg !font-bold text-slate-900">Filters</h2>
-                      </div>
-                    </div>
-                    <div className="flex-1 overflow-y-auto px-6">
-                      {/* Duration Filter */}
-                      <div className="mb-6">
-                        <div className="flex items-center gap-2 mb-3">
-                          <div className="w-1 h-4 bg-blue-600 rounded"></div>
-                          <Label className="!text-sm !font-bold text-slate-700">DURATION</Label>
-                        </div>
-                        <RadioGroup value={durationFilter} onValueChange={(value) => setDurationFilter(value)}>
-                          <div className="space-y-2">
-                            <div className="flex items-center space-x-2">
-                              <RadioGroupItem value="all" id="duration-any" />
-                              <Label htmlFor="duration-any" className="text-sm text-slate-600 cursor-pointer">Any</Label>
-                            </div>
-                            <div className="flex items-center space-x-2">
-                              <RadioGroupItem value="1-3" id="duration-1-3" />
-                              <Label htmlFor="duration-1-3" className="text-sm text-slate-600 cursor-pointer">1-3 Days</Label>
-                            </div>
-                            <div className="flex items-center space-x-2">
-                              <RadioGroupItem value="4-6" id="duration-4-6" />
-                              <Label htmlFor="duration-4-6" className="text-sm text-slate-600 cursor-pointer">4-6 Days</Label>
-                            </div>
-                            <div className="flex items-center space-x-2">
-                              <RadioGroupItem value="7-9" id="duration-7-9" />
-                              <Label htmlFor="duration-7-9" className="text-sm text-slate-600 cursor-pointer">7-9 Days</Label>
-                            </div>
-                            <div className="flex items-center space-x-2">
-                              <RadioGroupItem value="10-12" id="duration-10-12" />
-                              <Label htmlFor="duration-10-12" className="text-sm text-slate-600 cursor-pointer">10-12 Days</Label>
-                            </div>
-                            <div className="flex items-center space-x-2">
-                              <RadioGroupItem value="13+" id="duration-13+" />
-                              <Label htmlFor="duration-13+" className="text-sm text-slate-600 cursor-pointer">13+ Days</Label>
-                            </div>
-                          </div>
-                        </RadioGroup>
-                      </div>
-
-                      {/* Price Filter */}
-                      <div className="mb-6">
-                        <div className="flex items-center gap-2 mb-3">
-                          <div className="w-1 h-4 bg-blue-600 rounded"></div>
-                          <Label className="text-sm font-bold text-slate-700">PRICE</Label>
-                        </div>
-                        <RadioGroup value={priceFilter} onValueChange={(value) => setPriceFilter(value)}>
-                          <div className="space-y-2">
-                            <div className="flex items-center space-x-2">
-                              <RadioGroupItem value="all" id="price-any" />
-                              <Label htmlFor="price-any" className="text-sm text-slate-600 cursor-pointer">Any</Label>
-                            </div>
-                            <div className="flex items-center space-x-2">
-                              <RadioGroupItem value="0-10000" id="price-0-10000" />
-                              <Label htmlFor="price-0-10000" className="text-sm text-slate-600 cursor-pointer">₹ 0 - ₹ 10,000</Label>
-                            </div>
-                            <div className="flex items-center space-x-2">
-                              <RadioGroupItem value="10000-20000" id="price-10000-20000" />
-                              <Label htmlFor="price-10000-20000" className="text-sm text-slate-600 cursor-pointer">₹ 10,000 - ₹ 20,000</Label>
-                            </div>
-                            <div className="flex items-center space-x-2">
-                              <RadioGroupItem value="20000-35000" id="price-20000-35000" />
-                              <Label htmlFor="price-20000-35000" className="text-sm text-slate-600 cursor-pointer">₹ 20,000 - ₹ 35,000</Label>
-                            </div>
-                            <div className="flex items-center space-x-2">
-                              <RadioGroupItem value="35000-50000" id="price-35000-50000" />
-                              <Label htmlFor="price-35000-50000" className="text-sm text-slate-600 cursor-pointer">₹ 35,000 - ₹ 50,000</Label>
-                            </div>
-                            <div className="flex items-center space-x-2">
-                              <RadioGroupItem value="50000+" id="price-50000+" />
-                              <Label htmlFor="price-50000+" className="text-sm text-slate-600 cursor-pointer">₹ 50,000+</Label>
-                            </div>
-                          </div>
-                        </RadioGroup>
-                      </div>
-                    </div>
-                    <div className="p-6 pt-4 flex-shrink-0 border-t border-slate-200">
-                      <Button
-                        variant="outline"
-                        className="w-full"
-                        onClick={() => {
-                          setDurationFilter('all');
-                          setPriceFilter('all');
-                          setSortBy('recommended');
-                        }}
-                      >
-                        Clear All Filters
-                      </Button>
-                    </div>
+                  <Card className="sticky top-24 border border-slate-200 shadow-sm overflow-hidden">
+                    <SearchFilterSidebar
+                      durationFilter={durationFilter}
+                      setDurationFilter={setDurationFilter}
+                      priceFilter={priceFilter}
+                      setPriceFilter={setPriceFilter}
+                      onClearFilters={() => {
+                        setDurationFilter('all');
+                        setPriceFilter('all');
+                        setSortBy('recommended');
+                      }}
+                    />
                   </Card>
                 </aside>
 
@@ -708,72 +598,19 @@ export default function PackagesPageClient({ params }: PackagesPageClientProps) 
                   {filteredItems.length > 0 ? (
                     <div className="space-y-6">
                       {paginatedItems.map((item, index) => (
-                        <div key={`${item.type}-${item._id}`} className="group relative bg-white rounded-lg border border-slate-100 shadow-sm hover:shadow-xl hover:shadow-blue-900/5 transition-all duration-300 overflow-hidden">
-                          <Link href={item.detailUrl} className="flex flex-col md:flex-row h-full">
-                            {/* Image Section */}
-                            <div className="relative w-full md:w-72 lg:w-80 h-64 md:h-auto flex-shrink-0 overflow-hidden">
-                              {getImageUrl(item.displayImage) ? (
-                                <Image
-                                  src={getImageUrl(item.displayImage)!}
-                                  alt={item.displayName || `Travel package to ${item.displayLocation || 'destination'}`}
-                                  fill
-                                  className="object-cover group-hover:scale-110 transition-transform duration-700"
-                                />
-                              ) : (
-                                <div className="w-full h-full bg-slate-100 flex items-center justify-center">
-                                  <div className="text-slate-400 flex flex-col items-center">
-                                    <div className="w-12 h-12 bg-slate-200 rounded-full flex items-center justify-center mb-2">
-                                      <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
-                                      </svg>
-                                    </div>
-                                    <span className="text-xs font-medium">Image unavailable</span>
-                                  </div>
-                                </div>
-                              )}
-
-                              <div className="absolute top-4 left-4 bg-white/95 backdrop-blur-sm px-3 py-1.5 rounded-full text-xs font-bold text-blue-600 flex items-center gap-1.5 shadow-sm border border-blue-50/50">
-                                <MapPin className="w-3.5 h-3.5" />
-                                {item.displayLocation}
-                              </div>
-                            </div>
-
-                            {/* Content Section */}
-                            <div className="flex-1 p-6 md:py-8 md:px-8 flex flex-col justify-between">
-                              <div>
-                                <div className="flex items-center flex-wrap gap-2 text-xs font-semibold text-slate-500 mb-4">
-                                  <span className="flex items-center gap-1.5 bg-slate-50 px-2.5 py-1 rounded-md text-slate-600 border border-slate-100">
-                                    <Clock className="w-3.5 h-3.5 text-blue-500" />
-                                    {formatDurationDisplay(item.displayDuration || '')}
-                                  </span>
-                                </div>
-
-                                <h3 className="!text-xl !font-bold text-slate-900 mb-1 group-hover:text-blue-600 transition-colors leading-tight">
-                                  {item.displayName}
-                                </h3>
-
-                                <p className="!text-slate-600 !font-semibold !text-sm leading-relaxed line-clamp-2 mb-6">
-                                  {item.displayDescription}
-                                </p>
-                              </div>
-
-                              <div className="flex items-end justify-between pt-2 border-t border-dashed border-slate-200">
-                                <div className="flex flex-col">
-                                  <span className="text-xs font-bold !text-slate-600 uppercase tracking-wider mb-1">Starting From</span>
-                                  <span className="text-2xl font-black text-transparent bg-clip-text bg-gradient-to-r from-blue-600 to-indigo-600">
-                                    ₹ {(item.displayPrice || 0).toLocaleString()}
-                                  </span>
-                                </div>
-                                <div className="flex items-center gap-2 text-sm font-bold text-slate-900 group-hover:translate-x-1 transition-transform">
-                                  View Itinerary
-                                  <div className="bg-gradient-to-r from-blue-600 to-indigo-600 text-white p-2 rounded-full shadow-md shadow-blue-500/20">
-                                    <ArrowRight className="w-4 h-4" />
-                                  </div>
-                                </div>
-                              </div>
-                            </div>
-                          </Link>
-                        </div>
+                        <HorizontalPackageCard
+                          key={`${item.type}-${item._id}`}
+                          id={item._id}
+                          title={item.displayName}
+                          destination={item.displayLocation}
+                          duration={item.displayDuration}
+                          description={item.displayDescription}
+                          price={item.displayPrice}
+                          image={item.displayImage}
+                          detailUrl={item.detailUrl}
+                          isInWishlist={isInWishlist(item._id)}
+                          onWishlistToggle={handleWishlistToggle}
+                        />
                       ))}
 
                       {/* Pagination */}
@@ -812,275 +649,57 @@ export default function PackagesPageClient({ params }: PackagesPageClientProps) 
             </div>
           </section>
 
-          {/* You Might Also Like Section */}
           {suggestions.length > 0 && (
-            <section className="py-16 bg-slate-50 px-4 sm:px-6 lg:px-8">
-              <div className="max-w-7xl mx-auto">
-                <div className="text-center mb-12">
-                  <h2 className="!text-3xl sm:text-4xl !font-bold !text-slate-900 mb-4">
-                    You Might Also Like
-                  </h2>
-                  <p className="text-md md:text-lg !text-slate-600 max-w-2xl mx-auto">
-                    Explore more amazing destinations and create unforgettable memories
-                  </p>
+            <section className="!bg-white px-4 py-16 text-gray-900 md:px-8 relative z-20 overflow-hidden">
+              <div className="mx-auto flex max-w-6xl flex-col gap-10 relative z-10">
+                <div className="flex flex-col gap-2 md:flex-row md:items-end md:justify-between mb-2">
+                  <div className="flex flex-col gap-1">
+                    <h3 className="!text-2xl md:!text-3xl !font-bold !text-slate-900 !leading-tight flex items-center gap-3 flex-wrap">
+                      You Might Also Like
+                    </h3>
+                    <p className="!text-sm !text-slate-600 md:!text-base !max-w-2xl !font-semibold">
+                      Explore more amazing destinations and create unforgettable memories
+                    </p>
+                  </div>
+                  <div className="flex items-center gap-3 md:gap-4">
+                  </div>
                 </div>
 
-                {/* Mobile: Horizontal scrollable container */}
-                <div className="lg:hidden">
+                {/* Carousel */}
+                <div className="relative -mx-4 px-4 md:mx-0 md:px-0 group/carousel">
+                  <CarouselArrows
+                    onPrevious={() => scrollByStep(-1)}
+                    onNext={() => scrollByStep(1)}
+                    canScrollLeft={canScrollLeft}
+                    canScrollRight={canScrollRight}
+                  />
                   <div
-                    ref={mobileScrollRef}
-                    className="flex overflow-x-auto gap-4 pb-4 scrollbar-hide snap-x snap-mandatory"
-                    style={{ scrollBehavior: 'smooth' }}
+                    ref={carouselRef}
+                    className="flex gap-2 overflow-x-auto scroll-smooth pb-8 pt-2 scrollbar-hide px-2"
+                    style={{
+                      scrollbarWidth: "none",
+                      msOverflowStyle: "none",
+                      scrollSnapType: "x mandatory",
+                    }}
                   >
-                    {suggestions.map((suggestion, index) => (
-                      <div
-                        key={`suggestion-${suggestion._id || index}`}
-                        className="bg-white rounded-xl shadow-sm overflow-hidden hover:shadow-md transition-all duration-300 group flex-shrink-0 w-80 flex flex-col snap-start"
-                      >
-                        <div className="relative overflow-hidden h-48">
-                          {getImageUrl(suggestion.image) ? (
-                            <Image
-                              src={getImageUrl(suggestion.image)!}
-                              alt={suggestion.name}
-                              fill
-                              className="object-cover group-hover:scale-105 transition-transform duration-500"
-                            />
-                          ) : (
-                            <div className="w-full h-full bg-gray-200 flex items-center justify-center">
-                              <div className="text-center text-gray-500">
-                                <div className="w-12 h-12 mx-auto mb-2 bg-gray-300 rounded-full flex items-center justify-center">
-                                  <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
-                                  </svg>
-                                </div>
-                                <span className="text-sm">Image unavailable</span>
-                              </div>
-                            </div>
-                          )}
-
-
-
-                          <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/70 to-transparent p-4">
-                            <div className="text-white text-xs opacity-90 mb-1 flex items-center">
-                              <svg className="w-3 h-3 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
-                              </svg>
-                              {suggestion.location}
-                            </div>
-                            <h3 className="!text-md !font-semibold text-white">{suggestion.name}</h3>
-                          </div>
-                        </div>
-
-                        <div className="p-4 flex-1 flex flex-col">
-                          <div className="flex items-center !text-gray-500 !text-sm mb-3">
-                            <svg className="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
-                            </svg>
-                            <span>
-                              {suggestion.duration
-                                ? formatDurationDisplay(suggestion.duration)
-                                : 'Contact for duration'}
-                            </span>
-                          </div>
-
-                          <p className="!text-gray-600 !text-sm mb-4 line-clamp-2 leading-relaxed flex-1">{suggestion.shortDescription || suggestion.description}</p>
-
-                          <div className="flex items-center justify-between pt-3 border-t border-gray-100 mt-auto">
-                            <div>
-                              <div className="!text-xs !text-gray-500">Starting from</div>
-                              <div className="!text-lg !font-semibold !text-gray-900">
-                                ₹{suggestion.price?.toLocaleString() || 'Contact for price'}
-                              </div>
-                            </div>
-                            <a
-                              href={`/destinations/${suggestion.slug || suggestion._id}`}
-                              className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors duration-200 text-sm font-medium flex items-center"
-                            >
-                              Explore
-                              <svg className="w-4 h-4 ml-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M14 5l7 7m0 0l-7 7m7-7H3" />
-                              </svg>
-                            </a>
-                          </div>
-                        </div>
-                      </div>
+                    {suggestions.map((pkg, index) => (
+                      <PackageCard
+                        key={`${pkg._id}-${index}`}
+                        id={pkg._id}
+                        destination={pkg.location}
+                        duration={pkg.duration}
+                        title={pkg.name}
+                        price={pkg.price || 0}
+                        image={getImageUrl(pkg.image) || `https://picsum.photos/800/500?random=${index + 50}`}
+                        slug={pkg.slug || pkg._id}
+                        hrefPrefix="/destinations"
+                        themeColor="#005beb"
+                        priceLabel="Per Person"
+                        isInWishlist={isInWishlist(pkg._id)}
+                        onWishlistToggle={handleWishlistToggle}
+                      />
                     ))}
                   </div>
-
-                  {/* Mobile Dot Pagination */}
-                  {suggestions.length > 1 && (
-                    <div className="flex justify-center items-center gap-2 mt-3">
-                      {suggestions.map((_, index) => (
-                        <button
-                          key={index}
-                          onClick={() => handleMobileDotClick(index)}
-                          className={`pagination-dot ${mobileSuggestionIndex === index ? 'mobile-active' : ''}`}
-                          aria-label={`Go to suggestion ${index + 1}`}
-                        />
-                      ))}
-                    </div>
-                  )}
-                </div>
-
-                {/* Desktop: 5 cards grid with pagination */}
-                <div className="hidden lg:block">
-                  <style jsx global>{`
-                    @keyframes fadeInSoft {
-                      from { opacity: 0; transform: translateY(10px); }
-                      to { opacity: 1; transform: translateY(0); }
-                    }
-                    .card-new {
-                      animation: fadeInSoft 0.4s ease-out;
-                    }
-                    .pagination-dot {
-                      width: 8px;
-                      height: 8px;
-                      border-radius: 50%;
-                      background-color: #cbd5e1;
-                      transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-                      cursor: pointer;
-                      border: none;
-                    }
-                    .pagination-dot.active {
-                      background-color: #3b82f6;
-                      width: 24px;
-                      border-radius: 4px;
-                    }
-                    .pagination-dot.mobile-active {
-                      background-color: #3b82f6;
-                      width: 20px;
-                      border-radius: 4px;
-                    }
-                  `}</style>
-
-                  {/* Navigation controls */}
-                  <div className="flex justify-between items-center mb-4">
-                    <h3 className="text-lg font-semibold text-gray-800">Explore More Destinations</h3>
-                    <div className="flex space-x-2">
-                      <button
-                        type="button"
-                        onClick={prevSlide}
-                        disabled={currentSlide === 0}
-                        className="bg-white shadow-lg rounded-full p-2 hover:bg-gray-50 hover:shadow-xl transition-all duration-200 disabled:opacity-30 disabled:cursor-not-allowed border border-gray-200 hover:border-gray-300"
-                        aria-label="Previous"
-                      >
-                        <ChevronLeft className="w-5 h-5 text-gray-700" />
-                      </button>
-
-                      <button
-                        type="button"
-                        onClick={nextSlide}
-                        disabled={currentSlide >= suggestions.length - 5}
-                        className="bg-white shadow-lg rounded-full p-2 hover:bg-gray-50 hover:shadow-xl transition-all duration-200 disabled:opacity-30 disabled:cursor-not-allowed border border-gray-200 hover:border-gray-300"
-                        aria-label="Next"
-                      >
-                        <ChevronRight className="w-5 h-5 text-gray-700" />
-                      </button>
-                    </div>
-                  </div>
-
-                  {/* Grid container */}
-                  <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4">
-                    {suggestions.slice(currentSlide, currentSlide + 5).map((suggestion, index) => {
-                      const actualIndex = currentSlide + index;
-                      const isNewCard = newCardIndex === index;
-                      return (
-                        <motion.div
-                          key={`suggestion-${suggestion._id || actualIndex}`}
-                          initial={isNewCard ? { opacity: 0, scale: 0.9 } : false}
-                          animate={isNewCard ? { opacity: 1, scale: 1 } : {}}
-                          transition={{ duration: 0.3 }}
-                          className={`bg-white rounded-xl shadow-sm overflow-hidden hover:shadow-md transition-all duration-300 group h-full flex flex-col ${isNewCard ? 'card-new' : ''}`}
-                        >
-                          <div className="relative aspect-[16/9] overflow-hidden">
-                            {getImageUrl(suggestion.image) ? (
-                              <Image
-                                src={getImageUrl(suggestion.image)!}
-                                alt={suggestion.name}
-                                fill
-                                className="object-cover group-hover:scale-105 transition-transform duration-500"
-                              />
-                            ) : (
-                              <div className="w-full h-full bg-gray-200 flex items-center justify-center">
-                                <div className="text-center text-gray-500">
-                                  <div className="w-12 h-12 mx-auto mb-2 bg-gray-300 rounded-full flex items-center justify-center">
-                                    <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
-                                    </svg>
-                                  </div>
-                                  <span className="text-sm">Image unavailable</span>
-                                </div>
-                              </div>
-                            )}
-
-                            <div className="absolute top-3 right-3 flex flex-col items-end space-y-2">
-
-
-                            </div>
-
-                            <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/70 to-transparent p-4">
-                              <div className="text-white text-xs opacity-90 mb-1 flex items-center">
-                                <svg className="w-3 h-3 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
-                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
-                                </svg>
-                                {suggestion.location}
-                              </div>
-                              <h3 className="!text-lg !font-semibold text-white">{suggestion.name}</h3>
-                            </div>
-                          </div>
-
-                          <div className="p-4 flex-1 flex flex-col">
-                            <div className="flex items-center !text-gray-500 !text-sm mb-3">
-                              <svg className="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
-                              </svg>
-                              <span>
-                                {suggestion.duration
-                                  ? formatDurationDisplay(suggestion.duration)
-                                  : 'Contact for duration'}
-                              </span>
-                            </div>
-
-                            <p className="!text-gray-600 !text-sm mb-4 line-clamp-2 leading-relaxed flex-1">{suggestion.shortDescription || suggestion.description}</p>
-
-                            <div className="flex items-center justify-between pt-3 border-t border-gray-100 mt-auto">
-                              <div>
-                                <div className="!text-xs !text-gray-500">Starting from</div>
-                                <div className="!text-lg !font-semibold !text-gray-900">
-                                  ₹{suggestion.price?.toLocaleString() || 'Contact for price'}
-                                </div>
-                              </div>
-                              <a
-                                href={`/destinations/${suggestion.slug || suggestion._id}`}
-                                className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors duration-200 text-sm font-medium flex items-center"
-                              >
-                                Explore
-                                <svg className="w-4 h-4 ml-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M14 5l7 7m0 0l-7 7m7-7H3" />
-                                </svg>
-                              </a>
-                            </div>
-                          </div>
-                        </motion.div>
-                      );
-                    })}
-                  </div>
-
-                  {/* Desktop Dot Pagination */}
-                  {suggestions.length > 5 && (
-                    <div className="flex justify-center items-center gap-2 mt-6">
-                      {Array.from({ length: Math.ceil(suggestions.length / 5) }, (_, i) => (
-                        <button
-                          key={i}
-                          onClick={() => handleDesktopDotClick(i)}
-                          className={`pagination-dot ${Math.floor(currentSlide / 5) === i ? 'active' : ''}`}
-                          aria-label={`Go to page ${i + 1}`}
-                        />
-                      ))}
-                    </div>
-                  )}
                 </div>
               </div>
             </section>
@@ -1088,116 +707,25 @@ export default function PackagesPageClient({ params }: PackagesPageClientProps) 
 
           {/* Mobile Filter Dialog */}
           <Dialog open={isFiltersOpen} onOpenChange={setIsFiltersOpen}>
-            <DialogContent className="max-w-md max-h-[80vh] flex flex-col p-0">
-              <DialogHeader className="p-6 pb-4 flex-shrink-0 border-b">
-                <div className="flex items-center justify-between">
-                  <DialogTitle className="flex items-center gap-2">
-                    <div className="w-1 h-6 bg-blue-600 rounded"></div>
-                    <span className="text-black">Filters</span>
-                  </DialogTitle>
-                  <Button variant="ghost" size="sm" onClick={() => setIsFiltersOpen(false)}>
-                    <X className="h-4 w-4 text-black" />
-                  </Button>
-                </div>
-              </DialogHeader>
-
-              <div className="flex-1 overflow-y-auto px-6 pt-4">
-                {/* Duration Filter */}
-                <div className="mb-6">
-                  <div className="flex items-center gap-2 mb-3">
-                    <div className="w-1 h-4 bg-blue-600 rounded"></div>
-                    <Label className="text-sm font-semibold text-slate-700">DURATION</Label>
-                  </div>
-                  <RadioGroup value={durationFilter} onValueChange={(value) => setDurationFilter(value)}>
-                    <div className="space-y-2">
-                      <div className="flex items-center space-x-2">
-                        <RadioGroupItem value="all" id="mobile-duration-any" />
-                        <Label htmlFor="mobile-duration-any" className="text-sm text-slate-600 cursor-pointer">Any</Label>
-                      </div>
-                      <div className="flex items-center space-x-2">
-                        <RadioGroupItem value="1-3" id="mobile-duration-1-3" />
-                        <Label htmlFor="mobile-duration-1-3" className="text-sm text-slate-600 cursor-pointer">1-3 Days</Label>
-                      </div>
-                      <div className="flex items-center space-x-2">
-                        <RadioGroupItem value="4-6" id="mobile-duration-4-6" />
-                        <Label htmlFor="mobile-duration-4-6" className="text-sm text-slate-600 cursor-pointer">4-6 Days</Label>
-                      </div>
-                      <div className="flex items-center space-x-2">
-                        <RadioGroupItem value="7-9" id="mobile-duration-7-9" />
-                        <Label htmlFor="mobile-duration-7-9" className="text-sm text-slate-600 cursor-pointer">7-9 Days</Label>
-                      </div>
-                      <div className="flex items-center space-x-2">
-                        <RadioGroupItem value="10-12" id="mobile-duration-10-12" />
-                        <Label htmlFor="mobile-duration-10-12" className="text-sm text-slate-600 cursor-pointer">10-12 Days</Label>
-                      </div>
-                      <div className="flex items-center space-x-2">
-                        <RadioGroupItem value="13+" id="mobile-duration-13+" />
-                        <Label htmlFor="mobile-duration-13+" className="text-sm text-slate-600 cursor-pointer">13+ Days</Label>
-                      </div>
-                    </div>
-                  </RadioGroup>
-                </div>
-
-                {/* Price Filter */}
-                <div className="mb-6">
-                  <div className="flex items-center gap-2 mb-3">
-                    <div className="w-1 h-4 bg-blue-600 rounded"></div>
-                    <Label className="text-sm font-semibold text-slate-700">PRICE</Label>
-                  </div>
-                  <RadioGroup value={priceFilter} onValueChange={(value) => setPriceFilter(value)}>
-                    <div className="space-y-2">
-                      <div className="flex items-center space-x-2">
-                        <RadioGroupItem value="all" id="mobile-price-any" />
-                        <Label htmlFor="mobile-price-any" className="text-sm text-slate-600 cursor-pointer">Any</Label>
-                      </div>
-                      <div className="flex items-center space-x-2">
-                        <RadioGroupItem value="0-10000" id="mobile-price-0-10000" />
-                        <Label htmlFor="mobile-price-0-10000" className="text-sm text-slate-600 cursor-pointer">₹ 0 - ₹ 10,000</Label>
-                      </div>
-                      <div className="flex items-center space-x-2">
-                        <RadioGroupItem value="10000-20000" id="mobile-price-10000-20000" />
-                        <Label htmlFor="mobile-price-10000-20000" className="text-sm text-slate-600 cursor-pointer">₹ 10,000 - ₹ 20,000</Label>
-                      </div>
-                      <div className="flex items-center space-x-2">
-                        <RadioGroupItem value="20000-35000" id="mobile-price-20000-35000" />
-                        <Label htmlFor="mobile-price-20000-35000" className="text-sm text-slate-600 cursor-pointer">₹ 20,000 - ₹ 35,000</Label>
-                      </div>
-                      <div className="flex items-center space-x-2">
-                        <RadioGroupItem value="35000-50000" id="mobile-price-35000-50000" />
-                        <Label htmlFor="mobile-price-35000-50000" className="text-sm text-slate-600 cursor-pointer">₹ 35,000 - ₹ 50,000</Label>
-                      </div>
-                      <div className="flex items-center space-x-2">
-                        <RadioGroupItem value="50000+" id="mobile-price-50000+" />
-                        <Label htmlFor="mobile-price-50000+" className="text-sm text-slate-600 cursor-pointer">₹ 50,000+</Label>
-                      </div>
-                    </div>
-                  </RadioGroup>
-                </div>
-              </div>
-
-              <div className="p-6 pt-4 flex-shrink-0 border-t border-slate-200 flex gap-3">
-                <Button
-                  variant="outline"
-                  className="flex-1"
-                  onClick={() => {
-                    setDurationFilter('all');
-                    setPriceFilter('all');
-                    setSortBy('recommended');
-                  }}
-                >
-                  Clear All
-                </Button>
-                <Button
-                  className="flex-1 bg-gradient-to-r from-blue-500 to-indigo-600 hover:from-blue-600 hover:to-indigo-700 text-white"
-                  onClick={() => setIsFiltersOpen(false)}
-                >
-                  Apply Filters
-                </Button>
-              </div>
+            <DialogContent className="max-w-md max-h-[90vh] flex flex-col p-0 overflow-hidden">
+              <SearchFilterSidebar
+                durationFilter={durationFilter}
+                setDurationFilter={setDurationFilter}
+                priceFilter={priceFilter}
+                setPriceFilter={setPriceFilter}
+                onClearFilters={() => {
+                  setDurationFilter('all');
+                  setPriceFilter('all');
+                  setSortBy('recommended');
+                }}
+                onClose={() => setIsFiltersOpen(false)}
+                onApply={() => setIsFiltersOpen(false)}
+              />
             </DialogContent>
           </Dialog>
         </Suspense>
       </div>
+      <LoginAlertModal isOpen={isLoginModalOpen} onClose={() => setIsLoginModalOpen(false)} theme="blue" />
     </div>
   );
 }

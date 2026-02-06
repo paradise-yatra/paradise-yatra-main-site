@@ -5,7 +5,6 @@ import { motion, useReducedMotion, type Transition } from "framer-motion";
 import {
   LazyHeader,
   LazyHeroSection,
-  LazyFixedDepartureCarousel,
   LazyTrendingDestinations,
   LazyHolidaysSection,
   LazyDestinationsGrid,

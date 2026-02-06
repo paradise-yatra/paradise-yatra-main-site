@@ -47,6 +47,7 @@ interface FixedDeparture {
 interface NavigationItem {
   name: string;
   icon: string;
+  href?: string;
   submenu: Array<{
     name: string;
     href: string;
@@ -62,6 +63,7 @@ const fallbackNavItems: NavigationItem[] = [
   {
     name: "International Tour",
     icon: "Globe",
+    href: "/packages/international",
     submenu: [
       { name: "Europe", href: "/packages/international" },
       { name: "Southeast Asia", href: "/packages/international" },
@@ -71,6 +73,7 @@ const fallbackNavItems: NavigationItem[] = [
   {
     name: "India Tour Package",
     icon: "MapPin",
+    href: "/packages/india",
     submenu: [
       { name: "North India", href: "/packages/india" },
       { name: "South India", href: "/packages/india" },
@@ -203,6 +206,7 @@ export const useNavigation = () => {
           dynamicNavItems.push({
             name,
             icon,
+            href: `/packages/${tourType.tourType}`,
             submenu
           });
         });

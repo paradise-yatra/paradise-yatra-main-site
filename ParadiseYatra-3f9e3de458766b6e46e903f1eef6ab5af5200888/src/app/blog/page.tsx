@@ -196,10 +196,10 @@ const BlogPage = () => {
             <span className="text-blue-600 !font-semibold !text-xs tracking-widest uppercase">
               Read Our Blog
             </span>
-            <h1 className="text-4xl md:text-5xl font-extrabold mt-4 mb-4 tracking-tight text-slate-900">
+            <h1 className="!text-3xl  md:!text-4xl!font-extrabold mt-2 mb-2 tracking-tight text-slate-900">
               Travel Blog & Guides
             </h1>
-            <p className="!text-lg !text-slate-500 max-w-2xl">
+            <p className="!text-md !text-slate-600 max-w-2xl">
               Discover expert tips, local insights, and guides to make your journey unforgettable.
             </p>
           </motion.div>

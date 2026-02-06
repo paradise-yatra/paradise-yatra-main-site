@@ -184,6 +184,10 @@ const createFixedDeparture = async (req, res) => {
       exclusions,
       terms,
       images,
+      isActive,
+      isFeatured,
+      status,
+      departures,
     } = req.body;
 
     // Validate required fields
@@ -199,7 +203,8 @@ const createFixedDeparture = async (req, res) => {
       "category",
     ];
     for (const field of requiredFields) {
-      if (!req.body[field]) {
+      const value = req.body[field];
+      if (value === undefined || value === null || value === "") {
         return res.status(400).json({ message: `${field} is required` });
       }
     }
@@ -245,19 +250,27 @@ const createFixedDeparture = async (req, res) => {
       returnDate,
       availableSeats,
       totalSeats,
-      highlights,
-      itinerary,
-      inclusions,
-      exclusions,
-      terms,
+      highlights: highlights || [],
+      itinerary: itinerary || [],
+      inclusions: inclusions || [],
+      exclusions: exclusions || [],
+      terms: terms || [],
       images: images || [],
+      isActive: isActive !== undefined ? isActive : true,
+      isFeatured: isFeatured !== undefined ? isFeatured : false,
+      status: status || 'upcoming',
+      departures: departures || [],
     });
 
     await fixedDeparture.save();
     res.status(201).json(fixedDeparture);
   } catch (error) {
     console.error("Error creating fixed departure:", error);
-    res.status(500).json({ message: "Internal server error" });
+    if (error.name === 'ValidationError') {
+      const messages = Object.values(error.errors).map(err => err.message);
+      return res.status(400).json({ message: messages.join(', ') });
+    }
+    res.status(500).json({ message: "Internal server error: " + error.message });
   }
 };
 
@@ -292,6 +305,7 @@ const updateFixedDeparture = async (req, res) => {
       isActive,
       isFeatured,
       status,
+      departures,
     } = req.body;
 
     // Validate tour type if provided
@@ -357,6 +371,7 @@ const updateFixedDeparture = async (req, res) => {
         isActive,
         isFeatured,
         status,
+        departures,
       },
       { new: true, runValidators: true }
     );
@@ -368,7 +383,11 @@ const updateFixedDeparture = async (req, res) => {
     res.json(updatedFixedDeparture);
   } catch (error) {
     console.error("Error updating fixed departure:", error);
-    res.status(500).json({ message: "Internal server error" });
+    if (error.name === 'ValidationError') {
+      const messages = Object.values(error.errors).map(err => err.message);
+      return res.status(400).json({ message: messages.join(', ') });
+    }
+    res.status(500).json({ message: "Internal server error: " + error.message });
   }
 };
 

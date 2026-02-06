@@ -5,7 +5,7 @@ import { motion } from "framer-motion";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Star, MapPin, Clock, Heart, ChevronLeft, ChevronRight, Compass } from "lucide-react";
+import { Star, MapPin, Clock, Heart, ChevronLeft, ChevronRight, Compass, ArrowRight } from "lucide-react";
 import { SkeletonPackageCard } from "@/components/ui/skeleton";
 import Skeleton from "@/components/ui/skeleton";
 import Link from "next/link";
@@ -13,6 +13,8 @@ import Image from "next/image";
 import { getImageUrl } from "@/lib/utils";
 import TruncatedText from "@/components/ui/truncated-text";
 import { getCategoryPageUrl } from "@/lib/categoryUtils";
+import { useAuth } from "@/context/AuthContext";
+import LoginAlertModal from "./LoginAlertModal";
 
 interface Package {
   _id: string;
@@ -43,6 +45,21 @@ const TrendingDestinations = () => {
   const [isMobile, setIsMobile] = useState(false);
   const [activeScrollIndex, setActiveScrollIndex] = useState(0);
   const scrollContainerRef = useRef<HTMLDivElement>(null);
+
+  const { user, toggleWishlist: contextToggleWishlist, isInWishlist } = useAuth();
+  const [isLoginModalOpen, setIsLoginModalOpen] = useState(false);
+
+  const handleWishlistToggle = (e: React.MouseEvent, pkgId: string) => {
+    e.preventDefault();
+    e.stopPropagation();
+
+    if (!user) {
+      setIsLoginModalOpen(true);
+      return;
+    }
+
+    contextToggleWishlist(pkgId);
+  };
 
   // Update mobile state based on screen size
   useEffect(() => {
@@ -282,72 +299,68 @@ const TrendingDestinations = () => {
                   style={{ maxWidth: '100%' }}
                 >
                   <Link href={`/itinerary/${pkg.slug || pkg._id}`} className="block w-full">
-                    <Card className="group overflow-hidden modern-card hover-lift rounded-3xl shadow-xl border-0 relative bg-gradient-to-br from-white via-blue-50 to-blue-100 flex flex-col min-h-[580px] w-full cursor-pointer">
-                      {/* Fixed height image container */}
-                      <div className="relative h-60 overflow-hidden card-image rounded-t-3xl w-full flex-shrink-0">
+                    <article
+                      className="group cursor-pointer bg-white rounded-lg overflow-hidden border border-gray-300 transition-all duration-300 relative w-full"
+                    >
+                      {/* White hover overlay */}
+                      <div className="absolute inset-0 bg-white/10 opacity-10 group-hover:opacity-100 transition-opacity duration-300 z-30 pointer-events-none"></div>
+
+                      <div className="relative h-64 w-full overflow-hidden">
                         <Image
                           src={getImageUrl(pkg.images?.[0]) || "https://images.unsplash.com/photo-1524492412937-b28074a5d7da?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80"}
                           alt={pkg.title}
                           fill
-                          className="object-cover transition-transform duration-500 group-hover:scale-110"
-                          onError={(e) => {
-                            console.error('Image failed to load:', pkg.images?.[0]);
-                            const target = e.target as HTMLImageElement;
-                            target.src = "https://images.unsplash.com/photo-1524492412937-b28074a5d7da?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80";
-                          }}
+                          className="object-cover transition-transform duration-700"
                         />
-                        <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-transparent to-transparent z-10" />
+                        {/* Gradient Overlay */}
+                        <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/20 to-transparent" />
 
-                        <div className="absolute top-3 sm:top-4 left-3 sm:left-4 z-20">
-                          <Badge className="badge bg-blue-600 text-white px-2 sm:px-3 py-1 text-xs font-bold shadow-md">
-                            {pkg.category === 'trending' ? 'Trending' : pkg.category.charAt(0).toUpperCase() + pkg.category.slice(1)}
-                          </Badge>
+                        {/* Content on Image */}
+                        <button
+                          onClick={(e) => handleWishlistToggle(e, pkg._id)}
+                          className="absolute top-3 right-3 z-40 p-2 rounded-full bg-white/20 backdrop-blur-md border border-white/30 hover:bg-white transition-all shadow-sm group/heart"
+                        >
+                          <Heart
+                            className={`w-4 h-4 transition-colors ${isInWishlist(pkg._id) ? "fill-blue-600 text-blue-600" : "text-white group-hover/heart:text-blue-600"}`}
+                          />
+                        </button>
+
+                        <div className="absolute bottom-4 left-4 right-4 text-white">
+                          <div className="flex items-center gap-1.5 mb-1.5 opacity-90">
+                            <MapPin className="h-3.5 w-3.5 text-blue-600" />
+                            <span className="!text-xs !font-semibold tracking-wide uppercase">{pkg.destination}</span>
+                          </div>
+                          <h4 className="text-md !font-bold leading-snug line-clamp-2 text-shadow-sm">
+                            {pkg.title}
+                          </h4>
                         </div>
-
                       </div>
 
-                      {/* Content container with flexbox layout */}
-                      <CardContent className="p-4 sm:p-5 flex flex-col flex-1">
-                        <div className="flex-1">
-                          <h3 className="text-lg sm:text-xl font-bold text-gray-900 mb-3 line-clamp-2 group-hover:text-blue-700 transition-colors duration-200">
-                            {pkg.title}
-                          </h3>
-
-                          <TruncatedText
-                            text={pkg.shortDescription}
-                            maxWords={18}
-                            className="text-gray-700 text-sm leading-relaxed font-medium line-clamp-3 mb-4"
-                            buttonClassName="text-blue-600 hover:text-blue-700 font-semibold"
-                          />
-
-                          <div className="space-y-2 text-xs text-gray-500 mb-4">
-                            <div className="flex items-center space-x-2">
-                              <Clock className="w-3 h-3 text-blue-500 flex-shrink-0" />
-                              <span className="font-semibold truncate">{pkg.duration}</span>
-                            </div>
-                            <div className="flex items-center space-x-2">
-                              <MapPin className="w-3 h-3 text-blue-500 flex-shrink-0" />
-                              <span className="font-semibold truncate">{pkg.destination}</span>
-                            </div>
+                      <div className="p-5">
+                        <div className="flex items-center justify-between mb-4">
+                          <div className="flex flex-col">
+                            <span className="text-xs text-slate-800 font-black uppercase tracking-wide">Duration</span>
+                            <span className="text-sm !font-bold text-slate-800 flex items-center gap-1">
+                              <div className="w-1.5 h-1.5 rounded-full bg-blue-600"></div>
+                              {pkg.duration}
+                            </span>
+                          </div>
+                          <div className="flex flex-col items-end">
+                            <span className="text-xs text-slate-800 font-black uppercase tracking-wide">Price</span>
+                            <span className="!text-lg font-black text-blue-600">
+                              ₹{pkg.price.toLocaleString()}
+                            </span>
                           </div>
                         </div>
 
-                        {/* Bottom always aligned */}
-                        <div className="mt-auto">
-                          <div className="mb-4">
-                            <div className="text-lg sm:text-xl font-extrabold text-blue-700">₹{pkg.price.toLocaleString()}</div>
-                            {pkg.originalPrice && (
-                              <div className="line-through text-gray-400 text-xs">₹{pkg.originalPrice.toLocaleString()}</div>
-                            )}
-                            <div className="text-xs text-gray-500">Starting From Per Person</div>
-                          </div>
-
-                          <Button className="w-full py-3 text-sm font-bold bg-gradient-to-r from-blue-600 to-blue-400 text-white rounded-xl shadow-lg hover:cursor-pointer hover:from-blue-700 hover:to-blue-500 transition-all duration-200">
-                            View Details
-                          </Button>
+                        <div className="pt-4 border-t border-dashed border-gray-300 flex items-center justify-between">
+                          <span className="text-xs text-slate-800">Per Person</span>
+                          <button className="text-sm font-semibold text-slate-900 group-hover:text-blue-600 transition-colors flex items-center gap-2">
+                            View Details <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-1" />
+                          </button>
                         </div>
-                      </CardContent>
-                    </Card>
+                      </div>
+                    </article>
                   </Link>
                 </motion.div>
               ))}
@@ -385,79 +398,69 @@ const TrendingDestinations = () => {
                   whileHover={{ y: -10, scale: 1.03 }}
                   className="h-full flex flex-col"
                 >
-                  <Link href={`/itinerary/${pkg.slug || pkg._id}`} className="block h-full">
-                    <Card className="h-full flex flex-col group overflow-hidden modern-card hover-lift rounded-3xl shadow-xl border-0 bg-gradient-to-br from-white via-blue-50 to-blue-100 min-h-[580px] cursor-pointer">
-                      <div className="relative h-60 overflow-hidden card-image rounded-t-3xl w-full flex-shrink-0">
+                  <Link href={`/itinerary/${pkg.slug || pkg._id}`} className="block h-full w-full">
+                    <article
+                      className="group cursor-pointer bg-white rounded-lg overflow-hidden border border-gray-300 transition-all duration-300 relative w-full h-full"
+                    >
+                      {/* White hover overlay */}
+                      <div className="absolute inset-0 bg-white/10 opacity-10 group-hover:opacity-100 transition-opacity duration-300 z-30 pointer-events-none"></div>
+
+                      <div className="relative h-64 w-full overflow-hidden">
                         <Image
                           src={getImageUrl(pkg.images?.[0]) || "https://images.unsplash.com/photo-1524492412937-b28074a5d7da?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80"}
                           alt={pkg.title}
                           fill
-                          className="object-cover transition-transform duration-500 group-hover:scale-110"
-                          onError={(e) => {
-                            console.error('Image failed to load:', pkg.images?.[0]);
-                            const target = e.target as HTMLImageElement;
-                            // Prevent infinite loops by checking if we're already using fallback
-                            if (!target.src.includes('unsplash.com')) {
-                              target.src = "https://images.unsplash.com/photo-1524492412937-b28074a5d7da?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80";
-                            }
-                          }}
-                          onLoad={() => {
-                            // Log successful image loads for debugging
-                            console.log('Image loaded successfully:', pkg.images?.[0]);
-                          }}
+                          className="object-cover transition-transform duration-700"
                         />
-                        <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-transparent to-transparent z-10" />
+                        {/* Gradient Overlay */}
+                        <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/20 to-transparent" />
 
-                        <div className="absolute top-3 sm:top-4 left-3 sm:left-4 z-20">
-                          <Badge className="badge bg-blue-600 text-white px-2 sm:px-3 py-1 text-xs font-bold shadow-md">
-                            {pkg.category === 'trending' ? 'Trending' : pkg.category.charAt(0).toUpperCase() + pkg.category.slice(1)}
-                          </Badge>
+                        {/* Content on Image */}
+                        <button
+                          onClick={(e) => handleWishlistToggle(e, pkg._id)}
+                          className="absolute top-3 right-3 z-40 p-2 rounded-full bg-white/20 backdrop-blur-md border border-white/30 hover:bg-white transition-all shadow-sm group/heart"
+                        >
+                          <Heart
+                            className={`w-4 h-4 transition-colors ${isInWishlist(pkg._id) ? "fill-blue-600 text-blue-600" : "text-white group-hover/heart:text-blue-600"}`}
+                          />
+                        </button>
+
+                        <div className="absolute bottom-4 left-4 right-4 text-white">
+                          <div className="flex items-center gap-1.5 mb-1.5 opacity-90">
+                            <MapPin className="h-3.5 w-3.5 text-blue-600" />
+                            <span className="!text-xs !font-semibold tracking-wide uppercase">{pkg.destination}</span>
+                          </div>
+                          <h4 className="text-md !font-bold leading-snug line-clamp-2 text-shadow-sm">
+                            {pkg.title}
+                          </h4>
                         </div>
-
-
                       </div>
 
-                      <CardContent className="p-4 sm:p-5 md:p-6 flex flex-col flex-1">
-                        <div className="flex-1">
-                          <h3 className="text-lg sm:text-xl font-bold text-gray-900 mb-3 line-clamp-2 group-hover:text-blue-700 transition-colors duration-200">
-                            {pkg.title}
-                          </h3>
-
-                          <TruncatedText
-                            text={pkg.shortDescription}
-                            maxWords={18}
-                            className="text-gray-700 text-sm leading-relaxed font-medium line-clamp-3 mb-4"
-                            buttonClassName="text-blue-600 hover:text-blue-700 font-semibold"
-                          />
-
-                          <div className="space-y-2 text-xs text-gray-500 mb-4">
-                            <div className="flex items-center space-x-2">
-                              <Clock className="w-3 h-3 text-blue-500 flex-shrink-0" />
-                              <span className="font-semibold truncate">{pkg.duration}</span>
-                            </div>
-                            <div className="flex items-center space-x-2">
-                              <MapPin className="w-3 h-3 text-blue-500 flex-shrink-0" />
-                              <span className="font-semibold truncate">{pkg.destination}</span>
-                            </div>
+                      <div className="p-5">
+                        <div className="flex items-center justify-between mb-4">
+                          <div className="flex flex-col">
+                            <span className="text-xs text-slate-800 font-black uppercase tracking-wide">Duration</span>
+                            <span className="text-sm !font-bold text-slate-800 flex items-center gap-1">
+                              <div className="w-1.5 h-1.5 rounded-full bg-blue-600"></div>
+                              {pkg.duration}
+                            </span>
+                          </div>
+                          <div className="flex flex-col items-end">
+                            <span className="text-xs text-slate-800 font-black uppercase tracking-wide">Price</span>
+                            <span className="!text-lg font-black text-blue-600">
+                              ₹{pkg.price.toLocaleString()}
+                            </span>
                           </div>
                         </div>
 
-                        {/* Bottom always aligned */}
-                        <div className="mt-auto">
-                          <div className="mb-4">
-                            <div className="text-lg sm:text-xl font-extrabold text-blue-700">₹{pkg.price.toLocaleString()}</div>
-                            {pkg.originalPrice && (
-                              <div className="line-through text-gray-400 text-xs">₹{pkg.originalPrice.toLocaleString()}</div>
-                            )}
-                            <div className="text-xs text-gray-500">Starting From Per Person</div>
-                          </div>
-
-                          <Button className="w-full py-3 text-sm font-bold bg-gradient-to-r from-blue-600 to-blue-400 text-white rounded-xl shadow-lg hover:cursor-pointer hover:from-blue-700 hover:to-blue-500 transition-all duration-200">
-                            View Details
-                          </Button>
+                        <div className="pt-4 border-t border-dashed border-gray-300 flex items-center justify-between">
+                          <span className="text-xs text-slate-800">Per Person</span>
+                          <button className="text-sm font-semibold text-slate-900 group-hover:text-blue-600 transition-colors flex items-center gap-2">
+                            View Details <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-1" />
+                          </button>
                         </div>
-                      </CardContent>
-                    </Card>
+                      </div>
+                    </article>
                   </Link>
                 </motion.div>
               ))}
@@ -481,6 +484,7 @@ const TrendingDestinations = () => {
           </Link>
         </motion.div>
       </div>
+      <LoginAlertModal isOpen={isLoginModalOpen} onClose={() => setIsLoginModalOpen(false)} theme="blue" />
     </section>
   );
 };

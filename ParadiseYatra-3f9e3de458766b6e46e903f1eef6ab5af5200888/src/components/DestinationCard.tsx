@@ -27,11 +27,11 @@ const DestinationCard = ({ name, image, href }: DestinationCardProps) => {
                 />
 
                 {/* Gradient Overlay */}
-                <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent opacity-80 group-hover:opacity-90 transition-opacity duration-300"></div>
+                <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/20 to-transparent"></div>
 
                 {/* Content */}
                 <div className="absolute inset-x-0 bottom-0 p-5 flex flex-col justify-end z-20">
-                   
+
                     <h3 className="!text-2xl !font-bold text-white leading-tight drop-shadow-md transition-transform duration-300">
                         {name}
                     </h3>

@@ -111,12 +111,12 @@ const AdminTrendingDestinations = () => {
     const countryIso2 = e.target.value;
     setSelectedCountryIso2(countryIso2);
     setSelectedState("");
-    
+
     const selectedCountry = countries.find(c => c.iso2 === countryIso2);
-    setFormData(prev => ({ 
-      ...prev, 
-      country: selectedCountry ? selectedCountry.name : "", 
-      state: "" 
+    setFormData(prev => ({
+      ...prev,
+      country: selectedCountry ? selectedCountry.name : "",
+      state: ""
     }));
 
     if (countryIso2) {
@@ -146,7 +146,7 @@ const AdminTrendingDestinations = () => {
 
     setImageFile(file);
     setImageUrl("");
-    
+
     const reader = new FileReader();
     reader.onloadend = () => {
       setImagePreview(reader.result as string);
@@ -159,7 +159,7 @@ const AdminTrendingDestinations = () => {
     const url = e.target.value;
     setImageUrl(url);
     setImageFile(null);
-    
+
     if (url) {
       setImagePreview(url);
       setFormData(prev => ({ ...prev, image: url }));
@@ -180,24 +180,25 @@ const AdminTrendingDestinations = () => {
     try {
       setLoading(true);
       setError(null);
-      
+
       const token = localStorage.getItem('adminToken');
       const headers: HeadersInit = {
         'Content-Type': 'application/json',
       };
-      
+
       if (token) {
         headers['Authorization'] = `Bearer ${token}`;
       }
-      
+
       const response = await fetch('/api/packages?category=Trending%20Destinations&limit=100', {
-        headers
+        headers,
+        cache: 'no-store'
       });
-      
+
       if (!response.ok) {
         throw new Error('Failed to fetch trending destinations');
       }
-      
+
       const data = await response.json();
       const destinationsArray = Array.isArray(data) ? data : (data.packages || []);
       setTrendingDestinations(destinationsArray);
@@ -215,7 +216,7 @@ const AdminTrendingDestinations = () => {
   const handleAddDestination = async () => {
     try {
       setSubmitting(true);
-      
+
       const token = localStorage.getItem('adminToken');
       if (!token) {
         toast.error('Authentication required. Please login again.');
@@ -251,7 +252,8 @@ const AdminTrendingDestinations = () => {
           highlights: formData.highlights ? formData.highlights.split(',').map(h => h.trim()) : []
         };
 
-        const response = await fetch(`${BACKEND_URL}/api/packages`, {
+        const response = await fetch('/api/packages', {
+
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
@@ -272,11 +274,11 @@ const AdminTrendingDestinations = () => {
       }
 
       const uploadFormData = new FormData();
-      
+
       if (imageFile) {
         uploadFormData.append('image', imageFile);
       }
-      
+
       uploadFormData.append('title', formData.title);
       uploadFormData.append('slug', formData.slug);
       uploadFormData.append('description', formData.description);
@@ -287,23 +289,24 @@ const AdminTrendingDestinations = () => {
       uploadFormData.append('tourType', formData.tourType);
       uploadFormData.append('category', formData.category);
       uploadFormData.append('price', formData.price);
-      
+
       if (formData.originalPrice) {
         uploadFormData.append('originalPrice', formData.originalPrice);
       }
       if (formData.discount) {
         uploadFormData.append('discount', formData.discount);
       }
-      
+
       uploadFormData.append('rating', formData.rating || '0');
       uploadFormData.append('duration', formData.duration);
       uploadFormData.append('isActive', String(formData.isActive));
       uploadFormData.append('isFeatured', String(formData.isFeatured));
-      
+
       const highlightsArray = formData.highlights ? formData.highlights.split(',').map(h => h.trim()) : [];
       uploadFormData.append('highlights', JSON.stringify(highlightsArray));
 
-      const response = await fetch(`${BACKEND_URL}/api/packages`, {
+      const response = await fetch('/api/packages', {
+
         method: 'POST',
         headers: {
           'Authorization': `Bearer ${token}`,
@@ -329,7 +332,7 @@ const AdminTrendingDestinations = () => {
 
   const handleEditDestination = (dest: TrendingDestination) => {
     setEditingDestination(dest);
-    
+
     // Set country and state
     const country = countries.find(c => c.name === dest.country);
     setSelectedCountryIso2(country?.iso2 || '');
@@ -342,12 +345,12 @@ const AdminTrendingDestinations = () => {
         state_code: s.isoCode || '',
       })));
     }
-    
+
     const existingImage = dest.images && dest.images.length > 0 ? dest.images[0] : '';
     setImagePreview(existingImage);
     setImageUrl(existingImage);
     setUploadMethod('url');
-    
+
     setFormData({
       title: dest.title,
       slug: dest.slug,
@@ -376,7 +379,7 @@ const AdminTrendingDestinations = () => {
 
     try {
       setSubmitting(true);
-      
+
       const token = localStorage.getItem('adminToken');
       if (!token) {
         toast.error('Authentication required. Please login again.');
@@ -407,7 +410,8 @@ const AdminTrendingDestinations = () => {
           highlights: formData.highlights ? formData.highlights.split(',').map(h => h.trim()) : []
         };
 
-        const response = await fetch(`${BACKEND_URL}/api/packages/${editingDestination._id}`, {
+        const response = await fetch(`/api/packages/${editingDestination._id}`, {
+
           method: 'PUT',
           headers: {
             'Content-Type': 'application/json',
@@ -429,11 +433,11 @@ const AdminTrendingDestinations = () => {
       }
 
       const uploadFormData = new FormData();
-      
+
       if (imageFile) {
         uploadFormData.append('image', imageFile);
       }
-      
+
       uploadFormData.append('title', formData.title);
       uploadFormData.append('slug', formData.slug);
       uploadFormData.append('description', formData.description);
@@ -444,23 +448,24 @@ const AdminTrendingDestinations = () => {
       uploadFormData.append('tourType', formData.tourType);
       uploadFormData.append('category', formData.category);
       uploadFormData.append('price', formData.price);
-      
+
       if (formData.originalPrice) {
         uploadFormData.append('originalPrice', formData.originalPrice);
       }
       if (formData.discount) {
         uploadFormData.append('discount', formData.discount);
       }
-      
+
       uploadFormData.append('rating', formData.rating || '0');
       uploadFormData.append('duration', formData.duration);
       uploadFormData.append('isActive', String(formData.isActive));
       uploadFormData.append('isFeatured', String(formData.isFeatured));
-      
+
       const highlightsArray = formData.highlights ? formData.highlights.split(',').map(h => h.trim()) : [];
       uploadFormData.append('highlights', JSON.stringify(highlightsArray));
 
-      const response = await fetch(`${BACKEND_URL}/api/packages/${editingDestination._id}`, {
+      const response = await fetch(`/api/packages/${editingDestination._id}`, {
+
         method: 'PUT',
         headers: {
           'Authorization': `Bearer ${token}`,
@@ -490,15 +495,16 @@ const AdminTrendingDestinations = () => {
 
     try {
       setSubmitting(true);
-      
+
       const token = localStorage.getItem('adminToken');
       if (!token) {
         toast.error('Authentication required. Please login again.');
         return;
       }
-      
+
       const BACKEND_URL = process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:5001';
-      const response = await fetch(`${BACKEND_URL}/api/packages/${id}`, {
+      const response = await fetch(`/api/packages/${id}`, {
+
         method: 'DELETE',
         headers: {
           'Authorization': `Bearer ${token}`,
@@ -523,15 +529,16 @@ const AdminTrendingDestinations = () => {
   const toggleDestinationStatus = async (dest: TrendingDestination) => {
     try {
       setSubmitting(true);
-      
+
       const token = localStorage.getItem('adminToken');
       if (!token) {
         toast.error('Authentication required. Please login again.');
         return;
       }
-      
+
       const BACKEND_URL = process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:5001';
-      const response = await fetch(`${BACKEND_URL}/api/packages/${dest._id}`, {
+      const response = await fetch(`/api/packages/${dest._id}`, {
+
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
@@ -709,10 +716,10 @@ const AdminTrendingDestinations = () => {
                 disabled={!selectedCountryIso2 || states.length === 0}
               >
                 <option value="">
-                  {!selectedCountryIso2 
-                    ? 'Select country first' 
-                    : states.length === 0 
-                      ? 'No states available' 
+                  {!selectedCountryIso2
+                    ? 'Select country first'
+                    : states.length === 0
+                      ? 'No states available'
                       : 'Select state (optional)'}
                 </option>
                 {states.map((state) => (
@@ -821,7 +828,7 @@ const AdminTrendingDestinations = () => {
               <label className="block text-sm font-medium text-gray-700 mb-2">
                 Image Upload Method
               </label>
-              
+
               <div className="flex gap-4 mb-4">
                 <button
                   type="button"
@@ -829,11 +836,10 @@ const AdminTrendingDestinations = () => {
                     setUploadMethod('file');
                     setImageUrl("");
                   }}
-                  className={`px-4 py-2 rounded-lg font-medium transition-colors ${
-                    uploadMethod === 'file'
-                      ? 'bg-purple-600 text-white'
-                      : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
-                  }`}
+                  className={`px-4 py-2 rounded-lg font-medium transition-colors ${uploadMethod === 'file'
+                    ? 'bg-purple-600 text-white'
+                    : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
+                    }`}
                 >
                   <Upload className="w-4 h-4 inline mr-2" />
                   Upload File
@@ -844,11 +850,10 @@ const AdminTrendingDestinations = () => {
                     setUploadMethod('url');
                     setImageFile(null);
                   }}
-                  className={`px-4 py-2 rounded-lg font-medium transition-colors ${
-                    uploadMethod === 'url'
-                      ? 'bg-purple-600 text-white'
-                      : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
-                  }`}
+                  className={`px-4 py-2 rounded-lg font-medium transition-colors ${uploadMethod === 'url'
+                    ? 'bg-purple-600 text-white'
+                    : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
+                    }`}
                 >
                   <ImageIcon className="w-4 h-4 inline mr-2" />
                   Image URL
@@ -857,8 +862,8 @@ const AdminTrendingDestinations = () => {
 
               {imagePreview && (
                 <div className="mb-4 relative w-full h-48 rounded-lg overflow-hidden border border-gray-300">
-                  <img 
-                    src={imagePreview} 
+                  <img
+                    src={imagePreview}
                     alt="Preview"
                     className="w-full h-full object-cover"
                   />
@@ -1021,7 +1026,7 @@ const AdminTrendingDestinations = () => {
             <div>
               <p className="!text-yellow-100">Avg Rating</p>
               <p className="text-2xl !text-white font-bold">
-                {trendingDestinations.length > 0 
+                {trendingDestinations.length > 0
                   ? (trendingDestinations.reduce((sum, d) => sum + d.rating, 0) / trendingDestinations.length).toFixed(1)
                   : "0.0"
                 }
@@ -1061,8 +1066,8 @@ const AdminTrendingDestinations = () => {
                     <td className="px-6 py-4 whitespace-nowrap">
                       <div className="flex items-center gap-3">
                         <div className="w-12 h-12 rounded overflow-hidden relative flex-shrink-0">
-                          <img 
-                            src={dest.images?.[0] || "https://via.placeholder.com/48"} 
+                          <img
+                            src={dest.images?.[0] || "https://via.placeholder.com/48"}
                             alt={dest.title}
                             className="w-full h-full object-cover"
                           />
@@ -1110,9 +1115,8 @@ const AdminTrendingDestinations = () => {
                       <button
                         onClick={() => toggleDestinationStatus(dest)}
                         disabled={submitting}
-                        className={`px-2 py-1 text-xs font-medium rounded-full ${
-                          dest.isActive ? "bg-green-100 text-green-800" : "bg-red-100 text-red-800"
-                        }`}
+                        className={`px-2 py-1 text-xs font-medium rounded-full ${dest.isActive ? "bg-green-100 text-green-800" : "bg-red-100 text-red-800"
+                          }`}
                       >
                         {dest.isActive ? "Active" : "Inactive"}
                       </button>
@@ -1161,25 +1165,24 @@ const AdminTrendingDestinations = () => {
               >
                 Previous
               </button>
-              
+
               {totalPages > 1 && (
                 <div className="flex space-x-1">
                   {Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => (
                     <button
                       key={page}
                       onClick={() => handlePageChange(page)}
-                      className={`px-3 py-2 text-sm font-medium rounded-md ${
-                        currentPage === page
-                          ? 'bg-purple-600 text-white'
-                          : 'text-gray-500 bg-white border border-gray-300 hover:bg-gray-50'
-                      }`}
+                      className={`px-3 py-2 text-sm font-medium rounded-md ${currentPage === page
+                        ? 'bg-purple-600 text-white'
+                        : 'text-gray-500 bg-white border border-gray-300 hover:bg-gray-50'
+                        }`}
                     >
                       {page}
                     </button>
                   ))}
                 </div>
               )}
-              
+
               <button
                 onClick={handleNext}
                 disabled={currentPage === totalPages}
@@ -1206,8 +1209,8 @@ const AdminTrendingDestinations = () => {
             </div>
             <div className="space-y-4">
               <div className="w-full h-48 rounded-lg overflow-hidden">
-                <img 
-                  src={selectedDestination.images?.[0] || "https://via.placeholder.com/400x200"} 
+                <img
+                  src={selectedDestination.images?.[0] || "https://via.placeholder.com/400x200"}
                   alt={selectedDestination.title}
                   className="w-full h-full object-cover"
                 />

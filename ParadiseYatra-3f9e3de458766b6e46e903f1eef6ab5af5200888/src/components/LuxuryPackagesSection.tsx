@@ -3,8 +3,11 @@
 import { useEffect, useRef, useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
-import { ChevronLeft, ChevronRight, ArrowRight, MapPin } from "lucide-react";
+import { ArrowLeft, ArrowRight, MapPin, Heart } from "lucide-react";
 import { getImageUrl } from "@/lib/utils";
+import { useAuth } from "@/context/AuthContext";
+import LoginAlertModal from "./LoginAlertModal";
+import CarouselArrows from "./ui/CarouselArrows";
 
 interface LuxuryPackage {
     _id: string;
@@ -23,6 +26,21 @@ const LuxuryPackagesSection = () => {
     const [loading, setLoading] = useState(true);
     const [canScrollLeft, setCanScrollLeft] = useState(false);
     const [canScrollRight, setCanScrollRight] = useState(true);
+
+    const { user, toggleWishlist: contextToggleWishlist, isInWishlist } = useAuth();
+    const [isLoginModalOpen, setIsLoginModalOpen] = useState(false);
+
+    const handleWishlistToggle = (e: React.MouseEvent, pkgId: string) => {
+        e.preventDefault();
+        e.stopPropagation();
+
+        if (!user) {
+            setIsLoginModalOpen(true);
+            return;
+        }
+
+        contextToggleWishlist(pkgId);
+    };
 
     const updateScrollState = () => {
         if (carouselRef.current) {
@@ -179,31 +197,21 @@ const LuxuryPackagesSection = () => {
                             Experience the ultimate in travel excellence with our handpicked collection of elite escapes.
                         </p>
                     </div>
-                    <div className="flex gap-2 flex-shrink-0">
-                        <button
-                            onClick={() => scrollByStep(-1)}
-                            disabled={!canScrollLeft}
-                            className="w-9 h-9 rounded-full border border-slate-200 bg-white/95 shadow-md flex items-center justify-center cursor-pointer transition-all duration-120 hover:scale-105 hover:shadow-lg disabled:opacity-40 disabled:cursor-not-allowed disabled:hover:scale-100 disabled:hover:shadow-md"
-                            aria-label="Previous"
-                        >
-                            <ChevronLeft className="h-5 w-5 text-slate-700" />
-                        </button>
-                        <button
-                            onClick={() => scrollByStep(1)}
-                            disabled={!canScrollRight}
-                            className="w-9 h-9 rounded-full border border-slate-200 bg-white/95 shadow-md flex items-center justify-center cursor-pointer transition-all duration-120 hover:scale-105 hover:shadow-lg disabled:opacity-40 disabled:cursor-not-allowed disabled:hover:scale-100 disabled:hover:shadow-md"
-                            aria-label="Next"
-                        >
-                            <ChevronRight className="h-5 w-5 text-slate-700" />
-                        </button>
-                    </div>
                 </div>
 
                 {/* Carousel */}
-                <div className="relative">
+                <div className="relative group/carousel">
+                    {/* Floating Navigation Buttons */}
+                    <CarouselArrows
+                        onPrevious={() => scrollByStep(-1)}
+                        onNext={() => scrollByStep(1)}
+                        canScrollLeft={canScrollLeft}
+                        canScrollRight={canScrollRight}
+                    />
+
                     <div
                         ref={carouselRef}
-                        className="flex gap-6 overflow-x-auto scroll-smooth py-2 scrollbar-hide px-2"
+                        className="flex gap-2 overflow-x-auto scroll-smooth py-2 scrollbar-hide px-2"
                         style={{
                             scrollbarWidth: "none",
                             msOverflowStyle: "none",
@@ -226,12 +234,22 @@ const LuxuryPackagesSection = () => {
                                             className="object-cover transition-transform duration-700"
                                         />
                                         {/* Gradient Overlay */}
-                                        <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent opacity-80"></div>
+                                        <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/20 to-transparent"></div>
+
+                                        {/* Wishlist Button */}
+                                        <button
+                                            onClick={(e) => handleWishlistToggle(e, pkg._id)}
+                                            className="absolute top-3 right-3 z-40 p-2 rounded-full bg-white border border-white/30 hover:bg-white transition-all shadow-sm group/heart"
+                                        >
+                                            <Heart
+                                                className={`w-4 h-4 transition-colors ${isInWishlist(pkg._id) ? "fill-amber-600 text-amber-600" : "text-amber-600"}`}
+                                            />
+                                        </button>
 
                                         {/* Content on Image */}
                                         <div className="absolute bottom-4 left-4 right-4 text-white">
                                             <div className="flex items-center gap-1.5 mb-1.5 opacity-90">
-                                                <MapPin className="h-3.5 w-3.5" />
+                                                <MapPin className="h-3.5 w-3.5 text-amber-600" />
                                                 <span className="text-xs !font-medium text-white tracking-wide uppercase" style={{ fontFamily: "'Orange Avenue', serif" }}>{pkg.destination}</span>
                                             </div>
                                             <h4 className="!text-lg !font-bold leading-snug line-clamp-2 text-shadow-sm" style={{ fontFamily: "'Orange Avenue', serif" }}>
@@ -256,7 +274,7 @@ const LuxuryPackagesSection = () => {
                                             </div>
                                         </div>
 
-                                        <div className="pt-4 border-t border-dashed border-gray-200 flex items-center justify-between">
+                                        <div className="pt-4 border-t border-dashed border-gray-300 flex items-center justify-between">
                                             <span className="text-xs text-slate-700 !font-black" style={{ fontFamily: "'Orange Avenue', serif" }}>Per Person</span>
                                             <button className="text-sm font-bold text-slate-900 group-hover:text-amber-600 transition-colors flex items-center gap-2" style={{ fontFamily: "'Orange Avenue', serif" }}>
                                                 View Deal <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-1" />
@@ -269,7 +287,8 @@ const LuxuryPackagesSection = () => {
                     </div>
                 </div>
             </div>
-        </section>
+            <LoginAlertModal isOpen={isLoginModalOpen} onClose={() => setIsLoginModalOpen(false)} theme="blue" />
+        </section >
     );
 };
 

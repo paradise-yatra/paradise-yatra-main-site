@@ -203,15 +203,15 @@ const BlogDetailClient = ({ post, slug }: BlogDetailClientProps) => {
                 initial={{ opacity: 0, y: 30 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.6 }}
-                className="bg-white rounded-2xl overflow-hidden mb-8 md:mb-12"
+                className="bg-white rounded-lg overflow-hidden mb-8 md:mb-12"
               >
                 {/* Hero Image */}
-                <div className="relative w-full h-[400px] md:h-[500px] lg:h-[550px] overflow-hidden rounded-2xl">
+                <div className="relative w-full h-[250px] md:h-[400px] lg:h-[450px] overflow-hidden rounded-lg">
                   <Image
                     src={getSafeImageUrl(post.image, post._id)}
                     alt={post.title}
                     fill
-                    className="object-cover rounded-2xl"
+                    className="object-cover rounded-lg"
                     priority
                     sizes="(max-width: 768px) 100vw, (max-width: 1200px) 66vw, 800px"
                     onError={(e) => handleImageError(post._id, e)}
@@ -227,24 +227,24 @@ const BlogDetailClient = ({ post, slug }: BlogDetailClientProps) => {
                 </div>
 
                 {/* Article Content */}
-                <div className="p-6 md:p-8 lg:p-10">
+                <div className="p-5 md:p-8">
                   {/* Title */}
-                  <h1 className="text-3xl md:text-4xl lg:text-5xl font-extrabold text-slate-900 mb-4 md:mb-6 leading-tight tracking-tight">
+                  <h1 className="!text-2xl md:!text-3xl lg:!text-4xl !font-black !text-slate-900 mb-4 md:mb-6 leading-tight tracking-tight">
                     {post.title}
                   </h1>
 
                   {/* Meta Information */}
                   <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 pb-6 mb-6 border-b border-slate-200">
-                    <div className="flex flex-wrap items-center gap-x-6 gap-y-2 text-sm text-slate-600">
+                    <div className="flex flex-wrap items-center gap-x-6 gap-y-2 !text-xs md:!text-sm !text-slate-600">
                       <div className="flex items-center gap-2">
-                        <div className="w-8 h-8 rounded-full bg-gradient-to-br from-blue-100 to-indigo-100 text-blue-700 flex items-center justify-center font-semibold text-xs">
+                        <div className="w-7 h-7 rounded-full bg-gradient-to-br from-blue-100 to-indigo-100 text-blue-700 flex items-center justify-center !font-bold text-[10px]">
                           {post.author?.charAt(0) || "P"}
                         </div>
-                        <span className="font-semibold text-slate-700">{post.author || "Paradise Yatra"}</span>
+                        <span className="!font-bold !text-slate-700">{post.author || "Paradise Yatra"}</span>
                       </div>
                       <div className="flex items-center gap-2">
-                        <Calendar className="w-4 h-4 text-slate-400" />
-                        <span>
+                        <Calendar className="w-3.5 h-3.5 text-slate-400" />
+                        <span className="!font-medium">
                           {new Date(post.createdAt).toLocaleDateString("en-US", {
                             month: "short",
                             day: "numeric",
@@ -253,8 +253,8 @@ const BlogDetailClient = ({ post, slug }: BlogDetailClientProps) => {
                         </span>
                       </div>
                       <div className="flex items-center gap-2">
-                        <Clock className="w-4 h-4 text-slate-400" />
-                        <span>{post.readTime || 5} min read</span>
+                        <Clock className="w-3.5 h-3.5 text-slate-400" />
+                        <span className="!font-medium">{post.readTime || 5} min read</span>
                       </div>
                     </div>
                     <div className="flex items-center gap-4">
@@ -273,9 +273,9 @@ const BlogDetailClient = ({ post, slug }: BlogDetailClientProps) => {
                   </div>
 
                   {/* Article Body */}
-                  <div className="prose prose-lg max-w-none">
+                  <div className="prose prose-md max-w-none">
                     <div
-                      className="text-slate-700 leading-relaxed space-y-6 [&_h2]:text-2xl [&_h2]:font-bold [&_h2]:text-slate-900 [&_h2]:mt-8 [&_h2]:mb-4 [&_h3]:text-xl [&_h3]:font-bold [&_h3]:text-slate-900 [&_h3]:mt-6 [&_h3]:mb-3 [&_p]:mb-4 [&_p]:leading-relaxed [&_ul]:list-disc [&_ul]:pl-6 [&_ul]:space-y-2 [&_ol]:list-decimal [&_ol]:pl-6 [&_ol]:space-y-2 [&_li]:mb-2 [&_a]:text-blue-600 [&_a]:underline [&_a]:hover:text-blue-700 [&_img]:rounded-xl [&_img]:my-6 [&_blockquote]:border-l-4 [&_blockquote]:border-blue-600 [&_blockquote]:pl-4 [&_blockquote]:italic [&_blockquote]:text-slate-600"
+                      className="!text-slate-800 !leading-relaxed space-y-6 [&_h2]:!text-lg md:[&_h2]:!text-xl [&_h2]:!font-bold [&_h2]:!text-slate-900 [&_h2]:!mt-8 [&_h2]:!mb-4 [&_h3]:!text-base md:[&_h3]:!text-lg [&_h3]:!font-bold [&_h3]:!text-slate-900 [&_h3]:!mt-6 [&_h3]:!mb-3 [&_p]:!mb-4 [&_p]:!leading-relaxed [&_p]:!text-sm md:[&_p]:!text-base [&_p]:!text-slate-600 [&_ul]:!list-disc [&_ul]:!pl-6 [&_ul]:!space-y-2 [&_ol]:!list-decimal [&_ol]:!pl-6 [&_ol]:!space-y-2 [&_li]:!mb-2 [&_li]:!text-sm md:[&_li]:!text-base [&_li]:!text-slate-600 [&_a]:!text-blue-600 [&_a]:!underline [&_a]:!hover:text-blue-700 [&_img]:!rounded-lg [&_img]:!my-6 [&_blockquote]:!border-l-4 [&_blockquote]:!border-blue-600 [&_blockquote]:!pl-4 [&_blockquote]:!italic [&_blockquote]:!text-slate-600 [&_blockquote]:!my-6"
                       dangerouslySetInnerHTML={{ __html: post.content }}
                     />
                   </div>
@@ -322,39 +322,39 @@ const BlogDetailClient = ({ post, slug }: BlogDetailClientProps) => {
                           className="group cursor-pointer"
                         >
                           {/* Image */}
-                          <div className="overflow-hidden rounded-2xl mb-4 aspect-[4/3] relative">
+                          <div className="overflow-hidden rounded-lg mb-4 aspect-[4/3] relative">
                             <Image
                               src={getSafeImageUrl(relatedPost.image, relatedPost._id)}
                               alt={relatedPost.title}
                               fill
-                              className="object-cover group-hover:scale-105 transition-transform duration-500"
+                              className="object-cover group-hover:scale-105 transition-transform duration-500 rounded-lg"
                               sizes="(max-width: 768px) 100vw, (max-width: 1200px) 33vw, 400px"
                               onError={(e) => handleImageError(relatedPost._id, e)}
                             />
                           </div>
 
                           {/* Content */}
-                          <div className="space-y-3">
-                            <span className="text-blue-600 text-[10px] font-bold uppercase tracking-widest">
+                          <div className="space-y-2 p-2">
+                            <span className="text-blue-600 text-[9px] font-black uppercase tracking-widest bg-blue-50 px-2 py-0.5 rounded-full">
                               {relatedPost.category}
                             </span>
-                            <h3 className="!text-xl text-slate-900 !font-bold group-hover:text-blue-600 transition-colors line-clamp-2">
+                            <h3 className="!text-base text-slate-900 !font-bold group-hover:text-blue-600 transition-colors line-clamp-2 leading-snug">
                               {relatedPost.title}
                             </h3>
-                            <p className="!text-sm !text-slate-500 line-clamp-2 leading-relaxed">
+                            <p className="!text-xs !text-slate-600 line-clamp-2 leading-relaxed opacity-90">
                               {relatedPost.excerpt}
                             </p>
-                            <div className="flex items-center justify-between pt-2">
+                            <div className="flex items-center justify-between pt-2 border-t border-dashed border-slate-200">
                               <div className="flex items-center gap-2">
-                                <div className="w-6 h-6 rounded-full bg-gradient-to-br from-blue-100 to-indigo-100 text-blue-700 flex items-center justify-center font-semibold text-xs">
+                                <div className="w-5 h-5 rounded-full bg-gradient-to-br from-blue-100 to-indigo-100 text-blue-700 flex items-center justify-center !font-bold text-[9px]">
                                   {relatedPost.author?.charAt(0) || "A"}
                                 </div>
-                                <span className="text-xs font-semibold text-slate-700">
+                                <span className="text-[10px] !font-bold text-slate-600">
                                   {relatedPost.author || "Paradise Yatra"}
                                 </span>
                               </div>
-                              <span className="text-[10px] text-slate-400 font-medium">
-                                {relatedPost.readTime || 5}min read
+                              <span className="text-[9px] text-slate-400 !font-bold uppercase tracking-tighter">
+                                {relatedPost.readTime || 5} min
                               </span>
                             </div>
                           </div>
@@ -375,7 +375,7 @@ const BlogDetailClient = ({ post, slug }: BlogDetailClientProps) => {
                 className="space-y-6 sticky top-24"
               >
                 {/* Author Info */}
-                <div className="bg-white rounded-2xl p-6 border border-slate-200">
+                <div className="bg-white rounded-lg p-6 border border-slate-200">
                   <h3 className="!text-lg !font-bold text-slate-900 mb-4">
                     About the Author
                   </h3>
@@ -397,7 +397,7 @@ const BlogDetailClient = ({ post, slug }: BlogDetailClientProps) => {
                 </div>
 
                 {/* Popular Posts */}
-                <div className="bg-white rounded-2xl p-6 border border-slate-200">
+                <div className="bg-white rounded-lg p-6 border border-slate-200">
                   <h3 className="!text-lg !font-bold text-slate-900 mb-4">
                     Popular Posts
                   </h3>
@@ -440,7 +440,7 @@ const BlogDetailClient = ({ post, slug }: BlogDetailClientProps) => {
                 </div>
 
                 {/* Newsletter Signup */}
-                <div className="bg-gradient-to-r from-blue-600 to-indigo-600 rounded-2xl p-6 text-white">
+                <div className="bg-gradient-to-r from-blue-600 to-indigo-600 rounded-lg p-6 text-white">
                   <h3 className="!text-lg !font-bold mb-2">Stay Updated</h3>
                   <p className="!text-blue-100 !text-sm mb-4">
                     Get the latest travel tips and destination guides delivered

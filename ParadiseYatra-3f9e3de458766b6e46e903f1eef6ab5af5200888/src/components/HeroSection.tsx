@@ -63,6 +63,10 @@ const HeroSection = () => {
     setSearchQuery("");
     setIsSearchOpen(false);
 
+    if (typeof window !== 'undefined') {
+      window.scrollTo(0, 0);
+    }
+
     if (
       suggestion.category === "destination" ||
       suggestion.type === "destination"

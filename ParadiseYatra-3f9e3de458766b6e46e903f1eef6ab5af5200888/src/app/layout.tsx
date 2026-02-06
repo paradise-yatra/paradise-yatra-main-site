@@ -1,10 +1,15 @@
 import type { Metadata, Viewport } from "next";
 import { Playfair_Display, Nunito, Plus_Jakarta_Sans, Unbounded } from "next/font/google";
 import "./globals.css";
-import Footer from "@/components/Footer";
+import FooterWrapper from "@/components/FooterWrapper";
 import { BlogProvider } from "@/context/BlogContext";
+import { AuthProvider } from "@/context/AuthContext";
+import { GoogleOAuthProvider } from "@react-oauth/google";
 import Script from "next/script";
 import NewFooter from "@/components/NewFooter";
+import { ToastContainer } from "react-toastify";
+import "react-toastify/dist/ReactToastify.css";
+import { ReduxProvider } from "@/redux/ReduxProvider";
 
 
 const plusJakartaSans = Plus_Jakarta_Sans({
@@ -41,6 +46,7 @@ export const viewport: Viewport = {
 };
 
 export const metadata: Metadata = {
+  metadataBase: new URL(process.env.NEXT_PUBLIC_SITE_URL || 'https://paradiseyatra.com'),
   // Only include global metadata that should apply to all pages
   icons: {
     icon: "/favicon.png",
@@ -121,11 +127,18 @@ export default function RootLayout({
         </Script>
       </head>
       <body className={`${plusJakartaSans.className} antialiased`}>
-        <BlogProvider>
-          {children}
-          <Footer />
-          {/* <NewFooter /> */}
-        </BlogProvider>
+        <GoogleOAuthProvider clientId={process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID || ""}>
+          <ReduxProvider>
+            <AuthProvider>
+              <BlogProvider>
+                {children}
+                <FooterWrapper />
+                <ToastContainer position="top-right" autoClose={3000} hideProgressBar={false} newestOnTop={false} closeOnClick rtl={false} pauseOnFocusLoss draggable pauseOnHover theme="light" />
+                {/* <NewFooter /> */}
+              </BlogProvider>
+            </AuthProvider>
+          </ReduxProvider>
+        </GoogleOAuthProvider>
       </body>
     </html>
   );

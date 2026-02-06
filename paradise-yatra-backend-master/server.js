@@ -44,7 +44,7 @@ const allowedOrigins = [
   process.env.CLIENT_ORIGIN, // Production domain
   ...(process.env.NODE_ENV === 'development' ? [
     'http://localhost:3000',
-    'http://localhost:3001'
+    'http://localhost:3001',
   ] : [])
 ].filter(Boolean);
 
@@ -112,6 +112,7 @@ const seoRoutes = require("./routes/seo");
 const faqRoutes = require("./routes/faq");
 
 const tagRoutes = require("./routes/tags");
+const leadRoutes = require("./routes/leads");
 
 app.use("/api/auth", authRoutes);
 app.use("/api/packages", packageRoutes);
@@ -130,6 +131,7 @@ app.use("/api/locations", locationRoutes);
 app.use("/api/seo", seoRoutes);
 app.use("/api/faq", faqRoutes);
 app.use("/api/tags", tagRoutes);
+app.use("/api/leads", leadRoutes);
 
 // Basic route
 app.get("/", (req, res) => {

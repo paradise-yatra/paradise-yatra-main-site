@@ -1,5 +1,6 @@
 const jwt = require("jsonwebtoken");
 const User = require("../models/User");
+const Signup = require("../models/Signup");
 
 const auth = async (req, res, next) => {
   try {
@@ -12,7 +13,14 @@ const auth = async (req, res, next) => {
     }
 
     const decoded = jwt.verify(token, process.env.JWT_SECRET);
-    const user = await User.findById(decoded.userId).select("-password");
+
+    // First try finding in User collection
+    let user = await User.findById(decoded.userId).select("-password");
+
+    // If not found, try finding in Signup collection
+    if (!user) {
+      user = await Signup.findById(decoded.userId).select("-password");
+    }
 
     if (!user || !user.isActive) {
       return res

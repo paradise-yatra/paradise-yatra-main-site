@@ -418,54 +418,61 @@ const NewTrendingDestinations = () => {
             <div className="mobile-scroll-container" ref={scrollContainerRef} style={{ paddingLeft: '0.5rem', paddingRight: '0.5rem' }}>
               {allPackages.map((pkg) => (
                 <div key={pkg._id} className="mobile-scroll-item">
-                  <Card className="overflow-hidden border border-gray-200 h-full bg-white flex flex-col shadow-md">
-                    <div className="relative h-52 w-full overflow-hidden">
-                      <Image
-                        src={getImageUrl(pkg.images[0]) || FALLBACK_IMAGE}
-                        alt={pkg.title}
-                        fill
-                        className="object-cover"
-                      />
-                      {pkg.rating && (
-                        <div className="absolute top-4 right-4 bg-white/95 backdrop-blur-sm px-3 py-1 rounded-full flex items-center gap-1 shadow-lg">
-                          <Star className="h-4 w-4 fill-yellow-400 text-yellow-400" />
-                          <span className="text-sm font-semibold">{pkg.rating.toFixed(1)}</span>
+                  <Link href={`/itinerary/${pkg.slug || pkg._id}`} className="block w-full">
+                    <article
+                      className="group cursor-pointer bg-white rounded-lg overflow-hidden border border-gray-300 transition-all duration-300 relative w-full"
+                    >
+                      {/* White hover overlay */}
+                      <div className="absolute inset-0 bg-white/10 opacity-10 group-hover:opacity-100 transition-opacity duration-300 z-30 pointer-events-none"></div>
+
+                      <div className="relative h-64 w-full overflow-hidden">
+                        <Image
+                          src={getImageUrl(pkg.images?.[0]) || FALLBACK_IMAGE}
+                          alt={pkg.title}
+                          fill
+                          className="object-cover transition-transform duration-700"
+                        />
+                        {/* Gradient Overlay */}
+                        <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/20 to-transparent" />
+
+                        {/* Content on Image */}
+                        <div className="absolute bottom-4 left-4 right-4 text-white">
+                          <div className="flex items-center gap-1.5 mb-1.5 opacity-90">
+                            <MapPin className="h-3.5 w-3.5 text-blue-600" />
+                            <span className="!text-xs !font-semibold tracking-wide uppercase">{pkg.destination}</span>
+                          </div>
+                          <h4 className="text-md !font-bold leading-snug line-clamp-2 text-shadow-sm">
+                            {pkg.title}
+                          </h4>
                         </div>
-                      )}
-                    </div>
-                    <CardContent className="flex flex-col flex-grow p-4">
-                      <div className="flex items-center text-slate-500 text-xs mb-1">
-                        <MapPin className="h-3 w-3 mr-1" /> {pkg.destination}
-                      </div>
-                      <h3 className="!text-lg !font-bold text-slate-900 mb-2 truncate">
-                        {cleanTitle(pkg.title)}
-                      </h3>
-                      <div className="flex items-center text-slate-500 !text-xs mb-1">
-                        <Calendar className="h-3 w-3 mr-1" /> {formatDuration(pkg.duration)}
                       </div>
 
-                      <div className="mt-auto flex items-center justify-between pt-4">
-                        <div className="flex flex-col">
-                          <span className="text-xl font-bold text-slate-900">
-                            ₹{pkg.price.toLocaleString()}
-                          </span>
-                          {pkg.originalPrice && (
-                            <span className="text-xs text-slate-400 line-through">
-                              ₹{pkg.originalPrice.toLocaleString()}
+                      <div className="p-5">
+                        <div className="flex items-center justify-between mb-4">
+                          <div className="flex flex-col">
+                            <span className="text-xs text-slate-800 font-black uppercase tracking-wide">Duration</span>
+                            <span className="text-sm !font-bold text-slate-800 flex items-center gap-1">
+                              <div className="w-1.5 h-1.5 rounded-full bg-blue-600"></div>
+                              {pkg.duration}
                             </span>
-                          )}
+                          </div>
+                          <div className="flex flex-col items-end">
+                            <span className="text-xs text-slate-800 font-black uppercase tracking-wide">Price</span>
+                            <span className="!text-lg font-black text-blue-600">
+                              ₹{pkg.price.toLocaleString()}
+                            </span>
+                          </div>
                         </div>
-                        <Link href={`/itinerary/${pkg.slug || pkg._id}`}>
-                          <Button
-                            variant="outline"
-                            className="border-slate-900 border text-slate-900 bg-transparent hover:bg-blue-600 hover:text-white hover:border-blue-600 transition-all duration-300 cursor-pointer px-4 h-9"
-                          >
-                            View <ArrowRight className="ml-1 h-3 w-4" />
-                          </Button>
-                        </Link>
+
+                        <div className="pt-4 border-t border-dashed border-gray-300 flex items-center justify-between">
+                          <span className="text-xs text-slate-800">Per Person</span>
+                          <button className="text-sm font-semibold text-slate-900 group-hover:text-blue-600 transition-colors flex items-center gap-2">
+                            View Details <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-1" />
+                          </button>
+                        </div>
                       </div>
-                    </CardContent>
-                  </Card>
+                    </article>
+                  </Link>
                 </div>
               ))}
             </div>
@@ -488,54 +495,61 @@ const NewTrendingDestinations = () => {
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
               {visiblePackages.map((pkg, index) => (
                 <div key={pkg._id} className={newCardIndex === index ? 'card-enter' : ''}>
-                  <Card className="desktop-card overflow-hidden border border-gray-200 group h-full bg-white">
-                    <div className="desktop-card-image relative h-64 overflow-hidden">
-                      <Image
-                        src={getImageUrl(pkg.images[0]) || FALLBACK_IMAGE}
-                        alt={pkg.title}
-                        fill
-                        className="object-cover"
-                      />
-                      {pkg.rating && (
-                        <div className="absolute top-4 right-4 bg-white/95 backdrop-blur-sm px-3 py-1 rounded-full flex items-center gap-1 shadow-lg">
-                          <Star className="h-4 w-4 fill-yellow-400 text-yellow-400" />
-                          <span className="text-sm font-semibold">{pkg.rating.toFixed(1)}</span>
+                  <Link href={`/itinerary/${pkg.slug || pkg._id}`} className="block h-full w-full">
+                    <article
+                      className="group cursor-pointer bg-white rounded-lg overflow-hidden border border-gray-300 transition-all duration-300 relative w-full h-full"
+                    >
+                      {/* White hover overlay */}
+                      <div className="absolute inset-0 bg-white/10 opacity-10 group-hover:opacity-100 transition-opacity duration-300 z-30 pointer-events-none"></div>
+
+                      <div className="relative h-64 w-full overflow-hidden">
+                        <Image
+                          src={getImageUrl(pkg.images?.[0]) || FALLBACK_IMAGE}
+                          alt={pkg.title}
+                          fill
+                          className="object-cover transition-transform duration-700"
+                        />
+                        {/* Gradient Overlay */}
+                        <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/20 to-transparent" />
+
+                        {/* Content on Image */}
+                        <div className="absolute bottom-4 left-4 right-4 text-white">
+                          <div className="flex items-center gap-1.5 mb-1.5 opacity-90">
+                            <MapPin className="h-3.5 w-3.5 text-blue-600" />
+                            <span className="!text-xs !font-semibold tracking-wide uppercase">{pkg.destination}</span>
+                          </div>
+                          <h4 className="text-md !font-bold leading-snug line-clamp-2 text-shadow-sm">
+                            {pkg.title}
+                          </h4>
                         </div>
-                      )}
-                    </div>
-                    <CardContent className="p-6">
-                      <div className="flex items-center text-slate-500 text-sm mb-2">
-                        <MapPin className="h-4 w-4 mr-1" /> {pkg.destination}
-                      </div>
-                      <h3 className="!text-xl !font-bold text-slate-900 mb-2 truncate group-hover:text-blue-600 transition-colors duration-300">
-                        {cleanTitle(pkg.title)}
-                      </h3>
-                      <div className="flex items-center text-slate-500 text-sm mb-4">
-                        <Calendar className="h-4 w-4 mr-1" /> {formatDuration(pkg.duration)}
                       </div>
 
-                      <div className="flex items-center justify-between">
-                        <div className="flex flex-col">
-                          <span className="text-2xl font-bold text-slate-900">
-                            ₹{pkg.price.toLocaleString()}
-                          </span>
-                          {pkg.originalPrice && (
-                            <span className="text-xs text-slate-400 line-through">
-                              ₹{pkg.originalPrice.toLocaleString()}
+                      <div className="p-5">
+                        <div className="flex items-center justify-between mb-4">
+                          <div className="flex flex-col">
+                            <span className="text-xs text-slate-800 font-black uppercase tracking-wide">Duration</span>
+                            <span className="text-sm !font-bold text-slate-800 flex items-center gap-1">
+                              <div className="w-1.5 h-1.5 rounded-full bg-blue-600"></div>
+                              {pkg.duration}
                             </span>
-                          )}
+                          </div>
+                          <div className="flex flex-col items-end">
+                            <span className="text-xs text-slate-800 font-black uppercase tracking-wide">Price</span>
+                            <span className="!text-lg font-black text-blue-600">
+                              ₹{pkg.price.toLocaleString()}
+                            </span>
+                          </div>
                         </div>
-                        <Link href={`/itinerary/${pkg.slug || pkg._id}`}>
-                          <Button
-                            variant="outline"
-                            className="desktop-card-button border border-slate-900 text-slate-900 bg-transparent hover:bg-blue-600 hover:text-white hover:border-blue-600 transition-all duration-300 cursor-pointer px-6"
-                          >
-                            View Details <ArrowRight className="ml-2 h-4 w-4 transition-transform duration-300 group-hover:translate-x-1" />
-                          </Button>
-                        </Link>
+
+                        <div className="pt-4 border-t border-dashed border-gray-300 flex items-center justify-between">
+                          <span className="text-xs text-slate-800">Per Person</span>
+                          <button className="text-sm font-semibold text-slate-900 group-hover:text-blue-600 transition-colors flex items-center gap-2">
+                            View Details <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-1" />
+                          </button>
+                        </div>
                       </div>
-                    </CardContent>
-                  </Card>
+                    </article>
+                  </Link>
                 </div>
               ))}
             </div>

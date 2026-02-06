@@ -92,7 +92,7 @@ const FestivalSection = () => {
                                 fill
                                 className="object-cover transition-transform duration-500"
                             />
-                            <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/20 to-transparent"></div>
+                            <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/20 to-transparent"></div>
                             <div className="absolute bottom-6 left-6 text-white z-10">
                                 <h3 className="!text-2xl !font-bold">
                                     {FESTIVAL_DESTINATIONS[0].name}
@@ -114,7 +114,7 @@ const FestivalSection = () => {
                                 fill
                                 className="object-cover transition-transform duration-500"
                             />
-                            <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/20 to-transparent"></div>
+                            <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/20 to-transparent"></div>
                             <div className="absolute bottom-6 left-6 text-white z-10">
                                 <h3 className="!text-2xl !font-bold">
                                     {FESTIVAL_DESTINATIONS[3].name}
@@ -139,7 +139,7 @@ const FestivalSection = () => {
                                 fill
                                 className="object-cover transition-transform duration-500"
                             />
-                            <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/20 to-transparent"></div>
+                            <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/20 to-transparent"></div>
                             <div className="absolute bottom-8 left-8 text-white z-10">
                                 <h3 className="!text-2xl !font-bold">
                                     {FESTIVAL_DESTINATIONS[1].name}
@@ -164,7 +164,7 @@ const FestivalSection = () => {
                                 fill
                                 className="object-cover transition-transform duration-500"
                             />
-                            <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/20 to-transparent"></div>
+                            <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/20 to-transparent"></div>
                             <div className="absolute bottom-6 left-6 text-white z-10">
                                 <h3 className="!text-2xl !font-bold">
                                     {FESTIVAL_DESTINATIONS[2].name}
@@ -188,7 +188,7 @@ const FestivalSection = () => {
                                     fill
                                     className="object-cover transition-transform duration-500"
                                 />
-                                <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/20 to-transparent"></div>
+                                <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/20 to-transparent"></div>
                                 <div className="absolute bottom-5 left-5 text-white z-10">
                                     <h3 className="!text-2xl !font-bold">
                                         {FESTIVAL_DESTINATIONS[4].name}
@@ -210,7 +210,7 @@ const FestivalSection = () => {
                                     fill
                                     className="object-cover transition-transform duration-500"
                                 />
-                                <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/20 to-transparent"></div>
+                                <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/20 to-transparent"></div>
                                 <div className="absolute bottom-5 left-5 text-white z-10">
                                     <h3 className="!text-2xl !font-bold">
                                         {FESTIVAL_DESTINATIONS[5].name}

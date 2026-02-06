@@ -2,6 +2,7 @@ const express = require("express");
 const router = express.Router();
 const { adminAuth } = require("../middleware/auth");
 const User = require("../models/User");
+const Signup = require("../models/Signup");
 const Package = require("../models/Package");
 const Destination = require("../models/Destination");
 const Blog = require("../models/Blog");
@@ -9,7 +10,7 @@ const Blog = require("../models/Blog");
 // Get admin dashboard stats
 const getDashboardStats = async (req, res) => {
   try {
-    const totalUsers = await User.countDocuments();
+    const totalUsers = (await User.countDocuments()) + (await Signup.countDocuments());
     const totalPackages = await Package.countDocuments();
     const totalDestinations = await Destination.countDocuments();
     const totalBlogs = await Blog.countDocuments();
@@ -35,16 +36,28 @@ const getAllUsers = async (req, res) => {
   try {
     const { limit = 20, page = 1 } = req.query;
 
-    const users = await User.find()
+    const usersFromUser = await User.find()
       .select("-password")
-      .sort({ createdAt: -1 })
-      .limit(parseInt(limit))
-      .skip((parseInt(page) - 1) * parseInt(limit));
+      .sort({ createdAt: -1 });
 
-    const total = await User.countDocuments();
+    const usersFromSignup = await Signup.find()
+      .select("-password")
+      .sort({ createdAt: -1 });
+
+    // Combine and paginate manually or just return both (for simplicity here combining)
+    let allUsers = [...usersFromUser, ...usersFromSignup];
+
+    // Sort combined users by createdAt
+    allUsers.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+
+    const total = allUsers.length;
+
+    // Simple pagination for combined array
+    const start = (parseInt(page) - 1) * parseInt(limit);
+    const paginatedUsers = allUsers.slice(start, start + parseInt(limit));
 
     res.json({
-      users,
+      users: paginatedUsers,
       pagination: {
         current: parseInt(page),
         total: Math.ceil(total / parseInt(limit)),
@@ -63,11 +76,19 @@ const updateUserStatus = async (req, res) => {
   try {
     const { isActive } = req.body;
 
-    const user = await User.findByIdAndUpdate(
+    let user = await User.findByIdAndUpdate(
       req.params.id,
       { isActive },
       { new: true, runValidators: true }
     ).select("-password");
+
+    if (!user) {
+      user = await Signup.findByIdAndUpdate(
+        req.params.id,
+        { isActive },
+        { new: true, runValidators: true }
+      ).select("-password");
+    }
 
     if (!user) {
       return res.status(404).json({ message: "User not found." });

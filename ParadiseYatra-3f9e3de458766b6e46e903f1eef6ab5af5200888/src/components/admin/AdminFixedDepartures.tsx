@@ -11,6 +11,7 @@ import { toast } from "react-toastify";
 import ImageUpload from "@/components/ui/image-upload";
 import { useLocations } from "@/hooks/useLocations";
 import Image from "next/image";
+import { getImageUrl } from "@/lib/utils";
 
 interface FixedDeparture {
   _id: string;
@@ -19,6 +20,8 @@ interface FixedDeparture {
   description: string;
   shortDescription: string;
   price: number;
+  originalPrice?: number;
+  discount?: number;
   destination: string;
   duration: string;
   country: string;
@@ -33,6 +36,7 @@ interface FixedDeparture {
   isActive: boolean;
   isFeatured: boolean;
   status: 'upcoming' | 'ongoing' | 'completed' | 'cancelled';
+  departures?: { date: string; price: number; seats: number; status: 'available' | 'soldout' }[];
 }
 
 const AdminFixedDepartures = () => {
@@ -41,14 +45,14 @@ const AdminFixedDepartures = () => {
   const [showForm, setShowForm] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [searchTerm, setSearchTerm] = useState('');
-  
+
   // Use locations hook for dynamic data
   const { countries, states, loading: locationsLoading, fetchStates, clearStates } = useLocations();
-  
+
   // Add state for storing country ISO2 and state code
   const [selectedCountryIso2, setSelectedCountryIso2] = useState<string>("");
   const [selectedStateCode, setSelectedStateCode] = useState<string>("");
-  
+
 
 
   // Transform countries for dropdown
@@ -69,7 +73,7 @@ const AdminFixedDepartures = () => {
     setSelectedCountryIso2(countryIso2);
     setFormData(prev => ({ ...prev, country: countryIso2, state: '' }));
     setSelectedStateCode('');
-    
+
     if (countryIso2) {
       fetchStates(countryIso2);
     } else {
@@ -90,12 +94,14 @@ const AdminFixedDepartures = () => {
     description: '',
     shortDescription: '',
     price: '',
+    originalPrice: '',
+    discount: '0',
     destination: '',
     duration: '',
     country: '',
     state: '',
     tourType: '' as 'international' | 'india' | '',
-    category: '',
+    category: 'Fixed Departure',
     departureDate: '',
     returnDate: '',
     availableSeats: '',
@@ -103,7 +109,8 @@ const AdminFixedDepartures = () => {
     images: [] as string[],
     isActive: true,
     isFeatured: false,
-    status: 'upcoming' as 'upcoming' | 'ongoing' | 'completed' | 'cancelled'
+    status: 'upcoming' as 'upcoming' | 'ongoing' | 'completed' | 'cancelled',
+    departures: [] as { date: string; price: number; seats: number; status: 'available' | 'soldout' }[]
   });
 
   useEffect(() => {
@@ -112,7 +119,7 @@ const AdminFixedDepartures = () => {
 
   const fetchFixedDepartures = async () => {
     try {
-      const response = await fetch('/api/fixed-departures');
+      const response = await fetch('/api/fixed-departures', { cache: 'no-store' });
       if (response.ok) {
         const data = await response.json();
         setFixedDepartures(data.fixedDepartures || []);
@@ -126,18 +133,18 @@ const AdminFixedDepartures = () => {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    
+
     try {
-      const url = editingId 
+      const url = editingId
         ? `/api/fixed-departures/${editingId}`
-        : '/api/fixed-departures/create';
-      
+        : '/api/fixed-departures';
+
       const method = editingId ? 'PUT' : 'POST';
-      
+
       // Convert ISO codes to actual names for submission
       let countryName = formData.country;
       let stateName = formData.state;
-      
+
       if (selectedCountryIso2) {
         const selectedCountry = countries.find(c => c.iso2 === selectedCountryIso2);
         countryName = selectedCountry ? selectedCountry.name : selectedCountryIso2;
@@ -147,20 +154,40 @@ const AdminFixedDepartures = () => {
         stateName = selectedState ? selectedState.name : selectedStateCode;
       }
 
+      const payload = {
+        title: formData.title,
+        slug: formData.slug,
+        description: formData.description,
+        shortDescription: formData.shortDescription,
+        destination: formData.destination,
+        duration: formData.duration,
+        country: countryName,
+        state: stateName,
+        tourType: formData.tourType,
+        category: formData.category,
+        departureDate: formData.departureDate,
+        returnDate: formData.returnDate,
+        images: formData.images,
+        isActive: formData.isActive,
+        isFeatured: formData.isFeatured,
+        status: formData.status,
+        price: parseFloat(formData.price),
+        originalPrice: formData.originalPrice ? parseFloat(formData.originalPrice) : undefined,
+        discount: parseFloat(formData.discount || '0'),
+        availableSeats: parseInt(formData.availableSeats) || 0,
+        totalSeats: parseInt(formData.totalSeats) || 0,
+        departures: formData.departures
+      };
+
+      console.log('Submitting fixed departure:', payload);
+
       const response = await fetch(url, {
         method,
         headers: {
           'Content-Type': 'application/json',
           'Authorization': `Bearer ${localStorage.getItem('adminToken')}`
         },
-        body: JSON.stringify({
-          ...formData,
-          country: countryName,
-          state: stateName,
-          price: parseFloat(formData.price),
-          availableSeats: parseInt(formData.availableSeats),
-          totalSeats: parseInt(formData.totalSeats)
-        })
+        body: JSON.stringify(payload)
       });
 
       if (response.ok) {
@@ -170,11 +197,13 @@ const AdminFixedDepartures = () => {
         fetchFixedDepartures();
         toast.success('Fixed departure saved successfully');
       } else {
-        toast.error('Failed to save fixed departure');
+        const errorData = await response.json().catch(() => ({}));
+        console.error('Save failed:', errorData);
+        toast.error(errorData.message || 'Failed to save fixed departure');
       }
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error saving fixed departure:', error);
-      toast.error('Failed to save fixed departure');
+      toast.error(`Error: ${error.message || 'Failed to save fixed departure'}`);
     }
   };
 
@@ -182,21 +211,23 @@ const AdminFixedDepartures = () => {
     // Find country ISO2 and state code from names
     const country = countries.find(c => c.name === departure.country);
     const state = states.find(s => s.name === departure.state);
-    
+
     setSelectedCountryIso2(country?.iso2 || '');
     setSelectedStateCode(state?.state_code || '');
-    
+
     // If country is found, fetch its states
     if (country?.iso2) {
       fetchStates(country.iso2);
     }
-    
+
     setFormData({
       title: departure.title,
       slug: departure.slug,
       description: departure.description,
       shortDescription: departure.shortDescription,
       price: departure.price.toString(),
+      originalPrice: departure.originalPrice?.toString() || '',
+      discount: departure.discount?.toString() || '0',
       destination: departure.destination,
       duration: departure.duration || '',
       country: departure.country || '',
@@ -210,7 +241,8 @@ const AdminFixedDepartures = () => {
       images: departure.images || [],
       isActive: departure.isActive,
       isFeatured: departure.isFeatured,
-      status: departure.status
+      status: departure.status,
+      departures: departure.departures || []
     });
     setEditingId(departure._id);
     setShowForm(true);
@@ -246,12 +278,14 @@ const AdminFixedDepartures = () => {
       description: '',
       shortDescription: '',
       price: '',
+      originalPrice: '',
+      discount: '0',
       destination: '',
       duration: '',
       country: '',
       state: '',
       tourType: '',
-      category: '',
+      category: 'Fixed Departure',
       departureDate: '',
       returnDate: '',
       availableSeats: '',
@@ -259,7 +293,8 @@ const AdminFixedDepartures = () => {
       images: [],
       isActive: true,
       isFeatured: false,
-      status: 'upcoming'
+      status: 'upcoming',
+      departures: []
     });
     setSelectedCountryIso2('');
     setSelectedStateCode('');
@@ -305,7 +340,7 @@ const AdminFixedDepartures = () => {
         formData.append('image', files[i]);
       }
       // Add contentType for Cloudinary folder organization
-      formData.append('contentType', 'misc');
+      formData.append('contentType', 'fixed-departure');
 
       const response = await fetch('/api/upload/image', {
         method: 'POST',
@@ -318,7 +353,7 @@ const AdminFixedDepartures = () => {
       if (response.ok) {
         const data = await response.json();
 
-        
+
         // Handle different response formats from backend
         let newImages: string[] = [];
         if (data.images && Array.isArray(data.images)) {
@@ -334,13 +369,13 @@ const AdminFixedDepartures = () => {
           // If backend returns just filename, construct full URL
           newImages = [`/api/uploaded-images/uploads/${data.filename}`];
         }
-        
 
-        
+
+
         if (newImages.length > 0) {
           setFormData(prev => {
             const updatedImages = [...prev.images, ...newImages];
-    
+
             return {
               ...prev,
               images: updatedImages
@@ -361,10 +396,33 @@ const AdminFixedDepartures = () => {
     }
   };
 
+
+
   const removeImage = (index: number) => {
     setFormData(prev => ({
       ...prev,
       images: prev.images.filter((_, i) => i !== index)
+    }));
+  };
+
+  const addDeparture = () => {
+    setFormData(prev => ({
+      ...prev,
+      departures: [...prev.departures, { date: '', price: parseFloat(prev.price) || 0, seats: parseInt(prev.totalSeats) || 0, status: 'available' }]
+    }));
+  };
+
+  const removeDeparture = (index: number) => {
+    setFormData(prev => ({
+      ...prev,
+      departures: prev.departures.filter((_, i) => i !== index)
+    }));
+  };
+
+  const updateDeparture = (index: number, field: string, value: any) => {
+    setFormData(prev => ({
+      ...prev,
+      departures: prev.departures.map((d, i) => i === index ? { ...d, [field]: value } : d)
     }));
   };
 
@@ -407,12 +465,12 @@ const AdminFixedDepartures = () => {
                   {departure.status}
                 </Badge>
               </div>
-              
+
               <div className="flex items-center text-sm text-gray-600">
                 <MapPin className="w-4 h-4 mr-1" />
                 {departure.destination}
               </div>
-              
+
               <div className="flex items-center text-sm text-gray-600">
                 <span className="text-xs bg-blue-100 text-blue-800 px-2 py-1 rounded">
                   {departure.country}
@@ -423,7 +481,7 @@ const AdminFixedDepartures = () => {
                   </span>
                 )}
               </div>
-              
+
               <div className="flex items-center text-sm text-gray-600">
                 <span className="text-xs bg-green-100 text-green-800 px-2 py-1 rounded">
                   {departure.category}
@@ -432,42 +490,59 @@ const AdminFixedDepartures = () => {
                   {departure.tourType}
                 </span>
               </div>
-              
-              <div className="flex items-center text-sm text-gray-600">
-                <Calendar className="w-4 h-4 mr-1" />
-                {new Date(departure.departureDate).toLocaleDateString()}
-              </div>
-              
-                             <div className="flex items-center justify-between">
-                 <div className="flex items-center text-sm text-gray-600">
-                   <Users className="w-4 h-4 mr-1" />
-                   {departure.availableSeats}/{departure.totalSeats}
-                 </div>
-                 <div className="text-lg font-bold text-blue-600">
-                   ₹{departure.price.toLocaleString()}
-                 </div>
-               </div>
 
-               {/* Display Images */}
-               {departure.images && departure.images.length > 0 && (
-                 <div className="flex gap-2 overflow-x-auto">
-                   {departure.images.slice(0, 3).map((image, index) => (
-                     <Image
-                       key={index}
-                       src={image}
-                       alt={`${departure.title} image ${index + 1}`}
-                       width={64}
-                       height={48}
-                       className="w-16 h-12 object-cover rounded border border-gray-200 flex-shrink-0"
-                     />
-                   ))}
-                   {departure.images.length > 3 && (
-                     <div className="w-16 h-12 bg-gray-100 rounded border border-gray-200 flex items-center justify-center text-xs text-gray-500 flex-shrink-0">
-                       +{departure.images.length - 3}
-                     </div>
-                   )}
-                 </div>
-               )}
+              <div className="flex items-center justify-between text-sm text-gray-600">
+                <div className="flex items-center">
+                  <Calendar className="w-4 h-4 mr-1" />
+                  {new Date(departure.departureDate).toLocaleDateString('en-IN', {
+                    day: 'numeric',
+                    month: 'short',
+                    year: 'numeric'
+                  })}
+                </div>
+                {departure.departures && departure.departures.length > 0 && (
+                  <Badge variant="secondary" className="bg-blue-50 text-blue-600 border-blue-100 text-[10px]">
+                    +{departure.departures.length} Batches
+                  </Badge>
+                )}
+              </div>
+
+              <div className="flex items-center justify-between">
+                <div className="flex items-center text-sm text-gray-600">
+                  <Users className="w-4 h-4 mr-1" />
+                  {departure.availableSeats}/{departure.totalSeats}
+                </div>
+                <div className="text-lg font-bold text-blue-600">
+                  ₹{departure.price.toLocaleString()}
+                </div>
+              </div>
+
+              {/* Display Images */}
+              {departure.images && departure.images.length > 0 && (
+                <div className="flex gap-2 overflow-x-auto">
+                  {departure.images.slice(0, 3).map((image, index) => (
+                    <div key={index} className="w-16 h-12 bg-gray-50 rounded border border-gray-200 overflow-hidden flex-shrink-0">
+                      <Image
+                        src={getImageUrl(image) || ''}
+                        alt={`${departure.title} image ${index + 1}`}
+                        width={64}
+                        height={48}
+                        className="w-full h-full object-cover"
+                        unoptimized
+                        onError={(e) => {
+                          const target = e.target as HTMLImageElement;
+                          target.src = "https://placehold.co/100x100/f3f4f6/9ca3af?text=Err";
+                        }}
+                      />
+                    </div>
+                  ))}
+                  {departure.images.length > 3 && (
+                    <div className="w-16 h-12 bg-gray-100 rounded border border-gray-200 flex items-center justify-center text-xs text-gray-500 flex-shrink-0">
+                      +{departure.images.length - 3}
+                    </div>
+                  )}
+                </div>
+              )}
 
               <div className="flex gap-2">
                 <Button className="bg-blue-600 text-white hover:bg-blue-700" size="sm" variant="outline" onClick={() => handleEdit(departure)}>
@@ -498,7 +573,7 @@ const AdminFixedDepartures = () => {
                   <X className="w-5 h-5 text-gray-900" />
                 </Button>
               </div>
-              
+
               {locationsLoading && countries.length === 0 && (
                 <div className="mb-4 p-4 bg-blue-50 border border-blue-200 rounded-lg">
                   <div className="flex items-center">
@@ -544,6 +619,20 @@ const AdminFixedDepartures = () => {
                     />
                   </div>
                   <div>
+                    <label className="block text-sm font-medium mb-2 text-gray-900">Duration *</label>
+                    <Input
+                      name="duration"
+                      value={formData.duration}
+                      onChange={handleChange}
+                      placeholder="e.g., 5 Days 4 Nights"
+                      required
+                      className="bg-white text-gray-900"
+                    />
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-3 gap-4">
+                  <div>
                     <label className="block text-sm font-medium mb-2 text-gray-900">Price *</label>
                     <Input
                       name="price"
@@ -551,6 +640,26 @@ const AdminFixedDepartures = () => {
                       value={formData.price}
                       onChange={handleChange}
                       required
+                      className="bg-white text-gray-900"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium mb-2 text-gray-900">Original Price</label>
+                    <Input
+                      name="originalPrice"
+                      type="number"
+                      value={formData.originalPrice}
+                      onChange={handleChange}
+                      className="bg-white text-gray-900"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium mb-2 text-gray-900">Discount (%)</label>
+                    <Input
+                      name="discount"
+                      type="number"
+                      value={formData.discount}
+                      onChange={handleChange}
                       className="bg-white text-gray-900"
                     />
                   </div>
@@ -641,32 +750,19 @@ const AdminFixedDepartures = () => {
                   </div>
                 </div>
 
-                <div className="grid grid-cols-2 gap-4">
-                  <div>
-                    <label className="block text-sm font-medium mb-2 text-gray-900">Duration *</label>
-                    <Input
-                      name="duration"
-                      value={formData.duration}
-                      onChange={handleChange}
-                      placeholder="e.g., 5 Days 4 Nights"
-                      required
-                      className="bg-white text-gray-900"
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-sm font-medium mb-2 text-gray-900">Status</label>
-                    <select
-                      name="status"
-                      value={formData.status}
-                      onChange={handleChange}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white text-gray-900"
-                    >
-                      <option value="upcoming">Upcoming</option>
-                      <option value="ongoing">Ongoing</option>
-                      <option value="completed">Completed</option>
-                      <option value="cancelled">Cancelled</option>
-                    </select>
-                  </div>
+                <div>
+                  <label className="block text-sm font-medium mb-2 text-gray-900">Status</label>
+                  <select
+                    name="status"
+                    value={formData.status}
+                    onChange={handleChange}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white text-gray-900"
+                  >
+                    <option value="upcoming">Upcoming</option>
+                    <option value="ongoing">Ongoing</option>
+                    <option value="completed">Completed</option>
+                    <option value="cancelled">Cancelled</option>
+                  </select>
                 </div>
 
                 <div className="grid grid-cols-2 gap-4">
@@ -707,7 +803,7 @@ const AdminFixedDepartures = () => {
                     />
                   </div>
                   <div>
-                    <label className="block text-sm font-medium mb-2">Available Seats *</label>
+                    <label className="block text-sm !text-gray-900 font-medium mb-2">Available Seats *</label>
                     <Input
                       name="availableSeats"
                       type="number"
@@ -718,6 +814,86 @@ const AdminFixedDepartures = () => {
                     />
                   </div>
                 </div>
+
+                {/* Multiple Departures Section */}
+                <Card className="border-blue-100 bg-blue-50/30">
+                  <CardHeader className="py-3 px-4 flex flex-row items-center justify-between">
+                    <CardTitle className="text-sm font-bold text-gray-900 flex items-center gap-2">
+                      <Calendar className="w-4 h-4 text-blue-600" />
+                      Available Batch Dates
+                    </CardTitle>
+                    <Button
+                      type="button"
+                      onClick={addDeparture}
+                      size="sm"
+                      variant="outline"
+                      className="h-8 text-xs border-blue-200 text-blue-700 hover:bg-blue-100"
+                    >
+                      <Plus className="w-3 h-3 mr-1" />
+                      Add Batch
+                    </Button>
+                  </CardHeader>
+                  <CardContent className="p-4 pt-0 space-y-3">
+                    {formData.departures.map((departure, index) => (
+                      <div key={index} className="grid grid-cols-12 gap-2 items-end bg-white p-3 rounded-md border border-gray-200">
+                        <div className="col-span-4">
+                          <label className="text-[10px] font-bold text-gray-500 uppercase ml-1">Date</label>
+                          <Input
+                            type="date"
+                            value={departure.date}
+                            onChange={(e) => updateDeparture(index, 'date', e.target.value)}
+                            className="h-8 text-xs bg-white text-gray-900"
+                          />
+                        </div>
+                        <div className="col-span-2">
+                          <label className="text-[10px] font-bold text-gray-500 uppercase ml-1">Price</label>
+                          <Input
+                            type="number"
+                            value={departure.price}
+                            onChange={(e) => updateDeparture(index, 'price', parseFloat(e.target.value))}
+                            className="h-8 text-xs bg-gray-50 text-gray-900"
+                          />
+                        </div>
+                        <div className="col-span-2">
+                          <label className="text-[10px] font-bold text-gray-500 uppercase ml-1">Seats</label>
+                          <Input
+                            type="number"
+                            value={departure.seats}
+                            onChange={(e) => updateDeparture(index, 'seats', parseInt(e.target.value))}
+                            className="h-8 text-xs bg-gray-50 text-gray-900"
+                          />
+                        </div>
+                        <div className="col-span-3">
+                          <label className="text-[10px] font-bold text-gray-500 uppercase ml-1">Status</label>
+                          <select
+                            value={departure.status}
+                            onChange={(e) => updateDeparture(index, 'status', e.target.value)}
+                            className="w-full h-8 text-xs px-2 border border-gray-200 rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500 bg-gray-50 text-gray-900"
+                          >
+                            <option value="available">Available</option>
+                            <option value="soldout">Sold Out</option>
+                          </select>
+                        </div>
+                        <div className="col-span-1">
+                          <Button
+                            type="button"
+                            variant="ghost"
+                            size="icon"
+                            onClick={() => removeDeparture(index)}
+                            className="h-8 w-8 text-red-500 hover:text-red-700 hover:bg-red-50"
+                          >
+                            <Trash2 className="w-4 h-4" />
+                          </Button>
+                        </div>
+                      </div>
+                    ))}
+                    {formData.departures.length === 0 && (
+                      <div className="text-center py-4 text-xs text-gray-500 italic">
+                        No additional batches added yet.
+                      </div>
+                    )}
+                  </CardContent>
+                </Card>
 
                 <div>
                   <label className="block text-sm font-medium mb-2 text-gray-900">Short Description *</label>
@@ -743,13 +919,17 @@ const AdminFixedDepartures = () => {
                   />
                 </div>
 
-                                 <div>
-                   <label className="block text-sm font-medium mb-2 text-gray-900">Images</label>
-                   <div className="space-y-4">
-                     {/* Debug info */}
-                     <div className="text-xs text-gray-500 p-2 bg-gray-100 rounded">
-                       Current images array: {JSON.stringify(formData.images)}
-                     </div>
+
+
+
+
+                <div>
+                  <label className="block text-sm font-medium mb-2 text-gray-900">Images</label>
+                  <div className="space-y-4">
+                    {/* Debug info */}
+                    <div className="text-xs text-gray-500 p-2 bg-gray-100 rounded">
+                      Current images array: {JSON.stringify(formData.images)}
+                    </div>
                     {/* Image Upload */}
                     <div className="border-2 border-dashed border-gray-300 rounded-lg p-6 text-center hover:border-blue-400 transition-colors">
                       <input
@@ -771,50 +951,41 @@ const AdminFixedDepartures = () => {
                       </label>
                     </div>
 
-                                         {/* Display Uploaded Images */}
-                     {formData.images.length > 0 && (
-                       <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
-                         <div className="col-span-full text-sm text-gray-500 mb-2">
-                           Debug: {formData.images.length} images loaded
-                         </div>
-                         {formData.images.map((image, index) => (
-                           <div key={index} className="relative group">
-                             <div className="text-xs text-gray-500 mb-1">Image {index + 1}: {image}</div>
-                             <Image
-                               src={image}
-                               alt={`Image ${index + 1}`}
-                               width={300}
-                               height={128}
-                               className="w-full h-32 object-cover rounded-lg border border-gray-200"
-                               onError={(e) => {
-                                 console.error('Image failed to load:', image);
-                                 // Show fallback content when image fails to load
-                                 const imgElement = e.currentTarget as HTMLImageElement;
-                                 imgElement.style.display = 'none';
-                                 const fallback = document.createElement('div');
-                                 fallback.className = 'w-full h-32 bg-gray-100 rounded-lg border border-gray-200 flex items-center justify-center text-xs text-gray-500';
-                                 fallback.innerHTML = `
-                                   <div class="text-center">
-                                     <ImageIcon class="w-8 h-8 text-gray-400 mx-auto mb-1" />
-                                     <div>Image failed to load</div>
-                                     <div class="text-xs">${image}</div>
-                                   </div>
-                                 `;
-                                 imgElement.parentNode?.appendChild(fallback);
-                               }}
-                               onLoad={() => {}}
-                             />
-                             <button
-                               type="button"
-                               onClick={() => removeImage(index)}
-                               className="absolute top-2 right-2 bg-red-500 text-white rounded-full p-1 opacity-0 group-hover:opacity-100 transition-opacity hover:bg-red-600"
-                             >
-                               <X className="w-4 h-4" />
-                             </button>
-                           </div>
-                         ))}
-                       </div>
-                     )}
+                    {/* Display Uploaded Images */}
+                    {formData.images.length > 0 && (
+                      <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+                        <div className="col-span-full text-sm text-gray-500 mb-2">
+                          Debug: {formData.images.length} images loaded
+                        </div>
+                        {formData.images.map((image, index) => (
+                          <div key={index} className="relative group">
+                            <div className="text-xs text-gray-500 mb-1 truncate" title={image}>Image {index + 1}</div>
+                            <div className="w-full h-32 bg-gray-50 rounded-lg border border-gray-200 overflow-hidden">
+                              <Image
+                                src={getImageUrl(image) || ''}
+                                alt={`Image ${index + 1}`}
+                                width={300}
+                                height={128}
+                                className="w-full h-full object-cover"
+                                unoptimized
+                                onError={(e) => {
+                                  // Fallback to a placeholder icon if image fails
+                                  const target = e.target as HTMLImageElement;
+                                  target.src = "https://placehold.co/600x400/f3f4f6/9ca3af?text=Image+Load+Error";
+                                }}
+                              />
+                            </div>
+                            <button
+                              type="button"
+                              onClick={() => removeImage(index)}
+                              className="absolute top-2 right-2 bg-red-500 text-white rounded-full p-1 opacity-0 group-hover:opacity-100 transition-opacity hover:bg-red-600"
+                            >
+                              <X className="w-4 h-4" />
+                            </button>
+                          </div>
+                        ))}
+                      </div>
+                    )}
                   </div>
                 </div>
 

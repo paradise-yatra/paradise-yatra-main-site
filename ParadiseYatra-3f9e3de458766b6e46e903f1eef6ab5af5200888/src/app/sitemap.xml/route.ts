@@ -1,8 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { API_CONFIG } from '@/config/api';
 
 export async function GET(request: NextRequest) {
   const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://paradiseyatra.com';
-  
+
   // Static pages
   const staticPages = [
     {
@@ -75,10 +76,10 @@ export async function GET(request: NextRequest) {
 
   // Fetch dynamic content from your API
   let dynamicPages = [];
-  
+
   try {
-    const API_BASE_URL = process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:5000';
-    
+    const API_BASE_URL = API_CONFIG.BACKEND_URL;
+
     // Fetch packages
     const packagesResponse = await fetch(`${API_BASE_URL}/api/packages`, {
       next: { revalidate: 3600 } // Cache for 1 hour
@@ -169,7 +170,7 @@ export async function GET(request: NextRequest) {
   }
 
   const allPages = [...staticPages, ...dynamicPages];
-  
+
   const sitemap = `<?xml version="1.0" encoding="UTF-8"?>
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
 ${allPages.map(page => `  <url>

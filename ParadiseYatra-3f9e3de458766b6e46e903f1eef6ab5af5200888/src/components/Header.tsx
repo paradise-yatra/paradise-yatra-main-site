@@ -19,22 +19,28 @@ import {
   TreePine,
   Camera,
   Mail,
+  LogOut,
+  User as UserIcon,
+  Settings,
+  ChevronRight,
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useState, useEffect } from "react";
 import LeadCaptureForm from "./LeadCaptureForm";
 import Sidebar from "./Sidebar";
 import { usePathname, useRouter } from "next/navigation";
+import { useAuth } from "@/context/AuthContext";
 
 import { useNavigation } from "@/hooks/useNavigation";
 import Image from "next/image";
 import { HiOutlineMenuAlt3 } from "react-icons/hi";
 
 const Header = () => {
+  const { user, logout } = useAuth();
   const [isScrolled, setIsScrolled] = useState(false);
   const [activeDropdown, setActiveDropdown] = useState<number | null>(null);
+  const [showUserMenu, setShowUserMenu] = useState(false);
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
-  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [isLeadFormOpen, setIsLeadFormOpen] = useState(false);
   const [isNavigating, setIsNavigating] = useState(false);
 
@@ -172,42 +178,17 @@ const Header = () => {
     }
   }, [isNavigating]);
 
-  // Close mobile menu when clicking outside
+  // Handle Sidebar scroll lock
   useEffect(() => {
-    const handleClickOutside = (event: MouseEvent) => {
-      const target = event.target as Element;
-      if (!target.closest(".mobile-menu-container")) {
-        setIsMobileMenuOpen(false);
-      }
-    };
-
-    if (isMobileMenuOpen) {
-      document.addEventListener("mousedown", handleClickOutside);
-    }
-
-    return () => {
-      document.removeEventListener("mousedown", handleClickOutside);
-    };
-  }, [isMobileMenuOpen]);
-
-  // Prevent body scroll when mobile menu is open
-  useEffect(() => {
-    const bodyStyle = document.body.style;
-
-    if (isMobileMenuOpen) {
-      bodyStyle.overflowY = "hidden";
+    if (isSidebarOpen) {
+      document.body.style.overflow = "hidden";
     } else {
-      bodyStyle.overflowY = "";
+      document.body.style.overflow = "";
     }
-
-    // Always keep horizontal overflow hidden to prevent stray scroll on mobile
-    bodyStyle.overflowX = "hidden";
-
     return () => {
-      bodyStyle.overflowY = "";
-      bodyStyle.overflowX = "hidden";
+      document.body.style.overflow = "";
     };
-  }, [isMobileMenuOpen]);
+  }, [isSidebarOpen]);
 
 
 
@@ -224,7 +205,7 @@ const Header = () => {
         transition={{ delay: 0.3, duration: 0.5 }}
         className={`transition-all duration-300 ${isTransparent
           ? "bg-transparent border-transparent"
-          : "bg-white border-gray-100/50 shadow-lg"
+          : "bg-white border-gray-100/50 shadow-sm"
           }`}
       >
         <div className="max-w-6xl mx-auto px-4 md:px-6">
@@ -239,7 +220,7 @@ const Header = () => {
                 onClick={() => router.push("/")}
                 className="flex items-center gap-3 group cursor-pointer "
               >
-                <div className="relative h-11 w-11 rounded-full overflow-hidden shadow-md group-hover:shadow-lg transition-shadow bg-white">
+                <div className="relative h-11 w-11  overflow-hidden ">
                   <Image
                     src="/favicon.png"
                     alt="Paradise Yatra"
@@ -459,285 +440,134 @@ const Header = () => {
               >
                 Fixed Departure
               </a>
+
             </nav>
 
-            {/* Right side - Desktop */}
-            <div className="hidden md:flex items-center gap-3 text-sm font-semibold">
-              <motion.button
-                onClick={() => setIsLeadFormOpen(true)}
-                className={`rounded-lg border cursor-pointer backdrop-blur-md px-4 py-2 backdrop-blur-sm transition ${isTransparent
-                  ? "border-white  bg-white/10 hover:bg-white/10 text-white "
-                  : "border-gray-300 hover:bg-gray-100 text-gray-700"
-                  }`}
-              >
-                Book Now
-              </motion.button>
-              <button
-                className={`p-2 rounded-full cursor-pointer transition-colors ${isTransparent ? "text-white hover:bg-white/10" : "text-gray-700 hover:bg-gray-100"
-                  }`}
-                onClick={() => setIsSidebarOpen(true)}
-                aria-label="Menu"
-              >
-                <HiOutlineMenuAlt3 className="w-6 h-6" />
-              </button>
-            </div>
+            {/* Right side - Desktop & Mobile Book Now */}
+            <div className="flex items-center gap-3">
+              {/* Desktop specific buttons */}
+              <div className="hidden md:flex items-center gap-3 text-sm font-semibold">
+                <motion.button
+                  onClick={() => setIsLeadFormOpen(true)}
+                  className={`rounded-lg border cursor-pointer backdrop-blur-md px-4 py-2 transition ${isTransparent
+                    ? "border-white bg-white/10 hover:bg-white/10 text-white"
+                    : "border-gray-300 hover:bg-gray-100 text-gray-700"
+                    }`}
+                >
+                  Book Now
+                </motion.button>
 
-            {/* Mobile menu button */}
-            <motion.div
-              whileHover={{ scale: 1.1 }}
-              whileTap={{ scale: 0.9 }}
-              className="md:hidden mobile-menu-container"
-            >
-              <button
-                className={`flex h-10 w-10 items-center justify-center rounded-full border transition ${isTransparent
-                  ? "border-white/40 hover:bg-white/10 text-white"
-                  : "border-gray-300 hover:bg-gray-100 text-gray-700"
-                  }`}
-                onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
-                aria-label="Menu"
-              >
-                {isMobileMenuOpen ? (
-                  <X className="h-5 w-5" />
+
+
+                {user ? (
+                  <div className="relative">
+                    <button
+                      onClick={() => setShowUserMenu(!showUserMenu)}
+                      className={`flex items-center gap-2 p-1.5 rounded-full transition-all border ${isTransparent
+                        ? "border-white/30 bg-white/10 hover:bg-white/20 text-white"
+                        : "border-slate-200 bg-slate-50 hover:bg-slate-100 text-slate-700"
+                        }`}
+                    >
+                      <div className="h-7 w-7 rounded-full bg-blue-600 flex items-center justify-center text-[10px] text-white font-bold">
+                        {user.name.charAt(0).toUpperCase()}
+                      </div>
+                      <ChevronDown className={`w-4 h-4 transition-transform duration-200 ${showUserMenu ? "rotate-180" : ""}`} />
+                    </button>
+
+                    <AnimatePresence>
+                      {showUserMenu && (
+                        <motion.div
+                          initial={{ opacity: 0, y: 10, scale: 0.95 }}
+                          animate={{ opacity: 1, y: 0, scale: 1 }}
+                          exit={{ opacity: 0, y: 10, scale: 0.95 }}
+                          className="absolute right-0 top-full mt-2 w-56 bg-white rounded-xl shadow-xl border border-slate-200 overflow-hidden z-50 px-1 py-1"
+                        >
+                          <div className="px-4 py-3 border-b border-slate-100 mb-1">
+                            <p className="text-sm font-black text-slate-900 truncate">{user.name}</p>
+                            <p className="text-[10px] font-medium text-slate-500 truncate">{user.email}</p>
+                          </div>
+                          <button
+                            onClick={() => { logout(); setShowUserMenu(false); }}
+                            className="w-full flex items-center gap-3 px-3 py-2 text-sm text-red-600 hover:bg-red-50 rounded-lg transition-colors group"
+                          >
+                            <LogOut className="w-4 h-4" />
+                            <span className="font-bold">Sign Out</span>
+                          </button>
+                        </motion.div>
+                      )}
+                    </AnimatePresence>
+                  </div>
                 ) : (
-                  <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.5" d="M4 7h16M4 12h16M4 17h16" />
-                  </svg>
+                  <motion.button
+                    whileHover={{ scale: 1.02 }}
+                    whileTap={{ scale: 0.98 }}
+                    onClick={() => router.push("/login")}
+                    className={`rounded-lg px-5 py-2 font-bold transition-all shadow-sm flex items-center gap-2 group ${isTransparent
+                      ? "bg-white text-blue-900 hover:bg-blue-50"
+                      : "bg-blue-600 text-white hover:bg-blue-700"
+                      }`}
+                  >
+                    Login
+                    <ChevronRight className="w-4 h-4 group-hover:translate-x-0.5 transition-transform" />
+                  </motion.button>
                 )}
-              </button>
-            </motion.div>
+
+                <button
+                  className={`p-2 rounded-full cursor-pointer transition-colors ${isTransparent ? "text-white hover:bg-white/10" : "text-gray-700 hover:bg-gray-100"
+                    }`}
+                  onClick={() => setIsSidebarOpen(true)}
+                  aria-label="Menu"
+                >
+                  <HiOutlineMenuAlt3 className="w-6 h-6" />
+                </button>
+              </div>
+
+              {/* Mobile Actions - Rich Looking */}
+              <div className="md:hidden flex items-center gap-2">
+
+
+                {user ? (
+                  <button
+                    onClick={() => setShowUserMenu(!showUserMenu)}
+                    className={`flex h-10 w-10 items-center justify-center rounded-xl border transition-all duration-300 ${isTransparent
+                      ? "border-white/40 bg-white/10 text-white"
+                      : "border-gray-200 bg-gray-50 text-slate-700"
+                      }`}
+                  >
+                    <div className="h-6 w-6 rounded-full bg-blue-600 flex items-center justify-center text-[10px] text-white font-bold capitalize">
+                      {user.name.charAt(0)}
+                    </div>
+                  </button>
+                ) : (
+                  <button
+                    onClick={() => router.push("/login")}
+                    className={`flex h-10 w-10 items-center justify-center rounded-xl border transition-all duration-300 ${isTransparent
+                      ? "border-white/40 bg-white/10 text-white"
+                      : "border-gray-200 bg-gray-50 text-slate-700"
+                      }`}
+                    aria-label="Login"
+                  >
+                    <UserIcon className="h-5 w-5" />
+                  </button>
+                )}
+
+                <button
+                  className={`flex h-10 w-10 items-center justify-center rounded-xl border transition-all duration-300 ${isTransparent
+                    ? "border-white/40 bg-white/10 text-white active:bg-white/20"
+                    : "border-gray-200 bg-gray-50 text-gray-700 active:bg-gray-100"
+                    }`}
+                  onClick={() => setIsSidebarOpen(true)}
+                  aria-label="Menu"
+                >
+                  <Menu className="h-5 w-5" />
+                </button>
+              </div>
+            </div>
           </div>
+
         </div>
 
-        {/* Mobile Menu */}
-        <AnimatePresence>
-          {isMobileMenuOpen && (
-            <motion.div
-              initial={{ opacity: 0, height: 0 }}
-              animate={{ opacity: 1, height: "auto" }}
-              exit={{ opacity: 0, height: 0 }}
-              transition={{ duration: 0.3, ease: "easeInOut" }}
-              className="lg:hidden bg-white/98 backdrop-blur-xl border-t border-gray-200"
-            >
-              <div className="container !mt-4 px-4 sm:px-6 py-6 max-h-[80vh] overflow-y-auto scrollbar-thin scrollbar-thumb-gray-300 scrollbar-track-gray-100">
-                {/* Mobile Navigation Items */}
-                <nav className="space-y-4 mb-6">
-                  {filteredNavItems.map((item, index) => {
-                    const IconComponent =
-                      iconMap[item.icon as keyof typeof iconMap];
-                    return (
-                      <motion.div
-                        key={index}
-                        initial={{ opacity: 0, x: -20 }}
-                        animate={{ opacity: 1, x: 0 }}
-                        transition={{ delay: 0.2 + index * 0.1 }}
-                        className="border border-gray-100 rounded-lg p-4  bg-gradient-to-r from-gray-50 to-blue-50"
-                      >
-                        <div className="flex items-center mb-3">
-                          {IconComponent && (
-                            <IconComponent className="w-5 h-5 text-blue-600 mr-3" />
-                          )}
-                          <div className="font-semibold text-gray-800">
-                            {item.name}
-                          </div>
-                        </div>
-                        <div className="space-y-2">
-                          {item.submenu.map((subItem, subIndex) => {
-                            const DestinationIcon = getDestinationIcon(
-                              subItem.name
-                            );
 
-
-                            // Special handling for India Tour Package - compact grid layout showing states in mobile
-                            if (
-                              item.name === "India Tour Package" &&
-                              subItem.destinations &&
-                              subItem.destinations.length > 0
-                            ) {
-                              // Only render once to show all states in grid
-                              if (subIndex === 0) {
-                                return (
-                                  <div key="india-states-grid-mobile" className="space-y-2">
-                                    <div className="grid grid-cols-2 sm:grid-cols-3 gap-x-2 gap-y-1">
-                                      {item.submenu.map((stateItem, stateIndex) => (
-                                        <motion.a
-                                          key={stateIndex}
-                                          href={`/packages/india/${stateItem.name
-                                            .toLowerCase()
-                                            .replace(/\s+/g, "-")}`}
-                                          whileHover={{ x: 2 }}
-                                          className="text-xs cursor-pointer text-slate-600 hover:text-blue-600 font-medium py-1 px-1.5 rounded-sm hover:bg-gradient-to-r hover:from-blue-50/80 hover:to-indigo-50/80 transition-all duration-200 truncate whitespace-nowrap border border-transparent hover:border-blue-100"
-                                          title={stateItem.name}
-                                          onClick={() => {
-                                            setIsMobileMenuOpen(false);
-                                            setIsNavigating(true);
-                                          }}
-                                        >
-                                          {stateItem.name}
-                                        </motion.a>
-                                      ))}
-                                    </div>
-                                  </div>
-                                );
-                              }
-                              return null;
-                            }
-
-                            // Special handling for International Tour in mobile - compact grid layout showing countries
-                            if (
-                              item.name === "International Tour" &&
-                              subItem.destinations &&
-                              subItem.destinations.length > 0
-                            ) {
-                              // Only render once to show all countries in grid
-                              if (subIndex === 0) {
-                                return (
-                                  <div key="international-countries-grid-mobile" className="space-y-2">
-                                    <div className="grid grid-cols-2 sm:grid-cols-3 gap-x-2 gap-y-1">
-                                      {item.submenu.map((countryItem, countryIndex) => (
-                                        <motion.a
-                                          key={countryIndex}
-                                          href={`/packages/international/${countryItem.name
-                                            .toLowerCase()
-                                            .replace(/\s+/g, "-")}`}
-                                          whileHover={{ x: 2 }}
-                                          className="text-xs cursor-pointer text-slate-600 hover:text-blue-600 font-medium py-1 px-1.5 rounded-sm hover:bg-gradient-to-r hover:from-blue-50/80 hover:to-indigo-50/80 transition-all duration-200 truncate whitespace-nowrap border border-transparent hover:border-blue-100"
-                                          title={countryItem.name}
-                                          onClick={() => {
-                                            setIsMobileMenuOpen(false);
-                                            setIsNavigating(true);
-                                          }}
-                                        >
-                                          {countryItem.name}
-                                        </motion.a>
-                                      ))}
-                                    </div>
-                                  </div>
-                                );
-                              }
-                              return null;
-                            }
-
-                            // Regular submenu item (for other tour types)
-                            return (
-                              <div key={subIndex} className="space-y-2">
-                                <motion.a
-                                  href={subItem.href}
-                                  whileHover={{ x: 5 }}
-                                  className="flex items-center py-2 px-3 text-sm text-gray-600 rounded-lg hover:text-blue-600 hover:bg-gradient-to-r hover:from-blue-50 hover:to-purple-50 transition-all duration-200"
-                                  onClick={() => setIsMobileMenuOpen(false)}
-                                >
-                                  <DestinationIcon className="w-4 h-4 !mt-2 mr-3 text-blue-500" />
-                                  <span className="flex-1 font-medium">
-                                    {subItem.name}
-                                  </span>
-                                  {subItem.featured && (
-                                    <motion.div
-                                      initial={{ scale: 0 }}
-                                      animate={{ scale: 1 }}
-                                      transition={{ delay: 0.1 }}
-                                    >
-                                      <Star className="w-3 h-3 text-yellow-500 ml-2" />
-                                    </motion.div>
-                                  )}
-                                </motion.a>
-
-                                {/* Show destinations under each state in mobile for non-India tours */}
-                                {subItem.destinations &&
-                                  subItem.destinations.length > 0 &&
-                                  item.name !== "India Tour Package" &&
-                                  item.name !== "International Tour" && (
-                                    <div className="ml-6 pl-3 border-l-2 border-blue-200 space-y-1 max-h-32 overflow-y-auto scrollbar-thin scrollbar-thumb-gray-300 scrollbar-track-gray-100 relative">
-                                      {subItem.destinations.length > 4 && (
-                                        <div className="absolute top-0 right-2 w-2 h-2 bg-blue-400 rounded-full animate-pulse"></div>
-                                      )}
-                                      <div className="text-xs text-gray-500 font-medium mb-1">
-                                        Popular Destinations:
-                                      </div>
-                                      {subItem.destinations
-                                        .slice(0, 4)
-                                        .map((dest, destIndex) => (
-                                          <motion.a
-                                            key={destIndex}
-                                            href={
-                                              dest.type === "package"
-                                                ? `/itinerary/${dest.id}`
-                                                : `/destinations/${dest.id}`
-                                            }
-                                            whileHover={{ x: 3 }}
-                                            className="flex items-center text-xs text-gray-500 hover:text-blue-600 transition-colors duration-200 py-1"
-                                            onClick={() =>
-                                              setIsMobileMenuOpen(false)
-                                            }
-                                          >
-                                            <MapPin className="w-3 h-3 mr-2 text-blue-400" />
-                                            <span className="truncate">
-                                              {dest.name}
-                                            </span>
-                                            {dest.isTrending && (
-                                              <motion.div
-                                                initial={{ scale: 0 }}
-                                                animate={{ scale: 1 }}
-                                                transition={{ delay: 0.1 }}
-                                              >
-                                                <Star className="w-2 h-4 text-yellow-500 ml-1" />
-                                              </motion.div>
-                                            )}
-                                          </motion.a>
-                                        ))}
-                                      {subItem.destinations.length > 4 && (
-                                        <div className="text-xs text-blue-600 hover:text-blue-700 cursor-pointer pt-1">
-                                          +{subItem.destinations.length - 4}{" "}
-                                          more
-                                        </div>
-                                      )}
-                                    </div>
-                                  )}
-                              </div>
-                            );
-                          })}
-                        </div>
-                      </motion.div>
-                    );
-                  })}
-                </nav>
-
-                {/* Mobile Contact Info */}
-                <motion.div
-                  initial={{ opacity: 0, y: 20 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ delay: 0.6 }}
-                  className="space-y-2"
-                >
-                  <motion.div
-                    whileHover={{ scale: 1.02 }}
-                    className="flex items-center p-4 rounded-xl bg-gradient-to-r from-blue-50 to-purple-50 border border-blue-100"
-                  >
-                    <Phone className="w-4 h-4 text-blue-600 mr-2" />
-                    <div>
-                      <div className="text-xs text-gray-500">
-                        Call us anytime
-                      </div>
-                      <div className="font-semibold text-gray-800">
-                        +91 8979396413
-                      </div>
-                    </div>
-                  </motion.div>
-
-                  <Button
-                    size="lg"
-                    className="w-full bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 mt-4 mb-4 text-white font-semibold rounded-lg transition-all duration-300 shadow-lg"
-                    onClick={() => {
-                      setIsMobileMenuOpen(false);
-                      setIsLeadFormOpen(true);
-                    }}
-                  >
-                    Book Your Adventure
-                  </Button>
-                </motion.div>
-              </div>
-            </motion.div>
-          )}
-        </AnimatePresence>
       </motion.div>
 
       {/* Lead Capture Form */}
@@ -780,6 +610,7 @@ const Header = () => {
         isOpen={isSidebarOpen}
         onClose={() => setIsSidebarOpen(false)}
         navItems={filteredNavItems}
+        onBookNow={() => setIsLeadFormOpen(true)}
       />
 
     </header>
