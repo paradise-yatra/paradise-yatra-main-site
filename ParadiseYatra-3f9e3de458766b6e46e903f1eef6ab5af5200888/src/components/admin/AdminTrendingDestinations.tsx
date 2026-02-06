@@ -1,8 +1,9 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
-import { Crown, Star, MapPin, Clock, Edit, Trash2, Plus, Eye, Loader2, Upload, Image as ImageIcon, Percent } from "lucide-react";
+import { Crown, Star, MapPin, Clock, Edit, Trash2, Plus, Eye, Loader2, Upload, Image as ImageIcon, Percent, Globe, Search, Save, X, Check } from "lucide-react";
 import Image from "next/image";
+import { API_CONFIG } from "@/config/api";
 import { toast } from "react-toastify";
 import { Country, State } from "country-state-city";
 import type { ICountry, IState } from "country-state-city";
@@ -190,7 +191,7 @@ const AdminTrendingDestinations = () => {
         headers['Authorization'] = `Bearer ${token}`;
       }
 
-      const response = await fetch('/api/packages?category=Trending%20Destinations&limit=100', {
+      const response = await fetch(API_CONFIG.getFullUrl(API_CONFIG.ENDPOINTS.DESTINATIONS.TRENDING), {
         headers,
         cache: 'no-store'
       });

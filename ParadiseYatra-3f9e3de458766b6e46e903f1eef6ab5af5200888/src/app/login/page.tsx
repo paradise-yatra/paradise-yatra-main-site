@@ -8,6 +8,7 @@ import Link from "next/link";
 import { Mail, Lock, ArrowRight, Eye, EyeOff, Loader2 } from "lucide-react";
 import Image from "next/image";
 import { GoogleLogin, CredentialResponse } from "@react-oauth/google";
+import { API_CONFIG } from "@/config/api";
 
 export default function LoginPage() {
     const [email, setEmail] = useState("");
@@ -44,7 +45,7 @@ export default function LoginPage() {
         setError("");
 
         try {
-            const response = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/api/auth/login`, {
+            const response = await fetch(API_CONFIG.getFullUrl(API_CONFIG.ENDPOINTS.AUTH.LOGIN), {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({ email, password }),
@@ -245,13 +246,13 @@ export default function LoginPage() {
 
                         <div className="flex flex-col gap-4">
                             <div className="flex justify-center w-full">
-                                <div className="w-full transform-gpu transition-all hover:scale-[1.01]">
+                                <div className="w-full flex justify-center transform-gpu transition-all hover:scale-[1.01]">
                                     <GoogleLogin
                                         onSuccess={async (credentialResponse: CredentialResponse) => {
                                             if (!credentialResponse.credential) return;
                                             setLoading(true);
                                             try {
-                                                const response = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/api/auth/google-login`, {
+                                                const response = await fetch(API_CONFIG.getFullUrl('/api/auth/google-login'), {
                                                     method: "POST",
                                                     headers: { "Content-Type": "application/json" },
                                                     body: JSON.stringify({ idToken: credentialResponse.credential }),

@@ -8,6 +8,7 @@ import Link from "next/link";
 import { Mail, Lock, User, Phone, ArrowRight, Eye, EyeOff, Loader2, CheckCircle2, Sparkles, Globe, ShieldCheck } from "lucide-react";
 import Image from "next/image";
 import { GoogleLogin, CredentialResponse } from "@react-oauth/google";
+import { API_CONFIG } from "@/config/api";
 
 const signupBackground = "https://images.unsplash.com/photo-1507525428034-b723cf961d3e?q=80&w=2073&auto=format&fit=crop";
 
@@ -38,7 +39,7 @@ export default function SignupPage() {
     setError("");
 
     try {
-      const response = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/api/auth/send-otp`, {
+      const response = await fetch(API_CONFIG.getFullUrl('/api/auth/send-otp'), {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ email: formData.email }),
@@ -64,7 +65,7 @@ export default function SignupPage() {
     setError("");
 
     try {
-      const response = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/api/auth/register`, {
+      const response = await fetch(API_CONFIG.getFullUrl('/api/auth/register'), {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ ...formData, otp }),
@@ -379,13 +380,13 @@ export default function SignupPage() {
 
             <motion.div variants={itemVariants} className="flex flex-col gap-6">
               <div className="flex justify-center w-full">
-                <div className="w-full max-w-xs transform-gpu transition-all hover:scale-[1.02]">
+                <div className="w-full flex justify-center transform-gpu transition-all hover:scale-[1.01]">
                   <GoogleLogin
                     onSuccess={async (credentialResponse: CredentialResponse) => {
                       if (!credentialResponse.credential) return;
                       setLoading(true);
                       try {
-                        const response = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/api/auth/google-login`, {
+                        const response = await fetch(API_CONFIG.getFullUrl('/api/auth/google-login'), {
                           method: "POST",
                           headers: { "Content-Type": "application/json" },
                           body: JSON.stringify({ idToken: credentialResponse.credential }),
