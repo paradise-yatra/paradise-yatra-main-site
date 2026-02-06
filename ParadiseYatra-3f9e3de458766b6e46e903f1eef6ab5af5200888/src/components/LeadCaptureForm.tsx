@@ -114,7 +114,7 @@ export default function LeadCaptureForm({ isOpen, onClose, packageTitle, package
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    
+
     if (!validateForm()) {
       return;
     }
@@ -390,18 +390,18 @@ export default function LeadCaptureForm({ isOpen, onClose, packageTitle, package
 
                     <p className="text-xs text-gray-500 text-center mt-3">
                       By submitting this form, you agree to our{" "}
-                      <a 
-                        href="/privacy-policy" 
-                        target="_blank" 
+                      <a
+                        href="/privacy-policy"
+                        target="_blank"
                         rel="noopener noreferrer"
                         className="!text-blue-600 hover:!text-blue-700 underline underline-offset-2"
                       >
                         privacy policy
                       </a>
                       {" "}and{" "}
-                      <a 
-                        href="/terms-of-service" 
-                        target="_blank" 
+                      <a
+                        href="/terms-of-service"
+                        target="_blank"
                         rel="noopener noreferrer"
                         className="!text-blue-600 hover:!text-blue-700 underline underline-offset-2"
                       >

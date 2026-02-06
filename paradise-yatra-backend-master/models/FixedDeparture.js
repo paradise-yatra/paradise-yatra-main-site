@@ -168,13 +168,32 @@ const fixedDepartureSchema = new mongoose.Schema({
     type: String,
     enum: ['upcoming', 'ongoing', 'completed', 'cancelled'],
     default: 'upcoming'
-  }
+  },
+  departures: [{
+    date: {
+      type: String,
+      required: true
+    },
+    price: {
+      type: Number,
+      required: true
+    },
+    seats: {
+      type: Number,
+      required: true
+    },
+    status: {
+      type: String,
+      enum: ['available', 'soldout'],
+      default: 'available'
+    }
+  }]
 }, {
   timestamps: true
 });
 
 // Virtual for discounted price
-fixedDepartureSchema.virtual('discountedPrice').get(function() {
+fixedDepartureSchema.virtual('discountedPrice').get(function () {
   if (this.discount > 0) {
     return this.price - (this.price * this.discount / 100);
   }
@@ -182,12 +201,12 @@ fixedDepartureSchema.virtual('discountedPrice').get(function() {
 });
 
 // Virtual for seats remaining
-fixedDepartureSchema.virtual('seatsRemaining').get(function() {
+fixedDepartureSchema.virtual('seatsRemaining').get(function () {
   return this.availableSeats;
 });
 
 // Virtual for booking percentage
-fixedDepartureSchema.virtual('bookingPercentage').get(function() {
+fixedDepartureSchema.virtual('bookingPercentage').get(function () {
   return ((this.totalSeats - this.availableSeats) / this.totalSeats) * 100;
 });
 

@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import { motion } from 'framer-motion';
+import { motion, AnimatePresence } from 'framer-motion';
 import Link from 'next/link';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -11,7 +11,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
 import Header from '@/components/Header';
 import LeadCaptureForm from '@/components/LeadCaptureForm';
-import { Clock, MapPin, Star, Loader2, AlertCircle, Award, Check, Users, Calendar, Shield, ArrowRight, Plane, Utensils, Camera, Sparkles } from 'lucide-react';
+import { Clock, MapPin, Star, Loader2, AlertCircle, Award, Check, Users, Calendar, Shield, ArrowRight, Plane, Utensils, Camera, Sparkles, ChevronDown } from 'lucide-react';
 
 interface DestinationPageProps {
   params: Promise<{
@@ -57,6 +57,7 @@ export default function DestinationPage({ params }: DestinationPageProps) {
   const [otherPackages, setOtherPackages] = useState<any[]>([]);
   const [packagesLoading, setPackagesLoading] = useState(false);
   const [selectedImage, setSelectedImage] = useState(0);
+  const [openDay, setOpenDay] = useState<number | null>(0);
   const router = useRouter();
 
   useEffect(() => {
@@ -363,7 +364,7 @@ export default function DestinationPage({ params }: DestinationPageProps) {
                   <div className="p-2 bg-blue-100 rounded-lg">
                     <Sparkles className="h-6 w-6 text-blue-600" />
                   </div>
-                  <h2 className="!text-2xl !font-bold text-slate-900">Experience {destination.name}</h2>
+                  <h2 className="!text-2xl !font-bold text-slate-900">Experience  Highlights</h2>
                 </div>
 
                 <div className="prose prose-slate max-w-none">
@@ -408,42 +409,72 @@ export default function DestinationPage({ params }: DestinationPageProps) {
                   <div className="p-2 bg-blue-100 rounded-lg">
                     <Calendar className="h-6 w-6 text-blue-600" />
                   </div>
-                  <h2 className="!text-2xl !font-bold text-slate-900">Your Journey Awaits</h2>
+                  <h2 className="!text-2xl !font-bold text-slate-900">Detailed Itinerary</h2>
                 </div>
 
                 {destination?.itinerary && destination.itinerary.length > 0 ? (
-                  <div className="relative space-y-8 before:absolute before:inset-0 before:ml-5 before:-translate-x-px md:before:mx-auto md:before:translate-x-0 before:h-full before:w-0.5 before:bg-gradient-to-b before:from-transparent before:via-blue-200 before:to-transparent">
+                  <div className="space-y-4">
                     {destination.itinerary.map((day: DayItinerary, index: number) => (
-                      <div key={index} className="relative flex items-center justify-between md:justify-normal md:odd:flex-row-reverse group is-active">
-                        {/* Icon */}
-                        <div className="flex items-center justify-center w-10 h-10 rounded-full border border-white bg-blue-600 text-white shadow shrink-0 md:order-1 md:group-odd:-translate-x-1/2 md:group-even:translate-x-1/2">
-                          <span className="text-xs font-bold">{day.day}</span>
-                        </div>
-                        {/* Content */}
-                        <div className="w-[calc(100%-4rem)] md:w-[calc(50%-2.5rem)] p-4 rounded-lg border border-slate-200 bg-white shadow-sm hover:shadow-md transition-shadow">
-                          <div className="flex items-center justify-between space-x-2 mb-2">
-                            <div className="font-bold text-slate-900 !text-md">{day.title}</div>
+                      <div key={index} className="border border-slate-100 rounded-xl overflow-hidden bg-white transition-all duration-300">
+                        <button
+                          onClick={() => setOpenDay(openDay === index ? null : index)}
+                          className="w-full flex items-center gap-4 p-3 sm:p-4 text-left bg-slate-50/50 hover:bg-slate-50 transition-colors"
+                        >
+                          <div className={`flex-shrink-0 w-10 h-10 sm:w-12 sm:h-12 rounded-xl flex items-center justify-center font-bold !text-sm sm:!text-lg transition-colors border ${openDay === index ? 'bg-blue-600 text-white border-blue-600 shadow-lg shadow-blue-200' : 'bg-white border-slate-200 text-slate-500'}`}>
+                            D{day.day}
                           </div>
-                          <div className="text-slate-500 text-sm mb-4 flex items-center gap-4">
-                            {day.accommodation && (
-                              <span className="flex items-center gap-1">
-                                <Award className="w-3 h-3" /> {day.accommodation}
-                              </span>
-                            )}
+                          <div className="flex-grow">
+                            <h3 className={`!text-base sm:!text-lg !font-semibold transition-colors ${openDay === index ? 'text-blue-700' : 'text-slate-800'}`}>{day.title}</h3>
                           </div>
-                          <ul className="space-y-2">
-                            {Array.isArray(day.activities) && day.activities.length > 0 ? (
-                              day.activities.map((activity, actIndex) => (
-                                <li key={actIndex} className="flex items-start gap-2 text-slate-600 !text-md">
-                                  <div className="min-w-[12px] mt-1.5 h-1.5 w-1.5 rounded-full bg-blue-400"></div>
-                                  <span>{activity}</span>
-                                </li>
-                              ))
-                            ) : (
-                              <li className="text-slate-400 italic !text-md">Activities to be updated</li>
-                            )}
-                          </ul>
-                        </div>
+                          <div className={`flex-shrink-0 transition-transform duration-300 ${openDay === index ? 'rotate-180' : ''}`}>
+                            <ChevronDown className={`w-5 h-5 ${openDay === index ? 'text-blue-600' : 'text-slate-400'}`} />
+                          </div>
+                        </button>
+
+                        <AnimatePresence>
+                          {openDay === index && (
+                            <motion.div
+                              initial={{ height: 0, opacity: 0 }}
+                              animate={{ height: "auto", opacity: 1 }}
+                              exit={{ height: 0, opacity: 0 }}
+                              transition={{ duration: 0.3 }}
+                            >
+                              <div className="p-4 sm:p-5 pt-0 border-t border-slate-100">
+                                <div className="pt-4 space-y-4">
+                                  <ul className="space-y-3">
+                                    {Array.isArray(day.activities) && day.activities.length > 0 ? (
+                                      day.activities.map((activity, actIndex) => (
+                                        <li key={actIndex} className="flex gap-3 text-slate-600">
+                                          <div className="mt-2 min-w-[6px] h-1.5 w-1.5 rounded-full bg-blue-400 shrink-0" />
+                                          <span className="leading-relaxed text-[15px]">{activity}</span>
+                                        </li>
+                                      ))
+                                    ) : (
+                                      <li className="text-slate-400 italic !text-md">Activities to be updated</li>
+                                    )}
+                                  </ul>
+
+                                  {(day.meals || day.accommodation) && (
+                                    <div className="flex flex-wrap gap-4 mt-6 pt-4 border-t border-dashed border-slate-100">
+                                      {day.meals && (
+                                        <div className="flex items-center gap-2 text-xs sm:text-sm font-medium text-slate-500 bg-orange-50 px-3 py-1.5 rounded-full">
+                                          <Utensils className="w-3.5 h-3.5 text-orange-500" />
+                                          <span>{Array.isArray(day.meals) ? day.meals.join(', ') : day.meals}</span>
+                                        </div>
+                                      )}
+                                      {day.accommodation && (
+                                        <div className="flex items-center gap-2 text-xs sm:text-sm font-medium text-slate-500 bg-emerald-50 px-3 py-1.5 rounded-full">
+                                          <MapPin className="w-3.5 h-3.5 text-emerald-500" />
+                                          <span>{day.accommodation}</span>
+                                        </div>
+                                      )}
+                                    </div>
+                                  )}
+                                </div>
+                              </div>
+                            </motion.div>
+                          )}
+                        </AnimatePresence>
                       </div>
                     ))}
                   </div>

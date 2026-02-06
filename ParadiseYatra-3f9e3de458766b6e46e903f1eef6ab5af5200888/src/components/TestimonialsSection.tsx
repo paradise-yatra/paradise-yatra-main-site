@@ -2,7 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import Image from "next/image";
-import { ChevronLeft, ChevronRight } from "lucide-react";
+import CarouselArrows from "./ui/CarouselArrows";
 
 interface Testimonial {
     id: number;
@@ -130,15 +130,13 @@ const TestimonialsSection = () => {
             </div>
 
             {/* Carousel */}
-            <div className="relative z-10 max-w-6xl mx-auto w-full">
-                <button
-                    onClick={() => scrollByStep(-1)}
-                    disabled={!canScrollLeft}
-                    className="absolute left-0 top-[40%] -translate-y-1/2 z-10 hidden md:flex items-center justify-center w-12 h-12 rounded-full bg-white/80 backdrop-blur-sm shadow-lg text-gray-800 -ml-4 lg:-ml-8 cursor-pointer border border-gray-200 disabled:opacity-40"
-                    aria-label="Previous"
-                >
-                    <ChevronLeft className="h-6 w-6" />
-                </button>
+            <div className="relative z-10 max-w-6xl mx-auto w-full group/carousel">
+                <CarouselArrows
+                    onPrevious={() => scrollByStep(-1)}
+                    onNext={() => scrollByStep(1)}
+                    canScrollLeft={canScrollLeft}
+                    canScrollRight={canScrollRight}
+                />
 
                 <div
                     ref={carouselRef}
@@ -172,15 +170,6 @@ const TestimonialsSection = () => {
                         </div>
                     ))}
                 </div>
-
-                <button
-                    onClick={() => scrollByStep(1)}
-                    disabled={!canScrollRight}
-                    className="absolute right-0 top-[40%] -translate-y-1/2 z-10 hidden md:flex items-center justify-center w-12 h-12 rounded-full bg-white/80 backdrop-blur-sm shadow-lg text-gray-800 -mr-4 lg:-mr-8 cursor-pointer border border-gray-200 disabled:opacity-40"
-                    aria-label="Next"
-                >
-                    <ChevronRight className="h-6 w-6" />
-                </button>
             </div>
         </section>
     );

@@ -1,9 +1,9 @@
 "use client";
 
 import { useEffect, useRef, useState, useMemo } from "react";
-import { ChevronLeft, ChevronRight } from "lucide-react";
 import DestinationCard from "./DestinationCard";
 import { useNavigation } from "@/hooks/useNavigation";
+import CarouselArrows from "./ui/CarouselArrows";
 
 interface InternationalDestination {
     id: number;
@@ -91,28 +91,17 @@ const InternationalTourPackagesSection = () => {
                             Embark on extraordinary adventures and discover iconic global destinations with our curated international tour packages.
                         </p>
                     </div>
-                    <div className="flex gap-3 flex-shrink-0">
-                        <button
-                            onClick={() => scrollByStep(-1)}
-                            disabled={!canScrollLeft}
-                            className="w-9 h-9 rounded-full border border-blue-100 bg-white shadow-sm flex items-center justify-center cursor-pointer transition-all duration-300 hover:bg-blue-50 hover:border-blue-200 hover:scale-105 active:scale-95 disabled:opacity-40 disabled:cursor-not-allowed group"
-                            aria-label="Previous"
-                        >
-                            <ChevronLeft className="h-5 w-5 text-slate-700 group-hover:text-[#005beb] transition-colors" />
-                        </button>
-                        <button
-                            onClick={() => scrollByStep(1)}
-                            disabled={!canScrollRight}
-                            className="w-9 h-9 rounded-full border border-blue-100 bg-white shadow-sm flex items-center justify-center cursor-pointer transition-all duration-300 hover:bg-blue-50 hover:border-blue-200 hover:scale-105 active:scale-95 disabled:opacity-40 disabled:cursor-not-allowed group"
-                            aria-label="Next"
-                        >
-                            <ChevronRight className="h-5 w-5 text-slate-700 group-hover:text-[#005beb] transition-colors" />
-                        </button>
-                    </div>
                 </div>
 
                 {/* Carousel */}
-                <div className="relative -mx-4 px-4 md:mx-0 md:px-0">
+                <div className="relative group/carousel -mx-4 px-4 md:mx-0 md:px-0">
+                    <CarouselArrows
+                        onPrevious={() => scrollByStep(-1)}
+                        onNext={() => scrollByStep(1)}
+                        canScrollLeft={canScrollLeft}
+                        canScrollRight={canScrollRight}
+                    />
+
                     <div
                         ref={carouselRef}
                         className="flex gap-4 overflow-x-auto scroll-smooth pb-4 scrollbar-hide"

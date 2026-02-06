@@ -131,7 +131,7 @@ const nextConfig: NextConfig = {
         hostname: 'res.cloudinary.com',
         port: '',
         pathname: '/**',
-        
+
       },
       // Only allow localhost in development
       ...(process.env.NODE_ENV === 'development' ? [
@@ -234,12 +234,12 @@ const nextConfig: NextConfig = {
 
   turbopack: {},
 
-// Experimental features for better performance
-experimental: {
-  optimizePackageImports: ['lucide-react', 'framer-motion', 'react-icons'],
-  optimizeCss: true,
-  // ← Remove any 'turbo' here if still present!
-},
+  // Experimental features for better performance
+  experimental: {
+    optimizePackageImports: ['lucide-react', 'framer-motion', 'react-icons'],
+    optimizeCss: true,
+    // ← Remove any 'turbo' here if still present!
+  },
 
 
   // Headers for better caching and security

@@ -1,8 +1,8 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import { ChevronLeft, ChevronRight } from "lucide-react";
 import DestinationCard from "./DestinationCard";
+import CarouselArrows from "./ui/CarouselArrows";
 
 interface SeasonalPackage {
     id: number;
@@ -108,28 +108,17 @@ const WildlifeTourPackagesSection = () => {
                             Explore the beauty of India through our handpicked journeys, curated for the perfect weather and peak seasonal experiences.
                         </p>
                     </div>
-                    <div className="flex gap-2 flex-shrink-0">
-                        <button
-                            onClick={() => scrollByStep(-1)}
-                            disabled={!canScrollLeft}
-                            className="w-9 h-9 rounded-full border border-slate-200 bg-white/95 shadow-md flex items-center justify-center cursor-pointer transition-all duration-120 hover:scale-105 hover:shadow-lg disabled:opacity-40 disabled:cursor-not-allowed disabled:hover:scale-100 disabled:hover:shadow-md"
-                            aria-label="Previous"
-                        >
-                            <ChevronLeft className="h-5 w-5 text-slate-700" />
-                        </button>
-                        <button
-                            onClick={() => scrollByStep(1)}
-                            disabled={!canScrollRight}
-                            className="w-9 h-9 rounded-full border border-slate-200 bg-white/95 shadow-md flex items-center justify-center cursor-pointer transition-all duration-120 hover:scale-105 hover:shadow-lg disabled:opacity-40 disabled:cursor-not-allowed disabled:hover:scale-100 disabled:hover:shadow-md"
-                            aria-label="Next"
-                        >
-                            <ChevronRight className="h-5 w-5 text-slate-700" />
-                        </button>
-                    </div>
                 </div>
 
                 {/* Carousel */}
-                <div className="relative">
+                <div className="relative group/carousel">
+                    <CarouselArrows
+                        onPrevious={() => scrollByStep(-1)}
+                        onNext={() => scrollByStep(1)}
+                        canScrollLeft={canScrollLeft}
+                        canScrollRight={canScrollRight}
+                    />
+
                     <div
                         ref={carouselRef}
                         className="flex gap-4 overflow-x-auto scroll-smooth pb-4 scrollbar-hide"

@@ -7,11 +7,17 @@ const {
   getProfile,
   updateProfile,
   changePassword,
+  googleLogin,
+  sendOTP,
+  verifyOTP,
 } = require("../controllers/authController");
 
 // Public routes
 router.post("/register", register);
 router.post("/login", login);
+router.post("/google-login", googleLogin);
+router.post("/send-otp", sendOTP);
+router.post("/verify-otp", verifyOTP);
 
 // Protected routes
 router.get("/profile", auth, getProfile);

@@ -54,15 +54,11 @@ router.get("/:id", getFixedDeparture);
 router.post(
   "/",
   adminAuth,
-  uploadSingleImage,
-  handleUploadError,
   createFixedDeparture
 );
 router.put(
   "/:id",
   adminAuth,
-  uploadSingleImage,
-  handleUploadError,
   updateFixedDeparture
 );
 router.delete("/:id", adminAuth, deleteFixedDeparture);

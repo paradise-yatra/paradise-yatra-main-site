@@ -5,6 +5,8 @@ interface LeadData {
   fullName: string;
   email: string;
   phone: string;
+  destination?: string;
+  budget?: string;
   message: string;
   newsletterConsent: boolean;
   packageTitle?: string;
@@ -57,7 +59,7 @@ export async function POST(request: NextRequest) {
 
     // Email content
     const emailSubject = `New Travel Inquiry - ${body.packageTitle || "General Inquiry"}`;
-    
+
     const emailHtml = `
       <!DOCTYPE html>
       <html>
@@ -96,6 +98,14 @@ export async function POST(request: NextRequest) {
               <div class="value">${body.phone}</div>
             </div>
             <div class="field">
+              <div class="label">Destination:</div>
+              <div class="value">${body.destination || 'Not specified'}</div>
+            </div>
+            <div class="field">
+              <div class="label">Budget:</div>
+              <div class="value">${body.budget || 'Not specified'}</div>
+            </div>
+            <div class="field">
               <div class="label">Message/Requirements:</div>
               <div class="value">${body.message.replace(/\n/g, '<br>')}</div>
             </div>
@@ -132,6 +142,8 @@ New Travel Inquiry - ParadiseYatra
 Full Name: ${body.fullName}
 Email: ${body.email}
 Phone: ${body.phone}
+Destination: ${body.destination || 'Not specified'}
+Budget: ${body.budget || 'Not specified'}
 
 Message/Requirements:
 ${body.message}
@@ -155,8 +167,33 @@ Inquiry received on: ${new Date(body.timestamp).toLocaleString()}
 
     await transporter.sendMail(mailOptions);
 
-    // Log the lead (you can also save to database here)
-    console.log("New lead captured:", {
+    // Save lead to database
+    const backendUrl = process.env.NEXT_PUBLIC_BACKEND_URL || "http://localhost:5001";
+    try {
+      const dbResponse = await fetch(`${backendUrl}/api/leads`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          ...body,
+          timestamp: body.timestamp || new Date().toISOString(),
+        }),
+      });
+
+      if (!dbResponse.ok) {
+        console.error("Failed to save lead to database:", await dbResponse.text());
+      } else {
+        console.log("Lead saved to database successfully");
+      }
+    } catch (dbError) {
+      console.error("Error connecting to backend to save lead:", dbError);
+      // We don't fail the whole request if DB save fails but email was sent
+      // although ideally we'd want both to succeed.
+    }
+
+    // Log the lead
+    console.log("New lead captured and processed:", {
       fullName: body.fullName,
       email: body.email,
       phone: body.phone,
@@ -165,19 +202,19 @@ Inquiry received on: ${new Date(body.timestamp).toLocaleString()}
     });
 
     return NextResponse.json(
-      { 
-        success: true, 
-        message: "Inquiry submitted successfully" 
+      {
+        success: true,
+        message: "Inquiry submitted successfully"
       },
       { status: 200 }
     );
 
   } catch (error) {
     console.error("Error processing lead capture:", error);
-    
+
     return NextResponse.json(
-      { 
-        error: "Failed to submit inquiry. Please try again later." 
+      {
+        error: "Failed to submit inquiry. Please try again later."
       },
       { status: 500 }
     );

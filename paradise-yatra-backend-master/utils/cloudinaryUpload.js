@@ -7,7 +7,7 @@ const fs = require("fs");
 const getFolderPath = (contentType, category = null) => {
   // Normalize contentType to lowercase for matching
   const normalizedContentType = contentType ? contentType.toLowerCase().trim() : null;
-  
+
   // Pre-defined folder mappings
   const folderMap = {
     // Content types
@@ -19,13 +19,14 @@ const getFolderPath = (contentType, category = null) => {
     'holiday-types': 'paradise-yatra/packages/holiday-types',
     'misc': 'paradise-yatra/misc',
     'default': 'paradise-yatra/misc', // Map 'default' to 'misc' folder
-    
+
     // Package categories
     'trending-destinations': 'paradise-yatra/packages/trending-destinations',
     'popular-packages': 'paradise-yatra/packages/popular-packages',
     'holiday-packages': 'paradise-yatra/packages/holiday-packages',
     'adventure-packages': 'paradise-yatra/packages/adventure-packages',
     'premium-packages': 'paradise-yatra/packages/premium-packages',
+    'fixed-departure': 'paradise-yatra/packages/fixed-departure',
   };
 
   console.log(`📁 getFolderPath called with contentType: "${contentType}", normalized: "${normalizedContentType}", category: "${category}"`);
@@ -43,7 +44,7 @@ const getFolderPath = (contentType, category = null) => {
       .toLowerCase()
       .replace(/\s+/g, '-')
       .replace(/[^a-z0-9-]/g, '');
-    
+
     const folder = `paradise-yatra/packages/${safeCategoryName}`;
     console.log(`✅ Packages with category: ${folder}`);
     return folder;
@@ -55,7 +56,7 @@ const getFolderPath = (contentType, category = null) => {
       .toLowerCase()
       .replace(/\s+/g, '-')
       .replace(/[^a-z0-9-]/g, '');
-    
+
     const folder = `paradise-yatra/packages/${safeCategoryName}`;
     console.log(`✅ Dynamic category: ${folder}`);
     return folder;
@@ -77,26 +78,26 @@ const getFolderPath = (contentType, category = null) => {
 const uploadToCloudinary = async (filePath, contentTypeOrCategory = "misc", category = null, oldPublicId = null) => {
   // Support legacy single-parameter usage: uploadToCloudinary(path, 'trending-destinations')
   const contentType = contentTypeOrCategory;
-  
+
   // Normalize category: handle string "null" or "undefined" as actual null
   let normalizedCategory = category;
   if (category === "null" || category === "undefined" || category === null || category === undefined) {
     normalizedCategory = null;
   }
-  
+
   console.log(`🚀 uploadToCloudinary called with:`);
   console.log(`   - filePath: ${filePath}`);
   console.log(`   - contentTypeOrCategory: "${contentTypeOrCategory}"`);
   console.log(`   - category: "${category}" (normalized: ${normalizedCategory === null ? 'null' : `"${normalizedCategory}"`})`);
   console.log(`   - oldPublicId: "${oldPublicId}"`);
-  
+
   // If no category provided and contentType looks like a category, extract it
   if (!normalizedCategory && contentType && contentType.includes('-')) {
     // This is likely a legacy category parameter
     normalizedCategory = contentType;
     console.log(`   - Extracted category from contentType: "${normalizedCategory}"`);
   }
-  
+
   try {
     if (!filePath) {
       throw new Error("File path is required");
@@ -128,7 +129,7 @@ const uploadToCloudinary = async (filePath, contentTypeOrCategory = "misc", cate
         { quality: "auto", fetch_format: "auto" }
       ],
     };
-    
+
     console.log(`📤 Upload options:`, JSON.stringify(uploadOptions, null, 2));
 
     const result = await cloudinary.uploader.upload(filePath, uploadOptions);
@@ -136,12 +137,12 @@ const uploadToCloudinary = async (filePath, contentTypeOrCategory = "misc", cate
     console.log(`✅ Upload successful: ${result.secure_url}`);
     console.log(`✅ Public ID: ${result.public_id}`);
     console.log(`✅ Folder in public_id: ${result.public_id.split('/').slice(0, -1).join('/')}`);
-    
+
     // Verify folder is correct
     const expectedFolderParts = folder.split('/');
     const actualFolderParts = result.public_id.split('/').slice(0, -1);
     const folderMatches = JSON.stringify(expectedFolderParts) === JSON.stringify(actualFolderParts);
-    
+
     if (!folderMatches) {
       console.error(`❌ FOLDER MISMATCH!`);
       console.error(`   Expected: ${folder}`);
@@ -249,10 +250,10 @@ const deleteFromCloudinary = async (publicId) => {
  */
 const extractPublicId = (cloudinaryUrl) => {
   if (!cloudinaryUrl || typeof cloudinaryUrl !== 'string') return null;
-  
+
   // Check if it's a Cloudinary URL
   if (!cloudinaryUrl.includes('cloudinary.com')) return null;
-  
+
   // Extract public_id from URL
   // Example: https://res.cloudinary.com/xxx/image/upload/v123/paradise-yatra/packages/popular-packages/image.jpg
   const matches = cloudinaryUrl.match(/\/upload\/(?:v\d+\/)?(.+?)(?:\.[^.]+)?$/);

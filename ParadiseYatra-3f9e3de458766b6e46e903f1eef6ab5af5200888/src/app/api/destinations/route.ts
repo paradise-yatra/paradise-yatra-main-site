@@ -85,7 +85,10 @@ import { validateApiParams } from '@/lib/validation';
 const BACKEND_URL = process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:5001';
 
 // Cache destinations for 30 seconds
-export const revalidate = 30;
+// Disable caching for destinations
+export const dynamic = 'force-dynamic';
+export const revalidate = 0;
+
 
 export async function GET(request: NextRequest) {
   try {
@@ -145,7 +148,8 @@ export async function GET(request: NextRequest) {
     try {
       const response = await fetch(apiUrl, {
         signal: controller.signal,
-        next: { revalidate: 30 }, // Cache for 30 seconds
+        cache: 'no-store',
+
         headers: {
           'Authorization': request.headers.get('Authorization') || '',
         }
@@ -181,26 +185,44 @@ export async function GET(request: NextRequest) {
   }
 }
 
-// ✅ POST - Handle FormData for file uploads
+// ✅ POST - Handle both JSON and FormData
 export async function POST(request: NextRequest) {
   try {
-    const formData = await request.formData();
+    const contentType = request.headers.get('content-type') || '';
+    const authHeader = request.headers.get('Authorization') || '';
 
-    const response = await fetch(`${BACKEND_URL}/api/destinations`, {
-      method: 'POST',
-      headers: {
-        'Authorization': request.headers.get('Authorization') || '',
-      },
-      body: formData, // Send FormData directly for file upload
-    });
+    if (contentType.includes('application/json')) {
+      const body = await request.json();
+      const response = await fetch(`${BACKEND_URL}/api/destinations`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': authHeader,
+        },
+        body: JSON.stringify(body),
+      });
 
-    const data = await response.json();
+      const data = await response.json();
+      if (!response.ok) {
+        return NextResponse.json({ message: data.message || 'Failed to create destination' }, { status: response.status });
+      }
+      return NextResponse.json(data, { status: 201 });
+    } else {
+      const formData = await request.formData();
+      const response = await fetch(`${BACKEND_URL}/api/destinations`, {
+        method: 'POST',
+        headers: {
+          'Authorization': authHeader,
+        },
+        body: formData,
+      });
 
-    if (!response.ok) {
-      return NextResponse.json({ message: data.message || 'Failed to create destination' }, { status: response.status });
+      const data = await response.json();
+      if (!response.ok) {
+        return NextResponse.json({ message: data.message || 'Failed to create destination' }, { status: response.status });
+      }
+      return NextResponse.json(data, { status: 201 });
     }
-
-    return NextResponse.json(data, { status: 201 });
   } catch (error) {
     console.error('Destinations API error:', error);
     return NextResponse.json({ message: 'Internal server error' }, { status: 500 });

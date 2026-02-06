@@ -160,10 +160,10 @@ const SearchSuggestions = ({
 
         try {
             const [packagesResponse, fixedDeparturesResponse, destinationsResponse, holidayTypesResponse] = await Promise.all([
-                fetch(`/api/packages/suggest?q=${encodeURIComponent(searchQuery)}`),
-                fetch(`/api/fixed-departures/suggest?q=${encodeURIComponent(searchQuery)}`),
-                fetch(`/api/destinations/suggest?q=${encodeURIComponent(searchQuery)}`),
-                fetch(`/api/holiday-types/suggest?q=${encodeURIComponent(searchQuery)}`)
+                fetch(`/api/packages/suggest?q=${encodeURIComponent(searchQuery)}`, { cache: 'no-store' }),
+                fetch(`/api/fixed-departures/suggest?q=${encodeURIComponent(searchQuery)}`, { cache: 'no-store' }),
+                fetch(`/api/destinations/suggest?q=${encodeURIComponent(searchQuery)}`, { cache: 'no-store' }),
+                fetch(`/api/holiday-types/suggest?q=${encodeURIComponent(searchQuery)}`, { cache: 'no-store' })
             ]);
 
             const results = await Promise.all([
@@ -462,20 +462,20 @@ const SearchSuggestions = ({
                                 </button>
 
                                 {/* Main Content */}
-                                <main className="min-h-screen flex flex-col items-center justify-start pt-16 sm:pt-20 md:pt-24 lg:pt-[15vh] px-4 sm:px-6 md:px-8 pb-24 sm:pb-32 overflow-y-auto">
+                                <main className="h-screen flex flex-col items-center justify-start pt-16 sm:pt-20 md:pt-24 lg:pt-[15vh] px-4 sm:px-6 md:px-8 pb-6 sm:pb-8">
                                     <motion.div
                                         initial={{ opacity: 0, y: 20 }}
                                         animate={{ opacity: 1, y: 0 }}
                                         transition={{ delay: 0.1, duration: 0.4 }}
-                                        className="w-full max-w-2xl"
+                                        className="w-full max-w-2xl flex flex-col h-full"
                                     >
                                         {/* Heading */}
-                                        <h1 className="!text-2xl sm:!text-3xl md:!text-4xl font-bold text-center mb-4 sm:mb-6 md:mb-8 text-slate-800 px-2">
+                                        <h1 className="!text-2xl sm:!text-3xl md:!text-4xl font-bold text-center mb-4 sm:mb-6 md:mb-8 text-slate-800 px-2 flex-shrink-0">
                                             Where is your next adventure?
                                         </h1>
 
                                         {/* Search Input */}
-                                        <div className="relative mb-6 sm:mb-8 md:mb-10">
+                                        <div className="relative mb-4 sm:mb-6 flex-shrink-0">
                                             <div className="absolute inset-y-0 left-3 sm:left-4 md:left-5 flex items-center pointer-events-none z-10">
                                                 <Search className="text-blue-600 w-4 h-4 sm:w-5 sm:h-5 md:w-6 md:h-6" />
                                             </div>
@@ -492,116 +492,116 @@ const SearchSuggestions = ({
                                             />
                                         </div>
 
-                                        {/* Results */}
-                                        <div
-                                            className="space-y-1 sm:space-y-1.5"
-                                        >
-                                            {/* Loading State */}
-                                            {isLoading && (
-                                                <motion.div
-                                                    initial={{ opacity: 0 }}
-                                                    animate={{ opacity: 1 }}
-                                                    className="flex flex-col items-center justify-center py-8 sm:py-12"
-                                                >
+                                        {/* Results - Scrollable Container */}
+                                        <div className="flex-1 overflow-y-auto scrollbar-hide min-h-0">
+                                            <div className="space-y-1 sm:space-y-1.5 pb-4">
+                                                {/* Loading State */}
+                                                {isLoading && (
                                                     <motion.div
-                                                        animate={{ rotate: 360 }}
-                                                        transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
-                                                        className="w-8 h-8 sm:w-10 sm:h-10 md:w-12 md:h-12 rounded-full border-4 border-blue-200 border-t-blue-600"
-                                                    />
-                                                    <p className="mt-3 sm:mt-4 text-xs sm:text-sm md:text-base text-slate-600 font-medium">Searching amazing destinations...</p>
-                                                </motion.div>
-                                            )}
-
-                                            {/* Error State */}
-                                            {error && (
-                                                <div className="text-center py-6 sm:py-8">
-                                                    <div className="w-10 h-10 sm:w-12 sm:h-12 mx-auto bg-red-100 rounded-full flex items-center justify-center mb-2 sm:mb-3">
-                                                        <Search className="w-5 h-5 sm:w-6 sm:h-6 text-red-500" />
-                                                    </div>
-                                                    <p className="text-xs sm:text-sm text-red-600 font-medium">{error}</p>
-                                                </div>
-                                            )}
-
-                                            {/* Suggested Destinations Header */}
-                                            {!isLoading && !error && suggestions.length > 0 && (
-                                                <>
-                                                    <p className="text-[10px] sm:text-xs font-semibold uppercase tracking-wider text-slate-400 ml-1 sm:ml-2 mb-2 sm:mb-3">
-                                                        Suggested Destinations
-                                                    </p>
-
-                                                    {suggestions.map((suggestion, index) => (
+                                                        initial={{ opacity: 0 }}
+                                                        animate={{ opacity: 1 }}
+                                                        className="flex flex-col items-center justify-center py-8 sm:py-12"
+                                                    >
                                                         <motion.div
-                                                            key={suggestion.id}
-                                                            initial={{ opacity: 0, y: 10 }}
-                                                            animate={{ opacity: 1, y: 0 }}
-                                                            transition={{ delay: index * 0.05 }}
-                                                            className={`group flex items-center justify-between p-2.5 sm:p-3 md:p-4 bg-white hover:bg-blue-50 rounded-lg sm:rounded-xl cursor-pointer transition-all border-2 border-gray-100 hover:border-blue-200 ${selectedIndex === index ? 'bg-blue-50 border-blue-200' : ''
-                                                                }`}
-                                                            onClick={() => handleSuggestionClick(suggestion)}
-                                                            onMouseEnter={() => setSelectedIndex(index)}
-                                                        >
-                                                            <div className="flex items-center gap-2 sm:gap-3 md:gap-4 flex-1 min-w-0">
-                                                                {/* Image/Icon */}
-                                                                <div className="flex-shrink-0 w-12 h-12 sm:w-14 sm:h-14 md:w-16 md:h-16 rounded-lg overflow-hidden shadow-md ring-1 ring-gray-200">
-                                                                    {suggestion.type === 'location' ? (
-                                                                        <div className="w-full h-full bg-gradient-to-br from-blue-400 via-purple-500 to-pink-500 flex items-center justify-center">
-                                                                            <Globe className="w-5 h-5 sm:w-6 sm:h-6 text-white" />
-                                                                        </div>
-                                                                    ) : suggestion.image ? (
-                                                                        <img
-                                                                            src={suggestion.image}
-                                                                            alt={suggestion.title}
-                                                                            className="w-full h-full object-cover"
-                                                                        />
-                                                                    ) : (
-                                                                        <div className="w-full h-full bg-gradient-to-br from-orange-400 via-red-500 to-pink-500 flex items-center justify-center">
-                                                                            <MapPin className="w-5 h-5 sm:w-6 sm:h-6 text-white" />
-                                                                        </div>
-                                                                    )}
-                                                                </div>
+                                                            animate={{ rotate: 360 }}
+                                                            transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
+                                                            className="w-8 h-8 sm:w-10 sm:h-10 md:w-12 md:h-12 rounded-full border-4 border-blue-200 border-t-blue-600"
+                                                        />
+                                                        <p className="mt-3 sm:mt-4 text-xs sm:text-sm md:text-base text-slate-600 font-medium">Searching amazing destinations...</p>
+                                                    </motion.div>
+                                                )}
 
-                                                                <div className="flex-1 min-w-0">
-                                                                    <span className="text-sm sm:text-base md:text-lg font-medium text-slate-800 truncate block">
-                                                                        {suggestion.title}
-                                                                    </span>
-                                                                    {suggestion.type !== 'location' && (
-                                                                        <div className="flex items-center gap-1.5 sm:gap-2 mt-0.5">
-                                                                            <span className="text-[10px] sm:text-xs text-slate-500">{suggestion.duration}</span>
-                                                                            <span className="text-[10px] sm:text-xs text-green-600 font-semibold">
-                                                                                {formatPrice(suggestion.price)}
-                                                                            </span>
-                                                                        </div>
-                                                                    )}
-                                                                </div>
-                                                            </div>
-                                                            {index === 0 && (
-                                                                <span className="text-[10px] sm:text-xs text-slate-400 group-hover:text-blue-600 transition-colors hidden sm:block whitespace-nowrap">
-                                                                    Popular choice
-                                                                </span>
-                                                            )}
-                                                        </motion.div>
-                                                    ))}
-                                                </>
-                                            )}
-
-                                            {/* No Results */}
-                                            {!isLoading && !error && suggestions.length === 0 && query.trim() && (
-                                                <motion.div
-                                                    initial={{ opacity: 0 }}
-                                                    animate={{ opacity: 1 }}
-                                                    className="text-center py-8 sm:py-12"
-                                                >
-                                                    <div className="w-12 h-12 sm:w-14 sm:h-14 mx-auto bg-gradient-to-br from-blue-100 to-blue-200 rounded-full flex items-center justify-center mb-3 sm:mb-4">
-                                                        <Search className="w-6 h-6 sm:w-7 sm:h-7 text-blue-600" />
+                                                {/* Error State */}
+                                                {error && (
+                                                    <div className="text-center py-6 sm:py-8">
+                                                        <div className="w-10 h-10 sm:w-12 sm:h-12 mx-auto bg-red-100 rounded-full flex items-center justify-center mb-2 sm:mb-3">
+                                                            <Search className="w-5 h-5 sm:w-6 sm:h-6 text-red-500" />
+                                                        </div>
+                                                        <p className="text-xs sm:text-sm text-red-600 font-medium">{error}</p>
                                                     </div>
-                                                    <p className="text-sm sm:text-base font-semibold text-slate-700 mb-1 sm:mb-1.5 px-4">
-                                                        No results found for "{query}"
-                                                    </p>
-                                                    <p className="text-xs sm:text-sm text-slate-500 px-4">
-                                                        Try different keywords or explore our destinations
-                                                    </p>
-                                                </motion.div>
-                                            )}
+                                                )}
+
+                                                {/* Suggested Destinations Header */}
+                                                {!isLoading && !error && suggestions.length > 0 && (
+                                                    <>
+                                                        <p className="text-[10px] sm:text-xs font-semibold uppercase tracking-wider text-slate-400 ml-1 sm:ml-2 mb-2 sm:mb-3 sticky top-0 bg-white py-2 z-10">
+                                                            Suggested Destinations
+                                                        </p>
+
+                                                        {suggestions.map((suggestion, index) => (
+                                                            <motion.div
+                                                                key={suggestion.id}
+                                                                initial={{ opacity: 0, y: 10 }}
+                                                                animate={{ opacity: 1, y: 0 }}
+                                                                transition={{ delay: index * 0.05 }}
+                                                                className={`group flex items-center justify-between p-2.5 sm:p-3 md:p-4 bg-white hover:bg-blue-50 rounded-lg sm:rounded-xl cursor-pointer transition-all border-2 border-gray-100 hover:border-blue-200 ${selectedIndex === index ? 'bg-blue-50 border-blue-200' : ''
+                                                                    }`}
+                                                                onClick={() => handleSuggestionClick(suggestion)}
+                                                                onMouseEnter={() => setSelectedIndex(index)}
+                                                            >
+                                                                <div className="flex items-center gap-2 sm:gap-3 md:gap-4 flex-1 min-w-0">
+                                                                    {/* Image/Icon */}
+                                                                    <div className="flex-shrink-0 w-12 h-12 sm:w-14 sm:h-14 md:w-16 md:h-16 rounded-lg overflow-hidden shadow-md ring-1 ring-gray-200">
+                                                                        {suggestion.type === 'location' ? (
+                                                                            <div className="w-full h-full bg-gradient-to-br from-blue-400 via-purple-500 to-pink-500 flex items-center justify-center">
+                                                                                <Globe className="w-5 h-5 sm:w-6 sm:h-6 text-white" />
+                                                                            </div>
+                                                                        ) : suggestion.image ? (
+                                                                            <img
+                                                                                src={suggestion.image}
+                                                                                alt={suggestion.title}
+                                                                                className="w-full h-full object-cover"
+                                                                            />
+                                                                        ) : (
+                                                                            <div className="w-full h-full bg-gradient-to-br from-orange-400 via-red-500 to-pink-500 flex items-center justify-center">
+                                                                                <MapPin className="w-5 h-5 sm:w-6 sm:h-6 text-white" />
+                                                                            </div>
+                                                                        )}
+                                                                    </div>
+
+                                                                    <div className="flex-1 min-w-0">
+                                                                        <span className="text-sm sm:text-base md:text-lg font-medium text-slate-800 truncate block">
+                                                                            {suggestion.title}
+                                                                        </span>
+                                                                        {suggestion.type !== 'location' && (
+                                                                            <div className="flex items-center gap-1.5 sm:gap-2 mt-0.5">
+                                                                                <span className="text-[10px] sm:text-xs text-slate-500">{suggestion.duration}</span>
+                                                                                <span className="text-[10px] sm:text-xs text-green-600 font-semibold">
+                                                                                    {formatPrice(suggestion.price)}
+                                                                                </span>
+                                                                            </div>
+                                                                        )}
+                                                                    </div>
+                                                                </div>
+                                                                {index === 0 && (
+                                                                    <span className="text-[10px] sm:text-xs text-slate-400 group-hover:text-blue-600 transition-colors hidden sm:block whitespace-nowrap">
+                                                                        Popular choice
+                                                                    </span>
+                                                                )}
+                                                            </motion.div>
+                                                        ))}
+                                                    </>
+                                                )}
+
+                                                {/* No Results */}
+                                                {!isLoading && !error && suggestions.length === 0 && query.trim() && (
+                                                    <motion.div
+                                                        initial={{ opacity: 0 }}
+                                                        animate={{ opacity: 1 }}
+                                                        className="text-center py-8 sm:py-12"
+                                                    >
+                                                        <div className="w-12 h-12 sm:w-14 sm:h-14 mx-auto bg-gradient-to-br from-blue-100 to-blue-200 rounded-full flex items-center justify-center mb-3 sm:mb-4">
+                                                            <Search className="w-6 h-6 sm:w-7 sm:h-7 text-blue-600" />
+                                                        </div>
+                                                        <p className="text-sm sm:text-base font-semibold text-slate-700 mb-1 sm:mb-1.5 px-4">
+                                                            No results found for "{query}"
+                                                        </p>
+                                                        <p className="text-xs sm:text-sm text-slate-500 px-4">
+                                                            Try different keywords or explore our destinations
+                                                        </p>
+                                                    </motion.div>
+                                                )}
+                                            </div>
                                         </div>
                                     </motion.div>
                                 </main>
@@ -686,7 +686,8 @@ const SearchSuggestions = ({
 
                                 {!isLoading && !error && suggestions.length > 0 && (
                                     <div
-                                        className="max-h-[70vh] sm:max-h-[500px] overflow-y-auto custom-scrollbar"
+                                        ref={resultsContainerRef}
+                                        className="max-h-[60vh] sm:max-h-[400px] overflow-y-auto scrollbar-hide"
                                     >
                                         {suggestions.map((suggestion, index) => (
                                             <motion.div
@@ -701,10 +702,10 @@ const SearchSuggestions = ({
                                             >
                                                 <div className="flex items-start gap-2 sm:gap-2.5">
                                                     {/* Premium Image */}
-                                                    <div className="flex-shrink-0 w-12 h-12 sm:w-14 sm:h-14 rounded-lg overflow-hidden shadow-md ring-1 ring-gray-200">
+                                                    <div className="flex-shrink-0 w-10 h-10 sm:w-12 sm:h-12 rounded-lg overflow-hidden shadow-md ring-1 ring-gray-200">
                                                         {suggestion.type === 'location' ? (
                                                             <div className="w-full h-full bg-gradient-to-br from-blue-400 via-purple-500 to-pink-500 flex items-center justify-center">
-                                                                <Globe className="w-4 h-4 sm:w-5 sm:h-5 text-white" />
+                                                                <Globe className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-white" />
                                                             </div>
                                                         ) : suggestion.image ? (
                                                             <img
@@ -714,18 +715,18 @@ const SearchSuggestions = ({
                                                             />
                                                         ) : (
                                                             <div className="w-full h-full bg-gradient-to-br from-orange-400 via-red-500 to-pink-500 flex items-center justify-center">
-                                                                <MapPin className="w-4 h-4 sm:w-5 sm:h-5 text-white" />
+                                                                <MapPin className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-white" />
                                                             </div>
                                                         )}
                                                     </div>
 
                                                     {/* Content */}
                                                     <div className="flex-1 min-w-0">
-                                                        <div className="flex items-start justify-between gap-1.5 mb-1">
+                                                        <div className="flex items-start justify-between gap-1.5 mb-0.5">
                                                             <h4 className="text-xs sm:text-sm font-semibold text-gray-900 truncate flex-1">
                                                                 {suggestion.title}
                                                             </h4>
-                                                            <span className={`flex-shrink-0 px-1.5 sm:px-2 py-0.5 text-[10px] sm:text-xs text-white rounded-full ${getCategoryColor(suggestion.type === 'location' ? 'location' : suggestion.category)} shadow-sm`}>
+                                                            <span className={`flex-shrink-0 px-1.5 sm:px-2 py-0.5 text-[9px] sm:text-[10px] text-white rounded-full ${getCategoryColor(suggestion.type === 'location' ? 'location' : suggestion.category)} shadow-sm`}>
                                                                 {suggestion.type === 'location' ? 'Location' :
                                                                     suggestion.category === 'fixed-departure' ? 'Fixed' :
                                                                         suggestion.category === 'destination' ? 'Place' :
@@ -734,7 +735,7 @@ const SearchSuggestions = ({
                                                             </span>
                                                         </div>
 
-                                                        <div className="flex flex-wrap items-center gap-1.5 sm:gap-2 text-[10px] sm:text-xs text-gray-600 mb-1">
+                                                        <div className="flex flex-wrap items-center gap-1.5 sm:gap-2 text-[10px] sm:text-xs text-gray-600 mb-0.5">
                                                             <div className="flex items-center gap-0.5">
                                                                 <MapPin className="w-2.5 h-2.5 text-orange-500" />
                                                                 <span className="font-medium truncate max-w-[100px] sm:max-w-none">{suggestion.destination}</span>
@@ -756,7 +757,7 @@ const SearchSuggestions = ({
 
                                                         {/* Mobile duration */}
                                                         {suggestion.type !== 'location' && (
-                                                            <div className="flex sm:hidden items-center gap-0.5 text-[10px] text-gray-600 mb-1">
+                                                            <div className="flex sm:hidden items-center gap-0.5 text-[10px] text-gray-600 mb-0.5">
                                                                 <Calendar className="w-2.5 h-2.5 text-blue-500" />
                                                                 <span>{suggestion.duration}</span>
                                                             </div>
@@ -764,18 +765,18 @@ const SearchSuggestions = ({
 
                                                         {/* States for locations */}
                                                         {suggestion.type === 'location' && suggestion.states && suggestion.states.length > 0 && (
-                                                            <div className="mt-1">
+                                                            <div className="mt-0.5">
                                                                 <div className="flex flex-wrap gap-1">
                                                                     {suggestion.states.slice(0, 3).map((state, idx) => (
                                                                         <span
                                                                             key={idx}
-                                                                            className="inline-block px-1.5 py-0.5 text-[10px] bg-blue-50 text-blue-700 rounded-full border border-blue-200"
+                                                                            className="inline-block px-1.5 py-0.5 text-[9px] bg-blue-50 text-blue-700 rounded-full border border-blue-200"
                                                                         >
                                                                             {state.name}
                                                                         </span>
                                                                     ))}
                                                                     {suggestion.states.length > 3 && (
-                                                                        <span className="inline-block px-1.5 py-0.5 text-[10px] bg-gray-100 text-gray-600 rounded-full">
+                                                                        <span className="inline-block px-1.5 py-0.5 text-[9px] bg-gray-100 text-gray-600 rounded-full">
                                                                             +{suggestion.states.length - 3}
                                                                         </span>
                                                                     )}

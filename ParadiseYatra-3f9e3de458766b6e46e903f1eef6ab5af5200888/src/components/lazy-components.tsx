@@ -37,23 +37,23 @@ export const LazyTrendingDestinations = createLazyComponent(
   { threshold: 0.1, rootMargin: "150px" }
 );
 
-export const LazyFixedDepartureCarousel = createLazyComponent(
-  () => import("./FixedDepartureCarousel"),
-  <div className="section-padding bg-white px-4 sm:px-6">
-    <div className="container mx-auto">
-      <div className="text-center mb-8">
-        <Skeleton height="2.5rem" width="300px" className="mx-auto mb-4" />
-        <Skeleton height="1.25rem" width="200px" className="mx-auto" />
-      </div>
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-        {Array.from({ length: 3 }).map((_, index) => (
-          <SkeletonPackageCard key={index} />
-        ))}
-      </div>
-    </div>
-  </div>,
-  { threshold: 0.1, rootMargin: "150px" }
-);
+// export const LazyFixedDepartureCarousel = createLazyComponent(
+//   () => import("./FixedDepartureCarousel"),
+//   <div className="section-padding bg-white px-4 sm:px-6">
+//     <div className="container mx-auto">
+//       <div className="text-center mb-8">
+//         <Skeleton height="2.5rem" width="300px" className="mx-auto mb-4" />
+//         <Skeleton height="1.25rem" width="200px" className="mx-auto" />
+//       </div>
+//       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+//         {Array.from({ length: 3 }).map((_, index) => (
+//           <SkeletonPackageCard key={index} />
+//         ))}
+//       </div>
+//     </div>
+//   </div>,
+//   { threshold: 0.1, rootMargin: "150px" }
+// );
 
 export const LazyRecentlyBooked = createLazyComponent(
   () => import("./RecentlyBooked"),

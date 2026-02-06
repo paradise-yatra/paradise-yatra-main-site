@@ -89,7 +89,10 @@ import { validateApiParams } from '@/lib/validation';
 const BACKEND_URL = process.env.NEXT_PUBLIC_BACKEND_URL || process.env.BACKEND_URL || 'http://localhost:5001';
 
 // Cache packages for 30 seconds
-export const revalidate = 30;
+// Disable caching for packages
+export const dynamic = 'force-dynamic';
+export const revalidate = 0;
+
 
 export async function GET(request: NextRequest) {
   try {
@@ -155,7 +158,8 @@ export async function GET(request: NextRequest) {
     try {
       const response = await fetch(url, {
         signal: controller.signal,
-        next: { revalidate: 30 }, // Cache for 30 seconds
+        cache: 'no-store',
+
       });
       clearTimeout(timeoutId);
 

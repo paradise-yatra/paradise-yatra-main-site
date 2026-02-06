@@ -105,7 +105,10 @@ export async function GET(
 ) {
   try {
     const { id } = await params;
-    const response = await fetch(`${BACKEND_URL}/api/packages/${id}`);
+    const response = await fetch(`${BACKEND_URL}/api/packages/${id}`, {
+      cache: 'no-store'
+    });
+
     const data = await response.json();
 
     if (!response.ok) {
@@ -132,12 +135,12 @@ export async function PUT(
   try {
     const { id } = await params;
     const contentType = request.headers.get('content-type') || '';
-    
+
     // Check if it's FormData (multipart/form-data)
     if (contentType.includes('multipart/form-data')) {
       // For FormData, forward the raw request body
       const formData = await request.formData();
-      
+
       const response = await fetch(`${BACKEND_URL}/api/packages/${id}`, {
         method: 'PUT',
         headers: {

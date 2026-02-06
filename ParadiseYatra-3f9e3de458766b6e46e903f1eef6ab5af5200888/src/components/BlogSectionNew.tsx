@@ -1,7 +1,8 @@
 import { useRef, useState, useEffect } from "react";
 import Image from "next/image";
 import Link from "next/link";
-import { ChevronRight, ArrowRight } from "lucide-react";
+import { ArrowRight } from "lucide-react";
+import CarouselArrows from "./ui/CarouselArrows";
 import { getImageUrl } from "@/lib/utils";
 
 interface BlogPost {
@@ -37,6 +38,30 @@ const BlogSectionNew = () => {
     const [blogPosts, setBlogPosts] = useState<BlogPost[]>([]);
     const [filters, setFilters] = useState([{ id: "all", label: "All Posts" }]);
     const [loading, setLoading] = useState(true);
+    const [canScrollLeft, setCanScrollLeft] = useState(false);
+    const [canScrollRight, setCanScrollRight] = useState(true);
+
+    const updateScrollState = () => {
+        if (carouselRef.current) {
+            const { scrollLeft, scrollWidth, clientWidth } = carouselRef.current;
+            setCanScrollLeft(scrollLeft > 0);
+            setCanScrollRight(scrollLeft < scrollWidth - clientWidth - 1);
+        }
+    };
+
+    useEffect(() => {
+        const carousel = carouselRef.current;
+        if (carousel) {
+            carousel.addEventListener("scroll", updateScrollState);
+            window.addEventListener("resize", updateScrollState);
+            setTimeout(updateScrollState, 100);
+
+            return () => {
+                carousel.removeEventListener("scroll", updateScrollState);
+                window.removeEventListener("resize", updateScrollState);
+            };
+        }
+    }, [blogPosts]);
 
     useEffect(() => {
         let isMounted = true;
@@ -120,15 +145,15 @@ const BlogSectionNew = () => {
         }
     }, [activeFilter, allPosts]);
 
-    const scrollNext = () => {
+    const scrollByStep = (direction: number) => {
         if (carouselRef.current) {
             const card = carouselRef.current.firstElementChild;
-            const gap = 24;
-            const cardWidth = card ? card.getBoundingClientRect().width : 480;
+            const gap = 8; // gap-2 = 8px
+            const cardWidth = card ? card.getBoundingClientRect().width : 340;
             const step = cardWidth + gap;
 
             carouselRef.current.scrollBy({
-                left: step,
+                left: direction * step,
                 behavior: "smooth",
             });
         }
@@ -157,76 +182,97 @@ const BlogSectionNew = () => {
         <section className="bg-white px-4 py-14 text-gray-900 md:px-8">
             <div className="mx-auto max-w-6xl">
                 {/* Header */}
-                <div className="flex flex-col md:flex-row md:items-end justify-between mb-10 gap-6">
-                    <div className="space-y-6">
-                        <h3 className="text-3xl md:text-4xl !font-bold text-slate-900 leading-tight">
-                            Journeys, Stories & Insights
+                <div className="flex flex-col md:flex-row md:items-end justify-between mb-8 gap-6">
+                    <div className="space-y-4">
+                        <span className="text-[#005beb] !font-black uppercase tracking-wider text-xs flex items-center gap-2">
+                            <span className="h-px w-8 bg-[#005beb]"></span>
+                            Updates & Insights
+                        </span>
+                        <h3 className="text-2xl md:text-3xl !font-bold text-slate-900 leading-tight">
+                            Journeys, Stories & Tips
                         </h3>
-                        <div className="flex flex-wrap gap-3">
+                    </div>
+                    <div className="flex flex-wrap items-center gap-3">
+                        <div className="flex flex-wrap gap-2">
                             {filters.map((filter) => (
                                 <button
                                     key={filter.id}
                                     onClick={() => setActiveFilter(filter.id)}
-                                    className={`px-6 py-2 rounded-lg font-medium text-sm transition-all cursor-pointer ${activeFilter === filter.id
-                                        ? "border-2 border-slate-900 hover:bg-slate-900 hover:text-white"
-                                        : "border border-slate-200 hover:border-slate-900"
+                                    className={`px-4 py-1.5 rounded-full font-bold text-[11px] uppercase tracking-wider transition-all cursor-pointer ${activeFilter === filter.id
+                                        ? "bg-slate-900 text-white shadow-md"
+                                        : "bg-slate-100 text-slate-600 hover:bg-slate-200"
                                         }`}
                                 >
                                     {filter.label}
                                 </button>
                             ))}
                         </div>
+                        <Link
+                            href="/blog"
+                            className="text-xs font-black uppercase tracking-widest text-[#005beb] hover:opacity-70 transition-opacity ml-2"
+                        >
+                            View all
+                        </Link>
                     </div>
-                    <Link
-                        href="/blog"
-                        className="text-sm font-semibold underline underline-offset-4 hover:opacity-70 transition-opacity"
-                    >
-                        View all
-                    </Link>
                 </div>
 
                 {/* Carousel */}
-                <div className="relative group">
+                {/* Content Area */}
+                <div className="relative group/carousel">
+                    <CarouselArrows
+                        onPrevious={() => scrollByStep(-1)}
+                        onNext={() => scrollByStep(1)}
+                        canScrollLeft={canScrollLeft}
+                        canScrollRight={canScrollRight}
+                    />
+
                     <div
                         ref={carouselRef}
-                        className="flex gap-6 overflow-x-auto scrollbar-hide pb-8 snap-x snap-mandatory scroll-smooth"
+                        className="flex gap-2 overflow-x-auto scroll-smooth scrollbar-hide pb-8 snap-x snap-mandatory px-1"
                         style={{ scrollbarWidth: "none", msOverflowStyle: "none" }}
                     >
                         {blogPosts.map((post) => (
                             <div
                                 key={post._id}
-                                className="w-[300px] md:w-[420px] lg:w-[480px] flex-shrink-0 snap-start"
+                                className="w-[280px] md:w-[calc(50%-4px)] lg:w-[calc(25%-6px)] flex-shrink-0 snap-start"
                             >
-                                <Link href={`/blog/${generateSlug(post.title)}`} className="block group/card h-full">
-                                    <div className="relative h-[220px] md:h-[280px] w-full overflow-hidden rounded-lg mb-5">
+                                <Link href={`/blog/${generateSlug(post.title)}`} className="block group/card h-full bg-white rounded-lg overflow-hidden border border-gray-300 transition-all duration-300 hover:border-blue-200 hover:shadow-md">
+                                    <div className="relative h-[180px] w-full overflow-hidden">
+                                        {/* White hover overlay */}
+                                        <div className="absolute inset-0 bg-white/10 opacity-10 group-hover/card:opacity-100 transition-opacity duration-300 z-30 pointer-events-none"></div>
+
                                         {post.image ? (
                                             <Image
                                                 src={getImageUrl(post.image) || ""}
                                                 alt={post.title}
                                                 fill
-                                                className="object-cover transition-transform duration-700 group-hover/card:scale-110"
+                                                className="object-cover transition-transform duration-700"
                                             />
                                         ) : (
                                             <div className="w-full h-full bg-slate-200 flex items-center justify-center text-4xl">
                                                 📝
                                             </div>
                                         )}
+                                        {/* Gradient Overlay */}
+                                        <div className="absolute inset-x-0 bottom-0 h-1/2 bg-gradient-to-t from-black/60 via-transparent to-transparent opacity-0 group-hover/card:opacity-100 transition-opacity duration-500"></div>
                                     </div>
-                                    <div className="space-y-3">
-                                        <div className="flex items-center gap-2 text-[12px] text-slate-500 font-bold uppercase tracking-wider">
-                                            <span>{post.author}</span>
+                                    <div className="p-4 space-y-3">
+                                        <div className="flex items-center gap-2 text-[10px] text-slate-500 font-bold uppercase tracking-wider">
+                                            <span className="text-blue-600 px-2 py-0.5 bg-blue-50 rounded-full">{post.category || "Travel"}</span>
                                             <span className="w-1 h-1 bg-slate-300 rounded-full"></span>
                                             <span>{new Date(post.createdAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}</span>
-
                                         </div>
-                                        <h4 className="text-xl !font-black leading-snug line-clamp-2 ">
+                                        <h4 className="text-base !font-bold leading-snug line-clamp-2 text-slate-900 group-hover/card:text-blue-600 transition-colors min-h-[44px]">
                                             {post.title}
                                         </h4>
-
-                                        <div className="pt-2">
-                                            <span className="inline-flex items-center gap-2 text-sm font-semibold text-blue-600 hover:text-blue-700 transition-colors">
-                                                Read More
-                                                <ArrowRight className="h-4 w-4 transition-transform group-hover/card:translate-x-1" />
+                                        <p className="!text-slate-700 text-xs line-clamp-2 leading-relaxed">
+                                            {post.excerpt || post.content.substring(0, 80).replace(/<[^>]*>?/gm, '') + '...'}
+                                        </p>
+                                        <div className="pt-3 flex items-center justify-between border-t border-dashed border-gray-300">
+                                            <span className="text-[11px] font-bold text-slate-600 truncate max-w-[100px]">{post.author}</span>
+                                            <span className="inline-flex items-center gap-1.5 text-xs font-black uppercase text-slate-900 group-hover/card:text-blue-600 transition-colors">
+                                                Read
+                                                <ArrowRight className="h-3 w-3 transition-transform group-hover/card:translate-x-1" />
                                             </span>
                                         </div>
                                     </div>
@@ -234,15 +280,6 @@ const BlogSectionNew = () => {
                             </div>
                         ))}
                     </div>
-
-                    {/* Next button */}
-                    <button
-                        onClick={scrollNext}
-                        className="absolute right-0 top-1/2 -translate-y-16 translate-x-1/2 w-12 h-12 bg-white border border-slate-200 rounded-full flex items-center justify-center shadow-xl z-10 hover:bg-slate-50 transition-all opacity-0 group-hover:opacity-100 hidden md:flex cursor-pointer"
-                        aria-label="Next"
-                    >
-                        <ChevronRight className="h-6 w-6" />
-                    </button>
                 </div>
             </div>
         </section>

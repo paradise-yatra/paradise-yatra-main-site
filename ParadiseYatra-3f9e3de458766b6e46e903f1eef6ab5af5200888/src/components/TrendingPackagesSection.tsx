@@ -3,8 +3,12 @@
 import { useEffect, useRef, useState, useCallback } from "react";
 import Image from "next/image";
 import Link from "next/link";
-import { ChevronRight, ArrowRight, MapPin } from "lucide-react";
+import { ArrowLeft, ArrowRight, MapPin, Heart } from "lucide-react";
 import { getImageUrl } from "@/lib/utils";
+import { useAuth } from "@/context/AuthContext";
+import LoginAlertModal from "./LoginAlertModal";
+import PackageCard from "./ui/PackageCard";
+import CarouselArrows from "./ui/CarouselArrows";
 
 interface TrendingPackage {
     id: string | number;
@@ -35,13 +39,30 @@ const TrendingPackagesSection = () => {
     const autoScrollRef = useRef<NodeJS.Timeout | null>(null);
     const [isHovered, setIsHovered] = useState(false);
     const [isScrolling, setIsScrolling] = useState(false);
+    const [canScrollLeft, setCanScrollLeft] = useState(false);
+    const [canScrollRight, setCanScrollRight] = useState(true);
+
+    const { user, toggleWishlist: contextToggleWishlist, isInWishlist } = useAuth();
+    const [isLoginModalOpen, setIsLoginModalOpen] = useState(false);
+
+    const handleWishlistToggle = (e: React.MouseEvent, pkgId: string) => {
+        e.preventDefault();
+        e.stopPropagation();
+
+        if (!user) {
+            setIsLoginModalOpen(true);
+            return;
+        }
+
+        contextToggleWishlist(pkgId);
+    };
 
     useEffect(() => {
         const fetchTrendingData = async () => {
             try {
                 setLoading(true);
                 // 1. Fetch all tags to find the trending tag
-                const tagsRes = await fetch("/api/tags");
+                const tagsRes = await fetch("/api/tags", { cache: 'no-store' });
                 const tagsData = await tagsRes.json();
 
                 const allTags = Array.isArray(tagsData) ? tagsData : (tagsData.data || []);
@@ -72,10 +93,10 @@ const TrendingPackagesSection = () => {
                 } else {
                     // It's an array of IDs, we need to fetch all possible sources
                     const [packagesRes, holidayRes, destinationsRes, fixedRes] = await Promise.all([
-                        fetch("/api/packages?limit=100"),
-                        fetch("/api/holiday-types?limit=100"),
-                        fetch("/api/destinations?limit=100"),
-                        fetch("/api/fixed-departures?limit=100")
+                        fetch("/api/packages?limit=100", { cache: 'no-store' }),
+                        fetch("/api/holiday-types?limit=100", { cache: 'no-store' }),
+                        fetch("/api/destinations?limit=100", { cache: 'no-store' }),
+                        fetch("/api/fixed-departures?limit=100", { cache: 'no-store' })
                     ]);
 
                     const [packagesData, holidayData, destinationsData, fixedData] = await Promise.all([
@@ -138,6 +159,15 @@ const TrendingPackagesSection = () => {
         };
 
         fetchTrendingData();
+    }, []);
+
+    // Update scroll buttons state
+    const updateScrollState = useCallback(() => {
+        if (carouselRef.current) {
+            const { scrollLeft, scrollWidth, clientWidth } = carouselRef.current;
+            setCanScrollLeft(scrollLeft > 5); // Small buffer
+            setCanScrollRight(scrollLeft < scrollWidth - clientWidth - 5);
+        }
     }, []);
 
     // Get the max scroll width
@@ -214,6 +244,9 @@ const TrendingPackagesSection = () => {
         if (carousel) {
             carousel.addEventListener('touchstart', handleTouchStart, { passive: true });
             carousel.addEventListener('touchend', handleTouchEnd, { passive: true });
+            carousel.addEventListener("scroll", updateScrollState);
+            window.addEventListener("resize", updateScrollState);
+            updateScrollState();
         }
 
         return () => {
@@ -221,9 +254,11 @@ const TrendingPackagesSection = () => {
             if (carousel) {
                 carousel.removeEventListener('touchstart', handleTouchStart);
                 carousel.removeEventListener('touchend', handleTouchEnd);
+                carousel.removeEventListener("scroll", updateScrollState);
+                window.removeEventListener("resize", updateScrollState);
             }
         };
-    }, [isHovered, startAutoScroll, stopAutoScroll, packages]);
+    }, [isHovered, startAutoScroll, stopAutoScroll, packages, updateScrollState]);
 
     const handlePrev = () => {
         if (isScrolling || !carouselRef.current) return;
@@ -314,13 +349,21 @@ const TrendingPackagesSection = () => {
 
                     {/* Right side - Carousel */}
                     <div
-                        className="md:w-[70%] relative"
+                        className="md:w-[70%] relative group/carousel"
                         onMouseEnter={() => setIsHovered(true)}
                         onMouseLeave={() => setIsHovered(false)}
                     >
+                        {/* Floating Navigation Buttons */}
+                        <CarouselArrows
+                            onPrevious={handlePrev}
+                            onNext={handleNext}
+                            canScrollLeft={canScrollLeft}
+                            canScrollRight={canScrollRight}
+                        />
+
                         <div
                             ref={carouselRef}
-                            className="flex gap-6 overflow-x-auto pb-8 pt-4 scrollbar-hide px-2 touch-auto"
+                            className="flex gap-2 overflow-x-auto pb-8 pt-4 scrollbar-hide px-2 touch-auto"
                             style={{
                                 scrollbarWidth: "none",
                                 msOverflowStyle: "none",
@@ -330,81 +373,27 @@ const TrendingPackagesSection = () => {
                         >
                             {/* Dynamic Cards */}
                             {packages.map((pkg, index) => (
-                                <Link href={`/itinerary/${pkg.slug}`} key={`${pkg.id}-${index}`} className="block flex-shrink-0">
-                                    <article
-                                        className="group cursor-pointer bg-white rounded-lg overflow-hidden border border-gray-200 scroll-snap-align-center md:scroll-snap-align-start transition-all duration-300 relative w-[260px] min-w-[260px] md:w-[265px] md:min-w-[265px] max-w-[260px] md:max-w-[265px]"
-                                    >
-                                        {/* White hover overlay */}
-                                        <div className="absolute inset-0 bg-white/10 opacity-10 group-hover:opacity-100 transition-opacity duration-300 z-30 pointer-events-none"></div>
-
-                                        <div className="relative h-64 w-full overflow-hidden">
-                                            <Image
-                                                src={pkg.image}
-                                                alt={pkg.destination}
-                                                fill
-                                                className="object-cover transition-transform duration-700"
-                                            />
-                                            <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent opacity-80"></div>
-
-                                            <div className="absolute bottom-4 left-4 right-4 text-white">
-                                                <div className="flex items-center gap-1.5 mb-1.5 opacity-90">
-                                                    <MapPin className="h-3.5 w-3.5" />
-                                                    <span className="text-xs font-medium tracking-wide uppercase">{pkg.destination}</span>
-                                                </div>
-                                                <h4 className="text-lg font-bold leading-snug line-clamp-2 text-shadow-sm">
-                                                    {pkg.title}
-                                                </h4>
-                                            </div>
-                                        </div>
-                                        <div className="p-5">
-                                            <div className="flex items-center justify-between mb-4">
-                                                <div className="flex flex-col">
-                                                    <span className="text-xs text-slate-700 font-bold uppercase tracking-wide">Duration</span>
-                                                    <span className="text-sm font-semibold text-slate-800 flex items-center gap-1">
-                                                        <div className="w-1.5 h-1.5 rounded-full bg-[#005beb]"></div>
-                                                        {pkg.duration}
-                                                    </span>
-                                                </div>
-                                                <div className="flex flex-col items-end">
-                                                    <span className="text-xs text-slate-700 font-bold uppercase tracking-wide">Starts from</span>
-                                                    <span className="text-lg font-black text-[#005beb]">
-                                                        ₹{pkg.price.toLocaleString()}
-                                                    </span>
-                                                </div>
-                                            </div>
-
-                                            <div className="pt-4 border-t border-dashed border-gray-200 flex items-center justify-between">
-                                                <span className="text-xs text-slate-900 font-bold">Per Person</span>
-                                                <button className="text-sm font-bold text-slate-900 group-hover:text-[#005beb] transition-colors flex items-center gap-2">
-                                                    View Deal <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-1" />
-                                                </button>
-                                            </div>
-                                        </div>
-                                    </article>
-                                </Link>
+                                <PackageCard
+                                    key={`${pkg.id}-${index}`}
+                                    id={pkg.id}
+                                    destination={pkg.destination}
+                                    duration={pkg.duration}
+                                    title={pkg.title}
+                                    price={pkg.price}
+                                    image={pkg.image}
+                                    slug={pkg.slug}
+                                    hrefPrefix="/itinerary"
+                                    themeColor="#005beb"
+                                    priceLabel="Per Person"
+                                    isInWishlist={isInWishlist(String(pkg.id))}
+                                    onWishlistToggle={handleWishlistToggle}
+                                />
                             ))}
-                        </div>
-
-                        {/* Navigation button */}
-                        <div className="flex items-center gap-2 mt-4 md:absolute md:-bottom-12 md:right-0">
-                            <button
-                                onClick={handlePrev}
-                                className="p-2 rounded-full border border-gray-200 hover:bg-gray-50 bg-white/80 backdrop-blur-sm shadow-sm transition-all text-slate-700"
-                                aria-label="Previous destination"
-                            >
-                                <ChevronRight className="h-5 w-5 rotate-180" />
-                            </button>
-                            <button
-                                onClick={handleNext}
-                                className="p-2 rounded-full border border-gray-200 hover:bg-gray-50 bg-white/80 backdrop-blur-sm shadow-sm transition-all text-slate-700"
-                                aria-label="Next destination"
-                            >
-                                <ChevronRight className="h-5 w-5" />
-                            </button>
                         </div>
                     </div>
                 </div>
             </div>
+            <LoginAlertModal isOpen={isLoginModalOpen} onClose={() => setIsLoginModalOpen(false)} theme="blue" />
         </section >
     );
 };

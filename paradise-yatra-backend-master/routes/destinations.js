@@ -111,7 +111,7 @@ router.post('/', adminAuth, uploadSingleImage, handleUploadError, async (req, re
     console.log('Request body:', req.body);
     console.log('Request file:', req.file);
 
-    const { 
+    const {
       name,
       slug,
       description,
@@ -131,37 +131,35 @@ router.post('/', adminAuth, uploadSingleImage, handleUploadError, async (req, re
 
     // Validate required fields
     if (!name || !description || !shortDescription || !location || !country || !tourType || !category) {
-      return res.status(400).json({ 
-        message: 'Missing required fields. Please fill in all required fields.' 
+      return res.status(400).json({
+        message: 'Missing required fields. Please fill in all required fields.'
       });
     }
 
-    // Image is required
-    if (!req.file) {
-      return res.status(400).json({ 
-        message: 'Destination image is required' 
+    // Image is required (either via file upload or body URL)
+    let imageUrl = req.body.image;
+
+    if (req.file) {
+      console.log('📁 File upload detected');
+      const result = await uploadToCloudinary(req.file.path, 'popular-packages');
+      console.log('✅ Upload result:', result);
+      imageUrl = result.url;
+    }
+
+    if (!imageUrl) {
+      return res.status(400).json({
+        message: 'Destination image is required (file or URL)'
       });
     }
 
-    
-    const result = await uploadToCloudinary(req.file.path, 'popular-packages');
-    
-    console.log('✅ Upload result:', result);
-    console.log('✅ Image URL:', result.url);
-    console.log('✅ Public ID:', result.public_id);
-
-    const imageUrl = result.url;
-
-    // Verify the URL contains the correct path
-    if (!imageUrl.includes('paradise-yatra/packages/popular-packages')) {
-      console.error('❌ ERROR: Image uploaded to wrong folder!');
-      console.error('❌ Expected: paradise-yatra/packages/popular-packages');
-      console.error('❌ Got:', imageUrl);
-      throw new Error('Image uploaded to incorrect Cloudinary folder');
+    // If imageUrl is from Cloudinary, verify the folder
+    if (imageUrl.includes('cloudinary.com') && !imageUrl.includes('paradise-yatra/packages/popular-packages')) {
+      console.warn('⚠️ Warning: Image might be in wrong Cloudinary folder or external URL:', imageUrl);
     }
+
 
     // Parse highlights if it's a string
-    const parsedHighlights = typeof highlights === 'string' 
+    const parsedHighlights = typeof highlights === 'string'
       ? highlights.split(',').map(h => h.trim()).filter(h => h)
       : Array.isArray(highlights) ? highlights : [];
 
@@ -215,7 +213,7 @@ router.put('/:id', adminAuth, uploadSingleImage, handleUploadError, async (req, 
       return res.status(404).json({ message: "Destination not found" });
     }
 
-    const { 
+    const {
       name,
       slug,
       description,
@@ -233,8 +231,10 @@ router.put('/:id', adminAuth, uploadSingleImage, handleUploadError, async (req, 
       inclusions,      // ✅ NEW - Inclusions array
       exclusions,      // ✅ NEW - Exclusions array
       isActive,
-      isTrending
+      isTrending,
+      image // ✅ Accept image URL from body
     } = req.body;
+
 
     // Update fields
     if (name) destination.name = name;
@@ -248,40 +248,40 @@ router.put('/:id', adminAuth, uploadSingleImage, handleUploadError, async (req, 
     if (rating !== undefined) destination.rating = parseFloat(rating);
     if (price !== undefined) destination.price = parseFloat(price);
     if (duration !== undefined) destination.duration = duration;
-    
+
     if (highlights) {
-      destination.highlights = typeof highlights === 'string' 
+      destination.highlights = typeof highlights === 'string'
         ? highlights.split(',').map(h => h.trim()).filter(h => h)
         : Array.isArray(highlights) ? highlights : [];
     }
     // ✅ Handle itinerary
     if (itinerary !== undefined) {
-      destination.itinerary = typeof itinerary === 'string' 
-        ? JSON.parse(itinerary) 
-        : Array.isArray(itinerary) 
-          ? itinerary 
+      destination.itinerary = typeof itinerary === 'string'
+        ? JSON.parse(itinerary)
+        : Array.isArray(itinerary)
+          ? itinerary
           : [];
       console.log('✅ Updated destination itinerary:', destination.itinerary?.length || 0, 'days');
     }
     // ✅ Handle inclusions
     if (inclusions !== undefined) {
-      destination.inclusions = typeof inclusions === 'string' 
-        ? JSON.parse(inclusions) 
-        : Array.isArray(inclusions) 
-          ? inclusions 
+      destination.inclusions = typeof inclusions === 'string'
+        ? JSON.parse(inclusions)
+        : Array.isArray(inclusions)
+          ? inclusions
           : [];
       console.log('✅ Updated destination inclusions:', destination.inclusions?.length || 0, 'items');
     }
     // ✅ Handle exclusions
     if (exclusions !== undefined) {
-      destination.exclusions = typeof exclusions === 'string' 
-        ? JSON.parse(exclusions) 
-        : Array.isArray(exclusions) 
-          ? exclusions 
+      destination.exclusions = typeof exclusions === 'string'
+        ? JSON.parse(exclusions)
+        : Array.isArray(exclusions)
+          ? exclusions
           : [];
       console.log('✅ Updated destination exclusions:', destination.exclusions?.length || 0, 'items');
     }
-    
+
     if (isActive !== undefined) {
       destination.isActive = isActive === 'true' || isActive === true;
     }
@@ -295,33 +295,17 @@ router.put('/:id', adminAuth, uploadSingleImage, handleUploadError, async (req, 
       destination.slug = await ensureUniqueSlug(baseSlug, req.params.id);
     }
 
-    // ✅✅✅ CRITICAL: Handle image update - Upload to paradise-yatra/packages/popular-packages
+    // ✅ Handle image update
     if (req.file) {
-      console.log('🔥 New image detected for update');
-      console.log('🔥 Uploading to Cloudinary folder: paradise-yatra/packages/popular-packages');
-      console.log('🔥 Calling uploadToCloudinary with parameter: "popular-packages"');
-      
-      // Extract old image public_id for deletion
+      console.log('🔥 New image detected for update (file)');
       const oldPublicId = destination.image ? extractPublicId(destination.image) : null;
-      console.log('🗑️ Old image public_id for deletion:', oldPublicId);
-      
-      // Upload new image to paradise-yatra/packages/popular-packages and delete old one
       const result = await uploadToCloudinary(req.file.path, 'popular-packages', null, oldPublicId);
-      
-      console.log('✅ Upload result:', result);
-      console.log('✅ New image URL:', result.url);
-      console.log('✅ New public ID:', result.public_id);
-      
       destination.image = result.url;
-
-      // Verify the URL contains the correct path
-      if (!destination.image.includes('paradise-yatra/packages/popular-packages')) {
-        console.error('❌ ERROR: Image uploaded to wrong folder!');
-        console.error('❌ Expected: paradise-yatra/packages/popular-packages');
-        console.error('❌ Got:', destination.image);
-        throw new Error('Image uploaded to incorrect Cloudinary folder');
-      }
+    } else if (image) {
+      console.log('🔥 New image detected for update (URL)');
+      destination.image = image;
     }
+
 
     await destination.save();
     console.log('✅ Destination saved successfully with ID:', destination._id);
@@ -329,7 +313,7 @@ router.put('/:id', adminAuth, uploadSingleImage, handleUploadError, async (req, 
     console.log('✅ Destination inclusions count:', destination.inclusions?.length || 0);
     console.log('✅ Destination exclusions count:', destination.exclusions?.length || 0);
     console.log('✅ Current image:', destination.image);
-    
+
     res.json({
       message: 'Destination updated successfully',
       destination
@@ -346,7 +330,7 @@ router.delete('/:id', adminAuth, async (req, res) => {
     console.log('DELETE /destinations/:id - Deleting destination:', req.params.id);
 
     const destination = await Destination.findById(req.params.id);
-    
+
     if (!destination) {
       return res.status(404).json({ message: "Destination not found" });
     }
@@ -367,7 +351,7 @@ router.delete('/:id', adminAuth, async (req, res) => {
 
     await Destination.findByIdAndDelete(req.params.id);
     console.log('✅ Destination deleted successfully');
-    
+
     res.json({ message: "Destination deleted successfully" });
   } catch (error) {
     console.error("❌ Delete destination error:", error);

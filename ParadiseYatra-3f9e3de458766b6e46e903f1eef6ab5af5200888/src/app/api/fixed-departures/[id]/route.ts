@@ -13,16 +13,12 @@ export async function GET(
       },
     });
 
-    if (!response.ok) {
-      throw new Error(`HTTP error! status: ${response.status}`);
-    }
-
     const data = await response.json();
     return NextResponse.json(data);
   } catch (error) {
     console.error('Error fetching fixed departure:', error);
     return NextResponse.json(
-      { error: 'Failed to fetch fixed departure' },
+      { message: 'Failed to fetch fixed departure' },
       { status: 500 }
     );
   }
@@ -53,16 +49,20 @@ export async function PUT(
       body: JSON.stringify(body),
     });
 
+    const data = await response.json();
+
     if (!response.ok) {
-      throw new Error(`HTTP error! status: ${response.status}`);
+      return NextResponse.json(
+        { message: data.message || 'Failed to update fixed departure' },
+        { status: response.status }
+      );
     }
 
-    const data = await response.json();
     return NextResponse.json(data);
   } catch (error) {
     console.error('Error updating fixed departure:', error);
     return NextResponse.json(
-      { error: 'Failed to update fixed departure' },
+      { message: 'Failed to update fixed departure' },
       { status: 500 }
     );
   }
@@ -90,16 +90,20 @@ export async function DELETE(
       },
     });
 
+    const data = await response.json();
+
     if (!response.ok) {
-      throw new Error(`HTTP error! status: ${response.status}`);
+      return NextResponse.json(
+        { message: data.message || 'Failed to delete fixed departure' },
+        { status: response.status }
+      );
     }
 
-    const data = await response.json();
     return NextResponse.json(data);
   } catch (error) {
     console.error('Error deleting fixed departure:', error);
     return NextResponse.json(
-      { error: 'Failed to delete fixed departure' },
+      { message: 'Failed to delete fixed departure' },
       { status: 500 }
     );
   }

@@ -3,8 +3,12 @@
 import { useEffect, useRef, useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
-import { ChevronLeft, ChevronRight, ArrowRight, MapPin } from "lucide-react";
+import { ArrowLeft, ArrowRight, MapPin, Heart } from "lucide-react";
 import { getImageUrl } from "@/lib/utils";
+import { useAuth } from "@/context/AuthContext";
+import LoginAlertModal from "./LoginAlertModal";
+import PackageCard from "./ui/PackageCard";
+import CarouselArrows from "./ui/CarouselArrows";
 
 interface HoneymoonPackage {
     id: string | number;
@@ -35,12 +39,27 @@ const HoneymoonPackages = () => {
     const [canScrollLeft, setCanScrollLeft] = useState(false);
     const [canScrollRight, setCanScrollRight] = useState(true);
 
+    const { user, toggleWishlist: contextToggleWishlist, isInWishlist } = useAuth();
+    const [isLoginModalOpen, setIsLoginModalOpen] = useState(false);
+
+    const handleWishlistToggle = (e: React.MouseEvent, pkgId: string) => {
+        e.preventDefault();
+        e.stopPropagation();
+
+        if (!user) {
+            setIsLoginModalOpen(true);
+            return;
+        }
+
+        contextToggleWishlist(pkgId);
+    };
+
     useEffect(() => {
         const fetchHoneymoonData = async () => {
             try {
                 setLoading(true);
                 // 1. Fetch all tags to find the honeymoon tag
-                const tagsRes = await fetch("/api/tags");
+                const tagsRes = await fetch("/api/tags", { cache: 'no-store' });
                 const tagsData = await tagsRes.json();
 
                 const allTags = Array.isArray(tagsData) ? tagsData : (tagsData.data || []);
@@ -72,10 +91,10 @@ const HoneymoonPackages = () => {
                     // It's an array of IDs, we need to fetch all possible sources
                     // especially since some items are in holiday-types or destinations
                     const [packagesRes, holidayRes, destinationsRes, fixedRes] = await Promise.all([
-                        fetch("/api/packages"),
-                        fetch("/api/holiday-types"),
-                        fetch("/api/destinations"),
-                        fetch("/api/fixed-departures")
+                        fetch("/api/packages", { cache: 'no-store' }),
+                        fetch("/api/holiday-types", { cache: 'no-store' }),
+                        fetch("/api/destinations", { cache: 'no-store' }),
+                        fetch("/api/fixed-departures", { cache: 'no-store' })
                     ]);
 
                     const [packagesData, holidayData, destinationsData, fixedData] = await Promise.all([
@@ -203,117 +222,61 @@ const HoneymoonPackages = () => {
             {/* Decorative background elements */}
 
             <div className="mx-auto flex max-w-6xl flex-col gap-10 relative z-10">
-                <div className="flex flex-col gap-2 md:flex-row md:items-end md:justify-between mb-2">
-                    <div className="flex flex-col gap-1">
-                        <span className="text-[#ff1493] font-black tracking-wider text-xs uppercase flex items-center gap-2">
-                            <span className="h-px w-8 bg-[#ff1493]"></span>
-                            Romantic Getaways
-                        </span>
-                        <h3 className="!text-2xl md:text-3xl !font-bold text-slate-900 leading-tight flex items-center gap-3 flex-wrap">
-                            Where Love Takes You
+                <div className="flex flex-col gap-1">
+                    <span className="text-[#ff1493] font-black tracking-wider text-xs uppercase flex items-center gap-2">
+                        <span className="h-px w-8 bg-[#ff1493]"></span>
+                        Honeymoon Packages
+                    </span>
+                    <h3 className="!text-2xl md:text-3xl !font-bold text-slate-900 leading-tight flex items-center gap-3 flex-wrap">
+                        Where Love Takes You
+                    </h3>
 
-                        </h3>
-
-                        <p className="!text-sm !text-slate-600 md:text-base max-w-2xl font-semibold">
-                            Curated romantic escapes with luxury stays, candlelit dinners and unforgettable moments.
-                        </p>
-                    </div>
-                    <div className="flex items-center gap-3 md:gap-4">
-                        {/* <Link href="/packages/honeymoon" className="hidden md:inline-flex items-center justify-center px-5 py-2.5 text-sm font-semibold text-[#ff1493] bg-pink-50 rounded-lg hover:bg-pink-100 transition-colors border border-pink-200">
-                            View All
-                        </Link> */}
-                        <div className="flex gap-2">
-                            <button
-                                onClick={() => scrollByStep(-1)}
-                                disabled={!canScrollLeft}
-                                className="w-10 h-10 rounded-full border border-pink-100 bg-white shadow-sm flex items-center justify-center cursor-pointer transition-all duration-300 hover:bg-pink-50 hover:border-pink-200 hover:scale-105 active:scale-95 disabled:opacity-40 disabled:cursor-not-allowed group"
-                                aria-label="Previous"
-                            >
-                                <ChevronLeft className="h-5 w-5 text-slate-700 group-hover:text-[#ff1493] transition-colors" />
-                            </button>
-                            <button
-                                onClick={() => scrollByStep(1)}
-                                disabled={!canScrollRight}
-                                className="w-10 h-10 rounded-full border border-pink-100 bg-white shadow-sm flex items-center justify-center cursor-pointer transition-all duration-300 hover:bg-pink-50 hover:border-pink-200 hover:scale-105 active:scale-95 disabled:opacity-40 disabled:cursor-not-allowed group"
-                                aria-label="Next"
-                            >
-                                <ChevronRight className="h-5 w-5 text-slate-700 group-hover:text-[#ff1493] transition-colors" />
-                            </button>
-                        </div>
-                    </div>
+                    <p className="!text-sm !text-slate-600 md:text-base max-w-2xl font-semibold">
+                        Curated romantic escapes with luxury stays, candlelit dinners and unforgettable moments.
+                    </p>
                 </div>
 
-                {/* Carousel */}
-                <div className="relative -mx-4 px-4 md:mx-0 md:px-0">
+                {/* Carousel wrapper inside max-width container */}
+                <div className="relative group/carousel">
+                    {/* Floating Navigation Buttons */}
+                    <CarouselArrows
+                        onPrevious={() => scrollByStep(-1)}
+                        onNext={() => scrollByStep(1)}
+                        canScrollLeft={canScrollLeft}
+                        canScrollRight={canScrollRight}
+                    />
+
                     <div
                         ref={carouselRef}
-                        className="flex gap-6 overflow-x-auto scroll-smooth pb-8 pt-2 scrollbar-hide px-2"
+                        className="flex gap-2 overflow-x-auto scroll-smooth pb-8 pt-2 scrollbar-hide"
                         style={{
                             scrollbarWidth: "none",
                             msOverflowStyle: "none",
                             scrollSnapType: "x mandatory",
                         }}
                     >
+
                         {packages.map((pkg, index) => (
-                            <Link href={`/destinations/${pkg.slug}`} key={`${pkg.id}-${index}`} className="block">
-                                <article
-                                    className="group cursor-pointer bg-white rounded-lg overflow-hidden border border-gray-200 scroll-snap-align-center md:scroll-snap-align-start transition-all duration-300 relative w-[260px] min-w-[260px] md:w-[265px] md:min-w-[265px] max-w-[260px] md:max-w-[265px]"
-                                >
-                                    {/* White hover overlay */}
-                                    <div className="absolute inset-0 bg-white/10 opacity-10 group-hover:opacity-100 transition-opacity duration-300 z-30 pointer-events-none"></div>
-
-                                    <div className="relative h-64 w-full overflow-hidden">
-                                        <Image
-                                            src={pkg.image}
-                                            alt={pkg.destination}
-                                            fill
-                                            className="object-cover transition-transform duration-700"
-                                        />
-                                        {/* Gradient Overlay */}
-                                        <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent opacity-80"></div>
-
-                                        {/* Content on Image */}
-                                        <div className="absolute bottom-4 left-4 right-4 text-white">
-                                            <div className="flex items-center gap-1.5 mb-1.5 opacity-90">
-                                                <MapPin className="h-3.5 w-3.5" />
-                                                <span className="text-xs font-medium tracking-wide uppercase">{pkg.destination}</span>
-                                            </div>
-                                            <h4 className="text-lg font-bold leading-snug line-clamp-2 text-shadow-sm">
-                                                {pkg.title}
-                                            </h4>
-                                        </div>
-                                    </div>
-
-                                    <div className="p-5">
-                                        <div className="flex items-center justify-between mb-4">
-                                            <div className="flex flex-col">
-                                                <span className="text-xs text-slate-700 font-bold uppercase tracking-wide">Duration</span>
-                                                <span className="text-sm font-semibold text-slate-800 flex items-center gap-1">
-                                                    <div className="w-1.5 h-1.5 rounded-full bg-[#ff1493]"></div>
-                                                    {pkg.duration}
-                                                </span>
-                                            </div>
-                                            <div className="flex flex-col items-end">
-                                                <span className="text-xs text-slate-700 font-bold uppercase tracking-wide">Starts from</span>
-                                                <span className="!text-lg font-black text-[#ff1493]">
-                                                    ₹{pkg.price.toLocaleString()}
-                                                </span>
-                                            </div>
-                                        </div>
-
-                                        <div className="pt-4 border-t border-dashed border-gray-200 flex items-center justify-between">
-                                            <span className="text-xs text-slate-700 font-bold">Per Couple</span>
-                                            <button className="text-sm font-semibold text-slate-900 group-hover:text-[#ff1493] transition-colors flex items-center gap-2">
-                                                View Details <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-1" />
-                                            </button>
-                                        </div>
-                                    </div>
-                                </article>
-                            </Link>
+                            <PackageCard
+                                key={`${pkg.id}-${index}`}
+                                id={pkg.id}
+                                destination={pkg.destination}
+                                duration={pkg.duration}
+                                title={pkg.title}
+                                price={pkg.price}
+                                image={pkg.image}
+                                slug={pkg.slug}
+                                hrefPrefix="/destinations"
+                                themeColor="#ff1493"
+                                priceLabel="Per Couple"
+                                isInWishlist={isInWishlist(String(pkg.id))}
+                                onWishlistToggle={handleWishlistToggle}
+                            />
                         ))}
                     </div>
                 </div>
             </div>
+            <LoginAlertModal isOpen={isLoginModalOpen} onClose={() => setIsLoginModalOpen(false)} theme="pink" />
         </section>
     );
 };
