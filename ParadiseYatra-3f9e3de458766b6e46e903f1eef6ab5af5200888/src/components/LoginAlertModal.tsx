@@ -10,6 +10,7 @@ import { useAuth } from "@/context/AuthContext";
 import { useState } from "react";
 import { toast } from "react-toastify";
 import { FcGoogle } from "react-icons/fc";
+import { API_CONFIG } from "@/config/api";
 
 interface LoginAlertModalProps {
     isOpen: boolean;
@@ -35,7 +36,7 @@ const LoginAlertModal = ({ isOpen, onClose, theme = "blue" }: LoginAlertModalPro
 
         setLoading(true);
         try {
-            const response = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/api/auth/google-login`, {
+            const response = await fetch(API_CONFIG.getApiUrl(API_CONFIG.ENDPOINTS.AUTH.GOOGLE_LOGIN), {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({ idToken: credentialResponse.credential }),
@@ -90,10 +91,10 @@ const LoginAlertModal = ({ isOpen, onClose, theme = "blue" }: LoginAlertModalPro
 
                     {/* Buttons Section */}
                     <div className="flex flex-col gap-3 w-full">
-                        {/* Custom Google Button to match Email button exactly */}
+                        {/* Google Login Button - Look-alike design */}
                         <div className="relative w-full h-11 group">
-                            {/* The "Look-alike" button */}
-                            <div className="absolute inset-0 w-full h-full rounded-lg border border-slate-300 bg-white hover:bg-slate-50 flex items-center justify-center gap-3 px-6 transition-all active:scale-[0.98] pointer-events-none">
+                            {/* The "Look-alike" container that matches email button style */}
+                            <div className="absolute inset-0 w-full h-full rounded-lg border border-slate-300 bg-white group-hover:bg-slate-50 flex items-center justify-center gap-3 px-6 transition-all group-active:scale-[0.98] pointer-events-none shadow-none">
                                 {loading ? (
                                     <Loader2 className="h-5 w-5 animate-spin text-blue-600" />
                                 ) : (
@@ -106,7 +107,7 @@ const LoginAlertModal = ({ isOpen, onClose, theme = "blue" }: LoginAlertModalPro
 
                             {/* The hidden real Google button - scaled to cover the entire container */}
                             <div className="absolute inset-0 opacity-0 overflow-hidden cursor-pointer flex justify-center items-center">
-                                <div className="scale-[2.5] origin-center">
+                                <div className="scale-[5] origin-center">
                                     <GoogleLogin
                                         onSuccess={handleGoogleSuccess}
                                         onError={() => toast.error("Google Login failed")}

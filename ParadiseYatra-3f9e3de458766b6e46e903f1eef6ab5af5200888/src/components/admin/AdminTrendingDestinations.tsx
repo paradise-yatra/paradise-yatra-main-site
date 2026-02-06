@@ -191,7 +191,7 @@ const AdminTrendingDestinations = () => {
         headers['Authorization'] = `Bearer ${token}`;
       }
 
-      const response = await fetch(API_CONFIG.getFullUrl(API_CONFIG.ENDPOINTS.DESTINATIONS.TRENDING), {
+      const response = await fetch(`/api/packages?category=Trending%20Destinations&limit=100`, {
         headers,
         cache: 'no-store'
       });
@@ -229,7 +229,7 @@ const AdminTrendingDestinations = () => {
         return;
       }
 
-      const BACKEND_URL = process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:5001';
+
 
       if (uploadMethod === 'url' && imageUrl) {
         const destinationData = {
@@ -387,8 +387,6 @@ const AdminTrendingDestinations = () => {
         return;
       }
 
-      const BACKEND_URL = process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:5001';
-
       if (uploadMethod === 'url' && imageUrl && !imageFile) {
         const destinationData = {
           title: formData.title,
@@ -503,7 +501,7 @@ const AdminTrendingDestinations = () => {
         return;
       }
 
-      const BACKEND_URL = process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:5001';
+
       const response = await fetch(`/api/packages/${id}`, {
 
         method: 'DELETE',
@@ -537,7 +535,7 @@ const AdminTrendingDestinations = () => {
         return;
       }
 
-      const BACKEND_URL = process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:5001';
+
       const response = await fetch(`/api/packages/${dest._id}`, {
 
         method: 'PUT',
@@ -659,7 +657,11 @@ const AdminTrendingDestinations = () => {
               <input
                 type="text"
                 value={formData.title}
-                onChange={(e) => setFormData({ ...formData, title: e.target.value })}
+                onChange={(e) => {
+                  const newTitle = e.target.value;
+                  const newSlug = newTitle.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '');
+                  setFormData({ ...formData, title: newTitle, slug: newSlug });
+                }}
                 className="w-full text-gray-900 px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500"
                 placeholder="Destination title"
                 required

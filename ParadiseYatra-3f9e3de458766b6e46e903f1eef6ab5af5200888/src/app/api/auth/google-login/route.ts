@@ -18,57 +18,33 @@ const getApiPath = (path: string) => {
     return `${BACKEND_URL}${path.startsWith('/') ? '' : '/'}${path}`;
 };
 
-export async function GET(request: NextRequest) {
-    try {
-        const response = await fetch(getApiPath('/api/tags'), {
-            cache: 'no-store',
-        });
-
-        const data = await response.json();
-
-        if (!response.ok) {
-            return NextResponse.json(
-                { message: data.message || 'Failed to fetch tags' },
-                { status: response.status }
-            );
-        }
-
-        return NextResponse.json(data);
-    } catch (error) {
-        console.error('Tags API error:', error);
-        return NextResponse.json(
-            { message: 'Internal server error' },
-            { status: 500 }
-        );
-    }
-}
-
 export async function POST(request: NextRequest) {
     try {
         const body = await request.json();
-        const response = await fetch(getApiPath('/api/tags'), {
+        const { idToken } = body;
+
+        const response = await fetch(getApiPath('/api/auth/google-login'), {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
-                'Authorization': request.headers.get('Authorization') || '',
             },
-            body: JSON.stringify(body),
+            body: JSON.stringify({ idToken }),
         });
 
         const data = await response.json();
 
         if (!response.ok) {
             return NextResponse.json(
-                { message: data.message || 'Failed to create tag' },
+                { message: data.message || 'Google Login failed' },
                 { status: response.status }
             );
         }
 
         return NextResponse.json(data);
     } catch (error) {
-        console.error('Tags API error:', error);
+        console.error('Google Login API error:', error);
         return NextResponse.json(
-            { message: error instanceof Error ? error.message : 'Internal server error' },
+            { message: 'Internal server error' },
             { status: 500 }
         );
     }

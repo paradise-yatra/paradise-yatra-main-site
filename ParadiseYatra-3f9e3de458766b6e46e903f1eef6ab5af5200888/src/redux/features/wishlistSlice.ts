@@ -1,4 +1,5 @@
 import { createSlice, createAsyncThunk, PayloadAction } from '@reduxjs/toolkit';
+import { API_CONFIG } from '@/config/api';
 
 interface WishlistState {
     items: string[];
@@ -17,9 +18,9 @@ export const fetchWishlist = createAsyncThunk(
     'wishlist/fetchWishlist',
     async ({ token, userId }: { token: string; userId: string }, { rejectWithValue }) => {
         try {
-            const response = await fetch('/api/wishlist', {
+            const response = await fetch(API_CONFIG.getApiUrl(API_CONFIG.ENDPOINTS.WISHLIST.GET), {
                 headers: {
-                    'Authorization': token,
+                    'Authorization': token.startsWith('Bearer ') ? token : `Bearer ${token}`,
                     'X-User-Id': userId
                 }
             });
@@ -41,11 +42,11 @@ export const toggleWishlist = createAsyncThunk(
     'wishlist/toggleWishlist',
     async ({ packageId, token, userId }: { packageId: string; token: string; userId: string }, { rejectWithValue, getState }) => {
         try {
-            const response = await fetch('/api/wishlist', {
+            const response = await fetch(API_CONFIG.getApiUrl(API_CONFIG.ENDPOINTS.WISHLIST.GET), {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
-                    'Authorization': token,
+                    'Authorization': token.startsWith('Bearer ') ? token : `Bearer ${token}`,
                     'X-User-Id': userId
                 },
                 body: JSON.stringify({ packageId })

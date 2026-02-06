@@ -252,7 +252,7 @@ export default function LoginPage() {
                                             if (!credentialResponse.credential) return;
                                             setLoading(true);
                                             try {
-                                                const response = await fetch(API_CONFIG.getFullUrl('/api/auth/google-login'), {
+                                                const response = await fetch(API_CONFIG.getApiUrl(API_CONFIG.ENDPOINTS.AUTH.GOOGLE_LOGIN), {
                                                     method: "POST",
                                                     headers: { "Content-Type": "application/json" },
                                                     body: JSON.stringify({ idToken: credentialResponse.credential }),
