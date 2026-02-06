@@ -191,7 +191,7 @@ const AdminTrendingDestinations = () => {
         headers['Authorization'] = `Bearer ${token}`;
       }
 
-      const response = await fetch(API_CONFIG.getFullUrl(API_CONFIG.ENDPOINTS.DESTINATIONS.TRENDING), {
+      const response = await fetch(API_CONFIG.getFullUrl(`${API_CONFIG.ENDPOINTS.PACKAGES.ALL}?category=Trending%20Destinations`), {
         headers,
         cache: 'no-store'
       });
@@ -201,7 +201,8 @@ const AdminTrendingDestinations = () => {
       }
 
       const data = await response.json();
-      const destinationsArray = Array.isArray(data) ? data : (data.packages || []);
+      // Backend returns { packages: [...], pagination: {...} }
+      const destinationsArray = data.packages || (Array.isArray(data) ? data : []);
       setTrendingDestinations(destinationsArray);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'An error occurred');
@@ -224,12 +225,12 @@ const AdminTrendingDestinations = () => {
         return;
       }
 
-      if (!formData.title || !formData.slug || !formData.description || !formData.shortDescription || !formData.destination || !formData.country) {
-        toast.error('Please fill in all required fields');
+      if (!formData.title || !formData.slug || !formData.description || !formData.shortDescription || !formData.destination || !formData.country || !formData.tourType) {
+        toast.error('Please fill in all required fields (Title, Slug, Description, Destination, Country, Tour Type)');
         return;
       }
 
-      const BACKEND_URL = process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:5001';
+
 
       if (uploadMethod === 'url' && imageUrl) {
         const destinationData = {
@@ -253,7 +254,7 @@ const AdminTrendingDestinations = () => {
           highlights: formData.highlights ? formData.highlights.split(',').map(h => h.trim()) : []
         };
 
-        const response = await fetch('/api/packages', {
+        const response = await fetch(API_CONFIG.getFullUrl(API_CONFIG.ENDPOINTS.PACKAGES.ALL), {
 
           method: 'POST',
           headers: {
@@ -306,7 +307,7 @@ const AdminTrendingDestinations = () => {
       const highlightsArray = formData.highlights ? formData.highlights.split(',').map(h => h.trim()) : [];
       uploadFormData.append('highlights', JSON.stringify(highlightsArray));
 
-      const response = await fetch('/api/packages', {
+      const response = await fetch(API_CONFIG.getFullUrl(API_CONFIG.ENDPOINTS.PACKAGES.ALL), {
 
         method: 'POST',
         headers: {
@@ -387,7 +388,7 @@ const AdminTrendingDestinations = () => {
         return;
       }
 
-      const BACKEND_URL = process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:5001';
+
 
       if (uploadMethod === 'url' && imageUrl && !imageFile) {
         const destinationData = {
@@ -411,7 +412,7 @@ const AdminTrendingDestinations = () => {
           highlights: formData.highlights ? formData.highlights.split(',').map(h => h.trim()) : []
         };
 
-        const response = await fetch(`/api/packages/${editingDestination._id}`, {
+        const response = await fetch(API_CONFIG.getFullUrl(`${API_CONFIG.ENDPOINTS.PACKAGES.ALL}/${editingDestination._id}`), {
 
           method: 'PUT',
           headers: {
@@ -465,7 +466,7 @@ const AdminTrendingDestinations = () => {
       const highlightsArray = formData.highlights ? formData.highlights.split(',').map(h => h.trim()) : [];
       uploadFormData.append('highlights', JSON.stringify(highlightsArray));
 
-      const response = await fetch(`/api/packages/${editingDestination._id}`, {
+      const response = await fetch(API_CONFIG.getFullUrl(`${API_CONFIG.ENDPOINTS.PACKAGES.ALL}/${editingDestination._id}`), {
 
         method: 'PUT',
         headers: {
@@ -503,8 +504,8 @@ const AdminTrendingDestinations = () => {
         return;
       }
 
-      const BACKEND_URL = process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:5001';
-      const response = await fetch(`/api/packages/${id}`, {
+
+      const response = await fetch(API_CONFIG.getFullUrl(`${API_CONFIG.ENDPOINTS.PACKAGES.ALL}/${id}`), {
 
         method: 'DELETE',
         headers: {
@@ -537,8 +538,8 @@ const AdminTrendingDestinations = () => {
         return;
       }
 
-      const BACKEND_URL = process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:5001';
-      const response = await fetch(`/api/packages/${dest._id}`, {
+
+      const response = await fetch(API_CONFIG.getFullUrl(`${API_CONFIG.ENDPOINTS.PACKAGES.ALL}/${dest._id}`), {
 
         method: 'PUT',
         headers: {

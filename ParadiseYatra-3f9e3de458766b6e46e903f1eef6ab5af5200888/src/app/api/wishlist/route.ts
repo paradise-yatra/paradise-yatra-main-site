@@ -1,61 +1,35 @@
 import { NextRequest, NextResponse } from "next/server";
-import fs from 'fs/promises';
-import path from 'path';
+import API_CONFIG from "@/config/api";
 
-const DATA_FILE = path.join(process.cwd(), 'src/data/wishlists.json');
-
-// Helper to get user ID from token (INSECURE: for demo use only, does not verify signature)
-function getUserIdFromToken(token: string): string | null {
-    try {
-        if (!token) return null;
-        // Check if it looks like a JWT
-        if (token.split('.').length === 3) {
-            const payload = token.split('.')[1];
-            const decoded = JSON.parse(Buffer.from(payload, 'base64').toString());
-            return decoded.id || decoded._id || decoded.sub;
-        }
-        // Fallback: use token as ID if it's not a JWT (e.g. dev/test token)
-        return token;
-    } catch (e) {
-        return token; // Fallback
-    }
-}
-
-async function getWishlistData() {
-    try {
-        const data = await fs.readFile(DATA_FILE, 'utf8');
-        return JSON.parse(data);
-    } catch (e) {
-        return { wishlists: {} };
-    }
-}
-
-async function saveWishlistData(data: any) {
-    await fs.writeFile(DATA_FILE, JSON.stringify(data, null, 2));
-}
-
-// GET: Fetch user's wishlist
+// GET: Fetch user's wishlist from backend
 export async function GET(request: NextRequest) {
     try {
         const token = request.headers.get("Authorization");
-        const headerUserId = request.headers.get("X-User-Id");
-        // Prefer header user ID if provided (internal trusted call), otherwise extract from token
-        const userId = headerUserId || getUserIdFromToken(token || "");
 
-        console.log(`API GET Wishlist - UserID: ${userId}`);
-
-        if (!userId) {
+        if (!token) {
             return NextResponse.json({ message: "Unauthorized" }, { status: 401 });
         }
 
-        const data = await getWishlistData();
-        const userWishlist = data.wishlists[userId] || [];
+        // Forward request to backend
+        const response = await fetch(API_CONFIG.getFullUrl(API_CONFIG.ENDPOINTS.WISHLIST.GET), {
+            headers: {
+                'Authorization': token.startsWith('Bearer ') ? token : `Bearer ${token}`
+            },
+            cache: 'no-store'
+        });
 
-        console.log(`API GET Wishlist - Found ${userWishlist.length} searchItems`);
+        if (!response.ok) {
+            const errorData = await response.json();
+            return NextResponse.json(
+                { message: errorData.message || "Failed to fetch wishlist from backend" },
+                { status: response.status }
+            );
+        }
 
-        return NextResponse.json({ wishlist: userWishlist });
+        const data = await response.json();
+        return NextResponse.json(data);
     } catch (error) {
-        console.error("Wishlist GET error:", error);
+        console.error("Wishlist GET proxy error:", error);
         return NextResponse.json(
             { message: "Internal server error" },
             { status: 500 }
@@ -63,50 +37,43 @@ export async function GET(request: NextRequest) {
     }
 }
 
-// POST: Toggle item in wishlist (Add/Remove)
+// POST: Toggle item in wishlist (Add/Remove) via backend
 export async function POST(request: NextRequest) {
     try {
         const token = request.headers.get("Authorization");
-        const headerUserId = request.headers.get("X-User-Id");
-        const userId = headerUserId || getUserIdFromToken(token || "");
-
         const body = await request.json();
         const { packageId } = body;
 
-        if (!userId) {
+        if (!token) {
             return NextResponse.json({ message: "Unauthorized" }, { status: 401 });
         }
-
-        console.log(`API POST Wishlist - UserID: ${userId}, PackageID: ${packageId}`);
 
         if (!packageId) {
             return NextResponse.json({ message: "Package ID required" }, { status: 400 });
         }
 
-        const data = await getWishlistData();
-        const currentWishlist = data.wishlists[userId] || [];
+        // Forward request to backend toggle endpoint
+        const response = await fetch(API_CONFIG.getFullUrl(API_CONFIG.ENDPOINTS.WISHLIST.TOGGLE), {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': token.startsWith('Bearer ') ? token : `Bearer ${token}`
+            },
+            body: JSON.stringify({ packageId })
+        });
 
-        let newWishlist;
-        const index = currentWishlist.indexOf(packageId);
-
-        if (index > -1) {
-            // Remove
-            newWishlist = currentWishlist.filter((id: string) => id !== packageId);
-        } else {
-            // Add
-            newWishlist = [...currentWishlist, packageId];
+        if (!response.ok) {
+            const errorData = await response.json();
+            return NextResponse.json(
+                { message: errorData.message || "Failed to update wishlist in backend" },
+                { status: response.status }
+            );
         }
 
-        data.wishlists[userId] = newWishlist;
-        await saveWishlistData(data);
-
-        return NextResponse.json({
-            success: true,
-            wishlist: newWishlist,
-            message: index > -1 ? "Removed from wishlist" : "Added to wishlist"
-        });
+        const data = await response.json();
+        return NextResponse.json(data);
     } catch (error) {
-        console.error("Wishlist POST error:", error);
+        console.error("Wishlist POST proxy error:", error);
         return NextResponse.json(
             { message: "Internal server error" },
             { status: 500 }

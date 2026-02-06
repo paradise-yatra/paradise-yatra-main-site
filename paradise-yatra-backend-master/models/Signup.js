@@ -40,7 +40,11 @@ const signupSchema = new mongoose.Schema({
     isActive: {
         type: Boolean,
         default: true
-    }
+    },
+    wishlist: [{
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'Package'
+    }]
 }, {
     timestamps: true
 });

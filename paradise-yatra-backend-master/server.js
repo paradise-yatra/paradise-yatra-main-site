@@ -113,6 +113,7 @@ const faqRoutes = require("./routes/faq");
 
 const tagRoutes = require("./routes/tags");
 const leadRoutes = require("./routes/leads");
+const wishlistRoutes = require("./routes/wishlist");
 
 app.use("/api/auth", authRoutes);
 app.use("/api/packages", packageRoutes);
@@ -132,6 +133,7 @@ app.use("/api/seo", seoRoutes);
 app.use("/api/faq", faqRoutes);
 app.use("/api/tags", tagRoutes);
 app.use("/api/leads", leadRoutes);
+app.use("/api/wishlist", wishlistRoutes);
 
 // Basic route
 app.get("/", (req, res) => {
