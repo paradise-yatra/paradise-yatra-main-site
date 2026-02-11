@@ -1,5 +1,5 @@
 import { Metadata } from "next";
-import ItineraryPageClient from "./ItineraryPageClient";
+import ItineraryPageClient from "@/app/itinerary/[slug]/ItineraryPageClient";
 
 // Enable ISR with 60 second revalidation
 export const revalidate = 60;
@@ -125,9 +125,23 @@ async function getPackage(slug: string): Promise<PackageOrDestination | null> {
       }
     }
 
+    // Try all-packages API as another fallback
+    if (response.status === 404) {
+      console.log(`[ItineraryPage] Slug not found in destinations, trying all-packages...`);
+      response = await fetch(`${baseUrl}/api/all-packages/${slug}`, {
+        next: { revalidate: 60 }
+      });
+
+      if (response.ok) {
+        data = await response.json();
+        console.log(`[ItineraryPage] Successfully fetched from all-packages for slug: ${slug}`);
+        return unwrap(data);
+      }
+    }
+
     // Try one more fallback: direct ID match if it's a destination
     if (response.status === 404) {
-      console.log(`[ItineraryPage] Slug not found in destinations/slug, trying direct destinations/:id...`);
+      console.log(`[ItineraryPage] Slug not found in all-packages, trying direct destinations/:id...`);
       response = await fetch(`${baseUrl}/api/destinations/${slug}`, {
         next: { revalidate: 60 } // Cache for 60 seconds
       });
@@ -186,12 +200,12 @@ export async function generateMetadata({ params }: { params: Promise<{ slug: str
     },
     metadataBase: new URL(process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3000'),
     alternates: {
-      canonical: packageData.seoCanonicalUrl || `/itinerary/${resolvedParams.slug}`,
+      canonical: packageData.seoCanonicalUrl || `/package/${resolvedParams.slug}`,
     },
     openGraph: {
       title: packageData.seoOgTitle || displayTitle,
       description: packageData.seoOgDescription || description,
-      url: packageData.seoCanonicalUrl || `/itinerary/${resolvedParams.slug}`,
+      url: packageData.seoCanonicalUrl || `/package/${resolvedParams.slug}`,
       siteName: 'Paradise Yatra',
       images: [
         {

@@ -389,7 +389,10 @@ export default function SignupPage() {
                         const response = await fetch(API_CONFIG.getFullUrl('/api/auth/google-login'), {
                           method: "POST",
                           headers: { "Content-Type": "application/json" },
-                          body: JSON.stringify({ idToken: credentialResponse.credential }),
+                          body: JSON.stringify({
+                            idToken: credentialResponse.credential,
+                            phone: formData.phone
+                          }),
                         });
                         const data = await response.json();
                         if (response.ok) {

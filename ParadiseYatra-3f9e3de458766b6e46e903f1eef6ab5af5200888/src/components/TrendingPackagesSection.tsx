@@ -61,98 +61,31 @@ const TrendingPackagesSection = () => {
         const fetchTrendingData = async () => {
             try {
                 setLoading(true);
-                // 1. Fetch all tags to find the trending tag
-                const tagsRes = await fetch("/api/tags", { cache: 'no-store' });
-                const tagsData = await tagsRes.json();
+                // Fetch the 'trending' tag specifically to get its curated packages
+                const response = await fetch("/api/tags/slug/trending", { cache: 'no-store' });
 
-                const allTags = Array.isArray(tagsData) ? tagsData : (tagsData.data || []);
-                const success = Array.isArray(tagsData) || tagsData.success;
-
-                if (!tagsRes.ok || !success) {
-                    console.error("Failed to fetch tags", tagsData);
-                    return;
+                if (!response.ok) {
+                    throw new Error("Failed to fetch trending packages");
                 }
 
-                const trendingTag = allTags.find((tag: any) =>
-                    tag.slug.toLowerCase().includes("trending") ||
-                    tag.name.toLowerCase().includes("trending")
-                );
+                const json = await response.json();
+                const packagesData = (json.success && json.data && json.data.packages) ? json.data.packages : [];
 
-                if (!trendingTag || !trendingTag.packages || trendingTag.packages.length === 0) {
-                    console.warn("Trending tag not found or has no packages", trendingTag);
-                    setPackages([]);
-                    setLoading(false);
-                    return;
-                }
-
-                // 2. Fetch all possible data sources to match IDs
-                let matchedPackages = [];
-
-                if (typeof trendingTag.packages[0] === 'object') {
-                    matchedPackages = trendingTag.packages;
-                } else {
-                    // It's an array of IDs, we need to fetch all possible sources
-                    const [packagesRes, holidayRes, destinationsRes, fixedRes] = await Promise.all([
-                        fetch("/api/packages?limit=100", { cache: 'no-store' }),
-                        fetch("/api/holiday-types?limit=100", { cache: 'no-store' }),
-                        fetch("/api/destinations?limit=100", { cache: 'no-store' }),
-                        fetch("/api/fixed-departures?limit=100", { cache: 'no-store' })
-                    ]);
-
-                    const [packagesData, holidayData, destinationsData, fixedData] = await Promise.all([
-                        packagesRes.json().catch(() => ({})),
-                        holidayRes.json().catch(() => ([])),
-                        destinationsRes.json().catch(() => ({})),
-                        fixedRes.json().catch(() => ({}))
-                    ]);
-
-                    const normalize = (data: any) => {
-                        if (!data) return [];
-                        if (Array.isArray(data)) return data;
-                        if (data.data && Array.isArray(data.data)) return data.data;
-                        if (data.packages) return data.packages;
-                        if (data.destinations) return data.destinations;
-                        if (data.fixedDepartures) return data.fixedDepartures;
-                        if (data.holidayTypes) return data.holidayTypes;
-                        return [];
-                    };
-
-                    const allItems = [
-                        ...normalize(packagesData),
-                        ...normalize(holidayData),
-                        ...normalize(destinationsData),
-                        ...normalize(fixedData)
-                    ];
-
-                    // Normalize tagged package IDs to ensure consistent matching
-                    const taggedIds = (trendingTag.packages || []).map((p: any) => getPackageId(p)).filter((id: string) => id !== "");
-
-                    matchedPackages = allItems.filter((item: any) => {
-                        const itemId = getPackageId(item);
-                        return itemId && taggedIds.includes(itemId);
-                    });
-
-                    // Remove duplicates based on ID
-                    matchedPackages = Array.from(new Map(matchedPackages.map((pkg: any) => [getPackageId(pkg), pkg])).values());
-                }
-
-                // 3. Map to TrendingPackage format
-                const mappedPackages: TrendingPackage[] = matchedPackages.map((pkg: any, index: number) => {
-                    const pkgId = getPackageId(pkg) || `pkg-${index}`;
-                    return {
-                        id: pkgId,
-                        destination: pkg.destination || pkg.location || pkg.state || pkg.title || "India",
-                        duration: pkg.duration || "5N/6D",
-                        title: pkg.title || pkg.name || "Exciting Tour",
-                        price: typeof pkg.price === 'string' ? parseInt(pkg.price.replace(/[^\d]/g, '')) : (pkg.price || 0),
-                        image: getImageUrl(pkg.images?.[0] || pkg.image || pkg.thumbnail) || `https://picsum.photos/800/500?random=${index + 140}`,
-                        slug: pkg.slug || pkgId,
-                    };
-                });
+                // Map to TrendingPackage format
+                const mappedPackages: TrendingPackage[] = packagesData.map((pkg: any) => ({
+                    id: pkg._id,
+                    destination: pkg.location || pkg.destination || "India",
+                    duration: pkg.duration || "5N/6D",
+                    title: pkg.name || pkg.title || "Trending Package",
+                    price: pkg.price || 0,
+                    image: getImageUrl(pkg.image),
+                    slug: pkg.slug || pkg._id,
+                }));
 
                 setPackages(mappedPackages);
             } catch (error) {
                 console.error("Error fetching trending packages:", error);
+                setPackages([]);
             } finally {
                 setLoading(false);
             }
@@ -340,7 +273,7 @@ const TrendingPackagesSection = () => {
                         </p>
 
                         <div className="flex mt-2 mb-4 md:mt-4 md:mb-0">
-                            <Link href="packages/category/Trending%20Destinations" className="px-5 py-2.5 md:px-6 md:py-3 bg-slate-900 text-white rounded-lg text-sm font-semibold hover:bg-slate-800 transition-colors flex items-center gap-2 group shadow-sm">
+                            <Link href="/package/theme/trending" className="px-5 py-2.5 md:px-6 md:py-3 bg-slate-900 text-white rounded-lg text-sm font-semibold hover:bg-slate-800 transition-colors flex items-center gap-2 group shadow-sm">
                                 View All Deals
                                 <ArrowRight className="h-4 w-4 group-hover:translate-x-1 transition-transform" />
                             </Link>
@@ -382,7 +315,7 @@ const TrendingPackagesSection = () => {
                                     price={pkg.price}
                                     image={pkg.image}
                                     slug={pkg.slug}
-                                    hrefPrefix="/itinerary"
+                                    hrefPrefix="/package"
                                     themeColor="#005beb"
                                     priceLabel="Per Person"
                                     isInWishlist={isInWishlist(String(pkg.id))}

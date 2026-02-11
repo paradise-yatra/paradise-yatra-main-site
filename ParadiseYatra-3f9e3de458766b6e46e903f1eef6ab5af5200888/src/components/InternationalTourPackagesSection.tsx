@@ -1,8 +1,7 @@
 "use client";
 
-import { useEffect, useRef, useState, useMemo } from "react";
+import { useEffect, useRef, useState } from "react";
 import DestinationCard from "./DestinationCard";
-import { useNavigation } from "@/hooks/useNavigation";
 import CarouselArrows from "./ui/CarouselArrows";
 
 interface InternationalDestination {
@@ -16,26 +15,8 @@ const InternationalTourPackagesSection = () => {
     const carouselRef = useRef<HTMLDivElement>(null);
     const [canScrollLeft, setCanScrollLeft] = useState(false);
     const [canScrollRight, setCanScrollRight] = useState(true);
-    const { navItems, loading } = useNavigation();
-
-    const destinations = useMemo(() => {
-        const internationalPackage = navItems.find(item => item.name === "International Tour");
-        if (!internationalPackage) return [];
-
-        return internationalPackage.submenu
-            .filter((item) => {
-                // Ensure India doesn't show in International Tour section
-                if (item.name.toLowerCase() === "india") return false;
-                // Only show countries that have destinations
-                return item.destinations && item.destinations.length > 0;
-            })
-            .map((item, index) => ({
-                id: index + 1,
-                name: item.name,
-                image: item.destinations?.find(d => d.image)?.image || `https://picsum.photos/400/600?random=${index + 200}`,
-                href: item.href
-            }));
-    }, [navItems]);
+    const [destinations, setDestinations] = useState<InternationalDestination[]>([]);
+    const [loading, setLoading] = useState(true);
 
     const updateScrollState = () => {
         if (carouselRef.current) {
@@ -46,18 +27,69 @@ const InternationalTourPackagesSection = () => {
     };
 
     useEffect(() => {
+        const fetchInternationalCountriesData = async () => {
+            try {
+                setLoading(true);
+                // Fetch packages from 'all-packages' collection where tourType is 'international'
+                const response = await fetch("/api/all-packages?tourType=international&limit=200&isActive=true", { cache: 'no-store' });
+
+                if (!response.ok) {
+                    throw new Error("Failed to fetch International packages");
+                }
+
+                const data = await response.json();
+                const packages = data.packages || [];
+
+                // Group by 'country' to get unique countries from the database
+                const uniqueCountriesMap = new Map<string, InternationalDestination>();
+
+                packages.forEach((pkg: any) => {
+                    if (pkg.country && typeof pkg.country === 'string' && pkg.country.trim() !== '') {
+                        const countryName = pkg.country.trim();
+                        const countryKey = countryName.toLowerCase();
+
+                        if (!uniqueCountriesMap.has(countryKey)) {
+                            uniqueCountriesMap.set(countryKey, {
+                                id: pkg._id, // Using the first package ID as key
+                                name: countryName,
+                                // Use the package image or a fallback
+                                image: pkg.image || `https://picsum.photos/400/600?random=${uniqueCountriesMap.size + 200}`,
+                                // Construct the link to /package/international/[country-slug]
+                                href: `/package/international/${countryName.toLowerCase().replace(/\s+/g, '-')}`
+                            });
+                        }
+                    }
+                });
+
+                const countriesList = Array.from(uniqueCountriesMap.values());
+                setDestinations(countriesList);
+            } catch (error) {
+                console.error("Error fetching International countries from allpackages:", error);
+                setDestinations([]);
+            } finally {
+                setLoading(false);
+            }
+        };
+
+        fetchInternationalCountriesData();
+    }, []);
+
+    useEffect(() => {
         const carousel = carouselRef.current;
         if (carousel) {
             carousel.addEventListener("scroll", updateScrollState);
             window.addEventListener("resize", updateScrollState);
-            updateScrollState();
+            // Delay update to allow rendering
+            if (destinations.length > 0) {
+                setTimeout(updateScrollState, 100);
+            }
 
             return () => {
                 carousel.removeEventListener("scroll", updateScrollState);
                 window.removeEventListener("resize", updateScrollState);
             };
         }
-    }, []);
+    }, [destinations]);
 
     const scrollByStep = (direction: number) => {
         if (carouselRef.current) {
@@ -74,18 +106,17 @@ const InternationalTourPackagesSection = () => {
     };
 
     return (
-        <section className="bg-white px-4 py-14 text-gray-900 md:px-8 relative overflow-hidden">
-
-            <div className="mx-auto max-w-6xl relative z-10">
+        <section className="bg-white py-14 px-4 text-gray-900 md:px-8">
+            <div className="mx-auto max-w-6xl">
                 {/* Header with Controls */}
-                <div className="mb-8 flex flex-col gap-4 md:flex-row md:items-end md:justify-between">
+                <div className="mb-6 flex flex-col gap-4 md:flex-row md:items-end md:justify-between">
                     <div className="flex-1 flex flex-col gap-2">
-                        <span className="text-[#005beb] !font-black uppercase tracking-wider text-xs flex items-center gap-2">
+                        <span className="text-[#005beb] font-black uppercase tracking-wider text-xs flex items-center gap-2">
                             <span className="h-px w-8 bg-[#005beb]"></span>
                             World Awaits
                         </span>
-                        <h2 className="!text-2xl md:text-3xl !font-bold text-slate-900 leading-tight">
-                            Across the World’s Finest Places
+                        <h2 className="!text-2xl !font-bold text-slate-900 md:text-3xl">
+                            Across the World's Finest Places
                         </h2>
                         <p className="!text-sm !text-slate-600 md:text-base max-w-2xl font-semibold">
                             Embark on extraordinary adventures and discover iconic global destinations with our curated international tour packages.
@@ -94,35 +125,53 @@ const InternationalTourPackagesSection = () => {
                 </div>
 
                 {/* Carousel */}
-                <div className="relative group/carousel -mx-4 px-4 md:mx-0 md:px-0">
-                    <CarouselArrows
-                        onPrevious={() => scrollByStep(-1)}
-                        onNext={() => scrollByStep(1)}
-                        canScrollLeft={canScrollLeft}
-                        canScrollRight={canScrollRight}
-                    />
+                <div className="relative group/carousel">
+                    {loading ? (
+                        <div className="flex gap-4 overflow-hidden">
+                            {[1, 2, 3, 4].map((i) => (
+                                <div key={i} className="min-w-[272px] h-[272px] bg-slate-100 rounded-lg animate-pulse border border-slate-200"></div>
+                            ))}
+                        </div>
+                    ) : (
+                        <>
+                            {destinations.length > 0 ? (
+                                <>
+                                    <CarouselArrows
+                                        onPrevious={() => scrollByStep(-1)}
+                                        onNext={() => scrollByStep(1)}
+                                        canScrollLeft={canScrollLeft}
+                                        canScrollRight={canScrollRight}
+                                    />
 
-                    <div
-                        ref={carouselRef}
-                        className="flex gap-4 overflow-x-auto scroll-smooth pb-4 scrollbar-hide"
-                        style={{
-                            scrollbarWidth: "none",
-                            msOverflowStyle: "none",
-                            scrollSnapType: "x mandatory",
-                        }}
-                    >
-                        {destinations.map((destination) => (
-                            <DestinationCard
-                                key={destination.id}
-                                name={destination.name}
-                                image={destination.image}
-                                href={destination.href}
-                            />
-                        ))}
-                    </div>
+                                    <div
+                                        ref={carouselRef}
+                                        className="flex gap-4 overflow-x-auto scroll-smooth pb-4 scrollbar-hide"
+                                        style={{
+                                            scrollbarWidth: "none",
+                                            msOverflowStyle: "none",
+                                            scrollSnapType: "x mandatory",
+                                        }}
+                                    >
+                                        {destinations.map((destination) => (
+                                            <DestinationCard
+                                                key={destination.id}
+                                                name={destination.name}
+                                                image={destination.image}
+                                                href={destination.href}
+                                            />
+                                        ))}
+                                    </div>
+                                </>
+                            ) : (
+                                <div className="text-center py-10 bg-slate-50 rounded-lg">
+                                    <p className="text-slate-500 font-medium">No destinations found in database.</p>
+                                </div>
+                            )}
+                        </>
+                    )}
                 </div>
             </div>
-        </section>
+        </section >
     );
 };
 

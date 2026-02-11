@@ -58,99 +58,31 @@ const HoneymoonPackages = () => {
         const fetchHoneymoonData = async () => {
             try {
                 setLoading(true);
-                // 1. Fetch all tags to find the honeymoon tag
-                const tagsRes = await fetch("/api/tags", { cache: 'no-store' });
-                const tagsData = await tagsRes.json();
+                // Fetch the 'honeymoon' tag specifically to get its curated packages
+                const response = await fetch("/api/tags/slug/honeymoon", { cache: 'no-store' });
 
-                const allTags = Array.isArray(tagsData) ? tagsData : (tagsData.data || []);
-                const success = Array.isArray(tagsData) || tagsData.success;
-
-                if (!tagsRes.ok || !success) {
-                    console.error("Failed to fetch tags", tagsData);
-                    return;
+                if (!response.ok) {
+                    throw new Error("Failed to fetch honeymoon packages");
                 }
 
-                const honeymoonTag = allTags.find((tag: any) =>
-                    tag.slug.toLowerCase().includes("honeymoon") ||
-                    tag.name.toLowerCase().includes("honeymoon")
-                );
+                const json = await response.json();
+                const packagesData = (json.success && json.data && json.data.packages) ? json.data.packages : [];
 
-                if (!honeymoonTag || !honeymoonTag.packages || honeymoonTag.packages.length === 0) {
-                    console.warn("Honeymoon tag not found or has no packages", honeymoonTag);
-                    setPackages([]);
-                    setLoading(false);
-                    return;
-                }
-
-                // 2. Fetch all possible data sources to match IDs
-                let matchedPackages = [];
-
-                if (typeof honeymoonTag.packages[0] === 'object') {
-                    matchedPackages = honeymoonTag.packages;
-                } else {
-                    // It's an array of IDs, we need to fetch all possible sources
-                    // especially since some items are in holiday-types or destinations
-                    const [packagesRes, holidayRes, destinationsRes, fixedRes] = await Promise.all([
-                        fetch("/api/packages", { cache: 'no-store' }),
-                        fetch("/api/holiday-types", { cache: 'no-store' }),
-                        fetch("/api/destinations", { cache: 'no-store' }),
-                        fetch("/api/fixed-departures", { cache: 'no-store' })
-                    ]);
-
-                    const [packagesData, holidayData, destinationsData, fixedData] = await Promise.all([
-                        packagesRes.json().catch(() => ({})),
-                        holidayRes.json().catch(() => ([])),
-                        destinationsRes.json().catch(() => ({})),
-                        fixedRes.json().catch(() => ({}))
-                    ]);
-
-                    const normalize = (data: any) => {
-                        if (!data) return [];
-                        if (Array.isArray(data)) return data;
-                        if (data.data && Array.isArray(data.data)) return data.data;
-                        if (data.packages) return data.packages;
-                        if (data.destinations) return data.destinations;
-                        if (data.fixedDepartures) return data.fixedDepartures;
-                        if (data.holidayTypes) return data.holidayTypes;
-                        return [];
-                    };
-
-                    const allItems = [
-                        ...normalize(packagesData),
-                        ...normalize(holidayData),
-                        ...normalize(destinationsData),
-                        ...normalize(fixedData)
-                    ];
-
-                    // Normalize tagged package IDs to ensure consistent matching
-                    const taggedIds = (honeymoonTag.packages || []).map((p: any) => getPackageId(p)).filter((id: string) => id !== "");
-
-                    matchedPackages = allItems.filter((item: any) => {
-                        const itemId = getPackageId(item);
-                        return itemId && taggedIds.includes(itemId);
-                    });
-
-                    // Remove duplicates based on ID
-                    matchedPackages = Array.from(new Map(matchedPackages.map((pkg: any) => [getPackageId(pkg), pkg])).values());
-                }
-
-                // 3. Map to HoneymoonPackage format
-                const mappedPackages: HoneymoonPackage[] = matchedPackages.map((pkg: any, index: number) => {
-                    const pkgId = getPackageId(pkg) || `pkg-${index}`;
-                    return {
-                        id: pkgId,
-                        destination: pkg.destination || pkg.location || pkg.state || pkg.title || "India",
-                        duration: pkg.duration || "5N/6D",
-                        title: pkg.title || pkg.name || "Romantic Getaway",
-                        price: typeof pkg.price === 'string' ? parseInt(pkg.price.replace(/[^\d]/g, '')) : (pkg.price || 0),
-                        image: getImageUrl(pkg.images?.[0] || pkg.image || pkg.thumbnail) || `https://picsum.photos/800/500?random=${index + 50}`,
-                        slug: pkg.slug || pkgId,
-                    };
-                });
+                // Map to HoneymoonPackage format
+                const mappedPackages: HoneymoonPackage[] = packagesData.map((pkg: any) => ({
+                    id: pkg._id,
+                    destination: pkg.location || pkg.destination || "India",
+                    duration: pkg.duration || "5N/6D",
+                    title: pkg.name || pkg.title || "Honeymoon Package",
+                    price: pkg.price || 0,
+                    image: getImageUrl(pkg.image),
+                    slug: pkg.slug || pkg._id,
+                }));
 
                 setPackages(mappedPackages);
             } catch (error) {
                 console.error("Error fetching honeymoon packages:", error);
+                setPackages([]);
             } finally {
                 setLoading(false);
             }
@@ -222,18 +154,28 @@ const HoneymoonPackages = () => {
             {/* Decorative background elements */}
 
             <div className="mx-auto flex max-w-6xl flex-col gap-10 relative z-10">
-                <div className="flex flex-col gap-1">
-                    <span className="text-[#ff1493] font-black tracking-wider text-xs uppercase flex items-center gap-2">
-                        <span className="h-px w-8 bg-[#ff1493]"></span>
-                        Honeymoon Packages
-                    </span>
-                    <h3 className="!text-2xl md:text-3xl !font-bold text-slate-900 leading-tight flex items-center gap-3 flex-wrap">
-                        Where Love Takes You
-                    </h3>
+                <div className="flex flex-col md:flex-row md:items-end justify-between gap-6">
+                    <div className="flex flex-col gap-1">
+                        <span className="text-[#ff1493] font-black tracking-wider text-xs uppercase flex items-center gap-2">
+                            <span className="h-px w-8 bg-[#ff1493]"></span>
+                            Honeymoon Packages
+                        </span>
+                        <h3 className="!text-2xl md:text-3xl !font-bold text-slate-900 leading-tight flex items-center gap-3 flex-wrap">
+                            Where Love Takes You
+                        </h3>
 
-                    <p className="!text-sm !text-slate-600 md:text-base max-w-2xl font-semibold">
-                        Curated romantic escapes with luxury stays, candlelit dinners and unforgettable moments.
-                    </p>
+                        <p className="!text-sm !text-slate-600 md:text-base max-w-2xl font-semibold">
+                            Curated romantic escapes with luxury stays, candlelit dinners and unforgettable moments.
+                        </p>
+                    </div>
+
+                    <Link
+                        href="/package/theme/honeymoon"
+                        className="group flex items-center gap-2 text-[#ff1493] font-bold text-sm bg-pink-50 hover:bg-[#ff1493] hover:text-white px-6 py-3 rounded-xl transition-all duration-300 w-fit shrink-0"
+                    >
+                        View All Packages
+                        <ArrowRight className="h-4 w-4 group-hover:translate-x-1 transition-transform" />
+                    </Link>
                 </div>
 
                 {/* Carousel wrapper inside max-width container */}
@@ -266,7 +208,7 @@ const HoneymoonPackages = () => {
                                 price={pkg.price}
                                 image={pkg.image}
                                 slug={pkg.slug}
-                                hrefPrefix="/destinations"
+                                hrefPrefix="/package"
                                 themeColor="#ff1493"
                                 priceLabel="Per Couple"
                                 isInWishlist={isInWishlist(String(pkg.id))}

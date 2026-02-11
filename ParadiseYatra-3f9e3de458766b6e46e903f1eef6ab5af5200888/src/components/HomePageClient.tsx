@@ -17,21 +17,8 @@ import {
 } from "@/components/lazy-components";
 import PerformanceMonitor from "@/components/ui/PerformanceMonitor";
 import ShutdownPopup from "@/components/ShutdownPopup";
-import NewHero from "./NewHero";
-import NewHero2 from "./NewHero2";
-import NewTestimonial from "./NewTestimonial";
-import WhoWeAre from "./WhoWeAre";
 import NewsletterSubscribe from "./NewsLetter";
-import DreamsReality from "./DreamsReality";
-import NewTrendingDestinations from "./NewTrendingPackages";
-import NewHolidaysSection from "./NewHolidaySection";
-// import NewPremiumPackages from "./newPremiumPackages";
-import NewAdventureEscapes from "./NewAdventureEscapes";
-import NewDestinationsGrid from "./NewDestinationsGrid";
-import NewPremiumPackages from "./NewPremiumPackages";
-import NewBlogSection from "./NewBlogSection";
-import IndiaTourPackages from "./IndiaTourPackages";
-import InternationalTourPackages from "./InternationalTourPackages";
+
 import HoneymoonPackages from "./HoneymoonPackages";
 import TrendingPackagesSection from "./TrendingPackagesSection";
 import WhyChooseParadiseYatra from "./WhyChooseParadiseYatra";
@@ -43,7 +30,8 @@ import FestivalSection from "./FestivalSection";
 import TestimonialsSection from "./TestimonialsSection";
 import BlogSectionNew from "./BlogSectionNew";
 import RecentlyBookedItineraries from "./RecentlyBookedItineraries";
-import WildlifeTourPackagesSection from "./WildlifeTourPackagesSection";
+import WildlifeTourPackagesSection from "./SeasonalPackagesSection";
+import SeasonalPackagesSection from "./SeasonalPackagesSection";
 
 
 const HomePageClient = memo(() => {
@@ -86,41 +74,11 @@ const HomePageClient = memo(() => {
       <SpiritualJourneysSection />
       <LuxuryPackagesSection />
 
-      <WildlifeTourPackagesSection />
+      <SeasonalPackagesSection />
       <FestivalSection />
       <TestimonialsSection />
       <BlogSectionNew />
-      {/* <RecentlyBookedItineraries /> */}
-      {/* <IndiaTourPackages /> */}
-      {/* <InternationalTourPackages /> */}
 
-
-      {/* <RecentlyBookedItineraries /> */}
-      {/* <NewTrendingDestinations /> */}
-
-
-      {/* <LazyTrendingDestinations /> */}
-      {/* <LazyHolidaysSection /> */}
-
-      {/* <NewHolidaysSection /> */}
-      {/* <LazyDestinationsGrid /> */}
-      {/* <NewDestinationsGrid /> */}
-
-      {/* <LazyPremiumPackages /> */}
-      {/* <NewPremiumPackages /> */}
-
-      {/* <LazyAdventureEscapes /> */}
-      {/* <NewAdventureEscapes /> */}
-
-      {/* <DreamsReality /> */}
-      {/* <WhoWeAre /> */}
-
-      {/* <LazyBlogSection /> */}
-      {/* <NewBlogSection /> */}
-
-      {/* <NewTestimonial /> */}
-      {/* <LazyTestimonialSection />
-      <LazyCTASection /> */}
       <NewsletterSubscribe />
 
       {/* Performance monitoring - only visible in development */}

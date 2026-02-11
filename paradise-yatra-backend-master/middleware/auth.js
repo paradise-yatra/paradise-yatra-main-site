@@ -13,6 +13,7 @@ const auth = async (req, res, next) => {
     }
 
     const decoded = jwt.verify(token, process.env.JWT_SECRET);
+    // console.log("Decoded Token:", decoded);
 
     // First try finding in User collection
     let user = await User.findById(decoded.userId).select("-password");
@@ -22,15 +23,20 @@ const auth = async (req, res, next) => {
       user = await Signup.findById(decoded.userId).select("-password");
     }
 
-    if (!user || !user.isActive) {
-      return res
-        .status(401)
-        .json({ message: "Invalid token or user inactive." });
+    if (!user) {
+      console.log(`Auth Failed: User not found for ID ${decoded.userId}`);
+      return res.status(401).json({ message: "User not found." });
+    }
+
+    if (!user.isActive) {
+      console.log(`Auth Failed: User ${user.email} is inactive`);
+      return res.status(401).json({ message: "User inactive." });
     }
 
     req.user = user;
     next();
   } catch (error) {
+    console.error("Auth Middleware Error:", error.message);
     res.status(401).json({ message: "Invalid token." });
   }
 };

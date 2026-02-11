@@ -40,8 +40,9 @@ export const fetchWishlist = createAsyncThunk(
 // Async thunk to toggle wishlist item
 export const toggleWishlist = createAsyncThunk(
     'wishlist/toggleWishlist',
-    async ({ packageId, token, userId }: { packageId: string; token: string; userId: string }, { rejectWithValue, getState }) => {
+    async ({ packageId, token, userId }: { packageId: string; token: string; userId: string }, { rejectWithValue }) => {
         try {
+            console.log(`Toggling wishlist for package: ${packageId}`);
             const response = await fetch(API_CONFIG.getApiUrl(API_CONFIG.ENDPOINTS.WISHLIST.GET), {
                 method: 'POST',
                 headers: {
@@ -52,13 +53,16 @@ export const toggleWishlist = createAsyncThunk(
                 body: JSON.stringify({ packageId })
             });
 
+            const data = await response.json();
+
             if (!response.ok) {
-                throw new Error('Failed to update wishlist');
+                console.error(`Wishlist toggle error: Status ${response.status}`, data);
+                throw new Error(data?.message || `Failed to update wishlist (Status ${response.status})`);
             }
 
-            const data = await response.json();
             return { packageId, wishlist: data.wishlist };
         } catch (error: any) {
+            console.error('Wishlist toggle thunk catch:', error);
             return rejectWithValue(error.message);
         }
     }
@@ -114,7 +118,9 @@ const wishlistSlice = createSlice({
                 // Or simpler: The optimistic update assumes success. If fail, toast error.
 
                 // or just log it for debugging
-                console.error("Failed to sync wishlist");
+                const errorMsg = action.payload as string || "Unknown error";
+                console.error("Failed to sync wishlist:", errorMsg);
+
                 // A robust undo would go here, requiring finding the ID and reversing the operation.
                 // Since we have the ID in meta, we can reverse it.
                 const packageId = action.meta.arg.packageId;

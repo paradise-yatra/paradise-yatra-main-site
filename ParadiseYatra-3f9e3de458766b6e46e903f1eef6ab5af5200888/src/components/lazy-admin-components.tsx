@@ -160,3 +160,29 @@ export const LazyAdminTags = createLazyComponent(
   }),
   <Loading size="lg" className="min-h-[400px]" />
 );
+
+// ... existing code ...
+export const LazyAdminPackages = createLazyComponent(
+  () => import("./admin/AdminPackages").catch(err => {
+    console.error("Failed to load AdminPackages:", err);
+    return Promise.reject(err);
+  }),
+  <Loading size="lg" className="min-h-[400px]" />
+);
+
+// ... existing code ...
+export const LazyAdminLeads = createLazyComponent(
+  () => import("./admin/AdminLeads").catch(err => {
+    console.error("Failed to load AdminLeads:", err);
+    return Promise.reject(err);
+  }),
+  <Loading size="lg" className="min-h-[400px]" />
+);
+
+export const LazyAdminUsers = createLazyComponent(
+  () => import("./admin/AdminUsers").catch(err => {
+    console.error("Failed to load AdminUsers:", err);
+    return Promise.reject(err);
+  }),
+  <Loading size="lg" className="min-h-[400px]" />
+);

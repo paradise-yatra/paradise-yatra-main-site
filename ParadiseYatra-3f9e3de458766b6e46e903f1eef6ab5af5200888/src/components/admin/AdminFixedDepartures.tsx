@@ -12,6 +12,7 @@ import ImageUpload from "@/components/ui/image-upload";
 import { useLocations } from "@/hooks/useLocations";
 import Image from "next/image";
 import { getImageUrl } from "@/lib/utils";
+import ConfirmationDialog from "@/components/ui/confirmation-dialog";
 
 interface FixedDeparture {
   _id: string;
@@ -45,6 +46,7 @@ const AdminFixedDepartures = () => {
   const [showForm, setShowForm] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [searchTerm, setSearchTerm] = useState('');
+  const [deleteId, setDeleteId] = useState<string | null>(null);
 
   // Use locations hook for dynamic data
   const { countries, states, loading: locationsLoading, fetchStates, clearStates } = useLocations();
@@ -249,8 +251,6 @@ const AdminFixedDepartures = () => {
   };
 
   const handleDelete = async (id: string) => {
-    if (!confirm('Are you sure you want to delete this fixed departure?')) return;
-
     try {
       const response = await fetch(`/api/fixed-departures/${id}`, {
         method: 'DELETE',
@@ -549,7 +549,7 @@ const AdminFixedDepartures = () => {
                   <Edit className="w-4 h-4 mr-1" />
                   Edit
                 </Button>
-                <Button className="bg-red-600 text-white hover:bg-red-700" size="sm" variant="outline" onClick={() => handleDelete(departure._id)}>
+                <Button className="bg-red-600 text-white hover:bg-red-700" size="sm" variant="outline" onClick={() => setDeleteId(departure._id)}>
                   <Trash2 className="w-4 h-4" />
                 </Button>
               </div>
@@ -1029,6 +1029,17 @@ const AdminFixedDepartures = () => {
           </div>
         </div>
       )}
+      <ConfirmationDialog
+        isOpen={deleteId !== null}
+        onClose={() => setDeleteId(null)}
+        onConfirm={() => {
+          if (deleteId) {
+            handleDelete(deleteId);
+          }
+        }}
+        title="Delete Fixed Departure"
+        message="Are you sure you want to delete this fixed departure? This action cannot be undone."
+      />
     </div>
   );
 };

@@ -52,6 +52,53 @@ const Header = () => {
   const { navItems, loading } = useNavigation();
   const router = useRouter();
 
+  // Fetch India states and International countries from all-packages API
+  const [indiaStates, setIndiaStates] = useState<string[]>([]);
+  const [internationalCountries, setInternationalCountries] = useState<string[]>([]);
+  const [locationsLoading, setLocationsLoading] = useState(true);
+
+  useEffect(() => {
+    const fetchLocations = async () => {
+      try {
+        setLocationsLoading(true);
+
+        // Fetch India states
+        const indiaResponse = await fetch("/api/all-packages?tourType=india&limit=200&isActive=true", { cache: 'no-store' });
+        if (indiaResponse.ok) {
+          const indiaData = await indiaResponse.json();
+          const packages = indiaData.packages || [];
+          const uniqueStates = Array.from(new Set(
+            packages
+              .map((pkg: any) => pkg.state)
+              .filter((state: string) => state && state.trim() !== '')
+              .map((state: string) => state.trim())
+          )).sort();
+          setIndiaStates(uniqueStates as string[]);
+        }
+
+        // Fetch International countries
+        const intlResponse = await fetch("/api/all-packages?tourType=international&limit=200&isActive=true", { cache: 'no-store' });
+        if (intlResponse.ok) {
+          const intlData = await intlResponse.json();
+          const packages = intlData.packages || [];
+          const uniqueCountries = Array.from(new Set(
+            packages
+              .map((pkg: any) => pkg.country)
+              .filter((country: string) => country && country.trim() !== '')
+              .map((country: string) => country.trim())
+          )).sort();
+          setInternationalCountries(uniqueCountries as string[]);
+        }
+      } catch (error) {
+        console.error("Error fetching locations:", error);
+      } finally {
+        setLocationsLoading(false);
+      }
+    };
+
+    fetchLocations();
+  }, []);
+
   // Filter out Fixed Departure items from navigation
   const filteredNavItems = navItems.filter(item => item.name !== "Fixed Departure");
 
@@ -197,7 +244,49 @@ const Header = () => {
 
       {/* <div className="pointer-events-none absolute top-0 left-0 w-full h-22 bg-gradient-to-b from-black/60 via-black/20 to-transparent z-[-1]" /> */}
 
-      <div className="pointer-events-none absolute top-0 left-0 w-full h-22 bg-gradient-to-b from-black/65 from-0% via-black/25 via-40% via-black/8 via-70% to-transparent to-100% z-[-1]" />
+      <div className="pointer-events-none absolute top-0 left-0 w-full h-32 bg-gradient-to-b from-black/40 from-0% via-black/15 via-40% via-black/5 via-70% to-transparent to-100% z-[-1]" />
+
+      {/* Top Banner - Char Dham Yatra */}
+      <div className={`w-full transition-all duration-300 ${isTransparent ? "bg-black/30" : "bg-blue-600"} backdrop-blur-md border-b border-white/10 relative z-10`}>
+        <div className="max-w-6xl mx-auto px-4 py-1.5 flex justify-center items-center">
+          <motion.div
+            initial={{ opacity: 0, y: -10 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.5 }}
+            className="flex items-center gap-4 md:gap-8"
+          >
+            <div className="hidden sm:flex items-center gap-1">
+              {[1, 2, 3].map((i) => (
+                <div
+                  key={`left-${i}`}
+                  className="w-1 h-1 rounded-full bg-[#FDA800] animate-pulse"
+                  style={{ animationDelay: `${i * 200}ms` }}
+                />
+              ))}
+            </div>
+
+            <a
+              href="/package/theme/char-dham-yatra"
+              className="text-xs md:text-sm font-black tracking-[0.2em] text-white hover:text-[#FDA800] transition-all duration-300 uppercase flex items-center gap-2"
+            >
+              <Star className="w-3 h-3 md:w-4 md:h-4 fill-[#FDA800] text-[#FDA800] animate-spin-slow" />
+              Char Dham Yatra 2026
+              <Star className="w-3 h-3 md:w-4 md:h-4 fill-[#FDA800] text-[#FDA800] animate-spin-slow" />
+            </a>
+
+            <div className="hidden sm:flex items-center gap-1">
+              {[3, 2, 1].map((i) => (
+                <div
+                  key={`right-${i}`}
+                  className="w-1 h-1 rounded-full bg-[#FDA800] animate-pulse"
+                  style={{ animationDelay: `${i * 200}ms` }}
+                />
+              ))}
+            </div>
+          </motion.div>
+        </div>
+      </div>
+
       {/* Main header */}
       <motion.div
         initial={{ opacity: 0, y: -20 }}
@@ -205,7 +294,7 @@ const Header = () => {
         transition={{ delay: 0.3, duration: 0.5 }}
         className={`transition-all duration-300 ${isTransparent
           ? "bg-transparent border-transparent"
-          : "bg-white border-gray-100/50 shadow-sm"
+          : "bg-white border-b border-gray-100/50 shadow-[0_1px_2px_rgba(0,0,0,0.02)]"
           }`}
       >
         <div className="max-w-6xl mx-auto px-4 md:px-6">
@@ -287,30 +376,30 @@ const Header = () => {
 
 
                             // Special handling for India Tour Package - compact grid layout showing states
-                            if (
-                              item.name === "India Tour Package" &&
-                              subItem.destinations &&
-                              subItem.destinations.length > 0
-                            ) {
+                            if (item.name === "India Tour Package") {
                               // Only render once to show all states in grid
                               if (subIndex === 0) {
                                 return (
                                   <div key="india-states-grid" className="p-2.5">
-                                    <div className="grid grid-cols-3 gap-x-2.5 gap-y-1">
-                                      {item.submenu.map((stateItem, stateIndex) => (
-                                        <a
-                                          key={stateIndex}
-                                          href={`/packages/india/${stateItem.name
-                                            .toLowerCase()
-                                            .replace(/\s+/g, "-")}`}
-                                          onClick={() => setIsNavigating(true)}
-                                          className="text-sm cursor-pointer text-slate-900 hover:text-blue-600 font-bold py-1 px-1.5 rounded-sm hover:bg-gradient-to-r hover:from-blue-50/80 hover:to-indigo-50/80 transition-all duration-200 truncate whitespace-nowrap border border-transparent hover:border-blue-100"
-                                          title={stateItem.name}
-                                        >
-                                          {stateItem.name}
-                                        </a>
-                                      ))}
-                                    </div>
+                                    {locationsLoading ? (
+                                      <div className="text-center py-4 text-sm text-slate-500">Loading states...</div>
+                                    ) : indiaStates.length > 0 ? (
+                                      <div className="grid grid-cols-3 gap-x-2.5 gap-y-1">
+                                        {indiaStates.map((state, stateIndex) => (
+                                          <a
+                                            key={stateIndex}
+                                            href={`/package/india/${state.toLowerCase().replace(/\s+/g, "-")}`}
+                                            onClick={() => setIsNavigating(true)}
+                                            className="text-sm cursor-pointer text-slate-900 hover:text-blue-600 font-bold py-1 px-1.5 rounded-sm hover:bg-gradient-to-r hover:from-blue-50/80 hover:to-indigo-50/80 transition-all duration-200 truncate whitespace-nowrap border border-transparent hover:border-blue-100"
+                                            title={state}
+                                          >
+                                            {state}
+                                          </a>
+                                        ))}
+                                      </div>
+                                    ) : (
+                                      <div className="text-center py-4 text-sm text-slate-500">No states found</div>
+                                    )}
                                   </div>
                                 );
                               }
@@ -318,30 +407,30 @@ const Header = () => {
                             }
 
                             // Special handling for International Tour - compact grid layout showing countries
-                            if (
-                              item.name === "International Tour" &&
-                              subItem.destinations &&
-                              subItem.destinations.length > 0
-                            ) {
+                            if (item.name === "International Tour") {
                               // Only render once to show all countries in grid
                               if (subIndex === 0) {
                                 return (
                                   <div key="international-countries-grid" className="p-2.5">
-                                    <div className="grid grid-cols-3 gap-x-2.5 gap-y-1">
-                                      {item.submenu.map((countryItem, countryIndex) => (
-                                        <a
-                                          key={countryIndex}
-                                          href={`/packages/international/${countryItem.name
-                                            .toLowerCase()
-                                            .replace(/\s+/g, "-")}`}
-                                          onClick={() => setIsNavigating(true)}
-                                          className="text-sm cursor-pointer text-slate-900 hover:text-blue-600 font-bold py-1 px-1.5 rounded-sm hover:bg-gradient-to-r hover:from-blue-50/80 hover:to-indigo-50/80 transition-all duration-200 truncate whitespace-nowrap border border-transparent hover:border-blue-100"
-                                          title={countryItem.name}
-                                        >
-                                          {countryItem.name}
-                                        </a>
-                                      ))}
-                                    </div>
+                                    {locationsLoading ? (
+                                      <div className="text-center py-4 text-sm text-slate-500">Loading countries...</div>
+                                    ) : internationalCountries.length > 0 ? (
+                                      <div className="grid grid-cols-3 gap-x-2.5 gap-y-1">
+                                        {internationalCountries.map((country, countryIndex) => (
+                                          <a
+                                            key={countryIndex}
+                                            href={`/package/international/${country.toLowerCase().replace(/\s+/g, "-")}`}
+                                            onClick={() => setIsNavigating(true)}
+                                            className="text-sm cursor-pointer text-slate-900 hover:text-blue-600 font-bold py-1 px-1.5 rounded-sm hover:bg-gradient-to-r hover:from-blue-50/80 hover:to-indigo-50/80 transition-all duration-200 truncate whitespace-nowrap border border-transparent hover:border-blue-100"
+                                            title={country}
+                                          >
+                                            {country}
+                                          </a>
+                                        ))}
+                                      </div>
+                                    ) : (
+                                      <div className="text-center py-4 text-sm text-slate-500">No countries found</div>
+                                    )}
                                   </div>
                                 );
                               }

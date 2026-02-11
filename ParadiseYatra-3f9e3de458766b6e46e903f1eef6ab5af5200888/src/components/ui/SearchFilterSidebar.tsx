@@ -26,7 +26,7 @@ const SearchFilterSidebar: React.FC<SearchFilterSidebarProps> = ({
 }) => {
     return (
         <div className="flex flex-col h-full">
-            <div className="p-6 pb-4 flex-shrink-0 flex items-center justify-between border-b border-slate-100">
+            <div className="p-6 pb-4 flex-shrink-0 flex items-center justify-between">
                 <div className="flex items-center gap-2">
                     <h2 className="!text-lg !font-bold !text-slate-900 !uppercase">Filters</h2>
                 </div>

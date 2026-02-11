@@ -59,22 +59,22 @@ const IndiaTourPackages = () => {
     const fetchIndiaStates = async () => {
       try {
         setLoading(true);
-        
+
         // Fetch tour types and packages in parallel
         const [tourTypesResponse, packagesResponse] = await Promise.all([
           fetch("/api/tour-types"),
           fetch("/api/packages?tourType=india&limit=100")
         ]);
-        
+
         if (!tourTypesResponse.ok) throw new Error("Failed to fetch India tour data");
-        
+
         const tourTypesData = await tourTypesResponse.json();
         const packagesData = packagesResponse.ok ? await packagesResponse.json() : { packages: [] };
         const packages = Array.isArray(packagesData) ? packagesData : (packagesData.packages || []);
-        
+
         // Find India tour type
         const indiaTourType = tourTypesData.tourTypes?.find((tour: any) => tour.tourType === 'india');
-        
+
         if (!indiaTourType || !indiaTourType.states) {
           setStates([]);
           return;
@@ -95,13 +95,13 @@ const IndiaTourPackages = () => {
           // Get first destination/package image from this state
           let image = FALLBACK_IMAGE;
           let minPrice = 0;
-          
+
           if (state.destinations && state.destinations.length > 0) {
             // Get image from first destination
             const firstItem = state.destinations[0];
             image = firstItem.image || FALLBACK_IMAGE;
           }
-          
+
           // Get minimum price from packages for this state
           const statePackages = packagesByState[state.name] || [];
           if (statePackages.length > 0) {
@@ -112,7 +112,7 @@ const IndiaTourPackages = () => {
               minPrice = Math.min(...prices);
             }
           }
-          
+
           return {
             name: state.name,
             image: image,
@@ -233,11 +233,10 @@ const IndiaTourPackages = () => {
               <button
                 onClick={handlePrevious}
                 disabled={!canGoPrevious}
-                className={`absolute left-0 top-1/2 -translate-y-1/2 z-10 w-10 h-10 rounded-full bg-white shadow-lg flex items-center justify-center transition-all duration-300 ${
-                  !canGoPrevious
+                className={`absolute left-0 top-1/2 -translate-y-1/2 z-10 w-10 h-10 rounded-full bg-white shadow-lg flex items-center justify-center transition-all duration-300 ${!canGoPrevious
                     ? "opacity-50 cursor-not-allowed"
                     : "hover:scale-110 hover:shadow-xl cursor-pointer"
-                }`}
+                  }`}
                 aria-label="Previous"
               >
                 <ChevronLeft className="w-5 h-5 text-slate-700" />
@@ -245,11 +244,10 @@ const IndiaTourPackages = () => {
               <button
                 onClick={handleNext}
                 disabled={!canGoNext}
-                className={`absolute right-0 top-1/2 -translate-y-1/2 z-10 w-10 h-10 rounded-full bg-white shadow-lg flex items-center justify-center transition-all duration-300 ${
-                  !canGoNext
+                className={`absolute right-0 top-1/2 -translate-y-1/2 z-10 w-10 h-10 rounded-full bg-white shadow-lg flex items-center justify-center transition-all duration-300 ${!canGoNext
                     ? "opacity-50 cursor-not-allowed"
                     : "hover:scale-110 hover:shadow-xl cursor-pointer"
-                }`}
+                  }`}
                 aria-label="Next"
               >
                 <ChevronRight className="w-5 h-5 text-slate-700" />
@@ -264,7 +262,7 @@ const IndiaTourPackages = () => {
                 {states.map((state) => (
                   <Link
                     key={state.name}
-                    href={`/packages/india/${state.name.toLowerCase().replace(/\s+/g, "-")}`}
+                    href={`/package/india/${state.name.toLowerCase().replace(/\s+/g, "-")}`}
                     className="flex-shrink-0 w-[280px]"
                     style={{ scrollSnapAlign: 'start' }}
                   >
@@ -302,7 +300,7 @@ const IndiaTourPackages = () => {
               {visibleStates.map((state) => (
                 <Link
                   key={state.name}
-                  href={`/packages/india/${state.name.toLowerCase().replace(/\s+/g, "-")}`}
+                  href={`/package/india/${state.name.toLowerCase().replace(/\s+/g, "-")}`}
                   className="flex-1 max-w-[220px]"
                 >
                   <div className="bg-white rounded-t-3xl rounded-b-lg shadow-md overflow-hidden hover:shadow-xl hover:-translate-y-2 transition-all duration-300">
