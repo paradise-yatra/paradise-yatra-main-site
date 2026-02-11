@@ -114,9 +114,11 @@ const faqRoutes = require("./routes/faq");
 const tagRoutes = require("./routes/tags");
 const leadRoutes = require("./routes/leads");
 const wishlistRoutes = require("./routes/wishlist");
+const allPackageRoutes = require("./routes/allPackages");
 
 app.use("/api/auth", authRoutes);
 app.use("/api/packages", packageRoutes);
+app.use("/api/all-packages", allPackageRoutes);
 app.use("/api/destinations", destinationRoutes);
 app.use("/api/blogs", blogRoutes);
 app.use("/api/admin", adminRoutes);

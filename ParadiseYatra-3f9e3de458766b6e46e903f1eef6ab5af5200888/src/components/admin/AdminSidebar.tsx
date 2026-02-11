@@ -14,7 +14,10 @@ import {
   LogOut,
   Map,
   HelpCircle,
-  Tag
+  Tag,
+  Package,
+  Users,
+  User
 } from "lucide-react";
 import Image from "next/image";
 
@@ -40,6 +43,20 @@ const AdminSidebar = ({
       id: "dashboard",
       label: "Dashboard",
       icon: BarChart3,
+      hasSubmenu: false,
+      hasNotification: false,
+    },
+    {
+      id: "leads",
+      label: "Leads",
+      icon: Users,
+      hasSubmenu: false,
+      hasNotification: false,
+    },
+    {
+      id: "users",
+      label: "Users",
+      icon: User,
       hasSubmenu: false,
       hasNotification: false,
     },
@@ -96,34 +113,12 @@ const AdminSidebar = ({
       isHeader: true,
     },
     {
-      id: "popular-destinations",
-      label: "Popular Destinations",
-      icon: Mountain,
+      id: "all-packages",
+      label: "Packages",
+      icon: Package,
       hasSubmenu: false,
       hasNotification: false,
     },
-    {
-      id: "premium-packages",
-      label: "Premium Packages",
-      icon: Star,
-      hasSubmenu: false,
-      hasNotification: false,
-    },
-    {
-      id: "adventure-packages",
-      label: "Adventure Packages",
-      icon: Compass,
-      hasSubmenu: false,
-      hasNotification: false,
-    },
-    {
-      id: "holiday-types",
-      label: "Holiday Types",
-      icon: Calendar,
-      hasSubmenu: false,
-      hasNotification: false,
-    },
-
     {
       id: "fixed-departures",
       label: "Fixed Departures",
@@ -139,26 +134,13 @@ const AdminSidebar = ({
       hasNotification: false,
     },
     {
-      id: "trending-destinations",
-      label: "Trending Destinations",
-      icon: Mountain,
-      hasSubmenu: false,
-      hasNotification: false,
-    },
-    {
       id: "tags",
       label: "Tags Management",
       icon: Tag,
       hasSubmenu: false,
       hasNotification: false,
     },
-    {
-      id: "recently-booked",
-      label: "Recently Booked",
-      icon: Calendar,
-      hasSubmenu: false,
-      hasNotification: false,
-    },
+
     {
       id: "addons3",
       label: "CONTENT & SEO",

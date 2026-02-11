@@ -66,22 +66,22 @@ const InternationalTourPackages = () => {
     const fetchInternationalCountries = async () => {
       try {
         setLoading(true);
-        
+
         // Fetch tour types and packages in parallel
         const [tourTypesResponse, packagesResponse] = await Promise.all([
           fetch("/api/tour-types"),
           fetch("/api/packages?tourType=international&limit=100")
         ]);
-        
+
         if (!tourTypesResponse.ok) throw new Error("Failed to fetch International tour data");
-        
+
         const tourTypesData = await tourTypesResponse.json();
         const packagesData = packagesResponse.ok ? await packagesResponse.json() : { packages: [] };
         const packages = Array.isArray(packagesData) ? packagesData : (packagesData.packages || []);
-        
+
         // Find International tour type
         const internationalTourType = tourTypesData.tourTypes?.find((tour: any) => tour.tourType === 'international');
-        
+
         if (!internationalTourType || !internationalTourType.countries) {
           setCountries([]);
           return;
@@ -102,7 +102,7 @@ const InternationalTourPackages = () => {
           // Get first destination/package image from this country
           let image = FALLBACK_IMAGE;
           let minPrice = 0;
-          
+
           // Get image from first state's first destination
           if (country.states && country.states.length > 0) {
             const firstState = country.states[0];
@@ -111,7 +111,7 @@ const InternationalTourPackages = () => {
               image = firstItem.image || FALLBACK_IMAGE;
             }
           }
-          
+
           // Get minimum price from packages for this country
           const countryPackages = packagesByCountry[country.name] || [];
           if (countryPackages.length > 0) {
@@ -122,12 +122,12 @@ const InternationalTourPackages = () => {
               minPrice = Math.min(...prices);
             }
           }
-          
+
           // Count total destinations across all states
           const totalDestinations = country.states?.reduce((acc: number, state: any) => {
             return acc + (state.destinations?.length || 0);
           }, 0) || 0;
-          
+
           return {
             name: country.name,
             image: image,
@@ -247,11 +247,10 @@ const InternationalTourPackages = () => {
               <button
                 onClick={handlePrevious}
                 disabled={!canGoPrevious}
-                className={`absolute left-0 top-1/2 -translate-y-1/2 z-10 w-10 h-10 rounded-full bg-white shadow-lg flex items-center justify-center transition-all duration-300 ${
-                  !canGoPrevious
+                className={`absolute left-0 top-1/2 -translate-y-1/2 z-10 w-10 h-10 rounded-full bg-white shadow-lg flex items-center justify-center transition-all duration-300 ${!canGoPrevious
                     ? "opacity-50 cursor-not-allowed"
                     : "hover:scale-110 hover:shadow-xl cursor-pointer"
-                }`}
+                  }`}
                 aria-label="Previous"
               >
                 <ChevronLeft className="w-5 h-5 text-slate-700" />
@@ -259,11 +258,10 @@ const InternationalTourPackages = () => {
               <button
                 onClick={handleNext}
                 disabled={!canGoNext}
-                className={`absolute right-0 top-1/2 -translate-y-1/2 z-10 w-10 h-10 rounded-full bg-white shadow-lg flex items-center justify-center transition-all duration-300 ${
-                  !canGoNext
+                className={`absolute right-0 top-1/2 -translate-y-1/2 z-10 w-10 h-10 rounded-full bg-white shadow-lg flex items-center justify-center transition-all duration-300 ${!canGoNext
                     ? "opacity-50 cursor-not-allowed"
                     : "hover:scale-110 hover:shadow-xl cursor-pointer"
-                }`}
+                  }`}
                 aria-label="Next"
               >
                 <ChevronRight className="w-5 h-5 text-slate-700" />
@@ -278,7 +276,7 @@ const InternationalTourPackages = () => {
                 {countries.map((country) => (
                   <Link
                     key={country.name}
-                    href={`/packages/international/${country.name.toLowerCase().replace(/\s+/g, "-")}`}
+                    href={`/package/international/${country.name.toLowerCase().replace(/\s+/g, "-")}`}
                     className="flex-shrink-0 w-[280px]"
                     style={{ scrollSnapAlign: 'start' }}
                   >
@@ -316,7 +314,7 @@ const InternationalTourPackages = () => {
               {visibleCountries.map((country) => (
                 <Link
                   key={country.name}
-                  href={`/packages/international/${country.name.toLowerCase().replace(/\s+/g, "-")}`}
+                  href={`/package/international/${country.name.toLowerCase().replace(/\s+/g, "-")}`}
                   className="flex-1 max-w-[220px]"
                 >
                   <div className="bg-white rounded-t-3xl rounded-b-lg shadow-md overflow-hidden hover:shadow-xl hover:-translate-y-2 transition-all duration-300">

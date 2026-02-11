@@ -22,9 +22,18 @@ const tagSchema = new mongoose.Schema(
         packages: [
             {
                 type: mongoose.Schema.Types.ObjectId,
-                ref: "Package",
+                ref: "AllPackage",
             },
         ],
+        parent: {
+            type: mongoose.Schema.Types.ObjectId,
+            ref: "Tag",
+            default: null,
+        },
+        image: {
+            type: String,
+            trim: true,
+        },
     },
     {
         timestamps: true,

@@ -36,8 +36,12 @@ export default function DestinationsPage() {
                 const data = await response.json();
                 // Unwrap the destinations array
                 setDestinations(data.destinations || (Array.isArray(data) ? data : []));
-            } catch (err: any) {
-                setError(err.message);
+            } catch (err: unknown) {
+                if (err instanceof Error) {
+                    setError(err.message);
+                } else {
+                    setError("An unknown error occurred");
+                }
             } finally {
                 setLoading(false);
             }

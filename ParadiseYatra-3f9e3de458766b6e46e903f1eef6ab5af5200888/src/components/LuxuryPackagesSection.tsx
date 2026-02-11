@@ -54,20 +54,33 @@ const LuxuryPackagesSection = () => {
         const fetchLuxuryPackages = async () => {
             try {
                 setLoading(true);
-                // Fetching "Premium Packages" as requested to match NewPremiumPackages data source
-                const response = await fetch("/api/packages?category=Premium%20Packages&limit=10");
+                // Fetch the 'luxury' tag specifically to get its curated packages from the all-packages system
+                const response = await fetch("/api/tags/slug/luxury", { cache: 'no-store' });
 
                 if (!response.ok) {
                     throw new Error("Failed to fetch luxury packages");
                 }
 
-                const data = await response.json();
-                console.log("Fetched luxury packages:", data);
-                const packagesData = Array.isArray(data) ? data : (data.packages || []);
-                setPackages(packagesData);
+                const json = await response.json();
+                const packagesData = (json.success && json.data && json.data.packages) ? json.data.packages : [];
+
+                // Map to LuxuryPackage format with fallbacks
+                const mappedPackages: LuxuryPackage[] = packagesData.map((pkg: any) => ({
+                    _id: pkg._id,
+                    destination: pkg.location || pkg.destination || pkg.state || pkg.country || "India",
+                    duration: pkg.duration || "5N/6D",
+                    title: pkg.name || pkg.title || "Luxury Package",
+                    price: pkg.price || 0,
+                    images: pkg.image ? [pkg.image] : (pkg.images || []),
+                    slug: pkg.slug || pkg._id,
+                    shortDescription: pkg.shortDescription || "",
+                }));
+
+                setPackages(mappedPackages);
 
             } catch (error) {
                 console.error("Error fetching luxury packages:", error);
+                setPackages([]);
             } finally {
                 setLoading(false);
             }
@@ -174,7 +187,7 @@ const LuxuryPackagesSection = () => {
 
             <div className="relative mx-auto flex max-w-6xl flex-col gap-10">
                 {/* Header */}
-                <div className="flex flex-col gap-1 md:flex-row md:items-end md:justify-between mb-2">
+                <div className="flex flex-col gap-4 md:flex-row md:items-end md:justify-between mb-2">
                     <div className="flex flex-col gap-1">
                         <span
                             className="text-amber-400 font-black tracking-wider text-xs uppercase flex items-center gap-2"
@@ -197,6 +210,15 @@ const LuxuryPackagesSection = () => {
                             Experience the ultimate in travel excellence with our handpicked collection of elite escapes.
                         </p>
                     </div>
+
+                    <Link
+                        href="/package/theme/luxury"
+                        className="group flex items-center gap-2 text-white font-bold text-sm bg-amber-600/20 hover:bg-amber-600 border border-amber-500/30 px-6 py-3 rounded-xl transition-all duration-300 w-fit shrink-0"
+                        style={{ fontFamily: "'Orange Avenue', serif" }}
+                    >
+                        View All Luxury
+                        <ArrowRight className="h-4 w-4 group-hover:translate-x-1 transition-transform" />
+                    </Link>
                 </div>
 
                 {/* Carousel */}
@@ -219,7 +241,7 @@ const LuxuryPackagesSection = () => {
                         }}
                     >
                         {packages.map((pkg) => (
-                            <Link href={`/itinerary/${pkg.slug || pkg._id}`} key={pkg._id} className="block h-full">
+                            <Link href={`/package/${pkg.slug || pkg._id}`} key={pkg._id} className="block h-full">
                                 <article
                                     className="group cursor-pointer bg-white rounded-lg overflow-hidden border border-gray-100 scroll-snap-align-center md:scroll-snap-align-start transition-all duration-300 hover:shadow-xl relative w-[260px] min-w-[260px] md:w-[265px] md:min-w-[265px] max-w-[260px] md:max-w-[265px] h-full flex flex-col"
                                 >

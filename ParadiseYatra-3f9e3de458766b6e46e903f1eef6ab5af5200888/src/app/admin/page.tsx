@@ -22,6 +22,9 @@ import {
   LazyAdminItinerary,
   LazyAdminPopularDestinations,
   LazyAdminTags,
+  LazyAdminPackages,
+  LazyAdminLeads,
+  LazyAdminUsers,
 } from "@/components/lazy-admin-components";
 import AdminFAQ from "@/components/admin/AdminFAQ";
 
@@ -34,18 +37,15 @@ type AdminSection =
   | "cta-section"
   | "stats"
   | "menu"
-  | "popular-destinations"
   | "seo"
   | "blogs"
-  | "trending-destinations"
-  | "recently-booked"
-  | "premium-packages"
-  | "adventure-packages"
-  | "holiday-types"
   | "fixed-departures"
   | "itinerary"
   | "faq"
-  | "tags";
+  | "tags"
+  | "all-packages"
+  | "leads"
+  | "users";
 
 const AdminPage = () => {
   const [activeSection, setActiveSection] = useState<AdminSection>("dashboard");
@@ -153,8 +153,6 @@ const AdminPage = () => {
         return <LazyAdminStats />;
       case "menu":
         return <LazyAdminMenu />;
-      case "popular-destinations":
-        return <LazyAdminPopularDestinations />;
       case "seo":
         return <LazyAdminSEO />;
       case "blogs":
@@ -164,16 +162,6 @@ const AdminPage = () => {
             onActionComplete={() => setBlogAction(null)}
           />
         );
-      case "trending-destinations":
-        return <LazyAdminTrendingDestinations />;
-      case "recently-booked":
-        return <LazyAdminRecentlyBooked />;
-      case "premium-packages":
-        return <LazyAdminPremiumPackages />;
-      case "adventure-packages":
-        return <LazyAdminAdventurePackages />;
-      case "holiday-types":
-        return <LazyAdminHolidayTypes />;
       case "fixed-departures":
         return <LazyAdminFixedDepartures />;
       case "itinerary":
@@ -182,6 +170,12 @@ const AdminPage = () => {
         return <AdminFAQ />;
       case "tags":
         return <LazyAdminTags />;
+      case "all-packages":
+        return <LazyAdminPackages />;
+      case "leads":
+        return <LazyAdminLeads />;
+      case "users":
+        return <LazyAdminUsers />;
 
       default:
         return <LazyAdminDashboard />;

@@ -4,6 +4,7 @@ const { adminAuth } = require("../middleware/auth");
 const {
     getAllTags,
     getTag,
+    getTagBySlug,
     createTag,
     updateTag,
     deleteTag,
@@ -14,6 +15,7 @@ const {
 // Public routes
 router.get("/", getAllTags);
 router.get("/:id", getTag);
+router.get("/slug/:slug", getTagBySlug);
 
 // Admin routes
 router.post("/", adminAuth, createTag);

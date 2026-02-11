@@ -240,6 +240,12 @@ const packageSchema = new mongoose.Schema(
       trim: true,
       default: "Paradise Yatra",
     },
+    tags: [
+      {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: "Tag",
+      },
+    ],
   },
   {
     timestamps: true,

@@ -56,6 +56,7 @@ const register = async (req, res) => {
         id: user._id,
         name: user.name,
         email: user.email,
+        phone: user.phone,
         role: user.role,
       },
     });
@@ -70,6 +71,10 @@ const login = async (req, res) => {
   try {
     const { email, password } = req.body;
 
+    if (!email || !password) {
+      return res.status(400).json({ message: "Email and password are required." });
+    }
+
     // Find user - Try both collections
     let user = await Signup.findOne({ email });
     if (!user) {
@@ -78,6 +83,11 @@ const login = async (req, res) => {
 
     if (!user) {
       return res.status(400).json({ message: "Invalid credentials." });
+    }
+
+    // Check if user has a password set (might be a Google-only account)
+    if (!user.password) {
+      return res.status(400).json({ message: "Invalid credentials. Please login with Google." });
     }
 
     // Check password
@@ -101,6 +111,7 @@ const login = async (req, res) => {
         id: user._id,
         name: user.name,
         email: user.email,
+        phone: user.phone,
         role: user.role,
       },
     });
@@ -188,7 +199,7 @@ const changePassword = async (req, res) => {
 // Google Login
 const googleLogin = async (req, res) => {
   try {
-    const { idToken } = req.body;
+    const { idToken, phone } = req.body;
     const ticket = await client.verifyIdToken({
       idToken,
       audience: process.env.GOOGLE_CLIENT_ID,
@@ -206,15 +217,17 @@ const googleLogin = async (req, res) => {
       user = new Signup({
         name,
         email,
+        phone,
         googleId,
         picture,
         isActive: true,
       });
       await user.save();
     } else {
-      // Update existing user's Google info
+      // Update existing user's Google info and phone if provided
       user.googleId = googleId;
       if (picture) user.picture = picture;
+      if (phone && !user.phone) user.phone = phone;
       await user.save();
     }
 
@@ -228,8 +241,9 @@ const googleLogin = async (req, res) => {
         id: user._id,
         name: user.name,
         email: user.email,
+        phone: user.phone,
         role: user.role,
-        picture: picture,
+        picture: user.picture || picture,
       },
     });
   } catch (error) {

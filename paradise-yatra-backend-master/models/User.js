@@ -44,7 +44,7 @@ const userSchema = new mongoose.Schema({
   },
   wishlist: [{
     type: mongoose.Schema.Types.ObjectId,
-    ref: 'Package'
+    ref: 'AllPackage'
   }]
 }, {
   timestamps: true
@@ -65,6 +65,7 @@ userSchema.pre('save', async function (next) {
 
 // Method to compare password
 userSchema.methods.comparePassword = async function (candidatePassword) {
+  if (!this.password) return false;
   return bcrypt.compare(candidatePassword, this.password);
 };
 

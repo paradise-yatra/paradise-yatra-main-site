@@ -1,7 +1,7 @@
 "use client";
 
-import { useState, useEffect } from "react";
-import { motion } from "framer-motion";
+import { useState, useEffect, useMemo } from "react";
+import { motion, AnimatePresence } from "framer-motion";
 import {
   Plus,
   Edit,
@@ -17,48 +17,22 @@ import {
   Globe,
   Plane,
   Mountain,
-  Star
+  Search,
+  ChevronRight,
+  ChevronDown,
+  Star,
+  Tag
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
-
 
 interface DayItinerary {
   day: number;
   title: string;
   activities: string[];
   image: string;
-}
-
-interface Package {
-  _id: string;
-  title: string;
-  slug: string;
-  itinerary: DayItinerary[];
-  category: string;
-  duration: string;
-  destination: string;
-  highlights: string[];
-  inclusions: string[];
-  exclusions: string[];
-  terms?: string[];
-}
-
-interface HolidayType {
-  _id: string;
-  title: string;
-  slug: string;
-  itinerary: DayItinerary[];
-  duration: string;
-  travelers: string;
-  badge: string;
-  price: string;
-  highlights: string[];
-  inclusions: string[];
-  exclusions: string[];
-  terms?: string[];
 }
 
 interface FixedDeparture {
@@ -76,6 +50,11 @@ interface FixedDeparture {
   inclusions: string[];
   exclusions: string[];
   terms?: string[];
+  image?: string;
+  country?: string;
+  state?: string;
+  tourType?: string;
+  tags?: string[];
 }
 
 interface PopularDestinationPackage {
@@ -100,38 +79,19 @@ interface PopularDestinationPackage {
   isTrending: boolean;
   visitCount: number;
   itinerary: DayItinerary[];
+  tags?: string[];
 }
 
-interface AdventurePackage {
-  _id: string;
-  title: string;
-  destination: string;
-  duration: string;
-  price: number;
-  category: string;
-  itinerary: DayItinerary[];
-  isActive: boolean;
-  highlights: string[];
-  inclusions: string[];
-  exclusions: string[];
-  terms?: string[];
-}
-
-type ItemType = 'trending' | 'premium' | 'package' | 'holiday' | 'fixed-departure' | 'popular-destination' | 'adventure';
+type ItemType = 'fixed-departure' | 'all-package';
 
 interface SelectedItem {
   type: ItemType;
-  data: Package | HolidayType | FixedDeparture | PopularDestinationPackage | AdventurePackage;
+  data: PopularDestinationPackage | FixedDeparture;
 }
 
 const AdminItinerary = () => {
-  const [trendingPackages, setTrendingPackages] = useState<Package[]>([]);
-  const [premiumPackages, setPremiumPackages] = useState<Package[]>([]);
-  const [packages, setPackages] = useState<Package[]>([]);
-  const [holidayTypes, setHolidayTypes] = useState<HolidayType[]>([]);
   const [fixedDepartures, setFixedDepartures] = useState<FixedDeparture[]>([]);
-  const [popularDestinationPackages, setPopularDestinationPackages] = useState<PopularDestinationPackage[]>([]);
-  const [adventurePackages, setAdventurePackages] = useState<AdventurePackage[]>([]);
+  const [allPackages, setAllPackages] = useState<PopularDestinationPackage[]>([]);
   const [selectedItem, setSelectedItem] = useState<SelectedItem | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [isEditing, setIsEditing] = useState(false);
@@ -140,20 +100,43 @@ const AdminItinerary = () => {
   const [isSaving, setIsSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
+
+  // Search and Filter States
+  const [searchTerm, setSearchTerm] = useState("");
+  const [activeTab, setActiveTab] = useState<ItemType>('all-package');
+
+  // Edit Sections States
   const [isEditingHighlights, setIsEditingHighlights] = useState(false);
   const [packageHighlights, setPackageHighlights] = useState<string[]>([]);
   const [isEditingInclusions, setIsEditingInclusions] = useState(false);
   const [packageInclusions, setPackageInclusions] = useState<string[]>([]);
   const [isEditingExclusions, setIsEditingExclusions] = useState(false);
   const [packageExclusions, setPackageExclusions] = useState<string[]>([]);
-  const [isEditingTerms, setIsEditingTerms] = useState(false);
-  const [packageTerms, setPackageTerms] = useState<string[]>([]);
   const [newDay, setNewDay] = useState<Partial<DayItinerary>>({
     day: 1,
     title: "",
     activities: [""],
     image: ""
   });
+
+  const [allTags, setAllTags] = useState<any[]>([]);
+  const [selectedTag, setSelectedTag] = useState<string | null>(null);
+  const [selectedTourType, setSelectedTourType] = useState<string | null>(null);
+  const [selectedCountry, setSelectedCountry] = useState<string | null>(null);
+  const [selectedState, setSelectedState] = useState<string | null>(null);
+
+  // Derived unique values for filters
+  const uniqueCountries = useMemo(() => {
+    const list = activeTab === 'all-package' ? allPackages : fixedDepartures;
+    const countries = new Set(list.map(item => (item as any).country).filter(Boolean));
+    return Array.from(countries).sort();
+  }, [allPackages, fixedDepartures, activeTab]);
+
+  const uniqueStates = useMemo(() => {
+    const list = activeTab === 'all-package' ? allPackages : fixedDepartures;
+    const states = new Set(list.map(item => (item as any).state).filter(Boolean));
+    return Array.from(states).sort();
+  }, [allPackages, fixedDepartures, activeTab]);
 
   useEffect(() => {
     fetchData();
@@ -164,169 +147,52 @@ const AdminItinerary = () => {
       setIsLoading(true);
       setError(null);
 
-      // Fetch trending packages, premium packages, packages, holiday types, fixed departures, popular destinations, and adventure packages
       const token = localStorage.getItem('adminToken');
       const headers = {
         'Content-Type': 'application/json',
         ...(token && { 'Authorization': `Bearer ${token}` })
       };
 
-      const [trendingPackagesResponse, premiumPackagesResponse, packagesResponse, holidayTypesResponse, fixedDeparturesResponse, popularDestinationsResponse, adventurePackagesResponse] = await Promise.all([
-        fetch('/api/packages?category=Trending%20Destinations', { headers }),
-        fetch('/api/packages?category=Premium%20Packages', { headers }),
-        fetch('/api/packages', { headers }),
-        fetch('/api/holiday-types'),
-        fetch('/api/fixed-departures'),
-        fetch('/api/destinations'),
-        fetch('/api/packages?category=Adventure%20Tours')
+      const [fixedDeparturesResponse, allPackagesResponse, tagsResponse] = await Promise.all([
+        fetch('/api/fixed-departures', { headers }),
+        fetch('/api/all-packages', { headers }),
+        fetch('/api/tags', { headers })
       ]);
 
-      if (!trendingPackagesResponse.ok) {
-        throw new Error('Failed to fetch trending packages');
-      }
-      if (!premiumPackagesResponse.ok) {
-        throw new Error('Failed to fetch premium packages');
-      }
-      if (!packagesResponse.ok) {
-        throw new Error('Failed to fetch packages');
-      }
-      if (!holidayTypesResponse.ok) {
-        throw new Error('Failed to fetch holiday types');
-      }
-      if (!fixedDeparturesResponse.ok) {
-        throw new Error('Failed to fetch fixed departures');
-      }
-      if (!popularDestinationsResponse.ok) {
-        throw new Error('Failed to fetch popular destination packages');
-      }
-      if (!adventurePackagesResponse.ok) {
-        throw new Error('Failed to fetch adventure packages');
-      }
+      if (!fixedDeparturesResponse.ok) throw new Error('Failed to fetch fixed departures');
+      if (!allPackagesResponse.ok) throw new Error('Failed to fetch all packages');
+      if (!tagsResponse.ok) throw new Error('Failed to fetch tags');
 
-      const trendingPackagesData = await trendingPackagesResponse.json();
-      const premiumPackagesData = await premiumPackagesResponse.json();
-      const packagesData = await packagesResponse.json();
-      const holidayTypesData = await holidayTypesResponse.json();
       const fixedDeparturesData = await fixedDeparturesResponse.json();
-      const popularDestinationsData = await popularDestinationsResponse.json();
-      const adventurePackagesData = await adventurePackagesResponse.json();
+      const allPackagesData = await allPackagesResponse.json();
+      const tagsData = await tagsResponse.json();
 
-      // Ensure all trending packages have itinerary arrays
-      const normalizedTrendingPackages = (Array.isArray(trendingPackagesData) ? trendingPackagesData : (trendingPackagesData.packages || trendingPackagesData)).map((pkg: {
-        _id: string;
-        itinerary?: Array<{
-          day: number;
-          title: string;
-          activities: string[];
-          image: string;
-        }>;
-      }) => ({
-        ...pkg,
-        itinerary: Array.isArray(pkg.itinerary) ? pkg.itinerary : []
-      }));
-      setTrendingPackages(Array.isArray(normalizedTrendingPackages) ? normalizedTrendingPackages : []);
+      setAllTags(Array.isArray(tagsData) ? tagsData : (tagsData.tags || []));
 
-      // Ensure all premium packages have itinerary arrays
-      const normalizedPremiumPackages = (Array.isArray(premiumPackagesData) ? premiumPackagesData : (premiumPackagesData.packages || premiumPackagesData)).map((pkg: {
-        _id: string;
-        itinerary?: Array<{
-          day: number;
-          title: string;
-          activities: string[];
-          image: string;
-        }>;
-      }) => ({
-        ...pkg,
-        itinerary: Array.isArray(pkg.itinerary) ? pkg.itinerary : []
-      }));
-      setPremiumPackages(Array.isArray(normalizedPremiumPackages) ? normalizedPremiumPackages : []);
+      const fixedDeparturesArray = Array.isArray(fixedDeparturesData)
+        ? fixedDeparturesData
+        : Array.isArray(fixedDeparturesData?.fixedDepartures)
+          ? fixedDeparturesData.fixedDepartures
+          : [];
 
-      // Ensure all packages have itinerary arrays
-      const normalizedPackages = (packagesData.packages || packagesData).map((pkg: {
-        _id: string;
-        itinerary?: Array<{
-          day: number;
-          title: string;
-          activities: string[];
-          image: string;
-        }>;
-      }) => ({
-        ...pkg,
-        itinerary: Array.isArray(pkg.itinerary) ? pkg.itinerary : []
-      }));
-      setPackages(normalizedPackages);
-
-      // Ensure all holiday types have itinerary arrays
-      const normalizedHolidayTypes = holidayTypesData.map((holiday: {
-        _id: string;
-        itinerary?: Array<{
-          day: number;
-          title: string;
-          activities: string[];
-          image: string;
-        }>;
-      }) => ({
-        ...holiday,
-        itinerary: Array.isArray(holiday.itinerary) ? holiday.itinerary : []
-      }));
-      setHolidayTypes(normalizedHolidayTypes);
-
-      // Ensure all fixed departures have itinerary arrays
-      const normalizedFixedDepartures = (fixedDeparturesData.fixedDepartures || fixedDeparturesData).map((departure: {
-        _id: string;
-        itinerary?: Array<{
-          day: number;
-          title: string;
-          activities: string[];
-          image: string;
-        }>;
-      }) => ({
+      const normalizedFixedDepartures = fixedDeparturesArray.map((departure: any) => ({
         ...departure,
         itinerary: Array.isArray(departure.itinerary) ? departure.itinerary : []
       }));
       setFixedDepartures(normalizedFixedDepartures);
-      // Ensure popularDestinationPackages is always an array
-      const popularDestinationsArray = Array.isArray(popularDestinationsData)
-        ? popularDestinationsData
-        : Array.isArray(popularDestinationsData.destinations)
-          ? popularDestinationsData.destinations
-          : Array.isArray(popularDestinationsData.packages)
-            ? popularDestinationsData.packages
-            : [];
-      // Ensure all popular destination packages have itinerary arrays
-      const normalizedPopularDestinations = popularDestinationsArray.map((dest: {
-        _id: string;
-        itinerary?: Array<{
-          day: number;
-          title: string;
-          activities: string[];
-          image: string;
-        }>;
-      }) => ({
-        ...dest,
-        itinerary: Array.isArray(dest.itinerary) ? dest.itinerary : []
-      }));
-      setPopularDestinationPackages(normalizedPopularDestinations);
 
-      // Ensure all adventure packages have itinerary arrays
-      const adventurePackagesArray = Array.isArray(adventurePackagesData)
-        ? adventurePackagesData
-        : Array.isArray(adventurePackagesData.packages)
-          ? adventurePackagesData.packages
+      const allPackagesArray = Array.isArray(allPackagesData)
+        ? allPackagesData
+        : Array.isArray(allPackagesData?.packages)
+          ? allPackagesData.packages
           : [];
-      const normalizedAdventurePackages = adventurePackagesArray.map((adv: {
-        _id: string;
-        itinerary?: Array<{
-          day: number;
-          title: string;
-          activities: string[];
-          image: string;
-        }>;
-      }) => ({
-        ...adv,
-        itinerary: Array.isArray(adv.itinerary) ? adv.itinerary : []
+
+      const normalizedAllPackages = allPackagesArray.map((pkg: any) => ({
+        ...pkg,
+        itinerary: Array.isArray(pkg.itinerary) ? pkg.itinerary : []
       }));
-      setAdventurePackages(normalizedAdventurePackages);
+      setAllPackages(normalizedAllPackages);
+
     } catch (error) {
       console.error('Error fetching data:', error);
       setError('Failed to load data. Please try again.');
@@ -335,7 +201,6 @@ const AdminItinerary = () => {
     }
   };
 
-  // normalize item data to guarantee arrays for CRUD (prevents undefined errors)
   const normalizeItemData = (item: any) => ({
     ...item,
     itinerary: Array.isArray(item?.itinerary) ? item.itinerary : [],
@@ -345,73 +210,54 @@ const AdminItinerary = () => {
     terms: Array.isArray(item?.terms) ? item.terms : [],
   });
 
-  const handleItemSelect = (type: ItemType, itemId: string) => {
-    let item: Package | HolidayType | FixedDeparture | PopularDestinationPackage | AdventurePackage | null = null;
-
-    if (type === 'trending') {
-      item = trendingPackages.find(p => p._id === itemId) || null;
-    } else if (type === 'premium') {
-      item = premiumPackages.find(p => p._id === itemId) || null;
-    } else if (type === 'package') {
-      item = packages.find(p => p._id === itemId) || null;
-    } else if (type === 'holiday') {
-      item = holidayTypes.find(h => h._id === itemId) || null;
-    } else if (type === 'fixed-departure') {
-      item = fixedDepartures.find(f => f._id === itemId) || null;
-    } else if (type === 'popular-destination') {
-      item = popularDestinationPackages.find(p => p._id === itemId) || null;
-    } else if (type === 'adventure') {
-      item = adventurePackages.find(a => a._id === itemId) || null;
-    }
-
-    setSelectedItem(item ? {
+  const handleItemSelect = (type: ItemType, item: any) => {
+    setSelectedItem({
       type,
       data: normalizeItemData(item)
-    } : null);
+    });
     setIsEditing(false);
     setEditingDay(null);
     setIsAddingDay(false);
     setError(null);
     setSuccess(null);
-    // Reset newDay state when selecting a new item
-    setNewDay({
-      day: 1,
-      title: "",
-      activities: [""],
-      image: ""
-    });
+    setNewDay({ day: 1, title: "", activities: [""], image: "" });
+    // Scroll to details
+    setTimeout(() => {
+      document.getElementById('itinerary-details')?.scrollIntoView({ behavior: 'smooth' });
+    }, 100);
   };
 
-  const handleEditDay = (day: DayItinerary) => {
-    setEditingDay({
-      ...day,
-      activities: Array.isArray(day.activities) ? day.activities : [""]
+  const filteredItems = useMemo(() => {
+    const list = activeTab === 'all-package' ? allPackages : fixedDepartures;
+    return list.filter(item => {
+      const name = ((item as any).name || (item as any).title || "").toString();
+      const location = ((item as any).location || (item as any).destination || "").toString();
+      const matchesSearch = name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        location.toLowerCase().includes(searchTerm.toLowerCase());
+
+      const itemTags = (item as any).tags || [];
+      const matchesTag = !selectedTag || itemTags.includes(selectedTag);
+
+      const matchesTourType = !selectedTourType || (item as any).tourType === selectedTourType;
+      const matchesCountry = !selectedCountry || (item as any).country === selectedCountry;
+      const matchesState = !selectedState || (item as any).state === selectedState;
+
+      return matchesSearch && matchesTag && matchesTourType && matchesCountry && matchesState;
     });
-    setIsEditing(true);
-    setError(null);
-  };
+  }, [activeTab, allPackages, fixedDepartures, searchTerm, selectedTag, selectedTourType, selectedCountry, selectedState]);
 
   const handleSaveDay = async () => {
     if (!selectedItem || !editingDay) return;
-
     try {
       setIsSaving(true);
       setError(null);
-
       const updatedItinerary = (selectedItem.data.itinerary || []).map(day =>
         day.day === editingDay.day ? editingDay : day
       );
 
-      let endpoint = '';
-      if (selectedItem.type === 'trending' || selectedItem.type === 'premium' || selectedItem.type === 'package' || selectedItem.type === 'adventure') {
-        endpoint = `/api/packages/${selectedItem.data._id}`;
-      } else if (selectedItem.type === 'holiday') {
-        endpoint = `/api/holiday-types/${selectedItem.data._id}`;
-      } else if (selectedItem.type === 'fixed-departure') {
-        endpoint = `/api/fixed-departures/${selectedItem.data._id}`;
-      } else if (selectedItem.type === 'popular-destination') {
-        endpoint = `/api/destinations/${selectedItem.data._id}`;
-      }
+      const endpoint = selectedItem.type === 'fixed-departure'
+        ? `/api/fixed-departures/${selectedItem.data._id}`
+        : `/api/all-packages/${selectedItem.data._id}`;
 
       const response = await fetch(endpoint, {
         method: 'PUT',
@@ -419,62 +265,27 @@ const AdminItinerary = () => {
           'Content-Type': 'application/json',
           'Authorization': `Bearer ${localStorage.getItem('adminToken')}`
         },
-        body: JSON.stringify({
-          itinerary: updatedItinerary
-        })
+        body: JSON.stringify({ itinerary: updatedItinerary })
       });
 
-      if (!response.ok) {
-        const errorData = await response.json().catch(() => ({ message: 'Failed to update day' }));
-        throw new Error(errorData.message || `Failed to update day: ${response.status} ${response.statusText}`);
-      }
+      if (!response.ok) throw new Error('Failed to update day');
 
       const updatedData = await response.json();
-      console.log('Update Day Response:', updatedData);
+      const updatedItem = updatedData.package || updatedData.fixedDeparture || updatedData;
+      const normalized = normalizeItemData(updatedItem);
 
-      let updatedItem;
-      if (selectedItem.type === 'trending' || selectedItem.type === 'premium' || selectedItem.type === 'package' || selectedItem.type === 'adventure') {
-        updatedItem = updatedData.package || updatedData.packages?.[0] || updatedData;
-      } else if (selectedItem.type === 'holiday') {
-        updatedItem = updatedData.holidayType || updatedData;
-      } else if (selectedItem.type === 'fixed-departure') {
-        updatedItem = updatedData.fixedDeparture || updatedData;
-      } else if (selectedItem.type === 'popular-destination') {
-        updatedItem = updatedData.destination || updatedData;
-      }
-
-      if (!updatedItem || !updatedItem._id) {
-        console.error('Invalid response structure:', updatedData);
-        throw new Error('Invalid response from server');
-      }
-
-      const normalized = normalizeItemData({
-        ...updatedItem,
-        itinerary: Array.isArray(updatedItem.itinerary) ? updatedItem.itinerary : updatedItinerary
-      });
       setSelectedItem({ type: selectedItem.type, data: normalized });
-      // keep collections in sync for immediate UI feedback
-      if (selectedItem.type === 'trending') {
-        setTrendingPackages(prev => prev.map(p => p._id === normalized._id ? normalized : p));
-      } else if (selectedItem.type === 'premium') {
-        setPremiumPackages(prev => prev.map(p => p._id === normalized._id ? normalized : p));
-      } else if (selectedItem.type === 'package') {
-        setPackages(prev => prev.map(p => p._id === normalized._id ? normalized : p));
-      } else if (selectedItem.type === 'holiday') {
-        setHolidayTypes(prev => prev.map(p => p._id === normalized._id ? normalized as HolidayType : p));
-      } else if (selectedItem.type === 'fixed-departure') {
-        setFixedDepartures(prev => prev.map(p => p._id === normalized._id ? normalized as FixedDeparture : p));
-      } else if (selectedItem.type === 'popular-destination') {
-        setPopularDestinationPackages(prev => prev.map(p => p._id === normalized._id ? normalized as PopularDestinationPackage : p));
-      } else if (selectedItem.type === 'adventure') {
-        setAdventurePackages(prev => prev.map(p => p._id === normalized._id ? normalized as AdventurePackage : p));
+      if (selectedItem.type === 'fixed-departure') {
+        setFixedDepartures(prev => prev.map(p => p._id === normalized._id ? normalized : p));
+      } else {
+        setAllPackages(prev => prev.map(p => p._id === normalized._id ? normalized : p));
       }
+
       setIsEditing(false);
       setEditingDay(null);
       setSuccess('Day updated successfully!');
       setTimeout(() => setSuccess(null), 3000);
     } catch (error) {
-      console.error('Error updating day:', error);
       setError(error instanceof Error ? error.message : 'Failed to update day');
     } finally {
       setIsSaving(false);
@@ -482,30 +293,16 @@ const AdminItinerary = () => {
   };
 
   const handleDeleteDay = async (dayNumber: number) => {
-    if (!selectedItem) return;
-
-    if (!confirm(`Are you sure you want to delete Day ${dayNumber}?`)) {
-      return;
-    }
-
+    if (!selectedItem || !confirm(`Delete Day ${dayNumber}?`)) return;
     try {
       setIsSaving(true);
-      setError(null);
-
       const updatedItinerary = (selectedItem.data.itinerary || [])
         .filter(day => day.day !== dayNumber)
         .map((day, index) => ({ ...day, day: index + 1 }));
 
-      let endpoint = '';
-      if (selectedItem.type === 'trending' || selectedItem.type === 'premium' || selectedItem.type === 'package' || selectedItem.type === 'adventure') {
-        endpoint = `/api/packages/${selectedItem.data._id}`;
-      } else if (selectedItem.type === 'holiday') {
-        endpoint = `/api/holiday-types/${selectedItem.data._id}`;
-      } else if (selectedItem.type === 'fixed-departure') {
-        endpoint = `/api/fixed-departures/${selectedItem.data._id}`;
-      } else if (selectedItem.type === 'popular-destination') {
-        endpoint = `/api/destinations/${selectedItem.data._id}`;
-      }
+      const endpoint = selectedItem.type === 'fixed-departure'
+        ? `/api/fixed-departures/${selectedItem.data._id}`
+        : `/api/all-packages/${selectedItem.data._id}`;
 
       const response = await fetch(endpoint, {
         method: 'PUT',
@@ -513,107 +310,51 @@ const AdminItinerary = () => {
           'Content-Type': 'application/json',
           'Authorization': `Bearer ${localStorage.getItem('adminToken')}`
         },
-        body: JSON.stringify({
-          itinerary: updatedItinerary
-        })
+        body: JSON.stringify({ itinerary: updatedItinerary })
       });
 
-      if (!response.ok) {
-        const errorData = await response.json().catch(() => ({ message: 'Failed to delete day' }));
-        throw new Error(errorData.message || `Failed to delete day: ${response.status} ${response.statusText}`);
-      }
+      if (!response.ok) throw new Error('Failed to delete day');
 
       const updatedData = await response.json();
-      console.log('Delete Day Response:', updatedData);
+      const updatedItem = updatedData.package || updatedData.fixedDeparture || updatedData;
+      const normalized = normalizeItemData(updatedItem);
 
-      let updatedItem;
-      if (selectedItem.type === 'trending' || selectedItem.type === 'premium' || selectedItem.type === 'package' || selectedItem.type === 'adventure') {
-        updatedItem = updatedData.package || updatedData.packages?.[0] || updatedData;
-      } else if (selectedItem.type === 'holiday') {
-        updatedItem = updatedData.holidayType || updatedData;
-      } else if (selectedItem.type === 'fixed-departure') {
-        updatedItem = updatedData.fixedDeparture || updatedData;
-      } else if (selectedItem.type === 'popular-destination') {
-        updatedItem = updatedData.destination || updatedData;
-      }
-
-      if (!updatedItem || !updatedItem._id) {
-        console.error('Invalid response structure:', updatedData);
-        throw new Error('Invalid response from server');
-      }
-
-      const normalized = normalizeItemData({
-        ...updatedItem,
-        itinerary: Array.isArray(updatedItem.itinerary) ? updatedItem.itinerary : updatedItinerary
-      });
       setSelectedItem({ type: selectedItem.type, data: normalized });
-      if (selectedItem.type === 'trending') {
-        setTrendingPackages(prev => prev.map(p => p._id === normalized._id ? normalized : p));
-      } else if (selectedItem.type === 'premium') {
-        setPremiumPackages(prev => prev.map(p => p._id === normalized._id ? normalized : p));
-      } else if (selectedItem.type === 'package') {
-        setPackages(prev => prev.map(p => p._id === normalized._id ? normalized : p));
-      } else if (selectedItem.type === 'holiday') {
-        setHolidayTypes(prev => prev.map(p => p._id === normalized._id ? normalized as HolidayType : p));
-      } else if (selectedItem.type === 'fixed-departure') {
-        setFixedDepartures(prev => prev.map(p => p._id === normalized._id ? normalized as FixedDeparture : p));
-      } else if (selectedItem.type === 'popular-destination') {
-        setPopularDestinationPackages(prev => prev.map(p => p._id === normalized._id ? normalized as PopularDestinationPackage : p));
-      } else if (selectedItem.type === 'adventure') {
-        setAdventurePackages(prev => prev.map(p => p._id === normalized._id ? normalized as AdventurePackage : p));
+      if (selectedItem.type === 'fixed-departure') {
+        setFixedDepartures(prev => prev.map(p => p._id === normalized._id ? normalized : p));
+      } else {
+        setAllPackages(prev => prev.map(p => p._id === normalized._id ? normalized : p));
       }
-      setSuccess('Day deleted successfully!');
+      setSuccess('Day deleted!');
       setTimeout(() => setSuccess(null), 3000);
     } catch (error) {
-      console.error('Error deleting day:', error);
-      setError(error instanceof Error ? error.message : 'Failed to delete day');
+      setError('Failed to delete day');
     } finally {
       setIsSaving(false);
     }
   };
 
   const handleAddDay = async () => {
-    if (!selectedItem) {
-      setError('No package selected');
-      return;
-    }
-
-    // Validate title
-    if (!newDay.title || newDay.title.trim() === "") {
-      setError('Please enter a day title');
-      return;
-    }
-
-    // Validate activities - must have at least one non-empty activity
-    const validActivities = (newDay.activities || []).filter(activity => activity && activity.trim() !== "");
+    if (!selectedItem || !newDay.title) return;
+    const validActivities = (newDay.activities || []).filter(a => a.trim() !== "");
     if (validActivities.length === 0) {
-      setError('Please add at least one activity');
+      setError('Add at least one activity');
       return;
     }
 
     try {
       setIsSaving(true);
-      setError(null);
-
-      const dayToAdd: DayItinerary = {
+      const dayToAdd = {
         day: (selectedItem.data.itinerary || []).length + 1,
         title: newDay.title.trim(),
         activities: validActivities,
         image: ""
       };
-
       const updatedItinerary = [...(selectedItem.data.itinerary || []), dayToAdd];
 
-      let endpoint = '';
-      if (selectedItem.type === 'trending' || selectedItem.type === 'premium' || selectedItem.type === 'package' || selectedItem.type === 'adventure') {
-        endpoint = `/api/packages/${selectedItem.data._id}`;
-      } else if (selectedItem.type === 'holiday') {
-        endpoint = `/api/holiday-types/${selectedItem.data._id}`;
-      } else if (selectedItem.type === 'fixed-departure') {
-        endpoint = `/api/fixed-departures/${selectedItem.data._id}`;
-      } else if (selectedItem.type === 'popular-destination') {
-        endpoint = `/api/destinations/${selectedItem.data._id}`;
-      }
+      const endpoint = selectedItem.type === 'fixed-departure'
+        ? `/api/fixed-departures/${selectedItem.data._id}`
+        : `/api/all-packages/${selectedItem.data._id}`;
 
       const response = await fetch(endpoint, {
         method: 'PUT',
@@ -621,163 +362,39 @@ const AdminItinerary = () => {
           'Content-Type': 'application/json',
           'Authorization': `Bearer ${localStorage.getItem('adminToken')}`
         },
-        body: JSON.stringify({
-          itinerary: updatedItinerary
-        })
+        body: JSON.stringify({ itinerary: updatedItinerary })
       });
 
-      if (!response.ok) {
-        const errorData = await response.json().catch(() => ({ message: 'Failed to add day' }));
-        throw new Error(errorData.message || `Failed to add day: ${response.status} ${response.statusText}`);
-      }
+      if (!response.ok) throw new Error('Failed to add day');
 
       const updatedData = await response.json();
-      console.log('Add Day Response:', updatedData);
+      const updatedItem = updatedData.package || updatedData.fixedDeparture || updatedData;
+      const normalized = normalizeItemData(updatedItem);
 
-      let updatedItem;
-      if (selectedItem.type === 'trending' || selectedItem.type === 'premium' || selectedItem.type === 'package' || selectedItem.type === 'adventure') {
-        updatedItem = updatedData.package || updatedData.packages?.[0] || updatedData;
-      } else if (selectedItem.type === 'holiday') {
-        updatedItem = updatedData.holidayType || updatedData;
-      } else if (selectedItem.type === 'fixed-departure') {
-        updatedItem = updatedData.fixedDeparture || updatedData;
-      } else if (selectedItem.type === 'popular-destination') {
-        updatedItem = updatedData.destination || updatedData;
-      }
-
-      if (!updatedItem || !updatedItem._id) {
-        console.error('Invalid response structure:', updatedData);
-        throw new Error('Invalid response from server');
-      }
-
-      const normalized = normalizeItemData({
-        ...updatedItem,
-        itinerary: Array.isArray(updatedItem.itinerary) ? updatedItem.itinerary : updatedItinerary
-      });
       setSelectedItem({ type: selectedItem.type, data: normalized });
-      if (selectedItem.type === 'trending') {
-        setTrendingPackages(prev => prev.map(p => p._id === normalized._id ? normalized : p));
-      } else if (selectedItem.type === 'premium') {
-        setPremiumPackages(prev => prev.map(p => p._id === normalized._id ? normalized : p));
-      } else if (selectedItem.type === 'package') {
-        setPackages(prev => prev.map(p => p._id === normalized._id ? normalized : p));
-      } else if (selectedItem.type === 'holiday') {
-        setHolidayTypes(prev => prev.map(p => p._id === normalized._id ? normalized as HolidayType : p));
-      } else if (selectedItem.type === 'fixed-departure') {
-        setFixedDepartures(prev => prev.map(p => p._id === normalized._id ? normalized as FixedDeparture : p));
-      } else if (selectedItem.type === 'popular-destination') {
-        setPopularDestinationPackages(prev => prev.map(p => p._id === normalized._id ? normalized as PopularDestinationPackage : p));
-      } else if (selectedItem.type === 'adventure') {
-        setAdventurePackages(prev => prev.map(p => p._id === normalized._id ? normalized as AdventurePackage : p));
+      if (selectedItem.type === 'fixed-departure') {
+        setFixedDepartures(prev => prev.map(p => p._id === normalized._id ? normalized : p));
+      } else {
+        setAllPackages(prev => prev.map(p => p._id === normalized._id ? normalized : p));
       }
       setIsAddingDay(false);
-      setNewDay({
-        day: 1,
-        title: "",
-        activities: [""],
-        image: ""
-      });
-      setSuccess('Day added successfully!');
+      setNewDay({ day: 1, title: "", activities: [""], image: "" });
+      setSuccess('Day added!');
       setTimeout(() => setSuccess(null), 3000);
     } catch (error) {
-      console.error('Error adding day:', error);
-      setError(error instanceof Error ? error.message : 'Failed to add day');
+      setError('Failed to add day');
     } finally {
       setIsSaving(false);
     }
-  };
-
-  const addActivityField = () => {
-    setNewDay(prev => ({
-      ...prev,
-      activities: [...(prev.activities || [""]), ""]
-    }));
-  };
-
-  const updateActivity = (index: number, value: string) => {
-    setNewDay(prev => ({
-      ...prev,
-      activities: (prev.activities || [""]).map((activity, i) => i === index ? value : activity)
-    }));
-  };
-
-  const removeActivity = (index: number) => {
-    setNewDay(prev => ({
-      ...prev,
-      activities: (prev.activities || [""]).filter((_, i) => i !== index)
-    }));
-  };
-
-  const addPackageHighlight = () => {
-    setPackageHighlights(prev => [...prev, ""]);
-  };
-
-  const updatePackageHighlight = (index: number, value: string) => {
-    setPackageHighlights(prev => prev.map((highlight, i) => i === index ? value : highlight));
-  };
-
-  const removePackageHighlight = (index: number) => {
-    setPackageHighlights(prev => prev.filter((_, i) => i !== index));
-  };
-
-  const addPackageInclusion = () => {
-    setPackageInclusions(prev => [...prev, ""]);
-  };
-
-  const updatePackageInclusion = (index: number, value: string) => {
-    setPackageInclusions(prev => prev.map((inclusion, i) => i === index ? value : inclusion));
-  };
-
-  const removePackageInclusion = (index: number) => {
-    setPackageInclusions(prev => prev.filter((_, i) => i !== index));
-  };
-
-  const addPackageExclusion = () => {
-    setPackageExclusions(prev => [...prev, ""]);
-  };
-
-  const updatePackageExclusion = (index: number, value: string) => {
-    setPackageExclusions(prev => prev.map((exclusion, i) => i === index ? value : exclusion));
-  };
-
-  const removePackageExclusion = (index: number) => {
-    setPackageExclusions(prev => prev.filter((_, i) => i !== index));
-  };
-
-  const handleEditHighlights = () => {
-    setPackageHighlights(Array.isArray(selectedItem?.data.highlights) ? selectedItem.data.highlights : []);
-    setIsEditingHighlights(true);
-  };
-
-  const handleEditInclusions = () => {
-    setPackageInclusions(Array.isArray(selectedItem?.data.inclusions) ? selectedItem?.data.inclusions : []);
-    setIsEditingInclusions(true);
-  };
-
-  const handleEditExclusions = () => {
-    setPackageExclusions(Array.isArray(selectedItem?.data.exclusions) ? selectedItem?.data.exclusions : []);
-    setIsEditingExclusions(true);
   };
 
   const handleSaveHighlights = async () => {
     if (!selectedItem) return;
-
     try {
       setIsSaving(true);
-      setError(null);
-
-      const filteredHighlights = packageHighlights.filter(highlight => highlight.trim() !== "");
-
-      let endpoint = '';
-      if (selectedItem.type === 'trending' || selectedItem.type === 'premium' || selectedItem.type === 'package' || selectedItem.type === 'adventure') {
-        endpoint = `/api/packages/${selectedItem.data._id}`;
-      } else if (selectedItem.type === 'holiday') {
-        endpoint = `/api/holiday-types/${selectedItem.data._id}`;
-      } else if (selectedItem.type === 'fixed-departure') {
-        endpoint = `/api/fixed-departures/${selectedItem.data._id}`;
-      } else if (selectedItem.type === 'popular-destination') {
-        endpoint = `/api/destinations/${selectedItem.data._id}`;
-      }
+      const endpoint = selectedItem.type === 'fixed-departure'
+        ? `/api/fixed-departures/${selectedItem.data._id}`
+        : `/api/all-packages/${selectedItem.data._id}`;
 
       const response = await fetch(endpoint, {
         method: 'PUT',
@@ -785,85 +402,25 @@ const AdminItinerary = () => {
           'Content-Type': 'application/json',
           'Authorization': `Bearer ${localStorage.getItem('adminToken')}`
         },
-        body: JSON.stringify({
-          highlights: filteredHighlights
-        })
+        body: JSON.stringify({ highlights: packageHighlights.filter(h => h.trim()) })
       });
-
-      if (!response.ok) {
-        const errorData = await response.json().catch(() => ({ message: 'Failed to update highlights' }));
-        throw new Error(errorData.message || `Failed to update highlights: ${response.status} ${response.statusText}`);
-      }
 
       const updatedData = await response.json();
-      console.log('Update Highlights Response:', updatedData);
-
-      let updatedItem;
-      if (selectedItem.type === 'trending' || selectedItem.type === 'premium' || selectedItem.type === 'package' || selectedItem.type === 'adventure') {
-        updatedItem = updatedData.package || updatedData.packages?.[0] || updatedData;
-      } else if (selectedItem.type === 'holiday') {
-        updatedItem = updatedData.holidayType || updatedData;
-      } else if (selectedItem.type === 'fixed-departure') {
-        updatedItem = updatedData.fixedDeparture || updatedData;
-      } else if (selectedItem.type === 'popular-destination') {
-        updatedItem = updatedData.destination || updatedData;
-      }
-
-      if (!updatedItem || !updatedItem._id) {
-        console.error('Invalid response structure:', updatedData);
-        throw new Error('Invalid response from server');
-      }
-
-      const normalized = normalizeItemData({
-        ...updatedItem,
-        itinerary: Array.isArray(updatedItem.itinerary) ? updatedItem.itinerary : (selectedItem.data.itinerary || [])
-      });
+      const updatedItem = updatedData.package || updatedData.fixedDeparture || updatedData;
+      const normalized = normalizeItemData(updatedItem);
       setSelectedItem({ type: selectedItem.type, data: normalized });
-      if (selectedItem.type === 'trending') {
-        setTrendingPackages(prev => prev.map(p => p._id === normalized._id ? normalized : p));
-      } else if (selectedItem.type === 'premium') {
-        setPremiumPackages(prev => prev.map(p => p._id === normalized._id ? normalized : p));
-      } else if (selectedItem.type === 'package') {
-        setPackages(prev => prev.map(p => p._id === normalized._id ? normalized : p));
-      } else if (selectedItem.type === 'holiday') {
-        setHolidayTypes(prev => prev.map(p => p._id === normalized._id ? normalized as HolidayType : p));
-      } else if (selectedItem.type === 'fixed-departure') {
-        setFixedDepartures(prev => prev.map(p => p._id === normalized._id ? normalized as FixedDeparture : p));
-      } else if (selectedItem.type === 'popular-destination') {
-        setPopularDestinationPackages(prev => prev.map(p => p._id === normalized._id ? normalized as PopularDestinationPackage : p));
-      } else if (selectedItem.type === 'adventure') {
-        setAdventurePackages(prev => prev.map(p => p._id === normalized._id ? normalized as AdventurePackage : p));
-      }
       setIsEditingHighlights(false);
-      setSuccess('Highlights updated successfully!');
-      setTimeout(() => setSuccess(null), 3000);
-    } catch (error) {
-      console.error('Error updating highlights:', error);
-      setError(error instanceof Error ? error.message : 'Failed to update highlights');
-    } finally {
-      setIsSaving(false);
-    }
+      setSuccess('Highlights saved!');
+    } catch (e) { setError('Failed to save highlights'); } finally { setIsSaving(false); }
   };
 
   const handleSaveInclusions = async () => {
     if (!selectedItem) return;
-
     try {
       setIsSaving(true);
-      setError(null);
-
-      const filteredInclusions = packageInclusions.filter(inclusion => inclusion.trim() !== "");
-
-      let endpoint = '';
-      if (selectedItem.type === 'trending' || selectedItem.type === 'premium' || selectedItem.type === 'package' || selectedItem.type === 'adventure') {
-        endpoint = `/api/packages/${selectedItem.data._id}`;
-      } else if (selectedItem.type === 'holiday') {
-        endpoint = `/api/holiday-types/${selectedItem.data._id}`;
-      } else if (selectedItem.type === 'fixed-departure') {
-        endpoint = `/api/fixed-departures/${selectedItem.data._id}`;
-      } else if (selectedItem.type === 'popular-destination') {
-        endpoint = `/api/destinations/${selectedItem.data._id}`;
-      }
+      const endpoint = selectedItem.type === 'fixed-departure'
+        ? `/api/fixed-departures/${selectedItem.data._id}`
+        : `/api/all-packages/${selectedItem.data._id}`;
 
       const response = await fetch(endpoint, {
         method: 'PUT',
@@ -871,85 +428,25 @@ const AdminItinerary = () => {
           'Content-Type': 'application/json',
           'Authorization': `Bearer ${localStorage.getItem('adminToken')}`
         },
-        body: JSON.stringify({
-          inclusions: filteredInclusions
-        })
+        body: JSON.stringify({ inclusions: packageInclusions.filter(i => i.trim()) })
       });
-
-      if (!response.ok) {
-        const errorData = await response.json().catch(() => ({ message: 'Failed to update inclusions' }));
-        throw new Error(errorData.message || `Failed to update inclusions: ${response.status} ${response.statusText}`);
-      }
 
       const updatedData = await response.json();
-      console.log('Update Inclusions Response:', updatedData);
-
-      let updatedItem;
-      if (selectedItem.type === 'trending' || selectedItem.type === 'premium' || selectedItem.type === 'package' || selectedItem.type === 'adventure') {
-        updatedItem = updatedData.package || updatedData.packages?.[0] || updatedData;
-      } else if (selectedItem.type === 'holiday') {
-        updatedItem = updatedData.holidayType || updatedData;
-      } else if (selectedItem.type === 'fixed-departure') {
-        updatedItem = updatedData.fixedDeparture || updatedData;
-      } else if (selectedItem.type === 'popular-destination') {
-        updatedItem = updatedData.destination || updatedData;
-      }
-
-      if (!updatedItem || !updatedItem._id) {
-        console.error('Invalid response structure:', updatedData);
-        throw new Error('Invalid response from server');
-      }
-
-      const normalized = normalizeItemData({
-        ...updatedItem,
-        itinerary: Array.isArray(updatedItem.itinerary) ? updatedItem.itinerary : (selectedItem.data.itinerary || [])
-      });
+      const updatedItem = updatedData.package || updatedData.fixedDeparture || updatedData;
+      const normalized = normalizeItemData(updatedItem);
       setSelectedItem({ type: selectedItem.type, data: normalized });
-      if (selectedItem.type === 'trending') {
-        setTrendingPackages(prev => prev.map(p => p._id === normalized._id ? normalized : p));
-      } else if (selectedItem.type === 'premium') {
-        setPremiumPackages(prev => prev.map(p => p._id === normalized._id ? normalized : p));
-      } else if (selectedItem.type === 'package') {
-        setPackages(prev => prev.map(p => p._id === normalized._id ? normalized : p));
-      } else if (selectedItem.type === 'holiday') {
-        setHolidayTypes(prev => prev.map(p => p._id === normalized._id ? normalized as HolidayType : p));
-      } else if (selectedItem.type === 'fixed-departure') {
-        setFixedDepartures(prev => prev.map(p => p._id === normalized._id ? normalized as FixedDeparture : p));
-      } else if (selectedItem.type === 'popular-destination') {
-        setPopularDestinationPackages(prev => prev.map(p => p._id === normalized._id ? normalized as PopularDestinationPackage : p));
-      } else if (selectedItem.type === 'adventure') {
-        setAdventurePackages(prev => prev.map(p => p._id === normalized._id ? normalized as AdventurePackage : p));
-      }
       setIsEditingInclusions(false);
-      setSuccess('Inclusions updated successfully!');
-      setTimeout(() => setSuccess(null), 3000);
-    } catch (error) {
-      console.error('Error updating inclusions:', error);
-      setError(error instanceof Error ? error.message : 'Failed to update inclusions');
-    } finally {
-      setIsSaving(false);
-    }
+      setSuccess('Inclusions saved!');
+    } catch (e) { setError('Failed to save inclusions'); } finally { setIsSaving(false); }
   };
 
   const handleSaveExclusions = async () => {
     if (!selectedItem) return;
-
     try {
       setIsSaving(true);
-      setError(null);
-
-      const filteredExclusions = packageExclusions.filter(exclusion => exclusion.trim() !== "");
-
-      let endpoint = '';
-      if (selectedItem.type === 'trending' || selectedItem.type === 'premium' || selectedItem.type === 'package' || selectedItem.type === 'adventure') {
-        endpoint = `/api/packages/${selectedItem.data._id}`;
-      } else if (selectedItem.type === 'holiday') {
-        endpoint = `/api/holiday-types/${selectedItem.data._id}`;
-      } else if (selectedItem.type === 'fixed-departure') {
-        endpoint = `/api/fixed-departures/${selectedItem.data._id}`;
-      } else if (selectedItem.type === 'popular-destination') {
-        endpoint = `/api/destinations/${selectedItem.data._id}`;
-      }
+      const endpoint = selectedItem.type === 'fixed-departure'
+        ? `/api/fixed-departures/${selectedItem.data._id}`
+        : `/api/all-packages/${selectedItem.data._id}`;
 
       const response = await fetch(endpoint, {
         method: 'PUT',
@@ -957,1565 +454,522 @@ const AdminItinerary = () => {
           'Content-Type': 'application/json',
           'Authorization': `Bearer ${localStorage.getItem('adminToken')}`
         },
-        body: JSON.stringify({
-          exclusions: filteredExclusions
-        })
+        body: JSON.stringify({ exclusions: packageExclusions.filter(e => e.trim()) })
       });
-
-      if (!response.ok) {
-        const errorData = await response.json().catch(() => ({ message: 'Failed to update exclusions' }));
-        throw new Error(errorData.message || `Failed to update exclusions: ${response.status} ${response.statusText}`);
-      }
 
       const updatedData = await response.json();
-      console.log('Update Exclusions Response:', updatedData);
-
-      let updatedItem;
-      if (selectedItem.type === 'trending' || selectedItem.type === 'premium' || selectedItem.type === 'package' || selectedItem.type === 'adventure') {
-        updatedItem = updatedData.package || updatedData.packages?.[0] || updatedData;
-      } else if (selectedItem.type === 'holiday') {
-        updatedItem = updatedData.holidayType || updatedData;
-      } else if (selectedItem.type === 'fixed-departure') {
-        updatedItem = updatedData.fixedDeparture || updatedData;
-      } else if (selectedItem.type === 'popular-destination') {
-        updatedItem = updatedData.destination || updatedData;
-      }
-
-      if (!updatedItem || !updatedItem._id) {
-        console.error('Invalid response structure:', updatedData);
-        throw new Error('Invalid response from server');
-      }
-
-      const normalized = normalizeItemData({
-        ...updatedItem,
-        itinerary: Array.isArray(updatedItem.itinerary) ? updatedItem.itinerary : (selectedItem.data.itinerary || [])
-      });
+      const updatedItem = updatedData.package || updatedData.fixedDeparture || updatedData;
+      const normalized = normalizeItemData(updatedItem);
       setSelectedItem({ type: selectedItem.type, data: normalized });
-      if (selectedItem.type === 'trending') {
-        setTrendingPackages(prev => prev.map(p => p._id === normalized._id ? normalized : p));
-      } else if (selectedItem.type === 'premium') {
-        setPremiumPackages(prev => prev.map(p => p._id === normalized._id ? normalized : p));
-      } else if (selectedItem.type === 'package') {
-        setPackages(prev => prev.map(p => p._id === normalized._id ? normalized : p));
-      } else if (selectedItem.type === 'holiday') {
-        setHolidayTypes(prev => prev.map(p => p._id === normalized._id ? normalized as HolidayType : p));
-      } else if (selectedItem.type === 'fixed-departure') {
-        setFixedDepartures(prev => prev.map(p => p._id === normalized._id ? normalized as FixedDeparture : p));
-      } else if (selectedItem.type === 'popular-destination') {
-        setPopularDestinationPackages(prev => prev.map(p => p._id === normalized._id ? normalized as PopularDestinationPackage : p));
-      } else if (selectedItem.type === 'adventure') {
-        setAdventurePackages(prev => prev.map(p => p._id === normalized._id ? normalized as AdventurePackage : p));
-      }
       setIsEditingExclusions(false);
-      setSuccess('Exclusions updated successfully!');
-      setTimeout(() => setSuccess(null), 3000);
-    } catch (error) {
-      console.error('Error updating exclusions:', error);
-      setError(error instanceof Error ? error.message : 'Failed to update exclusions');
-    } finally {
-      setIsSaving(false);
-    }
-  };
-
-  const handleEditTerms = () => {
-    if (!selectedItem) return;
-    setPackageTerms(selectedItem.data.terms || []);
-    setIsEditingTerms(true);
-  };
-
-  const handleSaveTerms = async () => {
-    if (!selectedItem) return;
-
-    try {
-      setIsSaving(true);
-      setError(null);
-
-      const filteredTerms = packageTerms.filter(term => term.trim() !== "");
-
-      let endpoint = '';
-      if (selectedItem.type === 'trending' || selectedItem.type === 'premium' || selectedItem.type === 'package' || selectedItem.type === 'adventure') {
-        endpoint = `/api/packages/${selectedItem.data._id}`;
-      } else if (selectedItem.type === 'holiday') {
-        endpoint = `/api/holiday-types/${selectedItem.data._id}`;
-      } else if (selectedItem.type === 'fixed-departure') {
-        endpoint = `/api/fixed-departures/${selectedItem.data._id}`;
-      } else if (selectedItem.type === 'popular-destination') {
-        endpoint = `/api/destinations/${selectedItem.data._id}`;
-      }
-
-      const response = await fetch(endpoint, {
-        method: 'PUT',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${localStorage.getItem('adminToken')}`
-        },
-        body: JSON.stringify({
-          terms: filteredTerms
-        })
-      });
-
-      if (!response.ok) {
-        const errorData = await response.json().catch(() => ({ message: 'Failed to update terms' }));
-        throw new Error(errorData.message || `Failed to update terms: ${response.status} ${response.statusText}`);
-      }
-
-      const updatedData = await response.json();
-
-      let updatedItem;
-      if (selectedItem.type === 'trending' || selectedItem.type === 'premium' || selectedItem.type === 'package' || selectedItem.type === 'adventure') {
-        updatedItem = updatedData.package || updatedData.packages?.[0] || updatedData;
-      } else if (selectedItem.type === 'holiday') {
-        updatedItem = updatedData.holidayType || updatedData;
-      } else if (selectedItem.type === 'fixed-departure') {
-        updatedItem = updatedData.fixedDeparture || updatedData;
-      } else if (selectedItem.type === 'popular-destination') {
-        updatedItem = updatedData.destination || updatedData;
-      }
-
-      if (!updatedItem || !updatedItem._id) {
-        throw new Error('Invalid response from server');
-      }
-
-      const normalized = normalizeItemData({
-        ...updatedItem,
-        itinerary: Array.isArray(updatedItem.itinerary) ? updatedItem.itinerary : (selectedItem.data.itinerary || [])
-      });
-      setSelectedItem({ type: selectedItem.type, data: normalized });
-      if (selectedItem.type === 'trending') {
-        setTrendingPackages(prev => prev.map(p => p._id === normalized._id ? normalized as Package : p));
-      } else if (selectedItem.type === 'premium') {
-        setPremiumPackages(prev => prev.map(p => p._id === normalized._id ? normalized as Package : p));
-      } else if (selectedItem.type === 'package') {
-        setPackages(prev => prev.map(p => p._id === normalized._id ? normalized as Package : p));
-      } else if (selectedItem.type === 'holiday') {
-        setHolidayTypes(prev => prev.map(p => p._id === normalized._id ? normalized as HolidayType : p));
-      } else if (selectedItem.type === 'fixed-departure') {
-        setFixedDepartures(prev => prev.map(p => p._id === normalized._id ? normalized as FixedDeparture : p));
-      } else if (selectedItem.type === 'popular-destination') {
-        setPopularDestinationPackages(prev => prev.map(p => p._id === normalized._id ? normalized as PopularDestinationPackage : p));
-      } else if (selectedItem.type === 'adventure') {
-        setAdventurePackages(prev => prev.map(p => p._id === normalized._id ? normalized as AdventurePackage : p));
-      }
-      setIsEditingTerms(false);
-      setSuccess('Terms updated successfully!');
-      setTimeout(() => setSuccess(null), 3000);
-    } catch (error) {
-      console.error('Error updating terms:', error);
-      setError(error instanceof Error ? error.message : 'Failed to update terms');
-    } finally {
-      setIsSaving(false);
-    }
-  };
-
-  const updatePackageTerm = (index: number, value: string) => {
-    const newTerms = [...packageTerms];
-    newTerms[index] = value;
-    setPackageTerms(newTerms);
-  };
-
-  const addPackageTerm = () => {
-    setPackageTerms([...packageTerms, ""]);
-  };
-
-  const removePackageTerm = (index: number) => {
-    setPackageTerms(packageTerms.filter((_, i) => i !== index));
-  };
-
-  // Helper function to get display name for different item types
-  const getDisplayName = (item: Package | HolidayType | FixedDeparture | PopularDestinationPackage | AdventurePackage) => {
-    if ('name' in item) {
-      return item.name; // PopularDestinationPackage
-    }
-    return item.title; // Package, HolidayType, FixedDeparture, AdventurePackage
+      setSuccess('Exclusions saved!');
+    } catch (e) { setError('Failed to save exclusions'); } finally { setIsSaving(false); }
   };
 
   if (isLoading) {
     return (
-      <div className="flex items-center justify-center h-64">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+      <div className="flex flex-col items-center justify-center min-h-[400px]">
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
+        <p className="mt-4 text-gray-600 font-medium">Loading packages...</p>
       </div>
     );
   }
 
   return (
-    <motion.div
-      initial={{ opacity: 0, y: 20 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.5 }}
-      className="min-h-screen bg-gradient-to-br from-slate-50 to-blue-50"
-    >
-      <div className="max-w-7xl mx-auto p-6 space-y-8">
-        {/* Enhanced Header */}
-        <div className="bg-white rounded-2xl shadow-xl border border-gray-100 p-8">
-          <div className="flex items-center justify-between">
-            <div className="space-y-3">
-              <div className="flex items-center space-x-3">
-                <div className="p-3 bg-gradient-to-r from-blue-600 to-purple-600 rounded-xl">
-                  <Calendar className="w-8 h-8 text-white" />
-                </div>
-                <div>
-                  <h1 className="text-4xl font-bold bg-gradient-to-r from-gray-900 to-gray-700 bg-clip-text text-transparent">
-                    Itinerary Management
-                  </h1>
-                  <p className="text-gray-600 text-lg mt-1">
-                    Design and manage comprehensive travel itineraries
-                  </p>
-                </div>
+    <div className="min-h-screen bg-gray-50/50 pb-20">
+      <div className="max-w-7xl mx-auto p-4 md:p-8 space-y-8">
+
+        {/* Header Section */}
+        <div className="bg-white rounded-3xl shadow-sm border border-gray-100 p-8">
+          <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
+            <div className="flex items-center gap-4">
+              <div className="p-4 bg-blue-600 rounded-2xl shadow-lg shadow-blue-200">
+                <MapPin className="w-4 h-4 text-white" />
+              </div>
+              <div>
+                <h1 className="!text-3xl font-bold text-gray-900">Itinerary Management</h1>
+                <p className="!text-gray-500 mt-1">Design and customize daily travel experiences</p>
               </div>
             </div>
-            <div className="flex items-center space-x-4">
-              <div className="text-right">
-                <p className="text-sm text-gray-500">Total Packages</p>
-                <p className="text-2xl font-bold text-blue-600">
-                  {trendingPackages.length + premiumPackages.length + holidayTypes.length + fixedDepartures.length + popularDestinationPackages.length + adventurePackages.length}
-                </p>
-              </div>
+            <div className="flex flex-wrap gap-2">
+              <Badge variant="outline" className="px-4 py-2 rounded-xl bg-blue-50 !text-blue-700 border-blue-100">
+                {allPackages.length} Admin Packages
+              </Badge>
+              <Badge variant="outline" className="px-4 py-2 rounded-xl bg-purple-50 text-purple-700 border-purple-100">
+                {fixedDepartures.length} Fixed Departures
+              </Badge>
             </div>
           </div>
         </div>
 
-        {/* Enhanced Error/Success Messages */}
-        {error && (
-          <motion.div
-            initial={{ opacity: 0, y: -20 }}
-            animate={{ opacity: 1, y: 0 }}
-            className="bg-red-50 border-l-4 border-red-400 rounded-lg p-4 flex items-center space-x-3 shadow-sm"
-          >
-            <AlertCircle className="w-6 h-6 text-red-500 flex-shrink-0" />
-            <span className="text-red-700 font-medium">{error}</span>
-          </motion.div>
-        )}
+        {/* Messaging */}
+        <AnimatePresence>
+          {error && (
+            <motion.div initial={{ opacity: 0, y: -20 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }}
+              className="bg-red-50 border border-red-100 rounded-2xl p-4 flex items-center gap-3 text-red-700">
+              <AlertCircle className="w-5 h-5 flex-shrink-0" /> {error}
+            </motion.div>
+          )}
+          {success && (
+            <motion.div initial={{ opacity: 0, y: -20 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }}
+              className="bg-green-50 border border-green-100 rounded-2xl p-4 flex items-center gap-3 text-green-700">
+              <CheckCircle className="w-5 h-5 flex-shrink-0" /> {success}
+            </motion.div>
+          )}
+        </AnimatePresence>
 
-        {success && (
-          <motion.div
-            initial={{ opacity: 0, y: -20 }}
-            animate={{ opacity: 1, y: 0 }}
-            className="bg-green-50 border-l-4 border-green-400 rounded-lg p-4 flex items-center space-x-3 shadow-sm"
-          >
-            <CheckCircle className="w-6 h-6 text-green-500 flex-shrink-0" />
-            <span className="text-green-700 font-medium">{success}</span>
-          </motion.div>
-        )}
+        {/* Selection Area */}
+        <Card className="rounded-3xl shadow-sm border-gray-100 overflow-hidden">
+          <div className="p-8 space-y-8">
+            <div className="flex flex-col gap-6 w-full">
+              <div className="flex flex-col md:flex-row gap-6 items-center justify-between">
+                <div className="flex p-1 bg-gray-100 rounded-2xl w-full md:w-auto">
+                  <button
+                    onClick={() => { setActiveTab('all-package'); setSelectedItem(null); setSelectedTag(null); }}
+                    className={`flex-1 md:flex-none px-4 py-2 rounded-xl text-sm font-semibold transition-all ${activeTab === 'all-package' ? 'bg-white shadow-md text-blue-600' : 'text-gray-500 hover:text-gray-700'}`}
+                  >
+                    Admin Packages
+                  </button>
+                  <button
+                    onClick={() => { setActiveTab('fixed-departure'); setSelectedItem(null); setSelectedTag(null); }}
+                    className={`flex-1 md:flex-none px-8 py-3 rounded-xl text-sm font-semibold transition-all ${activeTab === 'fixed-departure' ? 'bg-white shadow-md text-purple-600' : 'text-gray-500 hover:text-gray-700'}`}
+                  >
+                    Fixed Departures
+                  </button>
+                </div>
 
-        {/* Enhanced Item Selection */}
-        <div className="bg-white rounded-2xl shadow-xl border border-gray-100 overflow-hidden">
-          <div className="bg-gradient-to-r from-blue-600 to-purple-600 p-6">
-            <h2 className="text-2xl font-bold text-white mb-2">Select Travel Package</h2>
-            <p className="text-blue-100">Choose from different types of travel packages to manage their itineraries</p>
-          </div>
+                <div className="relative w-full md:w-96">
+                  <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
+                  <Input
+                    placeholder={`Search by name or location...`}
+                    value={searchTerm}
+                    onChange={(e) => setSearchTerm(e.target.value)}
+                    className="pl-12 py-6 rounded-2xl border-gray-100 bg-gray-50 focus:bg-white transition-all shadow-inner"
+                  />
+                </div>
+              </div>
 
-          <div className="p-6">
-            {/* Modern Tab Navigation */}
-            <div className="flex flex-wrap gap-2 mb-8">
-              {[
-                { type: 'trending', label: 'Trending Packages', icon: Star, count: trendingPackages.length, color: 'orange' },
-                { type: 'premium', label: 'Premium Packages', icon: Star, count: premiumPackages.length, color: 'amber' },
-                { type: 'holiday', label: 'Holiday Types', icon: Globe, count: holidayTypes.length, color: 'green' },
-                { type: 'fixed-departure', label: 'Fixed Departures', icon: Plane, count: fixedDepartures.length, color: 'purple' },
-                { type: 'popular-destination', label: 'Popular Destinations', icon: Mountain, count: popularDestinationPackages.length, color: 'orange' },
-                { type: 'adventure', label: 'Adventure Tours', icon: Star, count: adventurePackages.length, color: 'red' }
-              ].map(({ type, label, icon: Icon, count, color }) => (
-                <button
-                  key={type}
-                  onClick={() => setSelectedItem(null)}
-                  className={`flex items-center space-x-3 px-6 py-3 rounded-xl font-medium transition-all duration-200 ${selectedItem?.type === type
-                    ? `bg-${color}-500 text-white shadow-lg transform scale-105`
-                    : `bg-gray-100 text-gray-700 hover:bg-${color}-50 hover:text-${color}-700`
-                    }`}
-                >
-                  <Icon className="w-5 h-5" />
-                  <span>{label}</span>
-                  <span className={`px-2 py-1 rounded-full text-xs font-bold ${selectedItem?.type === type
-                    ? 'bg-white bg-opacity-20'
-                    : `bg-${color}-100 text-${color}-700`
-                    }`}>
-                    {count}
+              <div className="flex flex-wrap gap-4 items-center bg-gray-50/50 p-4 rounded-2xl border border-gray-100">
+                <div className="flex flex-wrap gap-2 items-center flex-1">
+                  <span className="text-xs font-bold text-gray-400 mr-2 flex items-center gap-1">
+                    <Tag className="w-3 h-3" /> TAGS:
                   </span>
-                </button>
-              ))}
-            </div>
-
-            {/* Enhanced Package Selection Grid */}
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {/* Trending Packages */}
-              <div className="space-y-3">
-                <div className="flex items-center space-x-2">
-                  <Star className="w-5 h-5 text-orange-600" />
-                  <label className="text-sm font-semibold text-gray-900">Trending Packages</label>
-                  <span className="px-2 py-1 bg-orange-100 text-orange-700 text-xs rounded-full font-medium">
-                    {trendingPackages.length}
-                  </span>
-                </div>
-                <select
-                  onChange={(e) => {
-                    if (e.target.value) {
-                      handleItemSelect('trending', e.target.value);
-                    }
-                  }}
-                  className="w-full p-3 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent transition-all duration-200 bg-white hover:border-gray-300"
-                >
-                  <option value="">Select a trending package...</option>
-                  {trendingPackages.map((pkg) => (
-                    <option key={pkg._id} value={pkg._id}>
-                      {pkg.title} - {pkg.category} ({pkg.duration})
-                    </option>
-                  ))}
-                </select>
-              </div>
-
-              {/* Premium Packages */}
-              <div className="space-y-3">
-                <div className="flex items-center space-x-2">
-                  <Star className="w-5 h-5 text-yellow-600" />
-                  <label className="text-sm font-semibold text-gray-900">Premium Packages</label>
-                  <span className="px-2 py-1 bg-yellow-100 text-yellow-700 text-xs rounded-full font-medium">
-                    {premiumPackages.length}
-                  </span>
-                </div>
-                <select
-                  onChange={(e) => {
-                    if (e.target.value) {
-                      handleItemSelect('premium', e.target.value);
-                    }
-                  }}
-                  className="w-full p-3 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-yellow-500 focus:border-transparent transition-all duration-200 bg-white hover:border-gray-300"
-                >
-                  <option value="">Select a premium package...</option>
-                  {premiumPackages.map((pkg) => (
-                    <option key={pkg._id} value={pkg._id}>
-                      {pkg.title} - {pkg.category} ({pkg.duration})
-                    </option>
-                  ))}
-                </select>
-              </div>
-
-              {/* Holiday Types */}
-              <div className="space-y-3">
-                <div className="flex items-center space-x-2">
-                  <Globe className="w-5 h-5 text-green-600" />
-                  <label className="text-sm font-semibold text-gray-900">Holiday Types</label>
-                  <span className="px-2 py-1 bg-green-100 text-green-700 text-xs rounded-full font-medium">
-                    {holidayTypes.length}
-                  </span>
-                </div>
-                <select
-                  onChange={(e) => {
-                    if (e.target.value) {
-                      handleItemSelect('holiday', e.target.value);
-                    }
-                  }}
-                  className="w-full p-3 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent transition-all duration-200 bg-white hover:border-gray-300"
-                >
-                  <option value="">Select a holiday type...</option>
-                  {holidayTypes.map((holiday) => (
-                    <option key={holiday._id} value={holiday._id}>
-                      {holiday.title} - {holiday.badge} ({holiday.duration})
-                    </option>
-                  ))}
-                </select>
-              </div>
-
-              {/* Fixed Departures */}
-              <div className="space-y-3">
-                <div className="flex items-center space-x-2">
-                  <Plane className="w-5 h-5 text-purple-600" />
-                  <label className="text-sm font-semibold text-gray-900">Fixed Departures</label>
-                  <span className="px-2 py-1 bg-purple-100 text-purple-700 text-xs rounded-full font-medium">
-                    {fixedDepartures.length}
-                  </span>
-                </div>
-                <select
-                  onChange={(e) => {
-                    if (e.target.value) {
-                      handleItemSelect('fixed-departure', e.target.value);
-                    }
-                  }}
-                  className="w-full p-3 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all duration-200 bg-white hover:border-gray-300"
-                >
-                  <option value="">Select a fixed departure...</option>
-                  {fixedDepartures.map((departure) => (
-                    <option key={departure._id} value={departure._id}>
-                      {departure.title} - {departure.destination} ({departure.duration})
-                    </option>
-                  ))}
-                </select>
-              </div>
-
-              {/* Popular Destinations */}
-              <div className="space-y-3">
-                <div className="flex items-center space-x-2">
-                  <Mountain className="w-5 h-5 text-orange-600" />
-                  <label className="text-sm font-semibold text-gray-900">Popular Destinations</label>
-                  <span className="px-2 py-1 bg-orange-100 text-orange-700 text-xs rounded-full font-medium">
-                    {popularDestinationPackages.length}
-                  </span>
-                </div>
-                <select
-                  onChange={(e) => {
-                    if (e.target.value) {
-                      handleItemSelect('popular-destination', e.target.value);
-                    }
-                  }}
-                  className="w-full p-3 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent transition-all duration-200 bg-white hover:border-gray-300"
-                >
-                  <option value="">Select a destination...</option>
-                  {Array.isArray(popularDestinationPackages) && popularDestinationPackages.length > 0 ? (
-                    popularDestinationPackages.map((pkg) => (
-                      <option key={pkg._id} value={pkg._id}>
-                        {pkg.name} - {pkg.location} ({pkg.duration})
-                      </option>
-                    ))
-                  ) : (
-                    <option value="" disabled>No destinations available</option>
-                  )}
-                </select>
-              </div>
-
-              {/* Adventure Tours */}
-              <div className="space-y-3">
-                <div className="flex items-center space-x-2">
-                  <Star className="w-5 h-5 text-red-600" />
-                  <label className="text-sm font-semibold text-gray-900">Adventure Tours</label>
-                  <span className="px-2 py-1 bg-red-100 text-red-700 text-xs rounded-full font-medium">
-                    {adventurePackages.length}
-                  </span>
-                </div>
-                <select
-                  onChange={(e) => {
-                    if (e.target.value) {
-                      handleItemSelect('adventure', e.target.value);
-                    }
-                  }}
-                  className="w-full p-3 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-transparent transition-all duration-200 bg-white hover:border-gray-300"
-                >
-                  <option value="">Select an adventure tour...</option>
-                  {Array.isArray(adventurePackages) && adventurePackages.length > 0 ? (
-                    adventurePackages.map((pkg) => (
-                      <option key={pkg._id} value={pkg._id}>
-                        {pkg.title} - {pkg.destination} ({pkg.duration})
-                      </option>
-                    ))
-                  ) : (
-                    <option value="" disabled>No adventure tours available</option>
-                  )}
-                </select>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        {selectedItem && (
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.5 }}
-            className="space-y-8"
-          >
-            {/* Ensure itinerary is always an array */}
-            {(() => {
-              if (!Array.isArray(selectedItem.data.itinerary)) {
-                selectedItem.data.itinerary = [];
-              }
-              return null;
-            })()}
-
-            {/* Enhanced Item Info Card */}
-            <div className="bg-white rounded-2xl shadow-xl border border-gray-100 overflow-hidden">
-              <div className="bg-gradient-to-r from-blue-600 to-purple-600 p-6">
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center space-x-4">
-                    <div className="p-3 bg-white bg-opacity-20 rounded-xl">
-                      {selectedItem.type === 'trending' ? (
-                        <Star className="w-8 h-8 text-orange-500" />
-                      ) : selectedItem.type === 'premium' ? (
-                        <Star className="w-8 h-8 text-amber-500" />
-                      ) : selectedItem.type === 'package' ? (
-                        <Package className="w-8 h-8 text-green-500" />
-                      ) : selectedItem.type === 'holiday' ? (
-                        <Globe className="w-8 h-8 text-purple-500" />
-                      ) : selectedItem.type === 'fixed-departure' ? (
-                        <Plane className="w-8 h-8 text-orange-500" />
-                      ) : selectedItem.type === 'popular-destination' ? (
-                        <Mountain className="w-8 h-8 text-red-500" />
-                      ) : (
-                        <Star className="w-8 h-8 text-700" />
-                      )}
-                    </div>
-                    <div>
-                      <h2 className="text-2xl font-bold text-white">{getDisplayName(selectedItem.data)}</h2>
-                      <p className="!text-blue-100 capitalize">
-                        {selectedItem.type.replace('-', ' ')} Package
-                      </p>
-                    </div>
-                  </div>
-                  <div className="text-right">
-                    <div className="bg-white bg-opacity-20 rounded-xl px-4 py-2">
-                      <p className="!text-slate-900 text-sm font-medium">Itinerary Days</p>
-                      <p className="text-3xl font-bold !text-slate-900">
-                        {(selectedItem.data.itinerary || []).length}
-                      </p>
-                    </div>
-                  </div>
-                </div>
-              </div>
-
-              <div className="p-6">
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-                  {(selectedItem.type === 'trending' || selectedItem.type === 'premium' || selectedItem.type === 'package') ? (
-                    <>
-                      <div className="flex items-center space-x-3 p-4 bg-blue-50 rounded-xl">
-                        <MapPin className="w-6 h-6 text-blue-600" />
-                        <div>
-                          <p className="text-sm !text-gray-500">Destination</p>
-                          <p className="!font-semibold !text-gray-900">{(selectedItem.data as Package).destination}</p>
-                        </div>
-                      </div>
-                      <div className="flex items-center space-x-3 p-4 bg-green-50 rounded-xl">
-                        <Clock className="w-6 h-6 text-green-600" />
-                        <div>
-                          <p className="!text-sm !text-gray-500">Duration</p>
-                          <p className="!font-semibold !text-gray-900">{selectedItem.data.duration}</p>
-                        </div>
-                      </div>
-                      <div className="flex items-center space-x-3 p-4 bg-purple-50 rounded-xl">
-                        <Package className="w-6 h-6 text-purple-600" />
-                        <div>
-                          <p className="text-sm !text-gray-500">Category</p>
-                          <p className="!font-semibold !text-gray-900">{(selectedItem.data as Package).category}</p>
-                        </div>
-                      </div>
-                      <div className="flex items-center space-x-3 p-4 bg-orange-50 rounded-xl">
-                        <Calendar className="w-6 h-6 text-orange-600" />
-                        <div>
-                          <p className="text-sm !text-gray-500">Itinerary Days</p>
-                          <p className="!font-semibold !text-gray-900">{(selectedItem.data.itinerary || []).length} Days</p>
-                        </div>
-                      </div>
-                    </>
-                  ) : selectedItem.type === 'holiday' ? (
-                    <>
-                      <div className="flex items-center space-x-3 p-4 bg-green-50 rounded-xl">
-                        <Globe className="w-6 h-6 text-green-600" />
-                        <div>
-                          <p className="text-sm text-gray-500">Type</p>
-                          <p className="font-semibold text-gray-900">{(selectedItem.data as HolidayType).badge}</p>
-                        </div>
-                      </div>
-                      <div className="flex items-center space-x-3 p-4 bg-blue-50 rounded-xl">
-                        <Clock className="w-6 h-6 text-blue-600" />
-                        <div>
-                          <p className="text-sm text-gray-500">Duration</p>
-                          <p className="font-semibold text-gray-900">{selectedItem.data.duration}</p>
-                        </div>
-                      </div>
-                      <div className="flex items-center space-x-3 p-4 bg-purple-50 rounded-xl">
-                        <Calendar className="w-6 h-6 text-purple-600" />
-                        <div>
-                          <p className="text-sm text-gray-500">Travelers</p>
-                          <p className="font-semibold text-gray-900">{(selectedItem.data as HolidayType).travelers}</p>
-                        </div>
-                      </div>
-                      <div className="flex items-center space-x-3 p-4 bg-orange-50 rounded-xl">
-                        <Calendar className="w-6 h-6 text-orange-600" />
-                        <div>
-                          <p className="text-sm text-gray-500">Itinerary Days</p>
-                          <p className="font-semibold text-gray-900">{(selectedItem.data.itinerary || []).length} Days</p>
-                        </div>
-                      </div>
-                    </>
-                  ) : selectedItem.type === 'fixed-departure' ? (
-                    <>
-                      <div className="flex items-center space-x-3 p-4 bg-purple-50 rounded-xl">
-                        <MapPin className="w-6 h-6 text-purple-600" />
-                        <div>
-                          <p className="text-sm text-gray-500">Destination</p>
-                          <p className="font-semibold text-gray-900">{(selectedItem.data as FixedDeparture).destination}</p>
-                        </div>
-                      </div>
-                      <div className="flex items-center space-x-3 p-4 bg-blue-50 rounded-xl">
-                        <Clock className="w-6 h-6 text-blue-600" />
-                        <div>
-                          <p className="text-sm text-gray-500">Duration</p>
-                          <p className="font-semibold text-gray-900">{selectedItem.data.duration}</p>
-                        </div>
-                      </div>
-                      <div className="flex items-center space-x-3 p-4 bg-green-50 rounded-xl">
-                        <Calendar className="w-6 h-6 text-green-600" />
-                        <div>
-                          <p className="text-sm text-gray-500">Departure</p>
-                          <p className="font-semibold text-gray-900">
-                            {new Date((selectedItem.data as FixedDeparture).departureDate).toLocaleDateString('en-IN', {
-                              day: 'numeric',
-                              month: 'short',
-                              year: 'numeric'
-                            })}
-                          </p>
-                        </div>
-                      </div>
-                      <div className="flex items-center space-x-3 p-4 bg-orange-50 rounded-xl">
-                        <Calendar className="w-6 h-6 text-orange-600" />
-                        <div>
-                          <p className="text-sm text-gray-500">Itinerary Days</p>
-                          <p className="font-semibold text-gray-900">{(selectedItem.data.itinerary || []).length} Days</p>
-                        </div>
-                      </div>
-                    </>
-                  ) : selectedItem.type === 'popular-destination' ? (
-                    <>
-                      <div className="flex items-center space-x-3 p-4 bg-orange-50 rounded-xl">
-                        <MapPin className="w-6 h-6 text-orange-600" />
-                        <div>
-                          <p className="!text-sm !text-gray-500">Location</p>
-                          <p className="!font-semibold !text-gray-900">{(selectedItem.data as PopularDestinationPackage).location}</p>
-                        </div>
-                      </div>
-                      <div className="flex items-center space-x-3 p-4 bg-blue-50 rounded-xl">
-                        <Clock className="w-6 h-6 text-blue-600" />
-                        <div>
-                          <p className="!text-sm !text-gray-500">Duration</p>
-                          <p className="!font-semibold !text-gray-900">{(selectedItem.data as PopularDestinationPackage).duration}</p>
-                        </div>
-                      </div>
-                      <div className="flex items-center space-x-3 p-4 bg-green-50 rounded-xl">
-                        <Mountain className="w-6 h-6 text-green-600" />
-                        <div>
-                          <p className="!text-sm !text-gray-500">Country</p>
-                          <p className="!font-semibold !text-gray-900">{(selectedItem.data as PopularDestinationPackage).country}</p>
-                        </div>
-                      </div>
-                      <div className="flex items-center space-x-3 p-4 bg-purple-50 rounded-xl">
-                        <Calendar className="w-6 h-6 text-purple-600" />
-                        <div>
-                          <p className="!text-sm !text-gray-500">Itinerary Days</p>
-                          <p className="!font-semibold !text-gray-900">{(selectedItem.data.itinerary || []).length} Days</p>
-                        </div>
-                      </div>
-                    </>
-                  ) : (
-                    <>
-                      <div className="flex items-center space-x-3 p-4 bg-red-50 rounded-xl">
-                        <MapPin className="w-6 h-6 text-red-600" />
-                        <div>
-                          <p className="text-sm text-gray-500">Destination</p>
-                          <p className="font-semibold text-gray-900">{(selectedItem.data as AdventurePackage).destination}</p>
-                        </div>
-                      </div>
-                      <div className="flex items-center space-x-3 p-4 bg-blue-50 rounded-xl">
-                        <Clock className="w-6 h-6 text-blue-600" />
-                        <div>
-                          <p className="text-sm text-gray-500">Duration</p>
-                          <p className="font-semibold text-gray-900">{(selectedItem.data as AdventurePackage).duration}</p>
-                        </div>
-                      </div>
-                      <div className="flex items-center space-x-3 p-4 bg-green-50 rounded-xl">
-                        <Star className="w-6 h-6 text-green-600" />
-                        <div>
-                          <p className="text-sm text-gray-500">Category</p>
-                          <p className="font-semibold text-gray-900">{(selectedItem.data as AdventurePackage).category}</p>
-                        </div>
-                      </div>
-                      <div className="flex items-center space-x-3 p-4 bg-purple-50 rounded-xl">
-                        <Calendar className="w-6 h-6 text-purple-600" />
-                        <div>
-                          <p className="text-sm text-gray-500">Itinerary Days</p>
-                          <p className="font-semibold text-gray-900">{(selectedItem.data.itinerary || []).length} Days</p>
-                        </div>
-                      </div>
-                    </>
-                  )}
-                </div>
-              </div>
-            </div>
-
-            {/* Enhanced Package Details Grid */}
-            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-              {/* Package Highlights */}
-              <div className="bg-white rounded-2xl shadow-xl border border-gray-100 overflow-hidden">
-                <div className="bg-gradient-to-r from-green-500 to-emerald-600 p-4">
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center space-x-3">
-                      <div className="p-2 bg-white bg-opacity-20 rounded-lg">
-                        <Star className="w-5 h-5 text-red-400" />
-                      </div>
-                      <h3 className="text-lg font-bold text-white">Highlights</h3>
-                    </div>
-                    <Button
-                      onClick={handleEditHighlights}
-                      variant="ghost"
-                      size="sm"
-                      disabled={isSaving}
-                      className="text-white hover:bg-white  hover:text-slate-900 hover:bg-opacity-20"
+                  <button
+                    onClick={() => setSelectedTag(null)}
+                    className={`px-3 py-1 rounded-full text-[10px] font-bold transition-all border ${!selectedTag ? 'bg-blue-600 text-white border-blue-600 shadow-sm' : 'bg-white text-gray-500 border-gray-200 hover:border-gray-300'}`}
+                  >
+                    All
+                  </button>
+                  {allTags.slice(0, 8).map(tag => (
+                    <button
+                      key={tag._id}
+                      onClick={() => setSelectedTag(selectedTag === tag._id ? null : tag._id)}
+                      className={`px-3 py-1 rounded-full text-[10px] font-bold transition-all border ${selectedTag === tag._id ? 'bg-blue-600 text-white border-blue-600 shadow-sm' : 'bg-white text-gray-500 border-gray-200 hover:border-gray-300'}`}
                     >
-                      <Edit className="w-4 h-4 mr-2" />
-                      Edit
-                    </Button>
-                  </div>
-                </div>
-                <div className="p-6">
-                  {Array.isArray(selectedItem.data.highlights) && selectedItem.data.highlights.length > 0 ? (
-                    <div className="space-y-3">
-                      {selectedItem.data.highlights.map((highlight, idx) => (
-                        <div key={idx} className="flex items-start space-x-3 p-3 bg-green-50 rounded-xl">
-                          <div className="w-2 h-2 bg-green-500 rounded-full mt-2 flex-shrink-0"></div>
-                          <span className="text-sm text-gray-700 font-medium">{highlight}</span>
-                        </div>
-                      ))}
-                    </div>
-                  ) : (
-                    <div className="text-center py-8">
-                      <Star className="w-12 h-12 text-gray-300 mx-auto mb-3" />
-                      <p className="text-gray-500 text-sm">No highlights added yet</p>
-                      <Button
-                        onClick={handleEditHighlights}
-                        variant="outline"
-                        size="sm"
-                        className="mt-3 text-green-600 border-green-200 hover:bg-green-500"
-                      >
-                        Add Highlights
-                      </Button>
-                    </div>
-                  )}
-                </div>
-              </div>
-
-              {/* Package Inclusions */}
-              <div className="bg-white rounded-2xl shadow-xl border border-gray-100 overflow-hidden">
-                <div className="bg-gradient-to-r from-blue-500 to-cyan-600 p-4">
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center space-x-3">
-                      <div className="p-2 bg-white bg-opacity-20 rounded-lg">
-                        <CheckCircle className="w-5 h-5 text-green-600" />
-                      </div>
-                      <h3 className="text-lg font-bold text-white">Inclusions</h3>
-                    </div>
-                    <Button
-                      onClick={handleEditInclusions}
-                      variant="ghost"
-                      size="sm"
-                      disabled={isSaving}
-                      className="text-white hover:bg-white hover:text-slate-900 hover:bg-opacity-20"
-                    >
-                      <Edit className="w-4 h-4 mr-2" />
-                      Edit
-                    </Button>
-                  </div>
-                </div>
-                <div className="p-6">
-                  {Array.isArray(selectedItem.data.inclusions) && selectedItem.data.inclusions.length > 0 ? (
-                    <div className="space-y-3">
-                      {selectedItem.data.inclusions.map((inclusion, idx) => (
-                        <div key={idx} className="flex items-start space-x-3 p-3 bg-blue-50 rounded-xl">
-                          <div className="w-2 h-2 bg-blue-500 rounded-full mt-2 flex-shrink-0"></div>
-                          <span className="text-sm text-gray-700 font-medium">{inclusion}</span>
-                        </div>
-                      ))}
-                    </div>
-                  ) : (
-                    <div className="text-center py-8">
-                      <CheckCircle className="w-12 h-12 text-gray-300 mx-auto mb-3" />
-                      <p className="text-gray-500 text-sm">No inclusions added yet</p>
-                      <Button
-                        onClick={handleEditInclusions}
-                        variant="outline"
-                        size="sm"
-                        className="mt-3 text-blue-600 border-blue-200 hover:bg-blue-500"
-                      >
-                        Add Inclusions
-                      </Button>
-                    </div>
-                  )}
-                </div>
-              </div>
-
-              {/* Package Exclusions */}
-              <div className="bg-white rounded-2xl shadow-xl border border-gray-100 overflow-hidden">
-                <div className="bg-gradient-to-r from-red-500 to-pink-600 p-4">
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center space-x-3">
-                      <div className="p-2 bg-white bg-opacity-20 rounded-lg">
-                        <X className="w-5 h-5 text-blue-500" />
-                      </div>
-                      <h3 className="text-lg font-bold text-white">Exclusions</h3>
-                    </div>
-                    <Button
-                      onClick={handleEditExclusions}
-                      variant="ghost"
-                      size="sm"
-                      disabled={isSaving}
-                      className="text-white hover:bg-white hover:text-slate-900 hover:bg-opacity-20"
-                    >
-                      <Edit className="w-4 h-4 mr-2" />
-                      Edit
-                    </Button>
-                  </div>
-                </div>
-                <div className="p-6">
-                  {Array.isArray(selectedItem.data.exclusions) && selectedItem.data.exclusions.length > 0 ? (
-                    <div className="space-y-3">
-                      {selectedItem.data.exclusions.map((exclusion, idx) => (
-                        <div key={idx} className="flex items-start space-x-3 p-3 bg-red-50 rounded-xl">
-                          <div className="w-2 h-2 bg-red-500 rounded-full mt-2 flex-shrink-0"></div>
-                          <span className="text-sm text-gray-700 font-medium">{exclusion}</span>
-                        </div>
-                      ))}
-                    </div>
-                  ) : (
-                    <div className="text-center py-8">
-                      <X className="w-12 h-12 text-gray-300 mx-auto mb-3" />
-                      <p className="text-gray-500 text-sm">No exclusions added yet</p>
-                      <Button
-                        onClick={handleEditExclusions}
-                        variant="outline"
-                        size="sm"
-                        className="mt-3 text-red-600 border-red-200 hover:bg-red-500"
-                      >
-                        Add Exclusions
-                      </Button>
-                    </div>
-                  )}
-                </div>
-              </div>
-
-              {/* Package Terms */}
-              <div className="bg-white rounded-2xl shadow-xl border border-gray-100 overflow-hidden">
-                <div className="bg-gradient-to-r from-gray-600 to-slate-700 p-4">
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center space-x-3">
-                      <div className="p-2 bg-white bg-opacity-20 rounded-lg">
-                        <AlertCircle className="w-5 h-5 text-yellow-500" />
-                      </div>
-                      <h3 className="text-lg font-bold text-white">Terms & Conditions</h3>
-                    </div>
-                    <Button
-                      onClick={handleEditTerms}
-                      variant="ghost"
-                      size="sm"
-                      disabled={isSaving}
-                      className="text-white hover:bg-white hover:text-slate-900 hover:bg-opacity-20"
-                    >
-                      <Edit className="w-4 h-4 mr-2" />
-                      Edit
-                    </Button>
-                  </div>
-                </div>
-                <div className="p-6">
-                  {Array.isArray(selectedItem.data.terms) && selectedItem.data.terms.length > 0 ? (
-                    <div className="space-y-3">
-                      {selectedItem.data.terms.map((term, idx) => (
-                        <div key={idx} className="flex items-start space-x-3 p-3 bg-gray-50 rounded-xl">
-                          <div className="w-2 h-2 bg-gray-500 rounded-full mt-2 flex-shrink-0"></div>
-                          <span className="text-sm text-gray-700 font-medium">{term}</span>
-                        </div>
-                      ))}
-                    </div>
-                  ) : (
-                    <div className="text-center py-8">
-                      <AlertCircle className="w-12 h-12 text-gray-300 mx-auto mb-3" />
-                      <p className="text-gray-500 text-sm">No terms added yet</p>
-                      <Button
-                        onClick={handleEditTerms}
-                        variant="outline"
-                        size="sm"
-                        className="mt-3 text-gray-600 border-gray-200 hover:bg-gray-100"
-                      >
-                        Add Terms
-                      </Button>
-                    </div>
-                  )}
-                </div>
-              </div>
-            </div>
-
-            {/* Edit Terms Modal */}
-            {isEditingTerms && (
-              <Card className="border-gray-200 bg-gray-50">
-                <CardHeader>
-                  <CardTitle className="flex items-center justify-between text-gray-900">
-                    <span>Edit Package Terms</span>
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      onClick={() => setIsEditingTerms(false)}
-                      disabled={isSaving}
-                    >
-                      <X className="w-4 h-4" />
-                    </Button>
-                  </CardTitle>
-                </CardHeader>
-                <CardContent className="space-y-4">
-                  <div>
-                    <label className="block text-sm font-medium text-gray-900 mb-2">
-                      Terms & Conditions
-                    </label>
-                    <div className="space-y-2">
-                      {packageTerms.map((term, index) => (
-                        <div key={index} className="flex items-center space-x-2">
-                          <Input
-                            value={term}
-                            onChange={(e) => updatePackageTerm(index, e.target.value)}
-                            placeholder={`Term ${index + 1}`}
-                            disabled={isSaving}
-                            className="text-gray-900 bg-white"
-                          />
-                          {packageTerms.length > 1 && (
-                            <Button
-                              variant="ghost"
-                              size="sm"
-                              onClick={() => removePackageTerm(index)}
-                              disabled={isSaving}
-                            >
-                              <Trash2 className="w-4 h-4" />
-                            </Button>
-                          )}
-                        </div>
-                      ))}
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={addPackageTerm}
-                        disabled={isSaving}
-                        className="text-gray-900 bg-white"
-                      >
-                        <Plus className="w-4 h-4 mr-2" />
-                        Add Term
-                      </Button>
-                    </div>
-                  </div>
-
-                  <div className="flex justify-end space-x-2">
-                    <Button
-                      variant="outline"
-                      onClick={() => setIsEditingTerms(false)}
-                      disabled={isSaving}
-                      className="text-slate-900"
-                    >
-                      Cancel
-                    </Button>
-                    <Button
-                      onClick={handleSaveTerms}
-                      className="bg-gray-700 hover:bg-gray-800"
-                      disabled={isSaving}
-                    >
-                      {isSaving ? (
-                        <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
-                      ) : (
-                        <>
-                          <Save className="w-4 h-4 mr-2 text-white" />
-                          <div className="text-white">Save Terms</div>
-                        </>
-                      )}
-                    </Button>
-                  </div>
-                </CardContent>
-              </Card>
-            )}
-
-            {/* Edit Highlights Modal */}
-            {isEditingHighlights && (
-              <Card className="border-green-200 bg-green-50">
-                <CardHeader>
-                  <CardTitle className="flex items-center justify-between text-gray-900">
-                    <span>Edit Package Highlights</span>
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      onClick={() => setIsEditingHighlights(false)}
-                      disabled={isSaving}
-                    >
-                      <X className="w-4 h-4" />
-                    </Button>
-                  </CardTitle>
-                </CardHeader>
-                <CardContent className="space-y-4">
-                  <div>
-                    <label className="block text-sm font-medium text-gray-900 mb-2">
-                      Highlights
-                    </label>
-                    <div className="space-y-2">
-                      {packageHighlights.map((highlight, index) => (
-                        <div key={index} className="flex items-center space-x-2">
-                          <Input
-                            value={highlight}
-                            onChange={(e) => updatePackageHighlight(index, e.target.value)}
-                            placeholder={`Highlight ${index + 1}`}
-                            disabled={isSaving}
-                            className="text-gray-900 bg-white"
-                          />
-                          {packageHighlights.length > 1 && (
-                            <Button
-                              variant="ghost"
-                              size="sm"
-                              onClick={() => removePackageHighlight(index)}
-                              disabled={isSaving}
-                            >
-                              <Trash2 className="w-4 h-4" />
-                            </Button>
-                          )}
-                        </div>
-                      ))}
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={addPackageHighlight}
-                        disabled={isSaving}
-                        className="text-slate-900 border-gray-300"
-                      >
-                        <Plus className="w-4 h-4 mr-2" />
-                        Add Highlight
-                      </Button>
-                    </div>
-                  </div>
-
-                  <div className="flex justify-end space-x-2">
-                    <Button
-                      variant="outline"
-                      onClick={() => setIsEditingHighlights(false)}
-                      disabled={isSaving}
-                      className="text-slate-900"
-                    >
-                      Cancel
-                    </Button>
-                    <Button
-                      onClick={handleSaveHighlights}
-                      className="bg-green-600 hover:bg-green-700"
-                      disabled={isSaving}
-                    >
-                      {isSaving ? (
-                        <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
-                      ) : (
-                        <>
-                          <Save className="w-4 h-4 mr-2" />
-                          Save Highlights
-                        </>
-                      )}
-                    </Button>
-                  </div>
-                </CardContent>
-              </Card>
-            )}
-
-            {/* Edit Inclusions Modal */}
-            {isEditingInclusions && (
-              <Card className="border-blue-200 bg-blue-50">
-                <CardHeader>
-                  <CardTitle className="flex items-center justify-between text-gray-900">
-                    <span>Edit Package Inclusions</span>
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      onClick={() => setIsEditingInclusions(false)}
-                      disabled={isSaving}
-                    >
-                      <X className="w-4 h-4" />
-                    </Button>
-                  </CardTitle>
-                </CardHeader>
-                <CardContent className="space-y-4">
-                  <div>
-                    <label className="block text-sm font-medium text-gray-900 mb-2">
-                      Inclusions
-                    </label>
-                    <div className="space-y-2">
-                      {packageInclusions.map((inclusion, index) => (
-                        <div key={index} className="flex items-center space-x-2">
-                          <Input
-                            value={inclusion}
-                            onChange={(e) => updatePackageInclusion(index, e.target.value)}
-                            placeholder={`Inclusion ${index + 1}`}
-                            disabled={isSaving}
-                            className="text-gray-900 bg-white"
-                          />
-                          {packageInclusions.length > 1 && (
-                            <Button
-                              variant="ghost"
-                              size="sm"
-                              onClick={() => removePackageInclusion(index)}
-                              disabled={isSaving}
-                            >
-                              <Trash2 className="w-4 h-4" />
-                            </Button>
-                          )}
-                        </div>
-                      ))}
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={addPackageInclusion}
-                        disabled={isSaving}
-                        className="text-gray-900 bg-white"
-                      >
-                        <Plus className="w-4 h-4 mr-2" />
-                        Add Inclusion
-                      </Button>
-                    </div>
-                  </div>
-
-                  <div className="flex justify-end space-x-2">
-                    <Button
-                      variant="outline"
-                      onClick={() => setIsEditingInclusions(false)}
-                      disabled={isSaving}
-                      className="text-slate-900"
-                    >
-                      Cancel
-                    </Button>
-                    <Button
-                      onClick={handleSaveInclusions}
-                      className="bg-blue-600 hover:bg-blue-700"
-                      disabled={isSaving}
-                    >
-                      {isSaving ? (
-                        <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
-                      ) : (
-                        <>
-                          <Save className="w-4 h-4 mr-2" />
-                          Save Inclusions
-                        </>
-                      )}
-                    </Button>
-                  </div>
-                </CardContent>
-              </Card>
-            )}
-
-            {/* Edit Exclusions Modal */}
-            {isEditingExclusions && (
-              <Card className="border-red-200 bg-red-50">
-                <CardHeader>
-                  <CardTitle className="flex items-center justify-between text-gray-900">
-                    <span>Edit Package Exclusions</span>
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      onClick={() => setIsEditingExclusions(false)}
-                      disabled={isSaving}
-                    >
-                      <X className="w-4 h-4" />
-                    </Button>
-                  </CardTitle>
-                </CardHeader>
-                <CardContent className="space-y-4">
-                  <div>
-                    <label className="block text-sm font-medium text-gray-900 mb-2">
-                      Exclusions
-                    </label>
-                    <div className="space-y-2">
-                      {packageExclusions.map((exclusion, index) => (
-                        <div key={index} className="flex items-center space-x-2">
-                          <Input
-                            value={exclusion}
-                            onChange={(e) => updatePackageExclusion(index, e.target.value)}
-                            placeholder={`Exclusion ${index + 1}`}
-                            disabled={isSaving}
-                            className="text-gray-900 bg-white"
-                          />
-                          {packageExclusions.length > 1 && (
-                            <Button
-                              variant="ghost"
-                              size="sm"
-                              onClick={() => removePackageExclusion(index)}
-                              disabled={isSaving}
-                            >
-                              <Trash2 className="w-4 h-4" />
-                            </Button>
-                          )}
-                        </div>
-                      ))}
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={addPackageExclusion}
-                        disabled={isSaving}
-                        className="text-gray-900 bg-white"
-                      >
-                        <Plus className="w-4 h-4 mr-2" />
-                        Add Exclusion
-                      </Button>
-                    </div>
-                  </div>
-
-                  <div className="flex justify-end space-x-2">
-                    <Button
-                      variant="outline"
-                      onClick={() => setIsEditingExclusions(false)}
-                      disabled={isSaving}
-                      className="text-slate-900"
-                    >
-                      Cancel
-                    </Button>
-                    <Button
-                      onClick={handleSaveExclusions}
-                      className="bg-red-600 hover:bg-red-700"
-                      disabled={isSaving}
-                    >
-                      {isSaving ? (
-                        <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
-                      ) : (
-                        <>
-                          <Save className="w-4 h-4 mr-2" />
-                          Save Exclusions
-                        </>
-                      )}
-                    </Button>
-                  </div>
-                </CardContent>
-              </Card>
-            )}
-
-            {/* Enhanced Add New Day Section */}
-            <div className="bg-white rounded-2xl shadow-xl border border-gray-100 p-6">
-              <div className="flex items-center justify-between">
-                <div>
-                  <h3 className="text-xl font-bold text-gray-900">Itinerary Management</h3>
-                  <p className="!text-gray-600 mt-1">Add and manage day-wise activities for your travel package</p>
-                </div>
-                <Button
-                  onClick={() => setIsAddingDay(true)}
-                  className="bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white px-6 py-3 rounded-xl font-medium shadow-lg hover:shadow-xl transition-all duration-200"
-                  disabled={isSaving}
-                >
-                  <Plus className="w-5 h-5 mr-2" />
-                  Add New Day
-                </Button>
-              </div>
-            </div>
-
-            {/* Add New Day Form */}
-            {isAddingDay && (
-              <Card className="border-blue-200 bg-blue-50">
-                <CardHeader>
-                  <CardTitle className="flex items-center justify-between text-gray-900">
-                    <span>Add New Day</span>
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      onClick={() => setIsAddingDay(false)}
-                      disabled={isSaving}
-                    >
-                      <X className="w-4 h-4" />
-                    </Button>
-                  </CardTitle>
-                </CardHeader>
-                <CardContent className="space-y-4">
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <div>
-                      <label className="block text-sm font-medium text-gray-900 mb-2">
-                        Day Title *
-                      </label>
-                      <Input
-                        value={newDay.title}
-                        onChange={(e) => setNewDay(prev => ({ ...prev, title: e.target.value }))}
-                        placeholder="e.g., Arrival in Jaipur - The Pink City"
-                        disabled={isSaving}
-                        className="text-gray-900 bg-white"
-                      />
-                    </div>
-                    <div>
-                      <label className="block text-sm font-medium text-gray-900 mb-2">
-                        Day Number
-                      </label>
-                      <Input
-                        type="number"
-                        value={newDay.day}
-                        onChange={(e) => setNewDay(prev => ({ ...prev, day: parseInt(e.target.value) }))}
-                        min={1}
-                        disabled={isSaving}
-                        className="text-gray-900 bg-white"
-                      />
-                    </div>
-                  </div>
-
-                  <div>
-                    <label className="block text-sm font-medium  mb-2">
-                      Activities
-                    </label>
-                    <div className="space-y-2">
-                      {newDay.activities && newDay.activities.map((activity, index) => (
-                        <div key={index} className="flex items-center space-x-2">
-                          <Input
-                            value={activity}
-                            onChange={(e) => updateActivity(index, e.target.value)}
-                            placeholder={`Activity ${index + 1}`}
-                            disabled={isSaving}
-                            className="text-gray-900 bg-white"
-                          />
-                          {newDay.activities && newDay.activities.length > 1 && (
-                            <Button
-                              variant="ghost"
-                              size="sm"
-                              onClick={() => removeActivity(index)}
-                              disabled={isSaving}
-                            >
-                              <Trash2 className="w-4 h-4" />
-                            </Button>
-                          )}
-                        </div>
-                      ))}
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={addActivityField}
-                        disabled={isSaving}
-                        className="text-gray-900 bg-white"
-                      >
-                        <Plus className="w-4 h-4 mr-2" />
-                        Add Activity
-                      </Button>
-                    </div>
-                  </div>
-
-
-
-                  <div className="flex justify-end space-x-2">
-                    <Button
-                      variant="outline"
-                      onClick={() => setIsAddingDay(false)}
-                      disabled={isSaving}
-                      className="text-gray-900 border-gray-300 hover:bg-gray-50"
-                    >
-                      Cancel
-                    </Button>
-                    <Button
-                      onClick={handleAddDay}
-                      className="bg-blue-600 hover:bg-blue-700"
-                      disabled={isSaving}
-                    >
-                      {isSaving ? (
-                        <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
-                      ) : (
-                        <>
-                          <Save className="w-4 h-4 mr-2" />
-                          Add Day
-                        </>
-                      )}
-                    </Button>
-                  </div>
-                </CardContent>
-              </Card>
-            )}
-
-            {/* Enhanced Itinerary Days */}
-            <div className="space-y-6">
-              {(selectedItem.data.itinerary || []).length === 0 ? (
-                <div className="bg-white rounded-2xl shadow-xl border border-gray-100 overflow-hidden">
-                  <div className="text-center py-16">
-                    <div className="w-24 h-24 bg-gradient-to-r from-blue-100 to-purple-100 rounded-full flex items-center justify-center mx-auto mb-6">
-                      <Calendar className="w-12 h-12 text-blue-600" />
-                    </div>
-                    <h3 className="text-2xl font-bold text-gray-900 mb-3">No Itinerary Days</h3>
-                    <p className="text-gray-600 mb-8 max-w-md mx-auto">
-                      This {selectedItem.type === 'trending' ? 'trending package' : selectedItem.type === 'premium' ? 'premium package' : selectedItem.type === 'package' ? 'package' : selectedItem.type === 'holiday' ? 'holiday type' : selectedItem.type === 'fixed-departure' ? 'fixed departure' : selectedItem.type === 'popular-destination' ? 'popular destination package' : 'adventure tour'} doesn&apos;t have any itinerary days yet. Start by adding your first day!
-                    </p>
-                    <Button
-                      onClick={() => setIsAddingDay(true)}
-                      className="bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white px-8 py-3 rounded-xl font-medium shadow-lg hover:shadow-xl transition-all duration-200"
-                    >
-                      <Plus className="w-5 h-5 mr-2" />
-                      Add First Day
-                    </Button>
-                  </div>
-                </div>
-              ) : (
-                <div className="grid grid-cols-1 gap-6">
-                  {(selectedItem.data.itinerary || []).map((day, index) => (
-                    <motion.div
-                      key={day.day}
-                      initial={{ opacity: 0, y: 20 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      transition={{ duration: 0.3, delay: index * 0.1 }}
-                      className="bg-white rounded-2xl shadow-xl border border-gray-100 overflow-hidden hover:shadow-2xl transition-all duration-300"
-                    >
-                      <div className="bg-gradient-to-r from-blue-600 to-purple-600 p-6">
-                        <div className="flex items-center justify-between">
-                          <div className="flex items-center space-x-4">
-                            <div className="bg-white bg-opacity-20 rounded-xl px-4 py-2">
-                              <span className="text-2xl font-bold text-slate-900">Day {day.day}</span>
-                            </div>
-                            <div>
-                              <h3 className="text-xl font-bold text-white">{day.title}</h3>
-                              <p className="!text-blue-100 text-sm">
-                                {Array.isArray(day.activities) ? day.activities.length : 0} Activities
-                              </p>
-                            </div>
-                          </div>
-                          <div className="flex items-center space-x-2">
-                            <Button
-                              variant="ghost"
-                              size="sm"
-                              onClick={() => handleEditDay(day)}
-                              className="text-white hover:bg-white hover:text-slate-900 hover:bg-opacity-20 rounded-lg p-2"
-                              disabled={isSaving}
-                            >
-                              <Edit className="w-5 h-5" />
-                            </Button>
-                            <Button
-                              variant="ghost"
-                              size="sm"
-                              onClick={() => handleDeleteDay(day.day)}
-                              className="text-white hover:bg-red-500 hover:bg-opacity-20 rounded-lg p-2"
-                              disabled={isSaving}
-                            >
-                              <Trash2 className="w-5 h-5" />
-                            </Button>
-                          </div>
-                        </div>
-                      </div>
-
-                      <div className="p-6">
-                        <div className="space-y-4">
-                          <div className="flex items-center space-x-2 text-gray-600">
-                            <Calendar className="w-5 h-5" />
-                            <span className="font-medium">Activities ({Array.isArray(day.activities) ? day.activities.length : 0})</span>
-                          </div>
-
-                          {Array.isArray(day.activities) && day.activities.length > 0 ? (
-                            <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                              {day.activities.map((activity, idx) => (
-                                <div key={idx} className="flex items-start space-x-3 p-4 bg-gray-50 rounded-xl hover:bg-gray-100 transition-colors duration-200">
-                                  <div className="w-2 h-2 bg-blue-500 rounded-full mt-2 flex-shrink-0"></div>
-                                  <span className="text-sm text-gray-700 font-medium">{activity}</span>
-                                </div>
-                              ))}
-                            </div>
-                          ) : (
-                            <div className="text-center py-8 text-gray-500">
-                              <Calendar className="w-8 h-8 mx-auto mb-2 text-gray-300" />
-                              <p className="text-sm">No activities added for this day</p>
-                            </div>
-                          )}
-                        </div>
-                      </div>
-                    </motion.div>
+                      {tag.name}
+                    </button>
                   ))}
                 </div>
-              )}
-            </div>
-          </motion.div>
-        )}
 
-        {/* Enhanced Edit Day Modal */}
-        {isEditing && editingDay && (
-          <div className="fixed inset-0 bg-black bg-opacity-60 flex items-center justify-center z-50 p-4">
-            <motion.div
-              initial={{ opacity: 0, scale: 0.95 }}
-              animate={{ opacity: 1, scale: 1 }}
-              exit={{ opacity: 0, scale: 0.95 }}
-              transition={{ duration: 0.2 }}
-              className="bg-white rounded-2xl shadow-2xl w-full max-w-3xl max-h-[90vh] overflow-hidden"
-            >
-              <div className="bg-gradient-to-r from-blue-600 to-purple-600 p-6">
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center space-x-3">
-                    <div className="p-2 bg-white bg-opacity-20 rounded-lg">
-                      <Edit className="w-6 h-6 text-red-500" />
-                    </div>
-                    <div>
-                      <h2 className="text-2xl font-bold text-white">Edit Day {editingDay.day}</h2>
-                      <p className="!text-blue-100 text-sm">Modify activities and details for this day</p>
-                    </div>
+                <div className="flex flex-wrap gap-3 items-center">
+                  <div className="flex flex-col gap-1">
+                    <span className="text-[10px] font-bold text-gray-400 ml-1">TOUR TYPE</span>
+                    <select
+                      value={selectedTourType || ""}
+                      onChange={(e) => setSelectedTourType(e.target.value || null)}
+                      className="text-xs font-bold bg-white border border-gray-200 rounded-lg px-3 py-1.5 outline-none focus:ring-2 focus:ring-blue-500/20"
+                    >
+                      <option value="">All Types</option>
+                      <option value="india">India</option>
+                      <option value="international">International</option>
+                    </select>
                   </div>
+
+                  <div className="flex flex-col gap-1">
+                    <span className="text-[10px] font-bold text-gray-400 ml-1">COUNTRY</span>
+                    <select
+                      value={selectedCountry || ""}
+                      onChange={(e) => setSelectedCountry(e.target.value || null)}
+                      className="text-xs font-bold bg-white border border-gray-200 rounded-lg px-3 py-1.5 outline-none focus:ring-2 focus:ring-blue-500/20"
+                    >
+                      <option value="">All Countries</option>
+                      {uniqueCountries.map(c => <option key={c} value={c}>{c}</option>)}
+                    </select>
+                  </div>
+
+                  <div className="flex flex-col gap-1">
+                    <span className="text-[10px] font-bold text-gray-400 ml-1">STATE</span>
+                    <select
+                      value={selectedState || ""}
+                      onChange={(e) => setSelectedState(e.target.value || null)}
+                      className="text-xs font-bold bg-white border border-gray-200 rounded-lg px-3 py-1.5 outline-none focus:ring-2 focus:ring-blue-500/20"
+                    >
+                      <option value="">All States</option>
+                      {uniqueStates.map(s => <option key={s} value={s}>{s}</option>)}
+                    </select>
+                  </div>
+
                   <Button
                     variant="ghost"
                     size="sm"
-                    onClick={() => setIsEditing(false)}
-                    disabled={isSaving}
-                    className="text-white hover:bg-white hover:text-slate-900 hover:bg-opacity-20 rounded-lg p-2"
+                    onClick={() => {
+                      setSelectedTag(null);
+                      setSelectedTourType(null);
+                      setSelectedCountry(null);
+                      setSelectedState(null);
+                      setSearchTerm("");
+                    }}
+                    className="mt-4 text-[10px] font-bold text-red-500 hover:text-red-600 hover:bg-red-50"
                   >
-                    <X className="w-6 h-6" />
+                    CLEAR ALL
+                  </Button>
+                </div>
+              </div>
+            </div>
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 max-h-[400px] overflow-y-auto pr-2 custom-scrollbar">
+              {filteredItems.map((item) => {
+                const title = 'name' in item ? item.name : item.title;
+                const loc = 'location' in item ? item.location : item.destination;
+                const img = item.image;
+                const isSel = selectedItem?.data._id === item._id;
+
+                return (
+                  <button
+                    key={item._id}
+                    onClick={() => handleItemSelect(activeTab, item)}
+                    className={`group relative text-left rounded-2xl border-2 transition-all overflow-hidden ${isSel ? 'border-blue-500 bg-blue-50/30 ring-4 ring-blue-50' : 'border-gray-100 bg-white hover:border-blue-200 hover:shadow-lg'}`}
+                  >
+                    <div className="aspect-[16/10] overflow-hidden bg-gray-100">
+                      {img ? <img src={img} alt={title} className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500" /> : <div className="w-full h-full flex items-center justify-center text-gray-300"><Mountain className="w-8 h-8" /></div>}
+                    </div>
+                    <div className="p-4">
+                      <h4 className="font-bold text-gray-900 truncate">{title}</h4>
+                      <div className="flex items-center gap-1 mt-1 text-xs text-gray-500 font-medium capitalize">
+                        <MapPin className="w-3 h-3 text-blue-500" /> {loc} • {item.duration}
+                      </div>
+                    </div>
+                    {isSel && <div className="absolute top-2 right-2 bg-blue-500 text-white p-1 rounded-full shadow-lg"><CheckCircle className="w-4 h-4" /></div>}
+                  </button>
+                );
+              })}
+              {filteredItems.length === 0 && (
+                <div className="col-span-full py-12 text-center text-gray-500">
+                  No items found matching "{searchTerm}"
+                </div>
+              )}
+            </div>
+          </div>
+        </Card>
+
+        {/* Selected Package Details & Itinerary Editor */}
+        {selectedItem && (
+          <div id="itinerary-details" className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
+            <Card className="rounded-3xl shadow-md border-gray-100 overflow-hidden">
+              <div className="bg-gradient-to-r from-gray-900 to-slate-800 p-8 text-white">
+                <div className="flex items-center justify-between gap-4">
+                  <div className="space-y-2">
+                    <Badge className="bg-blue-500 hover:bg-blue-600 border-none px-4 py-1">Editing Itinerary</Badge>
+                    <h2 className="!text-3xl !font-bold font-royal">{'name' in selectedItem.data ? selectedItem.data.name : selectedItem.data.title}</h2>
+                    <div className="flex items-center gap-6 text-gray-300 text-sm">
+                      <span className="flex items-center gap-2"><Clock className="w-4 h-4" /> {selectedItem.data.duration}</span>
+                      <span className="flex items-center gap-2"><MapPin className="w-4 h-4" /> {'location' in selectedItem.data ? selectedItem.data.location : selectedItem.data.destination}</span>
+                    </div>
+                  </div>
+                  <Button
+                    onClick={() => {
+                      setIsAddingDay(true);
+                      setNewDay({ day: (selectedItem.data.itinerary || []).length + 1, title: "", activities: [""] });
+                    }}
+                    className="hidden md:flex bg-white !text-gray-900 hover:bg-gray-100 rounded-2xl px-4 py-4 font-bold gap-2 shadow-xl"
+                  >
+                    <Plus className="w-5 h-5 !text-blue-600" /> Add Day {(selectedItem.data.itinerary || []).length + 1}
                   </Button>
                 </div>
               </div>
 
-              <div className="p-6 max-h-[calc(90vh-120px)] overflow-y-auto">
-
-                <div className="space-y-4">
-                  <div>
-                    <label className="block text-sm font-medium text-gray-900 mb-2">
-                      Day Title
-                    </label>
-                    <Input
-                      value={editingDay.title}
-                      onChange={(e) => setEditingDay(prev => prev ? { ...prev, title: e.target.value } : null)}
-                      disabled={isSaving}
-                      className="text-gray-900 bg-white"
-                    />
-                  </div>
-
-                  <div>
-                    <label className="block text-sm font-medium text-gray-900 mb-2">
-                      Activities
-                    </label>
-                    <div className="space-y-2">
-                      {Array.isArray(editingDay.activities) && editingDay.activities.map((activity, index) => (
-                        <div key={index} className="flex items-center space-x-2">
-                          <Input
-                            value={activity}
-                            onChange={(e) => {
-                              const newActivities = [...(Array.isArray(editingDay.activities) ? editingDay.activities : [])];
-                              newActivities[index] = e.target.value;
-                              setEditingDay(prev => prev ? { ...prev, activities: newActivities } : null);
-                            }}
-                            disabled={isSaving}
-                            className="text-gray-900 bg-white"
-                          />
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            onClick={() => {
-                              const newActivities = (Array.isArray(editingDay.activities) ? editingDay.activities : []).filter((_, i) => i !== index);
-                              setEditingDay(prev => prev ? { ...prev, activities: newActivities } : null);
-                            }}
-                            disabled={isSaving}
-                          >
-                            <Trash2 className="w-4 h-4" />
-                          </Button>
-                        </div>
-                      ))}
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={() => {
-                          setEditingDay(prev => prev ? { ...prev, activities: [...(Array.isArray(prev.activities) ? prev.activities : []), ""] } : null);
-                        }}
-                        disabled={isSaving}
-                      >
-                        <Plus className="w-4 h-4 mr-2 text-slate-900" />
-                        <div className="text-slate-900">Add Activity</div>
-                      </Button>
-                    </div>
-                  </div>
-
-                  <div className="flex justify-end space-x-2 pt-4 ">
-                    <Button
-                      variant="outline"
-                      onClick={() => setIsEditing(false)}
-                      disabled={isSaving}
-                    >
-                      <div className="text-slate-900">Cancel</div>
-                    </Button>
-                    <Button
-                      onClick={handleSaveDay}
-                      className="bg-blue-600 hover:bg-blue-700"
-                      disabled={isSaving}
-                    >
-                      {isSaving ? (
-                        <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
+              <CardContent className="p-8">
+                {/* Metadata Sections Grid */}
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-12">
+                  {/* Highlights */}
+                  <div className={`p-6 rounded-2xl border-2 transition-all ${isEditingHighlights ? 'border-blue-500 bg-blue-50/30' : 'border-gray-50 bg-gray-50/30 hover:bg-gray-50'}`}>
+                    <div className="flex items-center justify-between mb-4">
+                      <h3 className="font-bold text-gray-900 flex items-center gap-2"><Star className="w-5 h-5 text-amber-500" /> Highlights</h3>
+                      {!isEditingHighlights ? (
+                        <Button variant="ghost" size="sm" onClick={() => { setPackageHighlights(selectedItem.data.highlights || []); setIsEditingHighlights(true); }}>Edit</Button>
                       ) : (
-                        <>
-                          <Save className="w-4 h-4 mr-2" />
-                          Save Changes
-                        </>
+                        <div className="flex gap-1">
+                          <Button size="sm" variant="ghost" onClick={() => setIsEditingHighlights(false)}>Cancel</Button>
+                          <Button size="sm" className="bg-blue-600" onClick={handleSaveHighlights}>Save</Button>
+                        </div>
                       )}
-                    </Button>
+                    </div>
+                    {isEditingHighlights ? (
+                      <div className="space-y-2">
+                        {packageHighlights.map((h, i) => (
+                          <div key={i} className="flex gap-2">
+                            <Input className="!bg-white" value={h} onChange={(e) => { const nh = [...packageHighlights]; nh[i] = e.target.value; setPackageHighlights(nh); }} />
+                            <Button variant="ghost" size="sm" onClick={() => setPackageHighlights(packageHighlights.filter((_, idx) => idx !== i))}><Trash2 className="w-4 h-4 text-red-500" /></Button>
+                          </div>
+                        ))}
+                        <Button variant="outline" size="sm" className="w-full mt-2" onClick={() => setPackageHighlights([...packageHighlights, ""])}>+ Add Highlight</Button>
+                      </div>
+                    ) : (
+                      <ul className="space-y-2">
+                        {(selectedItem.data.highlights || []).slice(0, 5).map((h, i) => (
+                          <li key={i} className="text-sm text-gray-600 flex  items-start gap-2"><div className="w-1.5 h-1.5 rounded-full bg-blue-400 mt-1.5" />{h}</li>
+                        ))}
+                        {(selectedItem.data.highlights || []).length > 5 && <li className="text-xs text-blue-500 font-medium">+ {(selectedItem.data.highlights || []).length - 5} more</li>}
+                      </ul>
+                    )}
+                  </div>
+
+                  {/* Inclusions */}
+                  <div className={`p-6 rounded-2xl border-2 transition-all ${isEditingInclusions ? 'border-green-500 bg-white shadow-sm' : 'border-gray-50 bg-gray-50/30 hover:bg-gray-50'}`}>
+                    <div className="flex items-center justify-between mb-4">
+                      <h3 className="font-bold text-gray-900 flex items-center gap-2"><CheckCircle className="w-5 h-5 text-green-500" /> Inclusions</h3>
+                      {!isEditingInclusions ? (
+                        <Button variant="ghost" size="sm" onClick={() => { setPackageInclusions(selectedItem.data.inclusions || []); setIsEditingInclusions(true); }}>Edit</Button>
+                      ) : (
+                        <div className="flex gap-1">
+                          <Button size="sm" variant="ghost" onClick={() => setIsEditingInclusions(false)}>Cancel</Button>
+                          <Button size="sm" className="bg-green-600" onClick={handleSaveInclusions}>Save</Button>
+                        </div>
+                      )}
+                    </div>
+                    {isEditingInclusions ? (
+                      <div className="space-y-2">
+                        {packageInclusions.map((v, i) => (
+                          <div key={i} className="flex gap-2">
+                            <Input className="!bg-white" value={v} onChange={(e) => { const nv = [...packageInclusions]; nv[i] = e.target.value; setPackageInclusions(nv); }} />
+                            <Button variant="ghost" size="sm" onClick={() => setPackageInclusions(packageInclusions.filter((_, idx) => idx !== i))}><Trash2 className="w-4 h-4 text-red-500" /></Button>
+                          </div>
+                        ))}
+                        <Button variant="outline" size="sm" className="w-full mt-2" onClick={() => setPackageInclusions([...packageInclusions, ""])}>+ Add Inclusion</Button>
+                      </div>
+                    ) : (
+                      <ul className="space-y-2">
+                        {(selectedItem.data.inclusions || []).slice(0, 5).map((v, i) => (
+                          <li key={i} className="text-sm text-gray-600 flex items-start gap-2"><div className="w-1.5 h-1.5 rounded-full bg-green-400 mt-1.5" />{v}</li>
+                        ))}
+                      </ul>
+                    )}
+                  </div>
+
+                  {/* Exclusions */}
+                  <div className={`p-6 rounded-2xl border-2 transition-all ${isEditingExclusions ? 'border-red-500 bg-white shadow-sm' : 'border-gray-50 bg-gray-50/30 hover:bg-gray-50'}`}>
+                    <div className="flex items-center justify-between mb-4">
+                      <h3 className="font-bold text-gray-900 flex items-center gap-2"><X className="w-5 h-5 text-red-500" /> Exclusions</h3>
+                      {!isEditingExclusions ? (
+                        <Button variant="ghost" size="sm" onClick={() => { setPackageExclusions(selectedItem.data.exclusions || []); setIsEditingExclusions(true); }}>Edit</Button>
+                      ) : (
+                        <div className="flex gap-1">
+                          <Button size="sm" variant="ghost" onClick={() => setIsEditingExclusions(false)}>Cancel</Button>
+                          <Button size="sm" className="bg-red-600" onClick={handleSaveExclusions}>Save</Button>
+                        </div>
+                      )}
+                    </div>
+                    {isEditingExclusions ? (
+                      <div className="space-y-2">
+                        {packageExclusions.map((v, i) => (
+                          <div key={i} className="flex gap-2">
+                            <Input className="!bg-white" value={v} onChange={(e) => { const nv = [...packageExclusions]; nv[i] = e.target.value; setPackageExclusions(nv); }} />
+                            <Button variant="ghost" size="sm" onClick={() => setPackageExclusions(packageExclusions.filter((_, idx) => idx !== i))}><Trash2 className="w-4 h-4 text-red-500" /></Button>
+                          </div>
+                        ))}
+                        <Button variant="outline" size="sm" className="w-full mt-2" onClick={() => setPackageExclusions([...packageExclusions, ""])}>+ Add Exclusion</Button>
+                      </div>
+                    ) : (
+                      <ul className="space-y-2">
+                        {(selectedItem.data.exclusions || []).slice(0, 5).map((v, i) => (
+                          <li key={i} className="text-sm text-gray-600 flex items-start gap-2"><div className="w-1.5 h-1.5 rounded-full bg-red-400 mt-1.5" />{v}</li>
+                        ))}
+                      </ul>
+                    )}
                   </div>
                 </div>
-              </div>
-            </motion.div>
+
+                <div className="space-y-8">
+                  {(selectedItem.data.itinerary || []).map((day, idx) => {
+                    const isCurrentEditing = isEditing && editingDay?.day === day.day;
+
+                    return (
+                      <motion.div
+                        key={day.day}
+                        initial={{ opacity: 0, y: 10 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        transition={{ delay: idx * 0.1 }}
+                        className="group"
+                      >
+
+                        <div className={`bg-white rounded-3xl border transition-all duration-300 overflow-hidden ${isCurrentEditing ? 'ring-4 ring-blue-50 border-blue-500 shadow-2xl' : 'border-gray-100 shadow-sm hover:shadow-xl'}`}>
+                          <div className="p-6 md:p-8">
+                            {isCurrentEditing ? (
+                              <div className="space-y-6">
+                                <div className="flex items-center justify-between">
+                                  <span className="text-gray-500 font-bold text-sm tracking-widest uppercase">Editing Day {day.day}</span>
+                                  <div className="flex gap-2">
+                                    <Button variant="ghost" size="sm" className="font-bold text-gray-500" onClick={() => { setIsEditing(false); setEditingDay(null); }}>Cancel</Button>
+                                    <Button size="sm" className="bg-blue-600 font-bold" onClick={handleSaveDay} disabled={isSaving}>
+                                      {isSaving ? "Saving..." : "Save Changes"}
+                                    </Button>
+                                  </div>
+                                </div>
+                                <div className="space-y-4">
+                                  <Input
+                                    className="text-xl font-bold py-6 rounded-2xl border-gray-100 focus:border-gray-400 !bg-white"
+                                    value={editingDay?.title || ""}
+                                    placeholder="Day Title..."
+                                    onChange={(e) => setEditingDay(p => p ? { ...p, title: e.target.value } : null)}
+                                  />
+                                  <div className="space-y-3">
+                                    <label className="text-[10px] font-bold text-gray-400 uppercase tracking-widest ml-1">Activities</label>
+                                    {(editingDay?.activities || []).map((act, i) => (
+                                      <div key={i} className="flex gap-2">
+                                        <Input
+                                          className="text-sm py-4 rounded-xl border-gray-50 !bg-white focus:bg-white"
+                                          value={act}
+                                          placeholder={`Activity ${i + 1}...`}
+                                          onChange={(e) => {
+                                            const list = [...(editingDay?.activities || [])];
+                                            list[i] = e.target.value;
+                                            setEditingDay(p => p ? { ...p, activities: list } : null);
+                                          }}
+                                        />
+                                        <Button variant="ghost" size="sm" onClick={() => {
+                                          const list = (editingDay?.activities || []).filter((_, idx) => idx !== i);
+                                          setEditingDay(p => p ? { ...p, activities: list } : null);
+                                        }}><Trash2 className="w-4 h-4 text-red-400" /></Button>
+                                      </div>
+                                    ))}
+                                    <Button variant="outline" size="sm" className="w-full text-xs font-bold py-6 border-dashed" onClick={() => {
+                                      const list = [...(editingDay?.activities || [])];
+                                      list.push("");
+                                      setEditingDay(p => p ? { ...p, activities: list } : null);
+                                    }}>+ Add Activity</Button>
+                                  </div>
+                                </div>
+                              </div>
+                            ) : (
+                              <div className="flex flex-col md:flex-row gap-8">
+                                <div className="flex-1 space-y-6">
+                                  <div className="flex items-center justify-between">
+                                    <div>
+                                      <span className="text-gray-500 font-bold text-sm tracking-widest uppercase">Day {day.day}</span>
+                                      <h3 className="!text-2xl !font-black !text-gray-900 group-hover:text-blue-600 transition-colors">{day.title}</h3>
+                                    </div>
+                                    <div className="flex gap-2">
+                                      <Button variant="outline" size="icon" className="rounded-xl border-gray-100" onClick={() => { setEditingDay({ ...day }); setIsEditing(true); setIsAddingDay(false); }}><Edit className="w-4 h-4 text-gray-600" /></Button>
+                                      <Button variant="outline" size="icon" className="rounded-xl border-gray-100 hover:bg-red-50" onClick={() => handleDeleteDay(day.day)}><Trash2 className="w-4 h-4 text-red-500" /></Button>
+                                    </div>
+                                  </div>
+                                  <div className="space-y-2">
+                                    {(day.activities || []).map((act, i) => (
+                                      <div key={i} className="flex gap-2 items-start py-1">
+                                        <div className="w-1.5 h-1.5 rounded-full bg-gray-300 mt-1.5 flex-shrink-0" />
+                                        <span className="text-sm text-gray-600 font-medium leading-relaxed">{act}</span>
+                                      </div>
+                                    ))}
+                                  </div>
+                                </div>
+                              </div>
+                            )}
+                          </div>
+                        </div>
+                      </motion.div>
+                    );
+                  })}
+
+                  {/* Inline Add Day Form */}
+                  {isAddingDay ? (
+                    <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="group">
+                      <div className="bg-white rounded-3xl border-2 border-gray-100 shadow-xl overflow-hidden p-6 md:p-8 space-y-6">
+                        <div className="flex items-center justify-between">
+                          <span className="text-gray-500 font-bold text-sm tracking-widest uppercase">Adding Day {(selectedItem.data.itinerary || []).length + 1}</span>
+                          <div className="flex gap-2">
+                            <Button variant="ghost" size="sm" className="font-bold text-gray-400" onClick={() => setIsAddingDay(false)}>Discard</Button>
+                            <Button size="sm" className="bg-blue-600 font-bold hover:bg-blue-700" onClick={handleAddDay} disabled={isSaving}>
+                              {isSaving ? "Saving..." : "Add to Itinerary"}
+                            </Button>
+                          </div>
+                        </div>
+                        <div className="space-y-4">
+                          <Input
+                            className="!text-xl !font-semibold !py-4 rounded-2xl border-gray-100 focus:border-gray-400 !bg-white"
+                            placeholder="Enter Day Theme/Title..."
+                            value={newDay.title || ""}
+                            onChange={(e) => setNewDay(p => ({ ...p, title: e.target.value }))}
+                          />
+                          <div className="space-y-3">
+                            <label className="text-[10px] font-bold text-gray-400 uppercase tracking-widest ml-1">Activities</label>
+                            {(newDay.activities || []).map((act, i) => (
+                              <div key={i} className="flex gap-2">
+                                <Input
+                                  className="text-sm py-4 rounded-xl border-gray-50 !bg-white focus:bg-white"
+                                  value={act}
+                                  placeholder={`Activity ${i + 1}...`}
+                                  onChange={(e) => {
+                                    const list = [...(newDay.activities || [])];
+                                    list[i] = e.target.value;
+                                    setNewDay(p => ({ ...p, activities: list }));
+                                  }}
+                                />
+                                <Button variant="ghost" size="sm" onClick={() => {
+                                  const list = (newDay.activities || []).filter((_, idx) => idx !== i);
+                                  setNewDay(p => ({ ...p, activities: list }));
+                                }}><Trash2 className="w-4 h-4 text-red-400" /></Button>
+                              </div>
+                            ))}
+                            <Button variant="outline" size="sm" className="w-full text-xs font-bold py-6 border-dashed" onClick={() => {
+                              const list = [...(newDay.activities || [])];
+                              list.push("");
+                              setNewDay(p => ({ ...p, activities: list }));
+                            }}>+ Add Activity</Button>
+                          </div>
+                        </div>
+                      </div>
+                    </motion.div>
+                  ) : (
+                    <Button
+                      variant="outline"
+                      onClick={() => {
+                        setIsAddingDay(true);
+                        setIsEditing(false);
+                        setEditingDay(null);
+                        setNewDay({ day: (selectedItem.data.itinerary || []).length + 1, title: "", activities: [""] });
+                      }}
+                      className="w-full py-4 border-dashed border-2 border-gray-200 rounded-3xl hover:bg-gray-50 hover:border-blue-400 group transition-all"
+                    >
+                      <Plus className="w-6 h-6 text-gray-400 group-hover:text-blue-600 mr-2" />
+                      <span className="!text-lg !font-bold text-gray-500 group-hover:text-blue-600">Add Complementary Day {(selectedItem.data.itinerary || []).length + 1}</span>
+                    </Button>
+                  )}
+                </div>
+              </CardContent>
+            </Card>
           </div>
         )}
       </div>
-    </motion.div>
+
+      {/* Custom Styles for Scrollbar */}
+      <style jsx>{`
+        .custom-scrollbar::-webkit-scrollbar {
+          width: 4px;
+        }
+        .custom-scrollbar::-webkit-scrollbar-track {
+          background: #f1f1f1;
+          border-radius: 10px;
+        }
+        .custom-scrollbar::-webkit-scrollbar-thumb {
+          background: #e2e8f0;
+          border-radius: 10px;
+        }
+        .custom-scrollbar::-webkit-scrollbar-thumb:hover {
+          background: #cbd5e1;
+        }
+      `}</style>
+    </div>
   );
 };
 
-export default AdminItinerary; 
+export default AdminItinerary;

@@ -27,6 +27,7 @@ const getFolderPath = (contentType, category = null) => {
     'adventure-packages': 'paradise-yatra/packages/adventure-packages',
     'premium-packages': 'paradise-yatra/packages/premium-packages',
     'fixed-departure': 'paradise-yatra/packages/fixed-departure',
+    'all-packages': 'paradise-yatra/packages/all-images',
   };
 
   console.log(`📁 getFolderPath called with contentType: "${contentType}", normalized: "${normalizedContentType}", category: "${category}"`);

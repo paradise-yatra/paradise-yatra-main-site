@@ -24,7 +24,7 @@ interface WishlistPackage {
 }
 
 export default function WishlistPage() {
-    const { user, wishlist, toggleWishlist, isLoading: authLoading } = useAuth();
+    const { user, token, wishlist, toggleWishlist, isLoading: authLoading } = useAuth();
     const [packages, setPackages] = useState<WishlistPackage[]>([]);
     const [loading, setLoading] = useState(true);
     const [isLoginModalOpen, setIsLoginModalOpen] = useState(false);
@@ -49,6 +49,11 @@ export default function WishlistPage() {
             return;
         }
 
+        if (!token) {
+            setLoading(false);
+            return;
+        }
+
         const fetchWishlistPackages = async () => {
             console.log("Current Wishlist IDs:", wishlist);
 
@@ -61,76 +66,57 @@ export default function WishlistPage() {
             try {
                 setLoading(true);
 
-                // Fetch from all possible sources to ensure we find the wishlisted items
-                const [packagesRes, holidayRes, destinationsRes, fixedRes, adventureRes] = await Promise.all([
-                    fetch("/api/packages?limit=100"),
-                    fetch("/api/holiday-types"),
-                    fetch("/api/destinations"),
-                    fetch("/api/fixed-departures"),
-                    fetch("/api/adventure-packages")
-                ]);
-
-                const [packagesData, holidayData, destinationsData, fixedData, adventureData] = await Promise.all([
-                    packagesRes.json().catch(() => ({})),
-                    holidayRes.json().catch(() => ([])),
-                    destinationsRes.json().catch(() => ({})),
-                    fixedRes.json().catch(() => ({})),
-                    adventureRes.json().catch(() => ({}))
-                ]);
-
-                const normalize = (data: any) => {
-                    if (!data) return [];
-                    if (Array.isArray(data)) return data;
-                    if (data.data && Array.isArray(data.data)) return data.data;
-                    if (data.packages) return data.packages;
-                    if (data.destinations) return data.destinations;
-                    if (data.fixedDepartures) return data.fixedDepartures;
-                    if (data.holidayTypes) return data.holidayTypes;
-                    if (data.adventurePackages) return data.adventurePackages;
-                    return [];
-                };
-
-                const allPackages = [
-                    ...normalize(packagesData).map((p: any) => ({ ...p, wishType: 'package' })),
-                    ...normalize(holidayData).map((p: any) => ({ ...p, wishType: 'holiday' })),
-                    ...normalize(destinationsData).map((p: any) => ({ ...p, wishType: 'destination' })),
-                    ...normalize(fixedData).map((p: any) => ({ ...p, wishType: 'fixed-departure' })),
-                    ...normalize(adventureData).map((p: any) => ({ ...p, wishType: 'adventure' }))
-                ];
-
-                console.log("Fetched All Packages Count:", allPackages.length);
-
-                const wishlistItems = allPackages.filter(pkg => {
-                    const pkgId = getPackageId(pkg);
-                    return wishlist.includes(pkgId);
+                // Fetch populated wishlist with auth token
+                const response = await fetch("/api/wishlist?populate=true", {
+                    headers: {
+                        'Authorization': token.startsWith('Bearer ') ? token : `Bearer ${token}`,
+                    },
+                    cache: 'no-store'
                 });
 
-                console.log("Filtered Wishlist Items:", wishlistItems);
+                if (!response.ok) {
+                    const errorData = await response.json().catch(() => ({}));
+                    console.error("Wishlist fetch error:", response.status, errorData);
+                    throw new Error(errorData.message || "Failed to fetch wishlist details");
+                }
 
-                // Remove duplicates using the robust ID
-                const uniqueItems = Array.from(new Map(wishlistItems.map(item => [getPackageId(item), item])).values());
+                const data = await response.json();
+                const populatedWishlist = data.wishlist || [];
 
-                // Mapping and normalising items to ensure consistent display across different package types
-                const mappedItems: WishlistPackage[] = uniqueItems.map((pkg: any) => {
+                console.log(`Fetched ${populatedWishlist.length} populated items directly from backend.`);
+
+                // Map the populated data to our UI format
+                const mappedItems: WishlistPackage[] = populatedWishlist.map((pkg: any) => {
+                    // Extract price carefully
                     const price = typeof pkg.price === 'string'
                         ? parseInt(pkg.price.replace(/[^\d]/g, ''))
                         : (pkg.price || 0);
 
+                    // Robust image fallback
+                    let validImage = "";
+                    if (pkg.image) validImage = pkg.image;
+                    else if (pkg.images && pkg.images.length > 0) validImage = pkg.images[0];
+                    else if (pkg.thumbnail) validImage = pkg.thumbnail;
+
+                    // Determine type (default to package)
+                    const type = pkg.type || 'package';
+
                     return {
                         _id: pkg._id,
-                        id: pkg.id,
-                        title: pkg.title || pkg.name || "Romantic Getaway",
-                        destination: pkg.destination || pkg.location || pkg.state || pkg.title || "India",
-                        duration: pkg.duration || "5N/6D",
+                        id: pkg._id || pkg.id,
+                        title: pkg.title || pkg.name || "Untitled Package",
+                        destination: pkg.destination || pkg.location || pkg.state || "India",
+                        duration: pkg.duration || "N/A",
                         price: price,
-                        images: pkg.images,
-                        image: pkg.image || pkg.thumbnail,
-                        slug: pkg.slug || getPackageId(pkg),
-                        type: pkg.wishType
+                        images: pkg.images || [],
+                        image: validImage,
+                        slug: pkg.slug || pkg._id,
+                        type: type
                     };
                 });
 
-                setPackages(mappedItems);
+                // Reverse to show newest added first if array order is preserved
+                setPackages(mappedItems.reverse());
             } catch (error) {
                 console.error("Error fetching wishlist packages:", error);
             } finally {
@@ -139,7 +125,7 @@ export default function WishlistPage() {
         };
 
         fetchWishlistPackages();
-    }, [wishlist, user, authLoading]);
+    }, [wishlist, user, authLoading, token]);
 
     if (authLoading || loading) {
         return (
@@ -213,9 +199,9 @@ export default function WishlistPage() {
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
                     {packages.map((pkg) => {
                         const pkgId = getPackageId(pkg);
-                        let href = `/itinerary/${pkg.slug || pkgId}`;
-                        if (pkg.type === 'destination') href = `/destinations/${pkg.slug || pkgId}`;
+                        let href = `/package/${pkg.slug || pkgId}`;
                         if (pkg.type === 'fixed-departure') href = `/fixed-departures/${pkg.slug || pkgId}`;
+                        if (pkg.type === 'destination') href = `/destinations/${pkg.slug || pkgId}`;
                         if (pkg.type === 'holiday') href = `/holiday-types/${pkg.slug || pkgId}`;
 
                         return (

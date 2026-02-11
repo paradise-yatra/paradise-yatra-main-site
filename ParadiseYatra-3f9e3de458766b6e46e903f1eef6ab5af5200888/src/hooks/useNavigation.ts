@@ -63,21 +63,21 @@ const fallbackNavItems: NavigationItem[] = [
   {
     name: "International Tour",
     icon: "Globe",
-    href: "/packages/international",
+    href: "/package",
     submenu: [
-      { name: "Europe", href: "/packages/international" },
-      { name: "Southeast Asia", href: "/packages/international" },
-      { name: "Middle East", href: "/packages/international" },
+      { name: "Europe", href: "/package" },
+      { name: "Southeast Asia", href: "/package" },
+      { name: "Middle East", href: "/package" },
     ],
   },
   {
     name: "India Tour Package",
     icon: "MapPin",
-    href: "/packages/india",
+    href: "/package",
     submenu: [
-      { name: "North India", href: "/packages/india" },
-      { name: "South India", href: "/packages/india" },
-      { name: "East India", href: "/packages/india" },
+      { name: "North India", href: "/package" },
+      { name: "South India", href: "/package" },
+      { name: "East India", href: "/package" },
     ],
   },
 ];
@@ -182,7 +182,7 @@ export const useNavigation = () => {
             // For international tours, create submenu from countries
             submenu = tourType.countries.map(country => ({
               name: country.name,
-              href: `/packages/${tourType.tourType}/${country.name.toLowerCase().replace(/\s+/g, '-')}`,
+              href: `/package/${tourType.tourType}/${country.name.toLowerCase().replace(/\s+/g, '-')}`,
               destinations: country.states.flatMap(state => state.destinations),
               featured: country.states.some(state =>
                 state.destinations.some(dest => dest.isTrending)
@@ -197,7 +197,7 @@ export const useNavigation = () => {
             // For India tours, create submenu from states
             submenu = tourType.states.map(state => ({
               name: state.name,
-              href: `/packages/${tourType.tourType}/${state.name.toLowerCase().replace(/\s+/g, '-')}`,
+              href: `/package/${tourType.tourType}/${state.name.toLowerCase().replace(/\s+/g, '-')}`,
               destinations: state.destinations || [],
               featured: state.destinations ? state.destinations.some(dest => dest.isTrending) : false
             }));
@@ -206,7 +206,7 @@ export const useNavigation = () => {
           dynamicNavItems.push({
             name,
             icon,
-            href: `/packages/${tourType.tourType}`,
+            href: `/package`,
             submenu
           });
         });

@@ -22,6 +22,8 @@ export const API_CONFIG = {
       REGISTER: '/api/auth/register',
       GOOGLE_LOGIN: '/api/auth/google-login',
       PROFILE: '/api/auth/profile',
+      SEND_OTP: '/api/auth/send-otp',
+      VERIFY_OTP: '/api/auth/verify-otp',
     },
 
     WISHLIST: {

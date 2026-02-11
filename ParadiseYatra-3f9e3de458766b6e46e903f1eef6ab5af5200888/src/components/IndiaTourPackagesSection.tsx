@@ -1,8 +1,7 @@
 "use client";
 
-import { useEffect, useRef, useState, useMemo } from "react";
+import { useEffect, useRef, useState } from "react";
 import DestinationCard from "./DestinationCard";
-import { useNavigation } from "@/hooks/useNavigation";
 import CarouselArrows from "./ui/CarouselArrows";
 
 interface IndiaDestination {
@@ -16,19 +15,8 @@ const IndiaTourPackagesSection = () => {
     const carouselRef = useRef<HTMLDivElement>(null);
     const [canScrollLeft, setCanScrollLeft] = useState(false);
     const [canScrollRight, setCanScrollRight] = useState(true);
-    const { navItems, loading } = useNavigation();
-
-    const destinations = useMemo(() => {
-        const indiaPackage = navItems.find(item => item.name === "India Tour Package");
-        if (!indiaPackage) return [];
-
-        return indiaPackage.submenu.map((item, index) => ({
-            id: index + 1,
-            name: item.name,
-            image: item.destinations?.find(d => d.image)?.image || `https://picsum.photos/400/600?random=${index + 100}`,
-            href: item.href
-        }));
-    }, [navItems]);
+    const [destinations, setDestinations] = useState<IndiaDestination[]>([]);
+    const [loading, setLoading] = useState(true);
 
     const updateScrollState = () => {
         if (carouselRef.current) {
@@ -39,18 +27,69 @@ const IndiaTourPackagesSection = () => {
     };
 
     useEffect(() => {
+        const fetchIndiaStatesData = async () => {
+            try {
+                setLoading(true);
+                // Fetch packages from 'all-packages' collection where tourType is 'india'
+                const response = await fetch("/api/all-packages?tourType=india&limit=200&isActive=true", { cache: 'no-store' });
+
+                if (!response.ok) {
+                    throw new Error("Failed to fetch India packages");
+                }
+
+                const data = await response.json();
+                const packages = data.packages || [];
+
+                // Group by 'state' to get unique states from the database
+                const uniqueStatesMap = new Map<string, IndiaDestination>();
+
+                packages.forEach((pkg: any) => {
+                    if (pkg.state && typeof pkg.state === 'string' && pkg.state.trim() !== '') {
+                        const stateName = pkg.state.trim();
+                        const stateKey = stateName.toLowerCase();
+
+                        if (!uniqueStatesMap.has(stateKey)) {
+                            uniqueStatesMap.set(stateKey, {
+                                id: pkg._id, // Using the first package ID as key
+                                name: stateName,
+                                // Use the package image or a fallback
+                                image: pkg.image || `https://picsum.photos/400/600?random=${uniqueStatesMap.size}`,
+                                // Construct the link to /package/india/[state-slug]
+                                href: `/package/india/${stateName.toLowerCase().replace(/\s+/g, '-')}`
+                            });
+                        }
+                    }
+                });
+
+                const statesList = Array.from(uniqueStatesMap.values());
+                setDestinations(statesList);
+            } catch (error) {
+                console.error("Error fetching India states from allpackages:", error);
+                setDestinations([]);
+            } finally {
+                setLoading(false);
+            }
+        };
+
+        fetchIndiaStatesData();
+    }, []);
+
+    useEffect(() => {
         const carousel = carouselRef.current;
         if (carousel) {
             carousel.addEventListener("scroll", updateScrollState);
             window.addEventListener("resize", updateScrollState);
-            updateScrollState();
+            // Delay update to allow rendering
+            if (destinations.length > 0) {
+                setTimeout(updateScrollState, 100);
+            }
 
             return () => {
                 carousel.removeEventListener("scroll", updateScrollState);
                 window.removeEventListener("resize", updateScrollState);
             };
         }
-    }, []);
+    }, [destinations]);
 
     const scrollByStep = (direction: number) => {
         if (carouselRef.current) {
@@ -87,31 +126,49 @@ const IndiaTourPackagesSection = () => {
 
                 {/* Carousel */}
                 <div className="relative group/carousel">
-                    <CarouselArrows
-                        onPrevious={() => scrollByStep(-1)}
-                        onNext={() => scrollByStep(1)}
-                        canScrollLeft={canScrollLeft}
-                        canScrollRight={canScrollRight}
-                    />
+                    {loading ? (
+                        <div className="flex gap-4 overflow-hidden">
+                            {[1, 2, 3, 4].map((i) => (
+                                <div key={i} className="min-w-[272px] h-[272px] bg-slate-100 rounded-lg animate-pulse border border-slate-200"></div>
+                            ))}
+                        </div>
+                    ) : (
+                        <>
+                            {destinations.length > 0 ? (
+                                <>
+                                    <CarouselArrows
+                                        onPrevious={() => scrollByStep(-1)}
+                                        onNext={() => scrollByStep(1)}
+                                        canScrollLeft={canScrollLeft}
+                                        canScrollRight={canScrollRight}
+                                    />
 
-                    <div
-                        ref={carouselRef}
-                        className="flex gap-4 overflow-x-auto scroll-smooth pb-4 scrollbar-hide"
-                        style={{
-                            scrollbarWidth: "none",
-                            msOverflowStyle: "none",
-                            scrollSnapType: "x mandatory",
-                        }}
-                    >
-                        {destinations.map((destination) => (
-                            <DestinationCard
-                                key={destination.id}
-                                name={destination.name}
-                                image={destination.image}
-                                href={destination.href}
-                            />
-                        ))}
-                    </div>
+                                    <div
+                                        ref={carouselRef}
+                                        className="flex gap-4 overflow-x-auto scroll-smooth pb-4 scrollbar-hide"
+                                        style={{
+                                            scrollbarWidth: "none",
+                                            msOverflowStyle: "none",
+                                            scrollSnapType: "x mandatory",
+                                        }}
+                                    >
+                                        {destinations.map((destination) => (
+                                            <DestinationCard
+                                                key={destination.id}
+                                                name={destination.name}
+                                                image={destination.image}
+                                                href={destination.href}
+                                            />
+                                        ))}
+                                    </div>
+                                </>
+                            ) : (
+                                <div className="text-center py-10 bg-slate-50 rounded-lg">
+                                    <p className="text-slate-500 font-medium">No destinations found in database.</p>
+                                </div>
+                            )}
+                        </>
+                    )}
                 </div>
             </div>
         </section >
