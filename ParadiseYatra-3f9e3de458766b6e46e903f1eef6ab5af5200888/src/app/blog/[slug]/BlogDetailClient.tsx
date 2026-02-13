@@ -182,7 +182,7 @@ const BlogDetailClient = ({ post, slug }: BlogDetailClientProps) => {
       <div className="min-h-screen bg-white">
         <Header />
 
-        <div className="max-w-7xl mx-auto px-3 sm:px-4 md:px-6 py-8 md:py-12">
+        <div className="max-w-6xl mx-auto px-4 md:px-6 py-8 md:py-12">
           {/* Back Button */}
           <Link href="/blog">
             <motion.button
@@ -273,9 +273,9 @@ const BlogDetailClient = ({ post, slug }: BlogDetailClientProps) => {
                   </div>
 
                   {/* Article Body */}
-                  <div className="prose prose-md max-w-none">
+                  <div className="max-w-none">
                     <div
-                      className="!text-slate-800 !leading-relaxed space-y-6 [&_h2]:!text-lg md:[&_h2]:!text-xl [&_h2]:!font-bold [&_h2]:!text-slate-900 [&_h2]:!mt-8 [&_h2]:!mb-4 [&_h3]:!text-base md:[&_h3]:!text-lg [&_h3]:!font-bold [&_h3]:!text-slate-900 [&_h3]:!mt-6 [&_h3]:!mb-3 [&_p]:!mb-4 [&_p]:!leading-relaxed [&_p]:!text-sm md:[&_p]:!text-base [&_p]:!text-slate-600 [&_ul]:!list-disc [&_ul]:!pl-6 [&_ul]:!space-y-2 [&_ol]:!list-decimal [&_ol]:!pl-6 [&_ol]:!space-y-2 [&_li]:!mb-2 [&_li]:!text-sm md:[&_li]:!text-base [&_li]:!text-slate-600 [&_a]:!text-blue-600 [&_a]:!underline [&_a]:!hover:text-blue-700 [&_img]:!rounded-lg [&_img]:!my-6 [&_blockquote]:!border-l-4 [&_blockquote]:!border-blue-600 [&_blockquote]:!pl-4 [&_blockquote]:!italic [&_blockquote]:!text-slate-600 [&_blockquote]:!my-6"
+                      className="!text-slate-800 !leading-relaxed space-y-6 overflow-x-auto [&_h1]:!text-xl md:[&_h1]:!text-2xl [&_h1]:!font-extrabold [&_h1]:!text-slate-900 [&_h1]:!mt-8 [&_h1]:!mb-4 [&_h2]:!text-lg md:[&_h2]:!text-xl [&_h2]:!font-bold [&_h2]:!text-slate-900 [&_h2]:!mt-8 [&_h2]:!mb-4 [&_h3]:!text-base md:[&_h3]:!text-lg [&_h3]:!font-bold [&_h3]:!text-slate-900 [&_h3]:!mt-6 [&_h3]:!mb-3 [&_h4]:!text-sm md:[&_h4]:!text-base [&_h4]:!font-semibold [&_h4]:!text-slate-900 [&_h4]:!mt-5 [&_h4]:!mb-2 [&_p]:!mb-4 [&_p]:!leading-relaxed [&_p]:!text-sm md:[&_p]:!text-base [&_p]:!text-slate-600 [&_ul]:!list-disc [&_ul]:!pl-6 [&_ul]:!space-y-2 [&_ol]:!list-decimal [&_ol]:!pl-6 [&_ol]:!space-y-2 [&_li]:!mb-2 [&_li]:!text-sm md:[&_li]:!text-base [&_li]:!text-slate-600 [&_a]:!text-blue-600 [&_a]:!underline [&_a]:!hover:text-blue-700 [&_img]:!rounded-lg [&_img]:!my-6 [&_blockquote]:!border-l-4 [&_blockquote]:!border-blue-600 [&_blockquote]:!pl-4 [&_blockquote]:!italic [&_blockquote]:!text-slate-600 [&_blockquote]:!my-6 [&_table]:!w-full [&_table]:!my-6 [&_table]:!border [&_table]:!border-slate-200 [&_table]:!border-separate [&_table]:!border-spacing-0 [&_table]:!rounded-lg [&_table]:!overflow-hidden [&_th]:!bg-slate-100 [&_th]:!text-slate-900 [&_th]:!font-semibold [&_th]:!text-sm [&_th]:!px-4 [&_th]:!py-3 [&_th]:!text-left [&_th]:!border-b [&_th]:!border-r [&_th]:!border-slate-200 [&_td]:!text-slate-700 [&_td]:!text-sm [&_td]:!px-4 [&_td]:!py-3 [&_td]:!align-top [&_td]:!border-b [&_td]:!border-r [&_td]:!border-slate-200 [&_tr:last-child_td]:!border-b-0 [&_tr_th:last-child]:!border-r-0 [&_tr_td:last-child]:!border-r-0"
                       dangerouslySetInnerHTML={{ __html: post.content }}
                     />
                   </div>

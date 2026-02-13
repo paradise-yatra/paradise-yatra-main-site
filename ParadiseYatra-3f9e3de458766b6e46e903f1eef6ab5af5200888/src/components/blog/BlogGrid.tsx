@@ -8,6 +8,7 @@ import { motion } from "framer-motion";
 
 interface BlogPost {
   _id: string;
+  slug?: string;
   title: string;
   excerpt: string;
   author: string;
@@ -32,6 +33,10 @@ const generateSlug = (title: string): string => {
     .replace(/\s+/g, "-")
     .replace(/-+/g, "-")
     .trim();
+};
+
+const getPostSlug = (post: BlogPost): string => {
+  return post.slug || generateSlug(post.title);
 };
 
 const getImageUrl = (image: string | undefined): string => {
@@ -91,7 +96,7 @@ export default function BlogGrid({ posts, searchQuery, selectedCategory }: BlogG
             whileHover={{ y: -8 }}
             className="bg-white rounded-xl overflow-hidden shadow-sm hover:shadow-xl transition-all duration-300 border border-slate-100 group"
           >
-            <Link href={`/blog/${generateSlug(post.title)}`} className="block h-full">
+            <Link href={`/blog/${getPostSlug(post)}`} className="block h-full">
               {/* Image */}
               <div className="relative h-48 md:h-56 overflow-hidden">
                 <Image

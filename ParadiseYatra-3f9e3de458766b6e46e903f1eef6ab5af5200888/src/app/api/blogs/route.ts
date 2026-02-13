@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { revalidatePath } from "next/cache";
 
 const BACKEND_URL = process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:5001';
 
@@ -125,6 +126,11 @@ export async function POST(request: NextRequest) {
         { message: data.message || 'Failed to create blog' },
         { status: response.status }
       );
+    }
+
+    revalidatePath("/blog");
+    if (data?.slug) {
+      revalidatePath(`/blog/${data.slug}`);
     }
 
     return NextResponse.json(data, { status: 201 });

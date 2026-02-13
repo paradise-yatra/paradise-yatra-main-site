@@ -16,9 +16,13 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
         title: `${formattedState} Tour Packages | Paradise Yatra`,
         description: `Explore the best tour packages for ${formattedState}. Handpicked premium collections for an unforgettable travel experience in ${formattedState}.`,
         keywords: [`${state} tour packages`, `${state} travel`, `${state} holiday packages`, 'Paradise Yatra', state],
+        alternates: {
+            canonical: `/package/india/${resolvedParams.state}`,
+        },
         openGraph: {
             title: `${formattedState} Tour Packages | Paradise Yatra`,
             description: `Book your dream vacation in ${formattedState} with Paradise Yatra.`,
+            url: `/package/india/${resolvedParams.state}`,
             type: 'website',
         },
     };

@@ -51,6 +51,11 @@ const allPackageSchema = new mongoose.Schema({
         required: true,
         default: 'india'
     },
+    priceType: {
+        type: String,
+        enum: ['per_person', 'per_couple'],
+        default: 'per_person'
+    },
     price: {
         type: Number,
         min: 0,

@@ -6,7 +6,7 @@ import { MapPin, Clock, Filter, ChevronDown, Check, ChevronLeft, ChevronRight, X
 import Loading from '@/components/ui/loading';
 import Link from 'next/link';
 import Image from 'next/image';
-import { getImageUrl } from '@/lib/utils';
+import { getImageUrl, getPackagePriceLabel } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
@@ -133,6 +133,13 @@ const PackagesLoadingSkeleton = () => (
     </div>
 );
 
+const stripHtmlTags = (value: string = "") =>
+    value
+        .replace(/<[^>]*>/g, " ")
+        .replace(/&nbsp;/gi, " ")
+        .replace(/\s+/g, " ")
+        .trim();
+
 export default function PackagePageClient() {
     const [allItems, setAllItems] = useState<any[]>([]);
     const [filteredItems, setFilteredItems] = useState<any[]>([]);
@@ -189,12 +196,12 @@ export default function PackagePageClient() {
                 setAllItems(packages);
                 setFilteredItems(packages);
 
-                // Fetch suggestions (from destinations API like in PackagesPageClient)
-                const suggestionsResponse = await fetch(`/api/destinations?limit=9`, { cache: 'no-store' });
+                // Fetch suggestions (from all-packages API for consistency)
+                const suggestionsResponse = await fetch(`/api/all-packages?limit=9`, { cache: 'no-store' });
                 if (suggestionsResponse.ok) {
                     const suggestionsData = await suggestionsResponse.json();
-                    if (suggestionsData && suggestionsData.destinations && Array.isArray(suggestionsData.destinations)) {
-                        setSuggestions(suggestionsData.destinations.slice(0, 9));
+                    if (suggestionsData && suggestionsData.packages && Array.isArray(suggestionsData.packages)) {
+                        setSuggestions(suggestionsData.packages);
                     }
                 }
 
@@ -212,6 +219,18 @@ export default function PackagePageClient() {
     // Filter items based on selected filters
     useEffect(() => {
         let filtered = [...allItems];
+
+        // Filter by search query
+        if (searchQuery.trim()) {
+            const query = searchQuery.toLowerCase();
+            filtered = filtered.filter(item =>
+                (item.name && item.name.toLowerCase().includes(query)) ||
+                (item.location && item.location.toLowerCase().includes(query)) ||
+                (item.description && stripHtmlTags(item.description).toLowerCase().includes(query)) ||
+                (item.state && item.state.toLowerCase().includes(query)) ||
+                (item.country && item.country.toLowerCase().includes(query))
+            );
+        }
 
         // Filter by tour type
         if (tourTypeFilter !== 'all') {
@@ -270,7 +289,7 @@ export default function PackagePageClient() {
 
         setFilteredItems(filtered);
         setCurrentPage(1);
-    }, [allItems, durationFilter, priceFilter, tourTypeFilter, sortBy]);
+    }, [allItems, searchQuery, durationFilter, priceFilter, tourTypeFilter, sortBy]);
 
     // Calculate pagination
     const totalPages = Math.ceil(filteredItems.length / itemsPerPage);
@@ -337,11 +356,35 @@ export default function PackagePageClient() {
                     subtitle="Discover handpicked premium tour packages curated for comfort, luxury, and authentic local adventures across the globe."
                 />
 
-                <div>
-                    <div className="max-w-6xl mx-auto px-4 md:px-8 py-3 flex items-center gap-2 text-xs font-bold uppercase tracking-widest text-slate-500">
-                        <Link href="/" className="hover:text-blue-600 transition-colors">Home</Link>
-                        <ChevronRight className="w-3 h-3 text-slate-300" />
-                        <span className="text-blue-600">Package</span>
+                <div className="bg-white border-b border-slate-200">
+                    <div className="max-w-6xl mx-auto px-4 md:px-8 py-3 flex flex-col md:flex-row md:items-center justify-between gap-4">
+                        <div className="flex items-center gap-2 text-xs font-bold uppercase tracking-widest text-slate-500">
+                            <Link href="/" className="hover:text-blue-600 transition-colors">Home</Link>
+                            <ChevronRight className="w-3 h-3 text-slate-300" />
+                            <span className="text-blue-600">Package</span>
+                        </div>
+
+                        {/* Search Bar */}
+                        <div className="relative w-full md:w-96 flex-shrink-0">
+                            <div className="absolute inset-y-0 left-3 flex items-center pointer-events-none">
+                                <Search className="h-4 w-4 text-slate-400" />
+                            </div>
+                            <input
+                                type="text"
+                                placeholder="Search packages, destinations..."
+                                value={searchQuery}
+                                onChange={(e) => setSearchQuery(e.target.value)}
+                                className="w-full pl-10 pr-4 py-2 bg-slate-50 border border-slate-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all font-medium text-slate-700"
+                            />
+                            {searchQuery && (
+                                <button
+                                    onClick={() => setSearchQuery("")}
+                                    className="absolute inset-y-0 right-3 flex items-center text-slate-400 hover:text-slate-600"
+                                >
+                                    <X className="h-4 w-4" />
+                                </button>
+                            )}
+                        </div>
                     </div>
                 </div>
 
@@ -457,6 +500,7 @@ export default function PackagePageClient() {
                                                 duration={item.duration}
                                                 description={item.shortDescription || item.description}
                                                 price={item.price}
+                                                priceLabel={getPackagePriceLabel(item.priceType)}
                                                 image={item.image}
                                                 detailUrl={`/package/${item.slug || item._id}`}
                                                 isInWishlist={isInWishlist(item._id)}

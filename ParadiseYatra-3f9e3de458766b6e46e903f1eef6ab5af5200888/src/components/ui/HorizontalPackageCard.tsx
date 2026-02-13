@@ -20,6 +20,18 @@ interface HorizontalPackageCardProps {
     onWishlistToggle: (e: React.MouseEvent, pkgId: string) => void;
 }
 
+const stripHtmlTags = (value: string = "") =>
+    value
+        .replace(/<[^>]*>/g, " ")
+        .replace(/&nbsp;/gi, " ")
+        .replace(/&amp;/gi, "&")
+        .replace(/&quot;/gi, "\"")
+        .replace(/&#39;/gi, "'")
+        .replace(/&lt;/gi, "<")
+        .replace(/&gt;/gi, ">")
+        .replace(/\s+/g, " ")
+        .trim();
+
 const formatDurationDisplay = (duration: string) => {
     if (!duration) return "";
     const nightsDaysMatch = duration.match(/^\s*(\d+)\s*N\s*\/\s*(\d+)\s*D\s*$/i);
@@ -44,6 +56,8 @@ const HorizontalPackageCard: React.FC<HorizontalPackageCardProps> = ({
     isInWishlist,
     onWishlistToggle,
 }) => {
+    const plainDescription = stripHtmlTags(description);
+
     return (
         <div className="group relative bg-white rounded-lg border border-slate-100 shadow-sm hover:shadow-xl hover:shadow-blue-900/5 transition-all duration-300 overflow-hidden">
             <Link href={detailUrl} className="flex flex-col md:flex-row h-full">
@@ -104,7 +118,7 @@ const HorizontalPackageCard: React.FC<HorizontalPackageCardProps> = ({
                         </h3>
 
                         <p className="!text-slate-600 !font-semibold !text-sm leading-relaxed line-clamp-2 mb-6">
-                            {description}
+                            {plainDescription}
                         </p>
                     </div>
 

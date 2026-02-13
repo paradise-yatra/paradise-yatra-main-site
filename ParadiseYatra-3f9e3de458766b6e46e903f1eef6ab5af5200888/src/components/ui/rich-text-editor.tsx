@@ -7,6 +7,7 @@ import Underline from "@tiptap/extension-underline";
 import Link from "@tiptap/extension-link";
 import Image from "@tiptap/extension-image";
 import Color from "@tiptap/extension-color";
+import { Table, TableRow, TableHeader, TableCell } from "@tiptap/extension-table";
 import { TextStyle } from "@tiptap/extension-text-style";
 import { toast } from "react-toastify";
 import {
@@ -26,6 +27,10 @@ import {
   Heading4,
   Palette,
   X,
+  Table2,
+  Undo2,
+  Redo2,
+  Eraser,
 } from "lucide-react";
 import { Button } from "./button";
 import { Input } from "./input";
@@ -38,6 +43,7 @@ interface RichTextEditorProps {
   placeholder?: string;
   className?: string;
   contentType?: string; // Content type for folder organization (e.g., 'blogs', 'destinations', 'packages')
+  editorViewportClassName?: string; // Controls scrollable editor viewport height
 }
 
 interface DialogProps {
@@ -66,8 +72,7 @@ const Dialog = ({
 }: DialogProps) => {
   const [value, setValue] = useState("");
 
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
+  const handleSubmit = () => {
     if (value.trim()) {
       onSubmit(value.trim());
       setValue("");
@@ -84,7 +89,7 @@ const Dialog = ({
       <div className="bg-white rounded-lg p-6 w-full max-w-md mx-4">
         <div className="flex items-center justify-between mb-4">
           <h3 className="text-lg font-semibold">{title}</h3>
-          <Button
+          <Button type="button"
             variant="ghost"
             size="sm"
             onClick={onClose}
@@ -93,12 +98,18 @@ const Dialog = ({
             <X className="h-4 w-4" />
           </Button>
         </div>
-        <form onSubmit={handleSubmit}>
+        <div>
           <Input
             type="url"
             placeholder={placeholder}
             value={value}
             onChange={(e) => setValue(e.target.value)}
+            onKeyDown={(e) => {
+              if (e.key === "Enter") {
+                e.preventDefault();
+                handleSubmit();
+              }
+            }}
             className="mb-4"
             autoFocus
           />
@@ -106,9 +117,9 @@ const Dialog = ({
             <Button type="button" variant="outline" onClick={onClose}>
               Cancel
             </Button>
-            <Button type="submit">{buttonText}</Button>
+            <Button type="button" onClick={handleSubmit}>{buttonText}</Button>
           </div>
-        </form>
+        </div>
       </div>
     </div>
   );
@@ -166,7 +177,7 @@ const ImageUploadDialog = ({
       const uploadPromises = validFiles.map(async (file) => {
         const formData = new FormData();
         formData.append("image", file);
-        
+
         // Add contentType if provided (for folder organization in Cloudinary)
         if (contentType) {
           formData.append("contentType", contentType);
@@ -223,7 +234,7 @@ const ImageUploadDialog = ({
       <div className="bg-white rounded-lg p-6 w-full max-w-md mx-4">
         <div className="flex items-center justify-between mb-4">
           <h3 className="text-lg font-semibold">Insert Image</h3>
-          <Button
+          <Button type="button"
             variant="ghost"
             size="sm"
             onClick={onClose}
@@ -331,12 +342,26 @@ const MenuBar = ({ editor, contentType }: { editor: Editor; contentType?: string
 
       try {
         new URL(url); // Validate URL
-        editor.chain().focus().setLink({ href: url }).run();
+        if (editor.state.selection.empty) {
+          // If no selection, insert the URL as text and then link it
+          editor
+            .chain()
+            .focus()
+            .insertContent(`<a href="${url}">${url}</a>`)
+            .run();
+        } else {
+          editor.chain().focus().setLink({ href: url }).run();
+        }
         toast.success("Link added successfully!");
       } catch {
         toast.error("Please enter a valid URL");
       }
     }
+  };
+
+  const removeLink = () => {
+    editor.chain().focus().unsetLink().run();
+    toast.success("Link removed");
   };
 
   const addImage = (url: string, size?: string) => {
@@ -374,10 +399,46 @@ const MenuBar = ({ editor, contentType }: { editor: Editor; contentType?: string
 
   return (
     <>
-      <div className="border-b border-gray-200 p-2 flex flex-wrap gap-1 bg-gray-50">
+      <div className="sticky top-0 z-20 border-b border-gray-200 p-2 flex flex-wrap gap-1 bg-gray-50 !text-slate-700">
+        {/* Editor Actions */}
+        <div className="flex items-center gap-1 border-r border-gray-300 pr-2">
+          <Button type="button"
+            variant="ghost"
+            size="sm"
+            onClick={() => editor.chain().focus().undo().run()}
+            className="h-10 w-10 p-0 hover:scale-110 transition-colors"
+            title="Undo (Ctrl+Z)"
+            disabled={!editor.can().chain().focus().undo().run()}
+          >
+            <Undo2 className="h-5 w-5" />
+          </Button>
+          <Button type="button"
+            variant="ghost"
+            size="sm"
+            onClick={() => editor.chain().focus().redo().run()}
+            className="h-10 w-10 p-0 hover:scale-110 transition-colors"
+            title="Redo (Ctrl+Y)"
+            disabled={!editor.can().chain().focus().redo().run()}
+          >
+            <Redo2 className="h-5 w-5" />
+          </Button>
+          <Button type="button"
+            variant="ghost"
+            size="sm"
+            onClick={() => {
+              editor.chain().focus().unsetAllMarks().clearNodes().run();
+              toast.success("Formatting cleared");
+            }}
+            className="h-10 w-10 p-0 hover:scale-110 transition-colors"
+            title="Clear Formatting"
+          >
+            <Eraser className="h-5 w-5" />
+          </Button>
+        </div>
+
         {/* Text Formatting */}
         <div className="flex items-center gap-1 border-r border-gray-300 pr-2">
-          <Button
+          <Button type="button"
             variant="ghost"
             size="sm"
             onClick={() => editor.chain().focus().toggleBold().run()}
@@ -389,7 +450,7 @@ const MenuBar = ({ editor, contentType }: { editor: Editor; contentType?: string
           >
             <Bold className="h-5 w-5" />
           </Button>
-          <Button
+          <Button type="button"
             variant="ghost"
             size="sm"
             onClick={() => editor.chain().focus().toggleItalic().run()}
@@ -401,7 +462,7 @@ const MenuBar = ({ editor, contentType }: { editor: Editor; contentType?: string
           >
             <Italic className="h-5 w-5" />
           </Button>
-          <Button
+          <Button type="button"
             variant="ghost"
             size="sm"
             onClick={() => editor.chain().focus().toggleUnderline().run()}
@@ -413,7 +474,7 @@ const MenuBar = ({ editor, contentType }: { editor: Editor; contentType?: string
           >
             <UnderlineIcon className="h-5 w-5" />
           </Button>
-          <Button
+          <Button type="button"
             variant="ghost"
             size="sm"
             onClick={() => editor.chain().focus().toggleStrike().run()}
@@ -426,7 +487,7 @@ const MenuBar = ({ editor, contentType }: { editor: Editor; contentType?: string
             <Strikethrough className="h-5 w-5" />
           </Button>
           <div className="relative" ref={colorDropdownRef}>
-            <Button
+            <Button type="button"
               variant="ghost"
               size="sm"
               onClick={() => setColorDropdown(!colorDropdown)}
@@ -481,23 +542,22 @@ const MenuBar = ({ editor, contentType }: { editor: Editor; contentType?: string
                     "#FF6633",
                     "#FF9966",
                   ].map((color, index) => (
-                    <button
+                    <button type="button"
                       key={`color-${index}-${color}`}
                       onClick={() => {
                         setTextColor(color);
                         setColorDropdown(false);
                       }}
-                      className={`w-6 h-6 rounded border-2 ${
-                        color === "#FFFFFF"
-                          ? "border-gray-300"
-                          : "border-gray-200"
-                      } hover:scale-110 transition-transform`}
+                      className={`w-6 h-6 rounded border-2 ${color === "#FFFFFF"
+                        ? "border-gray-300"
+                        : "border-gray-200"
+                        } hover:scale-110 transition-transform`}
                       style={{ backgroundColor: color }}
                       title={color}
                     />
                   ))}
                 </div>
-                <button
+                <button type="button"
                   onClick={() => {
                     editor.chain().focus().unsetColor().run();
                     setColorDropdown(false);
@@ -514,129 +574,53 @@ const MenuBar = ({ editor, contentType }: { editor: Editor; contentType?: string
 
         {/* Headings */}
         <div className="flex items-center gap-1 border-r border-gray-300 pr-2">
-          <Button
+          <Button type="button"
             variant="ghost"
             size="sm"
-            onClick={() => {
-              const { from, to } = editor.state.selection;
-              if (from === to) {
-                // No selection, apply to current line
-                if (editor.isActive("heading", { level: 1 })) {
-                  editor.chain().focus().setParagraph().run();
-                } else {
-                  editor.chain().focus().setHeading({ level: 1 }).run();
-                }
-              } else {
-                // Has selection, wrap selected text in heading
-                const selectedText = editor.state.doc.textBetween(from, to);
-                editor.chain().focus().deleteRange({ from, to }).run();
-                editor
-                  .chain()
-                  .focus()
-                  .insertContent(`<h1>${selectedText}</h1>`)
-                  .run();
-              }
-            }}
+            onClick={() => editor.chain().focus().toggleHeading({ level: 1 }).run()}
             className={cn(
               "h-10 w-10 p-0 hover:scale-110 transition-colors",
               editor.isActive("heading", { level: 1 }) &&
-                "bg-blue-100 text-blue-700"
+              "bg-blue-100 text-blue-700"
             )}
             title="Heading 1"
           >
             <Heading1 className="h-5 w-5" />
           </Button>
-          <Button
+          <Button type="button"
             variant="ghost"
             size="sm"
-            onClick={() => {
-              const { from, to } = editor.state.selection;
-              if (from === to) {
-                // No selection, apply to current line
-                if (editor.isActive("heading", { level: 2 })) {
-                  editor.chain().focus().setParagraph().run();
-                } else {
-                  editor.chain().focus().setHeading({ level: 2 }).run();
-                }
-              } else {
-                // Has selection, wrap selected text in heading
-                const selectedText = editor.state.doc.textBetween(from, to);
-                editor.chain().focus().deleteRange({ from, to }).run();
-                editor
-                  .chain()
-                  .focus()
-                  .insertContent(`<h2>${selectedText}</h2>`)
-                  .run();
-              }
-            }}
+            onClick={() => editor.chain().focus().toggleHeading({ level: 2 }).run()}
             className={cn(
               "h-10 w-10 p-0 hover:scale-110 transition-colors",
               editor.isActive("heading", { level: 2 }) &&
-                "bg-blue-100 text-blue-700"
+              "bg-blue-100 text-blue-700"
             )}
             title="Heading 2"
           >
             <Heading2 className="h-5 w-5" />
           </Button>
-          <Button
+          <Button type="button"
             variant="ghost"
             size="sm"
-            onClick={() => {
-              const { from, to } = editor.state.selection;
-              if (from === to) {
-                // No selection, apply to current line
-                if (editor.isActive("heading", { level: 3 })) {
-                  editor.chain().focus().setParagraph().run();
-                } else {
-                  editor.chain().focus().setHeading({ level: 3 }).run();
-                }
-              } else {
-                // Has selection, wrap selected text in heading
-                const selectedText = editor.state.doc.textBetween(from, to);
-                editor.chain().focus().deleteRange({ from, to }).run();
-                editor
-                  .chain()
-                  .focus()
-                  .insertContent(`<h3>${selectedText}</h3>`)
-                  .run();
-              }
-            }}
+            onClick={() => editor.chain().focus().toggleHeading({ level: 3 }).run()}
             className={cn(
               "h-10 w-10 p-0 hover:scale-110 transition-colors",
               editor.isActive("heading", { level: 3 }) &&
-                "bg-blue-100 text-blue-700"
+              "bg-blue-100 text-blue-700"
             )}
             title="Heading 3"
           >
             <Heading3 className="h-5 w-5" />
           </Button>
-          <Button
+          <Button type="button"
             variant="ghost"
             size="sm"
-            onClick={() => {
-              const { from, to } = editor.state.selection;
-              if (from === to) {
-                // No selection, apply to current line
-                if (editor.isActive("heading", { level: 4 })) {
-                  editor.chain().focus().setParagraph().run();
-                } else {
-                  editor.chain().focus().setHeading({ level: 4 }).run();
-                }
-              } else {
-                // Has selection, wrap selected text in heading
-                const selectedText = editor.state.doc.textBetween(from, to);
-                editor.chain().focus().deleteRange({ from, to }).run();
-                editor
-                  .chain()
-                  .focus()
-                  .insertContent(`<h4>${selectedText}</h4>`)
-                  .run();
-              }
-            }}
+            onClick={() => editor.chain().focus().toggleHeading({ level: 4 }).run()}
             className={cn(
               "h-10 w-10 p-0 hover:scale-110 transition-colors",
               editor.isActive("heading", { level: 4 }) &&
-                "bg-blue-100 text-blue-700"
+              "bg-blue-100 text-blue-700"
             )}
             title="Heading 4"
           >
@@ -646,7 +630,7 @@ const MenuBar = ({ editor, contentType }: { editor: Editor; contentType?: string
 
         {/* Lists */}
         <div className="flex items-center gap-1 border-r border-gray-300 pr-2">
-          <Button
+          <Button type="button"
             variant="ghost"
             size="sm"
             onClick={() => editor.chain().focus().toggleBulletList().run()}
@@ -658,7 +642,7 @@ const MenuBar = ({ editor, contentType }: { editor: Editor; contentType?: string
           >
             <List className="h-5 w-5" />
           </Button>
-          <Button
+          <Button type="button"
             variant="ghost"
             size="sm"
             onClick={() => editor.chain().focus().toggleOrderedList().run()}
@@ -674,7 +658,7 @@ const MenuBar = ({ editor, contentType }: { editor: Editor; contentType?: string
 
         {/* Block Elements */}
         <div className="flex items-center gap-1 border-r border-gray-300 pr-2">
-          <Button
+          <Button type="button"
             variant="ghost"
             size="sm"
             onClick={() => editor.chain().focus().toggleBlockquote().run()}
@@ -686,7 +670,7 @@ const MenuBar = ({ editor, contentType }: { editor: Editor; contentType?: string
           >
             <Quote className="h-5 w-5" />
           </Button>
-          <Button
+          <Button type="button"
             variant="ghost"
             size="sm"
             onClick={() => editor.chain().focus().toggleCodeBlock().run()}
@@ -700,21 +684,125 @@ const MenuBar = ({ editor, contentType }: { editor: Editor; contentType?: string
           </Button>
         </div>
 
-        {/* Links and Images */}
-        <div className="flex items-center gap-1">
-          <Button
+        {/* Tables */}
+        <div className="flex items-center gap-1 border-r border-gray-300 pr-2">
+          <Button type="button"
             variant="ghost"
             size="sm"
-            onClick={() => setLinkDialog(true)}
+            onClick={() =>
+              editor
+                .chain()
+                .focus()
+                .insertTable({ rows: 3, cols: 3, withHeaderRow: true })
+                .run()
+            }
+            className={cn(
+              "h-10 w-10 p-0 hover:scale-110 transition-colors",
+              editor.isActive("table") && "bg-blue-100 text-blue-700"
+            )}
+            title="Insert Table"
+          >
+            <Table2 className="h-5 w-5" />
+          </Button>
+          {editor.isActive("table") && (
+            <div className="flex items-center gap-1 border-l border-gray-300 pl-2">
+              <Button type="button"
+                variant="ghost"
+                size="sm"
+                onClick={() => editor.chain().focus().addColumnBefore().run()}
+                className="h-8 px-2 text-xs hover:scale-105 transition-colors"
+                title="Add Column Before"
+              >
+                +Col
+              </Button>
+              <Button type="button"
+                variant="ghost"
+                size="sm"
+                onClick={() => editor.chain().focus().addRowAfter().run()}
+                className="h-8 px-2 text-xs hover:scale-105 transition-colors"
+                title="Add Row After"
+              >
+                +Row
+              </Button>
+              <Button type="button"
+                variant="ghost"
+                size="sm"
+                onClick={() => editor.chain().focus().toggleHeaderRow().run()}
+                className="h-8 px-2 text-xs hover:scale-105 transition-colors"
+                title="Toggle Header Row"
+              >
+                H-Row
+              </Button>
+              <Button type="button"
+                variant="ghost"
+                size="sm"
+                onClick={() => editor.chain().focus().toggleHeaderColumn().run()}
+                className="h-8 px-2 text-xs hover:scale-105 transition-colors"
+                title="Toggle Header Column"
+              >
+                H-Col
+              </Button>
+              <Button type="button"
+                variant="ghost"
+                size="sm"
+                onClick={() => editor.chain().focus().mergeOrSplit().run()}
+                className="h-8 px-2 text-xs hover:scale-105 transition-colors"
+                title="Merge or Split Cells"
+              >
+                Merge
+              </Button>
+              <Button type="button"
+                variant="ghost"
+                size="sm"
+                onClick={() => editor.chain().focus().deleteColumn().run()}
+                className="h-8 px-2 text-xs hover:scale-105 transition-colors"
+                title="Delete Column"
+              >
+                -Col
+              </Button>
+              <Button type="button"
+                variant="ghost"
+                size="sm"
+                onClick={() => editor.chain().focus().deleteRow().run()}
+                className="h-8 px-2 text-xs hover:scale-105 transition-colors"
+                title="Delete Row"
+              >
+                -Row
+              </Button>
+              <Button type="button"
+                variant="ghost"
+                size="sm"
+                onClick={() => editor.chain().focus().deleteTable().run()}
+                className="h-8 px-2 text-xs text-red-600 hover:text-red-700 hover:scale-105 transition-colors"
+                title="Delete Table"
+              >
+                Del
+              </Button>
+            </div>
+          )}
+        </div>
+
+        {/* Links and Images */}
+        <div className="flex items-center gap-1">
+          <Button type="button"
+            variant="ghost"
+            size="sm"
+            onClick={() => {
+              if (editor.isActive("link")) {
+                removeLink();
+              } else {
+                setLinkDialog(true);
+              }
+            }}
             className={cn(
               "h-10 w-10 p-0 hover:scale-110 transition-colors",
               editor.isActive("link") && "bg-blue-100 text-blue-700"
             )}
-            title="Insert Link"
+            title={editor.isActive("link") ? "Remove Link" : "Insert Link"}
           >
             <LinkIcon className="h-5 w-5" />
           </Button>
-          <Button
+          <Button type="button"
             variant="ghost"
             size="sm"
             onClick={() => setImageUploadDialog(true)}
@@ -725,7 +813,7 @@ const MenuBar = ({ editor, contentType }: { editor: Editor; contentType?: string
           </Button>
           {editor.isActive("image") && (
             <div className="flex items-center gap-1 border-l border-gray-300 pl-2">
-              <Button
+              <Button type="button"
                 variant="ghost"
                 size="sm"
                 onClick={() => {
@@ -753,7 +841,7 @@ const MenuBar = ({ editor, contentType }: { editor: Editor; contentType?: string
               >
                 S
               </Button>
-              <Button
+              <Button type="button"
                 variant="ghost"
                 size="sm"
                 onClick={() => {
@@ -781,7 +869,7 @@ const MenuBar = ({ editor, contentType }: { editor: Editor; contentType?: string
               >
                 M
               </Button>
-              <Button
+              <Button type="button"
                 variant="ghost"
                 size="sm"
                 onClick={() => {
@@ -809,7 +897,7 @@ const MenuBar = ({ editor, contentType }: { editor: Editor; contentType?: string
               >
                 L
               </Button>
-              <Button
+              <Button type="button"
                 variant="ghost"
                 size="sm"
                 onClick={() => {
@@ -868,6 +956,7 @@ export const RichTextEditor = ({
   placeholder = "Start writing...",
   className,
   contentType,
+  editorViewportClassName = "max-h-[520px]",
 }: RichTextEditorProps) => {
   const [isDragOver, setIsDragOver] = useState(false);
 
@@ -897,7 +986,7 @@ export const RichTextEditor = ({
         const uploadPromises = validFiles.map(async (file) => {
           const formData = new FormData();
           formData.append("image", file);
-          
+
           // Add contentType if provided (for folder organization in Cloudinary)
           if (contentType) {
             formData.append("contentType", contentType);
@@ -972,6 +1061,12 @@ export const RichTextEditor = ({
           class: "text-blue-600 underline cursor-pointer",
         },
       }),
+      Table.configure({
+        resizable: true,
+      }),
+      TableRow,
+      TableHeader,
+      TableCell,
       Image.configure({
         HTMLAttributes: {
           class: "max-w-full h-auto rounded-lg",
@@ -985,11 +1080,20 @@ export const RichTextEditor = ({
     editorProps: {
       attributes: {
         class:
-          "prose prose-sm max-w-none focus:outline-none min-h-[200px] p-4 [&_ul]:list-disc [&_ul]:pl-6 [&_ol]:list-decimal [&_ol]:pl-6 [&_li]:mb-1",
+          "prose prose-sm max-w-none focus:outline-none min-h-[200px] p-4 cursor-text !text-black [&_*]:!text-black [&_ul]:list-disc [&_ul]:pl-6 [&_ol]:list-decimal [&_ol]:pl-6 [&_li]:mb-1 [&_h1]:text-3xl [&_h1]:font-bold [&_h1]:mb-4 [&_h2]:text-2xl [&_h2]:font-bold [&_h2]:mb-3 [&_h3]:text-xl [&_h3]:font-bold [&_h3]:mb-2 [&_h4]:text-lg [&_h4]:font-bold [&_h4]:mb-2 [&_strong]:font-bold [&_em]:italic [&_u]:underline [&_blockquote]:border-l-4 [&_blockquote]:border-gray-300 [&_blockquote]:pl-4 [&_blockquote]:italic [&_blockquote]:!text-gray-700 [&_pre]:bg-gray-100 [&_pre]:p-3 [&_pre]:rounded [&_code]:bg-gray-100 [&_code]:p-1 [&_code]:rounded [&_code]:font-mono [&_a]:!text-blue-600 [&_a]:underline [&_a]:cursor-pointer [&_table]:w-full [&_table]:border-collapse [&_table]:my-4 [&_th]:border [&_th]:border-gray-300 [&_th]:bg-gray-100 [&_th]:p-2 [&_th]:text-left [&_td]:border [&_td]:border-gray-300 [&_td]:p-2",
       },
     },
     immediatelyRender: false,
   });
+
+  // Sync editor content with value prop (for loading saved data)
+  useEffect(() => {
+    if (editor && value && editor.getHTML() !== value) {
+      // Only update if the content is truly different to avoid cursor jumping
+      // Simple string comparison works for loading saved data
+      editor.commands.setContent(value);
+    }
+  }, [editor, value]);
 
   if (!editor) {
     return (
@@ -1007,7 +1111,7 @@ export const RichTextEditor = ({
   return (
     <div
       className={cn(
-        "border rounded-md bg-white transition-all duration-200",
+        "border rounded-md bg-white transition-all duration-200 !text-slate-700",
         isDragOver
           ? "border-blue-500 bg-blue-50 scale-[1.02]"
           : "border-gray-300",
@@ -1018,7 +1122,7 @@ export const RichTextEditor = ({
       onDragLeave={handleDragLeave}
     >
       <MenuBar editor={editor} contentType={contentType} />
-      <div className="relative">
+      <div className={cn("relative overflow-y-auto", editorViewportClassName)}>
         <EditorContent editor={editor} />
         {!editor.getText() && (
           <div className="absolute top-0 left-4 text-gray-400 pointer-events-none">

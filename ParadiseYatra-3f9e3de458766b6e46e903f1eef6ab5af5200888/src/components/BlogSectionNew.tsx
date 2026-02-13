@@ -7,6 +7,7 @@ import { getImageUrl } from "@/lib/utils";
 
 interface BlogPost {
     _id: string;
+    slug?: string;
     title: string;
     content: string;
     excerpt: string;
@@ -29,6 +30,10 @@ const generateSlug = (title: string): string => {
         .replace(/\s+/g, "-")
         .replace(/-+/g, "-")
         .trim();
+};
+
+const getPostSlug = (post: BlogPost): string => {
+    return post.slug || generateSlug(post.title);
 };
 
 const BlogSectionNew = () => {
@@ -77,7 +82,7 @@ const BlogSectionNew = () => {
                 try {
                     response = await fetch("/api/blogs?featured=true", {
                         signal: controller.signal,
-                        cache: 'default', // Use cache to reduce requests
+                        cache: "no-store",
                     });
                     clearTimeout(timeoutId);
                 } catch (fetchError) {
@@ -236,7 +241,7 @@ const BlogSectionNew = () => {
                                 key={post._id}
                                 className="w-[280px] md:w-[calc(50%-4px)] lg:w-[calc(25%-6px)] flex-shrink-0 snap-start"
                             >
-                                <Link href={`/blog/${generateSlug(post.title)}`} className="block group/card h-full bg-white rounded-lg overflow-hidden border border-gray-300 transition-all duration-300 hover:border-blue-200 hover:shadow-md">
+                                <Link href={`/blog/${getPostSlug(post)}`} className="block group/card h-full bg-white rounded-lg overflow-hidden border border-gray-300 transition-all duration-300 hover:border-blue-200 hover:shadow-md">
                                     <div className="relative h-[180px] w-full overflow-hidden">
                                         {/* White hover overlay */}
                                         <div className="absolute inset-0 bg-white/10 opacity-10 group-hover/card:opacity-100 transition-opacity duration-300 z-30 pointer-events-none"></div>

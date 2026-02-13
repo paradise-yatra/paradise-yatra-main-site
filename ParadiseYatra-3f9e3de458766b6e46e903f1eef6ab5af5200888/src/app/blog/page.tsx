@@ -51,6 +51,15 @@ const getImageUrl = (image: string | undefined): string => {
   return `https://res.cloudinary.com/dwuwpxu0y/image/upload/${image}`;
 };
 
+const stripHtml = (value: string): string => value.replace(/<[^>]*>/g, " ");
+
+const normalizeText = (value: string): string =>
+  value
+    .toLowerCase()
+    .replace(/[^\w\s]/g, " ")
+    .replace(/\s+/g, " ")
+    .trim();
+
 const BlogPage = () => {
   const [blogPosts, setBlogPosts] = useState<BlogPost[]>([]);
   const [loading, setLoading] = useState(true);
@@ -86,7 +95,7 @@ const BlogPage = () => {
         try {
           response = await fetch("/api/blogs?published=true&limit=24", {
             signal: controller.signal,
-            cache: 'force-cache', // Use cache for better performance
+            cache: "no-store",
           });
           clearTimeout(timeoutId);
         } catch (fetchError) {
@@ -163,45 +172,66 @@ const BlogPage = () => {
 
   // Filter posts
   const filteredPosts = useMemo(() => {
+    const query = normalizeText(searchQuery);
+
     return blogPosts.filter((post) => {
       const matchesCategory = selectedCategory === "All" || post.category === selectedCategory;
-      const matchesSearch =
-        searchQuery === "" ||
-        post.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        post.excerpt.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        post.author.toLowerCase().includes(searchQuery.toLowerCase());
+      if (!query) return matchesCategory;
+
+      const searchableText = normalizeText(
+        [
+          post.title,
+          post.excerpt,
+          post.author,
+          post.category,
+          stripHtml(post.content || ""),
+        ].join(" ")
+      );
+
+      const matchesSearch = searchableText.includes(query);
       return matchesCategory && matchesSearch;
     });
   }, [blogPosts, selectedCategory, searchQuery]);
 
-  // Get featured post (first one)
-  const featuredPost = blogPosts.length > 0 ? blogPosts[0] : null;
+  // Get featured post from filtered posts
+  const featuredPost = filteredPosts.length > 0 ? filteredPosts[0] : null;
   // Get all other posts for the grid (exclude featured)
   const gridPosts = filteredPosts.slice(1);
 
   if (loading) return <Loading size="lg" className="min-h-[400px]" />;
 
   return (
-    <div className="min-h-screen bg-white">
+    <div className="min-h-screen bg-slate-50">
       <Header />
 
       {/* Main Content */}
-      <main className="max-w-7xl mx-auto px-3 sm:px-4 md:px-6 py-12">
+      <main className="max-w-6xl mx-auto px-4 md:px-6 py-10 md:py-14">
         {/* Header Section */}
-        <header className="mb-12">
+        <header className="mb-12 md:mb-14 relative overflow-hidden rounded-3xl border border-slate-200 bg-gradient-to-br from-white via-blue-50/40 to-slate-100 p-6 md:p-6 shadow-sm">
+          <div className="absolute -top-16 -right-20 h-56 w-56 rounded-full bg-blue-200/30 blur-3xl" />
+          <div className="absolute -bottom-20 -left-20 h-56 w-56 rounded-full bg-cyan-200/30 blur-3xl" />
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
+            className="relative"
           >
-            <span className="text-blue-600 !font-semibold !text-xs tracking-widest uppercase">
+            <span className="inline-flex items-center rounded-full border border-blue-200 bg-blue-50 px-3 py-1 text-blue-700 !font-semibold !text-xs tracking-widest uppercase">
               Read Our Blog
             </span>
-            <h1 className="!text-3xl  md:!text-4xl!font-extrabold mt-2 mb-2 tracking-tight text-slate-900">
+            <h1 className="!text-3xl md:!text-5xl !font-extrabold mt-3 mb-3 tracking-tight text-slate-900">
               Travel Blog & Guides
             </h1>
-            <p className="!text-md !text-slate-600 max-w-2xl">
+            <p className="!text-sm md:!text-base !text-slate-600 max-w-2xl">
               Discover expert tips, local insights, and guides to make your journey unforgettable.
             </p>
+            <div className="mt-5 flex flex-wrap gap-2 text-xs">
+              <span className="rounded-full bg-white/90 px-3 py-1.5 text-slate-600 border border-slate-200">
+                {blogPosts.length} total articles
+              </span>
+              <span className="rounded-full bg-white/90 px-3 py-1.5 text-slate-600 border border-slate-200">
+                {filteredPosts.length} matching results
+              </span>
+            </div>
           </motion.div>
         </header>
 
@@ -211,7 +241,7 @@ const BlogPage = () => {
             initial={{ opacity: 0, y: 30 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.2 }}
-            className="relative group cursor-pointer overflow-hidden rounded-2xl mb-16 min-h-[500px] md:aspect-[21/9] md:min-h-0"
+            className="relative group cursor-pointer overflow-hidden rounded-3xl mb-14 md:mb-16 min-h-[500px] md:aspect-[21/9] md:min-h-0 border border-slate-200 shadow-lg"
           >
             <Link
               href={`/blog/${getPostSlug(featuredPost)}`}
@@ -222,15 +252,16 @@ const BlogPage = () => {
                   src={getSafeImageUrl(featuredPost)}
                   alt={featuredPost.title}
                   fill
-                  className="object-cover group-hover:scale-105 transition-transform duration-700"
+                  className="object-cover group-hover:scale-110 transition-transform duration-700"
                   priority
                   sizes="(max-width: 768px) 100vw, (max-width: 1200px) 80vw, 1280px"
                   onError={(e) => handleImageError(featuredPost._id, e)}
                 />
 
+                <div className="absolute inset-0 bg-gradient-to-t from-slate-950/80 via-slate-950/20 to-transparent" />
                 {/* Glass Effect Overlay - Positioned at bottom */}
                 <div className="absolute left-0 right-0 bottom-0 p-2 md:p-4 lg:p-6 z-10">
-                  <div className="bg-white/10 backdrop-blur-md border border-white/20 p-4 sm:p-5 md:p-6 lg:p-8 rounded-xl sm:rounded-2xl md:rounded-3xl text-white relative">
+                  <div className="bg-white/10 backdrop-blur-lg border border-white/20 p-4 sm:p-5 md:p-6 lg:p-8 rounded-xl sm:rounded-2xl md:rounded-3xl text-white relative">
                     {/* Arrow Icon - Responsive positioning */}
                     <div className="absolute top-3 right-3 sm:top-4 sm:right-4 md:top-6 md:right-6 lg:top-8 lg:right-8">
                       <ArrowUpRight className="w-5 h-5 sm:w-6 sm:h-6 md:w-7 md:h-7 lg:w-8 lg:h-8 font-light opacity-80" />
@@ -285,14 +316,14 @@ const BlogPage = () => {
         )}
 
         {/* Category Filters and Search */}
-        <div className="flex flex-col md:flex-row items-center justify-between gap-6 mb-12 border-b border-slate-200 pb-2">
+        <div className="flex flex-col md:flex-row md:items-center justify-between gap-5 mb-10 rounded-2xl border border-slate-200 bg-white/90 backdrop-blur p-4 md:p-5 shadow-sm">
           {/* Category Filters */}
-          <div className="flex items-center gap-8 overflow-x-auto w-full md:w-auto scrollbar-hide">
+          <div className="flex items-center gap-2 overflow-x-auto w-full md:w-auto scrollbar-hide">
             <button
               onClick={() => setSelectedCategory("All")}
-              className={`text-sm font-semibold pb-4 whitespace-nowrap transition-colors ${selectedCategory === "All"
-                ? "text-blue-600 border-b-2 border-blue-600"
-                : "text-slate-400 hover:text-slate-600"
+              className={`text-xs md:text-sm font-semibold px-4 py-2 rounded-full whitespace-nowrap transition-all ${selectedCategory === "All"
+                ? "bg-slate-900 text-white"
+                : "bg-slate-100 text-slate-600 hover:bg-slate-200"
                 }`}
             >
               All
@@ -301,14 +332,14 @@ const BlogPage = () => {
               <button
                 key={category}
                 onClick={() => setSelectedCategory(category)}
-                className={`text-sm font-medium pb-4 whitespace-nowrap transition-colors ${selectedCategory === category
-                  ? "text-blue-600 border-b-2 border-blue-600"
-                  : "text-slate-400 hover:text-slate-600"
+                className={`text-xs md:text-sm font-medium px-4 py-2 rounded-full whitespace-nowrap transition-all ${selectedCategory === category
+                  ? "bg-slate-900 text-white"
+                  : "bg-slate-100 text-slate-600 hover:bg-slate-200"
                   }`}
               >
                 {category}
                 {count > 0 && (
-                  <span className="ml-2 px-1.5 py-0.5 bg-indigo-50 text-blue-600 text-[10px] font-bold rounded">
+                  <span className={`ml-2 px-1.5 py-0.5 text-[10px] font-bold rounded ${selectedCategory === category ? "bg-white/20 text-white" : "bg-indigo-50 text-blue-600"}`}>
                     {count}
                   </span>
                 )}
@@ -317,22 +348,28 @@ const BlogPage = () => {
           </div>
 
           {/* Search Bar */}
-          <div className="relative w-full md:w-72 mb-4 md:mb-0">
-            <Search className="absolute right-4 top-1/2 transform -translate-y-1/2 w-5 h-5 text-slate-400" />
+          <div className="relative w-full md:w-80">
+            <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 w-4 h-4 text-slate-400" />
             <input
               type="text"
               placeholder="Search blog..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-full bg-slate-50 border-none rounded-full px-5 py-2.5 text-sm focus:ring-2 focus:ring-blue-500/20 outline-none text-slate-900 placeholder:text-slate-400"
+              className="w-full bg-slate-50 border border-slate-200 rounded-full pl-11 pr-4 py-2.5 text-sm focus:ring-2 focus:ring-blue-500/20 focus:border-blue-400 outline-none text-slate-900 placeholder:text-slate-400"
             />
           </div>
         </div>
 
+        {error && (
+          <div className="mb-8 rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-700">
+            {error}
+          </div>
+        )}
+
         {/* Blog Post Grid */}
         {gridPosts.length > 0 ? (
           <>
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-x-8 gap-y-12">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 md:gap-8">
               {gridPosts.map((post, index) => {
                 return (
                   <motion.article
@@ -340,14 +377,14 @@ const BlogPage = () => {
                     initial={{ opacity: 0, y: 20 }}
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ delay: index * 0.05, duration: 0.4 }}
-                    className="group cursor-pointer"
+                    className="group cursor-pointer rounded-2xl border border-slate-200 p-2  hover:-translate-y-1 transition-all"
                   >
                     <Link
                       href={`/blog/${getPostSlug(post)}`}
                       prefetch={true}
                     >
                       {/* Image */}
-                      <div className="overflow-hidden rounded-2xl mb-5 aspect-[4/3] relative">
+                      <div className="overflow-hidden rounded-xl mb-4 aspect-[4/3] relative">
                         <Image
                           src={getSafeImageUrl(post)}
                           alt={post.title}
@@ -360,14 +397,25 @@ const BlogPage = () => {
                       </div>
 
                       {/* Content */}
-                      <div className="space-y-3">
-                        {/* Category */}
-                        <span className="!text-blue-600 text-[10px] font-bold uppercase tracking-widest">
-                          {post.category}
-                        </span>
+                      <div className="space-y-3 px-1 pb-1">
+                        {/* Category + Date */}
+                        <div className="flex items-center justify-between">
+                          <span className="inline-flex rounded-full bg-blue-50 px-2.5 py-1 !text-blue-700 text-[10px] font-bold uppercase tracking-widest">
+                            {post.category}
+                          </span>
+                          <span className="!text-[10px] !text-slate-400 font-medium">
+                            {new Date(
+                              post.createdAt || post.publishDate || post.updatedAt || new Date().toISOString()
+                            ).toLocaleDateString("en-US", {
+                              month: "short",
+                              day: "numeric",
+                              year: "numeric",
+                            })}
+                          </span>
+                        </div>
 
                         {/* Title */}
-                        <h3 className="!text-xl text-slate-900 !font-bold group-hover:text-blue-600 transition-colors">
+                        <h3 className="!text-lg md:!text-xl text-slate-900 !font-bold group-hover:text-blue-600 transition-colors line-clamp-2">
                           {post.title}
                         </h3>
 
@@ -377,7 +425,7 @@ const BlogPage = () => {
                         </p>
 
                         {/* Author and Read Time */}
-                        <div className="flex items-center justify-between pt-2">
+                        <div className="flex items-center justify-between pt-2 border-t border-slate-100">
                           <div className="flex items-center gap-2">
                             <div className="w-6 h-6 rounded-full bg-gradient-to-br from-blue-100 to-indigo-100 text-blue-700 flex items-center justify-center font-semibold text-xs">
                               {post.author?.charAt(0) || "A"}
@@ -386,8 +434,8 @@ const BlogPage = () => {
                               {post.author || "Paradise Yatra"}
                             </span>
                           </div>
-                          <span className="!text-[10px] !text-slate-400 font-medium">
-                            {post.readTime || 5}min read
+                          <span className="!text-[10px] !text-slate-500 font-semibold uppercase tracking-wider">
+                            {post.readTime || 5} min read
                           </span>
                         </div>
                       </div>
@@ -398,19 +446,14 @@ const BlogPage = () => {
             </div>
 
             {/* Results Count and Load More */}
-            <div className="mt-20 text-center">
+            <div className="mt-14 text-center">
               <p className="!text-xs !text-slate-400 mb-6">
-                Showing {gridPosts.length} of {blogPosts.length - 1} results
+                Showing {gridPosts.length} of {Math.max(filteredPosts.length - 1, 0)} results
               </p>
-              {gridPosts.length < blogPosts.length - 1 && (
-                <button className="px-8 py-3 bg-slate-900 text-white rounded-full font-bold text-sm hover:scale-105 transition-transform">
-                  Load More Articles
-                </button>
-              )}
             </div>
           </>
         ) : (
-          <div className="text-center py-16">
+          <div className="text-center py-16 rounded-2xl border border-dashed border-slate-300 bg-white">
             <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-slate-100 mb-4">
               <Search className="w-8 h-8 text-slate-400" />
             </div>

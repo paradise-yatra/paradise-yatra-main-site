@@ -52,6 +52,14 @@ export function formatPrice(price: number): string {
   }).format(price);
 }
 
+export function getPackagePriceLabel(priceType?: string): string {
+  return priceType === "per_couple" ? "Per Couple" : "Per Person";
+}
+
+export function getPackagePriceSubLabel(priceType?: string): string {
+  return priceType === "per_couple" ? "Starting from per couple" : "Starting from per person";
+}
+
 // Get category color classes
 export function getCategoryColor(category: string): string {
   const colors = {

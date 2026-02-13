@@ -395,7 +395,7 @@ const NewPremiumPackages = () => {
                             </span>
                           )}
                         </div>
-                        <Link href={`/itinerary/${pkg.slug || pkg._id}`}>
+                        <Link href={`/package/${pkg.slug || pkg._id}`}>
                           <Button
                             variant="outline"
                             className="border-slate-900 border text-slate-900 bg-transparent hover:bg-indigo-600 hover:text-white hover:border-indigo-600 transition-all duration-300 cursor-pointer px-4 h-9"
@@ -464,7 +464,7 @@ const NewPremiumPackages = () => {
                             </span>
                           )}
                         </div>
-                        <Link href={`/itinerary/${pkg.slug || pkg._id}`}>
+                        <Link href={`/package/${pkg.slug || pkg._id}`}>
                           <Button
                             variant="outline"
                             className="desktop-card-button border border-slate-900 text-slate-900 bg-transparent hover:bg-indigo-600 hover:text-white hover:border-indigo-600 transition-all duration-300 cursor-pointer px-6"

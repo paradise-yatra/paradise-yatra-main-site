@@ -418,7 +418,7 @@ const NewTrendingDestinations = () => {
             <div className="mobile-scroll-container" ref={scrollContainerRef} style={{ paddingLeft: '0.5rem', paddingRight: '0.5rem' }}>
               {allPackages.map((pkg) => (
                 <div key={pkg._id} className="mobile-scroll-item">
-                  <Link href={`/itinerary/${pkg.slug || pkg._id}`} className="block w-full">
+                  <Link href={`/package/${pkg.slug || pkg._id}`} className="block w-full">
                     <article
                       className="group cursor-pointer bg-white rounded-lg overflow-hidden border border-gray-300 transition-all duration-300 relative w-full"
                     >
@@ -495,7 +495,7 @@ const NewTrendingDestinations = () => {
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
               {visiblePackages.map((pkg, index) => (
                 <div key={pkg._id} className={newCardIndex === index ? 'card-enter' : ''}>
-                  <Link href={`/itinerary/${pkg.slug || pkg._id}`} className="block h-full w-full">
+                  <Link href={`/package/${pkg.slug || pkg._id}`} className="block h-full w-full">
                     <article
                       className="group cursor-pointer bg-white rounded-lg overflow-hidden border border-gray-300 transition-all duration-300 relative w-full h-full"
                     >

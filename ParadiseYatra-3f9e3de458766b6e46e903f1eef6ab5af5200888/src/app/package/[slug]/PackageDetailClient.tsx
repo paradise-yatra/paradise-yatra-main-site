@@ -10,6 +10,8 @@ import { useRouter } from "next/navigation";
 import Link from "next/link";
 import LeadCaptureForm from "@/components/LeadCaptureForm";
 import Header from "@/components/Header";
+import PackageCard from "@/components/ui/PackageCard";
+import { getImageUrl, getPackagePriceLabel, getPackagePriceSubLabel } from "@/lib/utils";
 
 interface DayItinerary {
   day: number;
@@ -27,6 +29,7 @@ interface Package {
   description: string;
   shortDescription: string;
   price: number;
+  priceType?: "per_person" | "per_couple";
   originalPrice?: number;
   discount: number;
   duration: string;
@@ -47,6 +50,15 @@ interface ItineraryPageClientProps {
   packageData: Package;
   slug: string;
 }
+
+const stripHtmlTags = (value: string = "") =>
+  value
+    .replace(/<[^>]*>/g, " ")
+    .replace(/&nbsp;/gi, " ")
+    .replace(/\s+/g, " ")
+    .trim();
+
+const containsHtml = (value: string = ""): boolean => /<\/?[a-z][\s\S]*>/i.test(value);
 
 const ItineraryPageClient = ({ packageData, slug }: ItineraryPageClientProps) => {
   const [selectedImage, setSelectedImage] = useState(0);
@@ -71,7 +83,7 @@ const ItineraryPageClient = ({ packageData, slug }: ItineraryPageClientProps) =>
     const fetchOtherPackages = async () => {
       try {
         setPackagesLoading(true);
-        const response = await fetch('/api/packages?limit=4');
+        const response = await fetch('/api/all-packages?limit=12&isActive=true', { cache: 'no-store' });
         const data = await response.json();
 
         // Extract array from possible response formats
@@ -80,7 +92,11 @@ const ItineraryPageClient = ({ packageData, slug }: ItineraryPageClientProps) =>
         else if (data.data && Array.isArray(data.data)) packagesArray = data.data;
         else if (data.packages && Array.isArray(data.packages)) packagesArray = data.packages;
 
-        setOtherPackages(packagesArray.filter((pkg: any) => pkg._id !== packageData._id).slice(0, 3));
+        setOtherPackages(
+          packagesArray
+            .filter((pkg: any) => pkg?._id !== packageData._id && (pkg?.isActive ?? true))
+            .slice(0, 9)
+        );
       } catch (error) {
         console.error('Error fetching other packages:', error);
       } finally {
@@ -94,6 +110,14 @@ const ItineraryPageClient = ({ packageData, slug }: ItineraryPageClientProps) =>
   const discount = packageData.originalPrice && packageData.originalPrice > packageData.price
     ? Math.round(((packageData.originalPrice - packageData.price) / packageData.originalPrice) * 100)
     : packageData.discount || 0;
+  const shortDescriptionText = stripHtmlTags(
+    packageData.shortDescription || packageData.description || ""
+  );
+  const shortDescriptionPreview = shortDescriptionText
+    ? shortDescriptionText.length > 180
+      ? `${shortDescriptionText.slice(0, 180)}...`
+      : shortDescriptionText
+    : "Tour details coming soon.";
 
   return (
     <motion.div
@@ -143,9 +167,16 @@ const ItineraryPageClient = ({ packageData, slug }: ItineraryPageClientProps) =>
                 <h1 className="!text-xl sm:!text-2xl font-black text-slate-900 leading-[1.1] tracking-tight">
                   {packageData.title}
                 </h1>
-                <p className="!text-md !text-slate-500 font-medium max-w-2xl leading-relaxed">
-                  {packageData.shortDescription || packageData.description?.substring(0, 160) + '...'}
-                </p>
+                {packageData.shortDescription ? (
+                  <div
+                    className="!text-md !text-slate-500 font-medium max-w-2xl leading-relaxed [&_p]:!mb-2 [&_p]:!text-slate-500 [&_h1]:!text-lg [&_h1]:!font-bold [&_h2]:!text-base [&_h2]:!font-bold [&_h3]:!text-sm [&_h3]:!font-semibold [&_ul]:!list-disc [&_ul]:!pl-5 [&_ol]:!list-decimal [&_ol]:!pl-5 [&_li]:!mb-1 [&_ul_li::marker]:!text-blue-500 [&_ol_li::marker]:!text-blue-500 [&_a]:!text-blue-600 [&_a]:!underline"
+                    dangerouslySetInnerHTML={{ __html: packageData.shortDescription }}
+                  />
+                ) : (
+                  <p className="!text-md !text-slate-500 font-medium max-w-2xl leading-relaxed">
+                    {shortDescriptionPreview}
+                  </p>
+                )}
               </div>
 
               <div className="flex flex-wrap items-center gap-4 sm:gap-8 py-6 border-y border-slate-100">
@@ -184,9 +215,10 @@ const ItineraryPageClient = ({ packageData, slug }: ItineraryPageClientProps) =>
                 <h2 className="!text-2xl !font-bold text-slate-900">Experience Highlights</h2>
               </div>
 
-              <p className="!text-md font-medium !text-slate-500 leading-relaxed mb-8">
-                {packageData.description}
-              </p>
+              <div
+                className="!text-slate-700 !leading-relaxed mb-8 overflow-x-auto [&_h1]:!text-2xl [&_h1]:!font-extrabold [&_h1]:!text-slate-900 [&_h1]:!mt-8 [&_h1]:!mb-4 [&_h2]:!text-xl [&_h2]:!font-bold [&_h2]:!text-slate-900 [&_h2]:!mt-8 [&_h2]:!mb-4 [&_h3]:!text-lg [&_h3]:!font-bold [&_h3]:!text-slate-900 [&_h3]:!mt-6 [&_h3]:!mb-3 [&_h4]:!text-base [&_h4]:!font-semibold [&_h4]:!text-slate-900 [&_h4]:!mt-5 [&_h4]:!mb-2 [&_p]:!mb-4 [&_p]:!text-base [&_p]:!text-slate-600 [&_ul]:!list-disc [&_ul]:!pl-6 [&_ul]:!space-y-2 [&_ol]:!list-decimal [&_ol]:!pl-6 [&_ol]:!space-y-2 [&_li]:!mb-2 [&_li]:!text-slate-600 [&_ul_li::marker]:!text-blue-500 [&_ol_li::marker]:!text-blue-500 [&_a]:!text-blue-600 [&_a]:!underline [&_blockquote]:!border-l-4 [&_blockquote]:!border-blue-600 [&_blockquote]:!pl-4 [&_blockquote]:!italic [&_blockquote]:!text-slate-600 [&_blockquote]:!my-6 [&_img]:!rounded-lg [&_img]:!my-6 [&_table]:!w-full [&_table]:!my-6 [&_table]:!border [&_table]:!border-slate-200 [&_table]:!border-separate [&_table]:!border-spacing-0 [&_table]:!rounded-lg [&_table]:!overflow-hidden [&_th]:!bg-slate-100 [&_th]:!text-slate-900 [&_th]:!font-semibold [&_th]:!text-sm [&_th]:!px-4 [&_th]:!py-3 [&_th]:!text-left [&_th]:!border-b [&_th]:!border-r [&_th]:!border-slate-200 [&_td]:!text-slate-700 [&_td]:!text-sm [&_td]:!px-4 [&_td]:!py-3 [&_td]:!align-top [&_td]:!border-b [&_td]:!border-r [&_td]:!border-slate-200 [&_tr:last-child_td]:!border-b-0 [&_tr_th:last-child]:!border-r-0 [&_tr_td:last-child]:!border-r-0"
+                dangerouslySetInnerHTML={{ __html: packageData.description || "" }}
+              />
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 {packageData.highlights?.map((highlight, index) => (
@@ -244,10 +276,19 @@ const ItineraryPageClient = ({ packageData, slug }: ItineraryPageClientProps) =>
                             <div className="pt-4 space-y-4">
                               <ul className="space-y-3">
                                 {day.activities?.map((activity, actIndex) => (
-                                  <li key={actIndex} className="flex gap-3 text-slate-600">
-                                    <div className="mt-2 min-w-[6px] h-1.5 w-1.5 rounded-full bg-blue-400 shrink-0" />
-                                    <span className="leading-relaxed text-[15px]">{activity}</span>
-                                  </li>
+                                  containsHtml(activity) ? (
+                                    <li key={actIndex} className="list-none">
+                                      <div
+                                        className="overflow-x-auto [&_h1]:!text-xl [&_h1]:!font-bold [&_h1]:!text-slate-900 [&_h1]:!mb-3 [&_h2]:!text-lg [&_h2]:!font-bold [&_h2]:!text-slate-900 [&_h2]:!mb-3 [&_h3]:!text-base [&_h3]:!font-semibold [&_h3]:!text-slate-900 [&_h3]:!mb-2 [&_p]:!text-sm [&_p]:!text-slate-700 [&_p]:!mb-3 [&_ul]:!list-disc [&_ul]:!pl-5 [&_ul]:!space-y-2 [&_ol]:!list-decimal [&_ol]:!pl-5 [&_ol]:!space-y-2 [&_li]:!text-sm [&_li]:!text-slate-700 [&_ul_li::marker]:!text-blue-500 [&_ol_li::marker]:!text-blue-500 [&_a]:!text-blue-600 [&_a]:!underline [&_table]:!w-full [&_table]:!border [&_table]:!border-slate-200 [&_th]:!bg-slate-100 [&_th]:!px-3 [&_th]:!py-2 [&_th]:!text-left [&_th]:!text-sm [&_th]:!font-semibold [&_td]:!px-3 [&_td]:!py-2 [&_td]:!text-sm [&_td]:!text-slate-700 [&_td]:!border-t [&_td]:!border-slate-200"
+                                        dangerouslySetInnerHTML={{ __html: activity }}
+                                      />
+                                    </li>
+                                  ) : (
+                                    <li key={actIndex} className="flex gap-3 text-slate-600">
+                                      <div className="mt-2 min-w-[6px] h-1.5 w-1.5 rounded-full bg-blue-400 shrink-0" />
+                                      <span className="leading-relaxed text-[15px]">{activity}</span>
+                                    </li>
+                                  )
                                 ))}
                               </ul>
 
@@ -298,7 +339,14 @@ const ItineraryPageClient = ({ packageData, slug }: ItineraryPageClientProps) =>
                         <div className="mt-1 h-5 w-5 rounded-full bg-green-100 flex items-center justify-center shrink-0 group-hover:bg-green-600 transition-colors">
                           <Check className="h-3 w-3 text-green-600 group-hover:text-white" />
                         </div>
-                        <span className="text-slate-600 !text-md">{item}</span>
+                        {containsHtml(item) ? (
+                          <div
+                            className="text-slate-600 !text-md [&_p]:!mb-1 [&_p]:!text-slate-600 [&_a]:!text-blue-600 [&_a]:!underline [&_strong]:!font-semibold"
+                            dangerouslySetInnerHTML={{ __html: item }}
+                          />
+                        ) : (
+                          <span className="text-slate-600 !text-md">{item}</span>
+                        )}
                       </li>
                     ))}
                   </ul>
@@ -317,7 +365,14 @@ const ItineraryPageClient = ({ packageData, slug }: ItineraryPageClientProps) =>
                         <div className="mt-1 h-5 w-5 rounded-full bg-red-100 flex items-center justify-center shrink-0 group-hover:bg-red-600 transition-colors">
                           <div className="h-1 w-2.5 bg-red-600 group-hover:bg-white rounded-full"></div>
                         </div>
-                        <span className="text-slate-600 !text-md">{item}</span>
+                        {containsHtml(item) ? (
+                          <div
+                            className="text-slate-600 !text-md [&_p]:!mb-1 [&_p]:!text-slate-600 [&_a]:!text-blue-600 [&_a]:!underline [&_strong]:!font-semibold"
+                            dangerouslySetInnerHTML={{ __html: item }}
+                          />
+                        ) : (
+                          <span className="text-slate-600 !text-md">{item}</span>
+                        )}
                       </li>
                     ))}
                   </ul>
@@ -339,63 +394,77 @@ const ItineraryPageClient = ({ packageData, slug }: ItineraryPageClientProps) =>
               </div>
             </motion.section>
 
-            {/* Other Packages Section */}
+            {/* Why Choose Paradise Yatra */}
             <motion.section
               initial={{ opacity: 0, y: 20 }}
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true }}
               className="scroll-mt-32"
             >
-              <div className="flex items-center gap-3 mb-8">
-                <div className="p-2 bg-blue-100 rounded-lg">
-                  <MapPin className="h-6 w-6 text-blue-600" />
+              <div className="rounded-2xl border border-slate-200 bg-white p-6 md:p-8 shadow-sm">
+                <div className="flex items-center gap-3 mb-6">
+                  <div className="p-2 bg-blue-100 rounded-lg">
+                    <Award className="h-6 w-6 text-blue-600" />
+                  </div>
+                  <h2 className="!text-2xl !font-bold text-slate-900">Why Choose Paradise Yatra</h2>
                 </div>
-                <h2 className="!text-2xl !font-bold text-slate-900">Explore Other Packages</h2>
-              </div>
+                <p className="!text-slate-600 !font-medium mb-7 leading-relaxed">
+                  We design practical, well-paced tours with transparent pricing and on-ground support, so your journey stays smooth from booking to return.
+                </p>
 
-              {packagesLoading ? (
-                <div className="flex justify-center py-10"><Loader2 className="animate-spin text-blue-600" /></div>
-              ) : (
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-                  {otherPackages.map((pkg, index) => (
-                    <Link key={index} href={`/itinerary/${pkg.slug || pkg._id}`} className="block h-full">
-                      <Card className="group cursor-pointer bg-white rounded-lg overflow-hidden border border-slate-200 transition-all duration-300 relative shadow-sm hover:shadow-xl hover:border-blue-100 h-full">
-                        <div className="relative h-64 w-full overflow-hidden">
-                          <img src={pkg.images?.[0] || pkg.image} alt={pkg.title} className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110" />
-                          <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-transparent to-transparent opacity-80" />
-                          <div className="absolute bottom-4 left-4 right-4 text-white">
-                            <div className="flex items-center gap-1.5 mb-1.5 opacity-90 text-[10px] font-bold uppercase tracking-wider">
-                              <MapPin className="h-3.5 w-3.5 text-white" /> {pkg.destination}
-                            </div>
-                            <h4 className="!text-md font-bold leading-snug line-clamp-2">{pkg.title}</h4>
-                          </div>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  {[
+                    {
+                      icon: Shield,
+                      title: "Trusted & Transparent",
+                      text: "Clear inclusions, no hidden surprises, and reliable pre-trip guidance.",
+                      color: "blue",
+                    },
+                    {
+                      icon: Calendar,
+                      title: "Well-Planned Itineraries",
+                      text: "Balanced sightseeing plans with proper travel time and comfort in mind.",
+                      color: "emerald",
+                    },
+                    {
+                      icon: MapPin,
+                      title: "Local Travel Expertise",
+                      text: "Destination-aware planning based on route, season, and travel conditions.",
+                      color: "amber",
+                    },
+                    {
+                      icon: Users,
+                      title: "Responsive Support Team",
+                      text: "Quick assistance before and during your trip for stress-free travel.",
+                      color: "purple",
+                    },
+                  ].map((item, idx) => (
+                    <div
+                      key={idx}
+                      className="rounded-xl border border-slate-200 bg-slate-50/60 p-4 transition-all hover:bg-white hover:shadow-sm"
+                    >
+                      <div className="flex items-start gap-3">
+                        <div className={`mt-0.5 h-9 w-9 rounded-lg flex items-center justify-center ${item.color === "blue"
+                          ? "bg-blue-100 text-blue-600"
+                          : item.color === "emerald"
+                            ? "bg-emerald-100 text-emerald-600"
+                            : item.color === "amber"
+                              ? "bg-amber-100 text-amber-600"
+                              : "bg-purple-100 text-purple-600"
+                          }`}>
+                          <item.icon className="h-5 w-5" />
                         </div>
-                        <div className="p-5">
-                          <div className="flex items-center justify-between mb-4">
-                            <div className="flex flex-col">
-                              <span className="text-[10px] !text-slate-700 font-bold uppercase tracking-wide">Duration</span>
-                              <span className="!text-sm font-bold text-slate-800 flex items-center gap-1">
-                                <div className="w-1.5 h-1.5 rounded-full bg-blue-600"></div> {pkg.duration}
-                              </span>
-                            </div>
-                            <div className="flex flex-col items-end">
-                              <span className="text-[10px] text-slate-700 font-bold uppercase tracking-wide">Starts from</span>
-                              <span className="!text-lg font-black text-blue-600">{formatPrice(pkg.price)}</span>
-                            </div>
-                          </div>
-                          <div className="pt-4 border-t border-dashed border-slate-100 flex items-center justify-between">
-                            <span className="text-[10px] text-slate-700 font-bold">Per Person</span>
-                            <div className="!text-sm font-bold text-slate-900 group-hover:text-blue-600 transition-all flex items-center gap-2">
-                              View Details <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-1" />
-                            </div>
-                          </div>
+                        <div>
+                          <h3 className="!text-base !font-bold text-slate-900 mb-1">{item.title}</h3>
+                          <p className="!text-sm !text-slate-600 leading-relaxed">{item.text}</p>
                         </div>
-                      </Card>
-                    </Link>
+                      </div>
+                    </div>
                   ))}
                 </div>
-              )}
+              </div>
             </motion.section>
+
           </div>
 
           {/* Sidebar */}
@@ -406,7 +475,7 @@ const ItineraryPageClient = ({ packageData, slug }: ItineraryPageClientProps) =>
                   <div className="absolute top-0 right-0 -translate-y-1/2 translate-x-1/2 w-32 h-32 bg-white/10 rounded-full blur-2xl"></div>
                   <p className="!text-blue-100 !font-bold uppercase tracking-widest text-xs mb-2">Exclusive Offer</p>
                   <div className="text-4xl font-black mb-1">{formatPrice(packageData.price)}</div>
-                  <p className="!text-blue-100/80 !text-sm !font-medium">Starting from per person</p>
+                  <p className="!text-blue-100/80 !text-sm !font-medium">{getPackagePriceSubLabel(packageData.priceType)}</p>
                   {discount > 0 && <div className="mt-4 bg-white/20 backdrop-blur-md rounded-full py-1 px-4 inline-block text-xs font-bold">Special {discount}% Off</div>}
                 </div>
                 <CardContent className="p-8 space-y-6">
@@ -445,6 +514,52 @@ const ItineraryPageClient = ({ packageData, slug }: ItineraryPageClientProps) =>
             </motion.div>
           </div>
         </div>
+
+        {/* Other Packages Section */}
+        <motion.section
+          initial={{ opacity: 0, y: 20 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true }}
+          className="!bg-white px-4 py-10 text-gray-900 md:px-8 rounded-lg mt-16"
+        >
+          <div className="flex flex-col gap-2 md:flex-row md:items-end md:justify-between mb-6">
+            <div className="flex flex-col gap-1">
+              <h3 className="!text-2xl md:!text-3xl !font-bold !text-slate-900 !leading-tight flex items-center gap-3 flex-wrap">
+                You Might Also Like
+              </h3>
+              <p className="!text-sm !text-slate-600 md:!text-base !max-w-2xl !font-semibold">
+                Explore our popular packages and create unforgettable memories
+              </p>
+            </div>
+          </div>
+
+          {packagesLoading ? (
+            <div className="flex justify-center py-10"><Loader2 className="animate-spin text-blue-600" /></div>
+          ) : (
+            <div className="flex gap-4 overflow-x-auto scroll-smooth pb-2 scrollbar-hide px-2">
+              {otherPackages.map((pkg, index) => (
+                <PackageCard
+                  key={`${pkg._id}-${index}`}
+                  id={pkg._id}
+                  title={pkg.title || pkg.name}
+                  destination={pkg.destination || pkg.location}
+                  image={getImageUrl(pkg.images?.[0] || pkg.image) || `https://picsum.photos/800/500?random=${index + 80}`}
+                  duration={pkg.duration}
+                  price={pkg.price || 0}
+                  slug={pkg.slug || pkg._id}
+                  hrefPrefix="/package"
+                  themeColor="#005beb"
+                  priceLabel={getPackagePriceLabel(pkg.priceType)}
+                  isInWishlist={false}
+                  onWishlistToggle={(e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                  }}
+                />
+              ))}
+            </div>
+          )}
+        </motion.section>
 
         {/* Terms and Conditions Section */}
         <section className="mt-16 pt-16 border-t border-slate-200">

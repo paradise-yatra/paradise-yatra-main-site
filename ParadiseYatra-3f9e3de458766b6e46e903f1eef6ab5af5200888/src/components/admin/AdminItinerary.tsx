@@ -27,6 +27,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
+import { RichTextEditor } from "@/components/ui/rich-text-editor";
 
 interface DayItinerary {
   day: number;
@@ -89,6 +90,38 @@ interface SelectedItem {
   data: PopularDestinationPackage | FixedDeparture;
 }
 
+const escapeHtml = (text: string) =>
+  text
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#39;");
+
+const containsHtml = (value: string = ""): boolean => /<\/?[a-z][\s\S]*>/i.test(value);
+
+const activitiesToHtml = (activities: string[]) => {
+  const cleanActivities = activities.filter((item) => item.trim());
+  if (cleanActivities.length === 0) return "<p></p>";
+  if (cleanActivities.length === 1 && containsHtml(cleanActivities[0])) {
+    return cleanActivities[0];
+  }
+  return `<ul>${cleanActivities
+    .map((item) => `<li>${containsHtml(item) ? item : escapeHtml(item)}</li>`)
+    .join("")}</ul>`;
+};
+
+const htmlToActivities = (html: string): string[] => {
+  if (!html.trim() || typeof window === "undefined") return [];
+  const parsed = new DOMParser().parseFromString(html, "text/html");
+  const textContent = (parsed.body?.textContent || "").trim();
+  const hasMedia =
+    parsed.body?.querySelector("img, table, iframe, video, audio, ul, ol") !== null;
+
+  if (!textContent && !hasMedia) return [];
+  return [html];
+};
+
 const AdminItinerary = () => {
   const [fixedDepartures, setFixedDepartures] = useState<FixedDeparture[]>([]);
   const [allPackages, setAllPackages] = useState<PopularDestinationPackage[]>([]);
@@ -112,6 +145,8 @@ const AdminItinerary = () => {
   const [packageInclusions, setPackageInclusions] = useState<string[]>([]);
   const [isEditingExclusions, setIsEditingExclusions] = useState(false);
   const [packageExclusions, setPackageExclusions] = useState<string[]>([]);
+  const [editingActivitiesHtml, setEditingActivitiesHtml] = useState("<p></p>");
+  const [newDayActivitiesHtml, setNewDayActivitiesHtml] = useState("<p></p>");
   const [newDay, setNewDay] = useState<Partial<DayItinerary>>({
     day: 1,
     title: "",
@@ -154,9 +189,9 @@ const AdminItinerary = () => {
       };
 
       const [fixedDeparturesResponse, allPackagesResponse, tagsResponse] = await Promise.all([
-        fetch('/api/fixed-departures', { headers }),
-        fetch('/api/all-packages', { headers }),
-        fetch('/api/tags', { headers })
+        fetch('/api/fixed-departures', { headers, cache: 'no-store' }),
+        fetch('/api/all-packages?limit=60', { headers, cache: 'no-store' }),
+        fetch('/api/tags', { headers, cache: 'no-store' })
       ]);
 
       if (!fixedDeparturesResponse.ok) throw new Error('Failed to fetch fixed departures');
@@ -211,15 +246,21 @@ const AdminItinerary = () => {
   });
 
   const handleItemSelect = (type: ItemType, item: any) => {
+    const normalized = normalizeItemData(item);
     setSelectedItem({
       type,
-      data: normalizeItemData(item)
+      data: normalized
     });
+    setPackageHighlights(normalized.highlights || []);
+    setPackageInclusions(normalized.inclusions || []);
+    setPackageExclusions(normalized.exclusions || []);
     setIsEditing(false);
     setEditingDay(null);
+    setEditingActivitiesHtml("<p></p>");
     setIsAddingDay(false);
     setError(null);
     setSuccess(null);
+    setNewDayActivitiesHtml("<p></p>");
     setNewDay({ day: 1, title: "", activities: [""], image: "" });
     // Scroll to details
     setTimeout(() => {
@@ -246,45 +287,78 @@ const AdminItinerary = () => {
     });
   }, [activeTab, allPackages, fixedDepartures, searchTerm, selectedTag, selectedTourType, selectedCountry, selectedState]);
 
+  const persistSelectedItem = async (
+    payload: Record<string, unknown>,
+    successMessage: string,
+    clearEditState?: () => void
+  ) => {
+    if (!selectedItem) return;
+
+    const endpoint = selectedItem.type === 'fixed-departure'
+      ? `/api/fixed-departures/${selectedItem.data._id}`
+      : `/api/all-packages/${selectedItem.data._id}`;
+
+    const response = await fetch(endpoint, {
+      method: 'PUT',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${localStorage.getItem('adminToken')}`
+      },
+      body: JSON.stringify(payload)
+    });
+
+    if (!response.ok) {
+      const errorData = await response.json().catch(() => ({}));
+      throw new Error(errorData?.message || 'Failed to save itinerary data');
+    }
+
+    const updatedData = await response.json();
+    const updatedItem = updatedData.package || updatedData.fixedDeparture || updatedData;
+    const normalized = normalizeItemData(updatedItem);
+
+    setSelectedItem({ type: selectedItem.type, data: normalized });
+    if (selectedItem.type === 'fixed-departure') {
+      setFixedDepartures(prev => prev.map(p => p._id === normalized._id ? normalized : p));
+    } else {
+      setAllPackages(prev => prev.map(p => p._id === normalized._id ? normalized : p));
+    }
+
+    setPackageHighlights(normalized.highlights || []);
+    setPackageInclusions(normalized.inclusions || []);
+    setPackageExclusions(normalized.exclusions || []);
+    clearEditState?.();
+    setSuccess(successMessage);
+    setTimeout(() => setSuccess(null), 3000);
+  };
+
   const handleSaveDay = async () => {
     if (!selectedItem || !editingDay) return;
     try {
       setIsSaving(true);
       setError(null);
-      const updatedItinerary = (selectedItem.data.itinerary || []).map(day =>
-        day.day === editingDay.day ? editingDay : day
-      );
 
-      const endpoint = selectedItem.type === 'fixed-departure'
-        ? `/api/fixed-departures/${selectedItem.data._id}`
-        : `/api/all-packages/${selectedItem.data._id}`;
-
-      const response = await fetch(endpoint, {
-        method: 'PUT',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${localStorage.getItem('adminToken')}`
-        },
-        body: JSON.stringify({ itinerary: updatedItinerary })
-      });
-
-      if (!response.ok) throw new Error('Failed to update day');
-
-      const updatedData = await response.json();
-      const updatedItem = updatedData.package || updatedData.fixedDeparture || updatedData;
-      const normalized = normalizeItemData(updatedItem);
-
-      setSelectedItem({ type: selectedItem.type, data: normalized });
-      if (selectedItem.type === 'fixed-departure') {
-        setFixedDepartures(prev => prev.map(p => p._id === normalized._id ? normalized : p));
-      } else {
-        setAllPackages(prev => prev.map(p => p._id === normalized._id ? normalized : p));
+      const parsedActivities = htmlToActivities(editingActivitiesHtml);
+      if (!editingDay.title.trim()) {
+        setError('Day title is required');
+        return;
+      }
+      if (parsedActivities.length === 0) {
+        setError('Add at least one activity');
+        return;
       }
 
-      setIsEditing(false);
-      setEditingDay(null);
-      setSuccess('Day updated successfully!');
-      setTimeout(() => setSuccess(null), 3000);
+      const updatedItinerary = (selectedItem.data.itinerary || []).map(day =>
+        day.day === editingDay.day ? { ...editingDay, activities: parsedActivities } : day
+      );
+      await persistSelectedItem(
+        { itinerary: updatedItinerary },
+        'Day updated successfully!',
+        () => {
+          setIsEditing(false);
+          setEditingDay(null);
+          setEditingActivitiesHtml("<p></p>");
+        }
+      );
     } catch (error) {
       setError(error instanceof Error ? error.message : 'Failed to update day');
     } finally {
@@ -296,37 +370,12 @@ const AdminItinerary = () => {
     if (!selectedItem || !confirm(`Delete Day ${dayNumber}?`)) return;
     try {
       setIsSaving(true);
+      setError(null);
       const updatedItinerary = (selectedItem.data.itinerary || [])
         .filter(day => day.day !== dayNumber)
         .map((day, index) => ({ ...day, day: index + 1 }));
 
-      const endpoint = selectedItem.type === 'fixed-departure'
-        ? `/api/fixed-departures/${selectedItem.data._id}`
-        : `/api/all-packages/${selectedItem.data._id}`;
-
-      const response = await fetch(endpoint, {
-        method: 'PUT',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${localStorage.getItem('adminToken')}`
-        },
-        body: JSON.stringify({ itinerary: updatedItinerary })
-      });
-
-      if (!response.ok) throw new Error('Failed to delete day');
-
-      const updatedData = await response.json();
-      const updatedItem = updatedData.package || updatedData.fixedDeparture || updatedData;
-      const normalized = normalizeItemData(updatedItem);
-
-      setSelectedItem({ type: selectedItem.type, data: normalized });
-      if (selectedItem.type === 'fixed-departure') {
-        setFixedDepartures(prev => prev.map(p => p._id === normalized._id ? normalized : p));
-      } else {
-        setAllPackages(prev => prev.map(p => p._id === normalized._id ? normalized : p));
-      }
-      setSuccess('Day deleted!');
-      setTimeout(() => setSuccess(null), 3000);
+      await persistSelectedItem({ itinerary: updatedItinerary }, 'Day deleted!');
     } catch (error) {
       setError('Failed to delete day');
     } finally {
@@ -336,7 +385,7 @@ const AdminItinerary = () => {
 
   const handleAddDay = async () => {
     if (!selectedItem || !newDay.title) return;
-    const validActivities = (newDay.activities || []).filter(a => a.trim() !== "");
+    const validActivities = htmlToActivities(newDayActivitiesHtml);
     if (validActivities.length === 0) {
       setError('Add at least one activity');
       return;
@@ -344,6 +393,7 @@ const AdminItinerary = () => {
 
     try {
       setIsSaving(true);
+      setError(null);
       const dayToAdd = {
         day: (selectedItem.data.itinerary || []).length + 1,
         title: newDay.title.trim(),
@@ -352,37 +402,17 @@ const AdminItinerary = () => {
       };
       const updatedItinerary = [...(selectedItem.data.itinerary || []), dayToAdd];
 
-      const endpoint = selectedItem.type === 'fixed-departure'
-        ? `/api/fixed-departures/${selectedItem.data._id}`
-        : `/api/all-packages/${selectedItem.data._id}`;
-
-      const response = await fetch(endpoint, {
-        method: 'PUT',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${localStorage.getItem('adminToken')}`
-        },
-        body: JSON.stringify({ itinerary: updatedItinerary })
-      });
-
-      if (!response.ok) throw new Error('Failed to add day');
-
-      const updatedData = await response.json();
-      const updatedItem = updatedData.package || updatedData.fixedDeparture || updatedData;
-      const normalized = normalizeItemData(updatedItem);
-
-      setSelectedItem({ type: selectedItem.type, data: normalized });
-      if (selectedItem.type === 'fixed-departure') {
-        setFixedDepartures(prev => prev.map(p => p._id === normalized._id ? normalized : p));
-      } else {
-        setAllPackages(prev => prev.map(p => p._id === normalized._id ? normalized : p));
-      }
-      setIsAddingDay(false);
-      setNewDay({ day: 1, title: "", activities: [""], image: "" });
-      setSuccess('Day added!');
-      setTimeout(() => setSuccess(null), 3000);
+      await persistSelectedItem(
+        { itinerary: updatedItinerary },
+        'Day added!',
+        () => {
+          setIsAddingDay(false);
+          setNewDay({ day: 1, title: "", activities: [""], image: "" });
+          setNewDayActivitiesHtml("<p></p>");
+        }
+      );
     } catch (error) {
-      setError('Failed to add day');
+      setError(error instanceof Error ? error.message : 'Failed to add day');
     } finally {
       setIsSaving(false);
     }
@@ -392,25 +422,12 @@ const AdminItinerary = () => {
     if (!selectedItem) return;
     try {
       setIsSaving(true);
-      const endpoint = selectedItem.type === 'fixed-departure'
-        ? `/api/fixed-departures/${selectedItem.data._id}`
-        : `/api/all-packages/${selectedItem.data._id}`;
-
-      const response = await fetch(endpoint, {
-        method: 'PUT',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${localStorage.getItem('adminToken')}`
-        },
-        body: JSON.stringify({ highlights: packageHighlights.filter(h => h.trim()) })
-      });
-
-      const updatedData = await response.json();
-      const updatedItem = updatedData.package || updatedData.fixedDeparture || updatedData;
-      const normalized = normalizeItemData(updatedItem);
-      setSelectedItem({ type: selectedItem.type, data: normalized });
-      setIsEditingHighlights(false);
-      setSuccess('Highlights saved!');
+      setError(null);
+      await persistSelectedItem(
+        { highlights: packageHighlights.filter(h => h.trim()) },
+        'Highlights saved!',
+        () => setIsEditingHighlights(false)
+      );
     } catch (e) { setError('Failed to save highlights'); } finally { setIsSaving(false); }
   };
 
@@ -418,25 +435,12 @@ const AdminItinerary = () => {
     if (!selectedItem) return;
     try {
       setIsSaving(true);
-      const endpoint = selectedItem.type === 'fixed-departure'
-        ? `/api/fixed-departures/${selectedItem.data._id}`
-        : `/api/all-packages/${selectedItem.data._id}`;
-
-      const response = await fetch(endpoint, {
-        method: 'PUT',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${localStorage.getItem('adminToken')}`
-        },
-        body: JSON.stringify({ inclusions: packageInclusions.filter(i => i.trim()) })
-      });
-
-      const updatedData = await response.json();
-      const updatedItem = updatedData.package || updatedData.fixedDeparture || updatedData;
-      const normalized = normalizeItemData(updatedItem);
-      setSelectedItem({ type: selectedItem.type, data: normalized });
-      setIsEditingInclusions(false);
-      setSuccess('Inclusions saved!');
+      setError(null);
+      await persistSelectedItem(
+        { inclusions: packageInclusions.filter(i => i.trim()) },
+        'Inclusions saved!',
+        () => setIsEditingInclusions(false)
+      );
     } catch (e) { setError('Failed to save inclusions'); } finally { setIsSaving(false); }
   };
 
@@ -444,25 +448,12 @@ const AdminItinerary = () => {
     if (!selectedItem) return;
     try {
       setIsSaving(true);
-      const endpoint = selectedItem.type === 'fixed-departure'
-        ? `/api/fixed-departures/${selectedItem.data._id}`
-        : `/api/all-packages/${selectedItem.data._id}`;
-
-      const response = await fetch(endpoint, {
-        method: 'PUT',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${localStorage.getItem('adminToken')}`
-        },
-        body: JSON.stringify({ exclusions: packageExclusions.filter(e => e.trim()) })
-      });
-
-      const updatedData = await response.json();
-      const updatedItem = updatedData.package || updatedData.fixedDeparture || updatedData;
-      const normalized = normalizeItemData(updatedItem);
-      setSelectedItem({ type: selectedItem.type, data: normalized });
-      setIsEditingExclusions(false);
-      setSuccess('Exclusions saved!');
+      setError(null);
+      await persistSelectedItem(
+        { exclusions: packageExclusions.filter(e => e.trim()) },
+        'Exclusions saved!',
+        () => setIsEditingExclusions(false)
+      );
     } catch (e) { setError('Failed to save exclusions'); } finally { setIsSaving(false); }
   };
 
@@ -679,6 +670,9 @@ const AdminItinerary = () => {
                   <Button
                     onClick={() => {
                       setIsAddingDay(true);
+                      setIsEditing(false);
+                      setEditingDay(null);
+                      setNewDayActivitiesHtml("<p></p>");
                       setNewDay({ day: (selectedItem.data.itinerary || []).length + 1, title: "", activities: [""] });
                     }}
                     className="hidden md:flex bg-white !text-gray-900 hover:bg-gray-100 rounded-2xl px-4 py-4 font-bold gap-2 shadow-xl"
@@ -690,7 +684,13 @@ const AdminItinerary = () => {
 
               <CardContent className="p-8">
                 {/* Metadata Sections Grid */}
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-12">
+                <div className="mb-5 flex flex-wrap items-center justify-between gap-2 rounded-2xl border border-gray-100 bg-slate-50 px-4 py-3">
+                  <h3 className="text-sm font-semibold text-gray-700">Package Sections</h3>
+                  <p className="text-xs text-gray-500">
+                    Edit highlights, inclusions, exclusions and itinerary with faster save flow.
+                  </p>
+                </div>
+                <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-12">
                   {/* Highlights */}
                   <div className={`p-6 rounded-2xl border-2 transition-all ${isEditingHighlights ? 'border-blue-500 bg-blue-50/30' : 'border-gray-50 bg-gray-50/30 hover:bg-gray-50'}`}>
                     <div className="flex items-center justify-between mb-4">
@@ -809,7 +809,7 @@ const AdminItinerary = () => {
                                 <div className="flex items-center justify-between">
                                   <span className="text-gray-500 font-bold text-sm tracking-widest uppercase">Editing Day {day.day}</span>
                                   <div className="flex gap-2">
-                                    <Button variant="ghost" size="sm" className="font-bold text-gray-500" onClick={() => { setIsEditing(false); setEditingDay(null); }}>Cancel</Button>
+                                    <Button variant="ghost" size="sm" className="font-bold text-gray-500" onClick={() => { setIsEditing(false); setEditingDay(null); setEditingActivitiesHtml("<p></p>"); }}>Cancel</Button>
                                     <Button size="sm" className="bg-blue-600 font-bold" onClick={handleSaveDay} disabled={isSaving}>
                                       {isSaving ? "Saving..." : "Save Changes"}
                                     </Button>
@@ -824,29 +824,17 @@ const AdminItinerary = () => {
                                   />
                                   <div className="space-y-3">
                                     <label className="text-[10px] font-bold text-gray-400 uppercase tracking-widest ml-1">Activities</label>
-                                    {(editingDay?.activities || []).map((act, i) => (
-                                      <div key={i} className="flex gap-2">
-                                        <Input
-                                          className="text-sm py-4 rounded-xl border-gray-50 !bg-white focus:bg-white"
-                                          value={act}
-                                          placeholder={`Activity ${i + 1}...`}
-                                          onChange={(e) => {
-                                            const list = [...(editingDay?.activities || [])];
-                                            list[i] = e.target.value;
-                                            setEditingDay(p => p ? { ...p, activities: list } : null);
-                                          }}
-                                        />
-                                        <Button variant="ghost" size="sm" onClick={() => {
-                                          const list = (editingDay?.activities || []).filter((_, idx) => idx !== i);
-                                          setEditingDay(p => p ? { ...p, activities: list } : null);
-                                        }}><Trash2 className="w-4 h-4 text-red-400" /></Button>
-                                      </div>
-                                    ))}
-                                    <Button variant="outline" size="sm" className="w-full text-xs font-bold py-6 border-dashed" onClick={() => {
-                                      const list = [...(editingDay?.activities || [])];
-                                      list.push("");
-                                      setEditingDay(p => p ? { ...p, activities: list } : null);
-                                    }}>+ Add Activity</Button>
+                                    <RichTextEditor
+                                      value={editingActivitiesHtml}
+                                      onChange={setEditingActivitiesHtml}
+                                      placeholder="Write detailed day activities..."
+                                      className="!bg-white rounded-2xl border border-gray-100"
+                                      contentType="itinerary"
+                                      editorViewportClassName="min-h-[220px] max-h-[320px] overflow-y-auto custom-scrollbar"
+                                    />
+                                    <p className="text-xs text-gray-500">
+                                      Tip: Use bullet list for cleaner itinerary points.
+                                    </p>
                                   </div>
                                 </div>
                               </div>
@@ -859,17 +847,29 @@ const AdminItinerary = () => {
                                       <h3 className="!text-2xl !font-black !text-gray-900 group-hover:text-blue-600 transition-colors">{day.title}</h3>
                                     </div>
                                     <div className="flex gap-2">
-                                      <Button variant="outline" size="icon" className="rounded-xl border-gray-100" onClick={() => { setEditingDay({ ...day }); setIsEditing(true); setIsAddingDay(false); }}><Edit className="w-4 h-4 text-gray-600" /></Button>
+                                      <Button variant="outline" size="icon" className="rounded-xl border-gray-100" onClick={() => {
+                                        setEditingDay({ ...day });
+                                        setEditingActivitiesHtml(activitiesToHtml(day.activities || []));
+                                        setIsEditing(true);
+                                        setIsAddingDay(false);
+                                      }}><Edit className="w-4 h-4 text-gray-600" /></Button>
                                       <Button variant="outline" size="icon" className="rounded-xl border-gray-100 hover:bg-red-50" onClick={() => handleDeleteDay(day.day)}><Trash2 className="w-4 h-4 text-red-500" /></Button>
                                     </div>
                                   </div>
-                                  <div className="space-y-2">
-                                    {(day.activities || []).map((act, i) => (
-                                      <div key={i} className="flex gap-2 items-start py-1">
-                                        <div className="w-1.5 h-1.5 rounded-full bg-gray-300 mt-1.5 flex-shrink-0" />
-                                        <span className="text-sm text-gray-600 font-medium leading-relaxed">{act}</span>
-                                      </div>
-                                    ))}
+                                    <div className="space-y-2">
+                                    {(day.activities || []).length === 1 && containsHtml((day.activities || [])[0]) ? (
+                                      <div
+                                        className="rounded-2xl border border-slate-200 bg-slate-50/60 p-4 overflow-x-auto [&_h1]:!text-xl [&_h1]:!font-bold [&_h1]:!text-slate-900 [&_h1]:!mb-3 [&_h2]:!text-lg [&_h2]:!font-bold [&_h2]:!text-slate-900 [&_h2]:!mb-3 [&_h3]:!text-base [&_h3]:!font-semibold [&_h3]:!text-slate-900 [&_h3]:!mb-2 [&_p]:!text-sm [&_p]:!text-slate-700 [&_p]:!mb-3 [&_ul]:!list-disc [&_ul]:!pl-5 [&_ul]:!space-y-2 [&_ol]:!list-decimal [&_ol]:!pl-5 [&_ol]:!space-y-2 [&_li]:!text-sm [&_li]:!text-slate-700 [&_a]:!text-blue-600 [&_a]:!underline [&_table]:!w-full [&_table]:!border [&_table]:!border-slate-200 [&_th]:!bg-slate-100 [&_th]:!px-3 [&_th]:!py-2 [&_th]:!text-left [&_th]:!text-sm [&_th]:!font-semibold [&_td]:!px-3 [&_td]:!py-2 [&_td]:!text-sm [&_td]:!text-slate-700 [&_td]:!border-t [&_td]:!border-slate-200"
+                                        dangerouslySetInnerHTML={{ __html: (day.activities || [])[0] }}
+                                      />
+                                    ) : (
+                                      (day.activities || []).map((act, i) => (
+                                        <div key={i} className="flex gap-2 items-start py-1">
+                                          <div className="w-1.5 h-1.5 rounded-full bg-gray-300 mt-1.5 flex-shrink-0" />
+                                          <span className="text-sm text-gray-600 font-medium leading-relaxed">{act}</span>
+                                        </div>
+                                      ))
+                                    )}
                                   </div>
                                 </div>
                               </div>
@@ -902,29 +902,14 @@ const AdminItinerary = () => {
                           />
                           <div className="space-y-3">
                             <label className="text-[10px] font-bold text-gray-400 uppercase tracking-widest ml-1">Activities</label>
-                            {(newDay.activities || []).map((act, i) => (
-                              <div key={i} className="flex gap-2">
-                                <Input
-                                  className="text-sm py-4 rounded-xl border-gray-50 !bg-white focus:bg-white"
-                                  value={act}
-                                  placeholder={`Activity ${i + 1}...`}
-                                  onChange={(e) => {
-                                    const list = [...(newDay.activities || [])];
-                                    list[i] = e.target.value;
-                                    setNewDay(p => ({ ...p, activities: list }));
-                                  }}
-                                />
-                                <Button variant="ghost" size="sm" onClick={() => {
-                                  const list = (newDay.activities || []).filter((_, idx) => idx !== i);
-                                  setNewDay(p => ({ ...p, activities: list }));
-                                }}><Trash2 className="w-4 h-4 text-red-400" /></Button>
-                              </div>
-                            ))}
-                            <Button variant="outline" size="sm" className="w-full text-xs font-bold py-6 border-dashed" onClick={() => {
-                              const list = [...(newDay.activities || [])];
-                              list.push("");
-                              setNewDay(p => ({ ...p, activities: list }));
-                            }}>+ Add Activity</Button>
+                            <RichTextEditor
+                              value={newDayActivitiesHtml}
+                              onChange={setNewDayActivitiesHtml}
+                              placeholder="Write detailed day activities..."
+                              className="!bg-white rounded-2xl border border-gray-100"
+                              contentType="itinerary"
+                              editorViewportClassName="min-h-[220px] max-h-[320px] overflow-y-auto custom-scrollbar"
+                            />
                           </div>
                         </div>
                       </div>
@@ -936,6 +921,7 @@ const AdminItinerary = () => {
                         setIsAddingDay(true);
                         setIsEditing(false);
                         setEditingDay(null);
+                        setNewDayActivitiesHtml("<p></p>");
                         setNewDay({ day: (selectedItem.data.itinerary || []).length + 1, title: "", activities: [""] });
                       }}
                       className="w-full py-4 border-dashed border-2 border-gray-200 rounded-3xl hover:bg-gray-50 hover:border-blue-400 group transition-all"

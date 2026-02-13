@@ -3,6 +3,13 @@ import FixedDepartureDetailClient from '../FixedDepartureDetailClient';
 import { notFound } from 'next/navigation';
 import { dummyFixedDepartures } from '../data';
 
+const stripHtmlTags = (value: string = "") =>
+    value
+        .replace(/<[^>]*>/g, " ")
+        .replace(/&nbsp;/gi, " ")
+        .replace(/\s+/g, " ")
+        .trim();
+
 async function getFixedDeparture(slug: string) {
     try {
         const backendUrl = process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:5001';
@@ -35,7 +42,7 @@ export async function generateMetadata({ params }: { params: Promise<{ slug: str
 
         return {
             title: `${departure.title} | Paradise Yatra`,
-            description: departure.shortDescription || departure.subtitle,
+            description: stripHtmlTags(departure.shortDescription || departure.subtitle || ""),
         };
     } catch (e) {
         return { title: 'Paradise Yatra' };
@@ -89,7 +96,9 @@ export default async function Page({ params }: { params: Promise<{ slug: string 
         itinerary: (rawDeparture.itinerary || []).map((item: any) => ({
             day: item.day,
             title: item.title,
-            description: Array.isArray(item.activities) ? item.activities.join('. ') : (item.description || ''),
+            description: Array.isArray(item.activities)
+                ? item.activities.filter(Boolean).join('<br />')
+                : (item.description || ''),
             meals: item.meals || '',
             hotel: item.accommodation || item.hotel || '',
         })),

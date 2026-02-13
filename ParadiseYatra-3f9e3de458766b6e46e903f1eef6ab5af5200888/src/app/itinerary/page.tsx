@@ -108,7 +108,7 @@ const PackageCard = ({ pkg }: { pkg: Package }) => {
             <span className="text-2xl font-bold text-blue-600">{pkg.price}</span>
             <span className="text-lg text-gray-500 line-through ml-2">{pkg.originalPrice}</span>
           </div>
-             <Link href={`/itinerary/${pkg.slug || pkg._id}`}>
+             <Link href={`/package/${pkg.slug || pkg._id}`}>
             <Button className="w-full bg-blue-600 hover:bg-blue-700 text-white">
               View Details
               <ArrowRight className="w-4 h-4 ml-2" />
