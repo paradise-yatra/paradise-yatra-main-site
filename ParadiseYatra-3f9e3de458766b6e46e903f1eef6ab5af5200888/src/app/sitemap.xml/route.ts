@@ -1,7 +1,7 @@
-import { NextRequest, NextResponse } from 'next/server';
+import { NextResponse } from 'next/server';
 import { API_CONFIG } from '@/config/api';
 
-export async function GET(request: NextRequest) {
+export async function GET() {
   const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://paradiseyatra.com';
 
   // Static pages
@@ -37,8 +37,26 @@ export async function GET(request: NextRequest) {
       lastmod: new Date().toISOString()
     },
     {
-      url: '/packages',
+      url: '/package',
       priority: '0.9',
+      changefreq: 'weekly',
+      lastmod: new Date().toISOString()
+    },
+    {
+      url: '/package/india',
+      priority: '0.8',
+      changefreq: 'weekly',
+      lastmod: new Date().toISOString()
+    },
+    {
+      url: '/package/international',
+      priority: '0.8',
+      changefreq: 'weekly',
+      lastmod: new Date().toISOString()
+    },
+    {
+      url: '/package/theme',
+      priority: '0.7',
       changefreq: 'weekly',
       lastmod: new Date().toISOString()
     },
@@ -66,12 +84,7 @@ export async function GET(request: NextRequest) {
       changefreq: 'monthly',
       lastmod: new Date().toISOString()
     },
-    {
-      url: '/itinerary',
-      priority: '0.6',
-      changefreq: 'weekly',
-      lastmod: new Date().toISOString()
-    }
+    // /itinerary now redirects to /package and should not be indexed separately
   ];
 
   // Fetch dynamic content from your API
@@ -80,20 +93,44 @@ export async function GET(request: NextRequest) {
   try {
     const API_BASE_URL = API_CONFIG.BACKEND_URL;
 
-    // Fetch packages
-    const packagesResponse = await fetch(`${API_BASE_URL}/api/packages`, {
+    // Fetch packages from canonical all-packages source
+    const packagesResponse = await fetch(`${API_BASE_URL}/api/all-packages?limit=2000&isActive=true`, {
       next: { revalidate: 3600 } // Cache for 1 hour
     });
     if (packagesResponse.ok) {
       const packagesData = await packagesResponse.json();
-      const packages = packagesData.success ? packagesData.data : packagesData;
+      const packages = Array.isArray(packagesData)
+        ? packagesData
+        : (Array.isArray(packagesData?.packages) ? packagesData.packages : []);
       if (Array.isArray(packages)) {
         dynamicPages.push(...packages.map((pkg: any) => ({
-          url: `/packages/${pkg.slug || pkg.id}`,
+          url: `/package/${pkg.slug || pkg._id || pkg.id}`,
           priority: '0.8',
           changefreq: 'weekly',
           lastmod: pkg.updatedAt || pkg.createdAt || new Date().toISOString()
         })));
+      }
+    }
+
+    // Fetch package themes/tags
+    const tagsResponse = await fetch(`${API_BASE_URL}/api/tags`, {
+      next: { revalidate: 3600 }
+    });
+    if (tagsResponse.ok) {
+      const tagsData = await tagsResponse.json();
+      const tags = Array.isArray(tagsData)
+        ? tagsData
+        : (Array.isArray(tagsData?.tags) ? tagsData.tags : []);
+
+      if (Array.isArray(tags)) {
+        dynamicPages.push(...tags
+          .filter((tag: any) => tag?.slug || tag?.name)
+          .map((tag: any) => ({
+            url: `/package/theme/${tag.slug || String(tag.name).toLowerCase().replace(/\s+/g, '-')}`,
+            priority: '0.6',
+            changefreq: 'weekly',
+            lastmod: tag.updatedAt || tag.createdAt || new Date().toISOString()
+          })));
       }
     }
 
@@ -169,7 +206,12 @@ export async function GET(request: NextRequest) {
     console.error('Error fetching dynamic content for sitemap:', error);
   }
 
-  const allPages = [...staticPages, ...dynamicPages];
+  // De-duplicate URLs to keep sitemap clean for crawlers
+  const uniquePagesMap = new Map<string, any>();
+  [...staticPages, ...dynamicPages].forEach((page) => {
+    uniquePagesMap.set(page.url, page);
+  });
+  const allPages = Array.from(uniquePagesMap.values());
 
   const sitemap = `<?xml version="1.0" encoding="UTF-8"?>
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">

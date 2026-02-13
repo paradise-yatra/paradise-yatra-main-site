@@ -594,7 +594,7 @@ export default function DestinationPage({ params }: DestinationPageProps) {
                         transition={{ duration: 0.3, delay: index * 0.1 }}
                       >
                         <Link
-                          href={`/itinerary/${pkg.slug || pkg.name?.toLowerCase().replace(/\s+/g, '-') || pkg._id}`}
+                          href={`/package/${pkg.slug || pkg.name?.toLowerCase().replace(/\s+/g, '-') || pkg._id}`}
                           className="block h-full"
                         >
                           <Card className="group cursor-pointer bg-white rounded-lg overflow-hidden border border-slate-200 transition-all duration-300 relative shadow-sm hover:shadow-xl hover:border-blue-100 h-full">

@@ -258,7 +258,7 @@ const PremiumPackages = () => {
                   className="flex-shrink-0 snap-start h-full w-full px-4"
                   style={{ maxWidth: '100%' }}
                 >
-                  <Link href={`/itinerary/${pkg.slug || pkg._id}`} className="block w-full">
+                  <Link href={`/package/${pkg.slug || pkg._id}`} className="block w-full">
                     <Card className="group overflow-hidden modern-card hover-lift rounded-3xl shadow-xl border-0 relative bg-gradient-to-br from-white via-purple-50 to-indigo-100 flex flex-col min-h-[580px] w-full cursor-pointer">
                     {/* Fixed height image container */}
                     <div className="relative h-60 overflow-hidden card-image rounded-t-3xl w-full flex-shrink-0">
@@ -363,7 +363,7 @@ const PremiumPackages = () => {
                   whileHover={{ y: -10, scale: 1.03 }}
                   className="h-full flex flex-col"
                 >
-                  <Link href={`/itinerary/${pkg.slug || pkg._id}`} className="block h-full">
+                  <Link href={`/package/${pkg.slug || pkg._id}`} className="block h-full">
                     <Card className="h-full flex flex-col group overflow-hidden modern-card hover-lift rounded-3xl shadow-xl border-0 bg-gradient-to-br from-white via-purple-50 to-indigo-100 min-h-[580px] cursor-pointer">
                     <div className="relative h-60 overflow-hidden card-image rounded-t-3xl w-full flex-shrink-0">
                       <Image 

@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button";
 
 interface BlogPost {
   _id: string;
+  slug?: string;
   title: string;
   excerpt: string;
   author: string;
@@ -29,6 +30,10 @@ const generateSlug = (title: string): string => {
     .replace(/\s+/g, "-")
     .replace(/-+/g, "-")
     .trim();
+};
+
+const getPostSlug = (post: BlogPost): string => {
+  return post.slug || generateSlug(post.title);
 };
 
 const getImageUrl = (image: string | undefined): string => {
@@ -97,7 +102,7 @@ export default function BlogHero({ post }: BlogHeroProps) {
               <span>{post.readTime || 5} min read</span>
             </div>
 
-            <Link href={`/blog/${generateSlug(post.title)}`}>
+            <Link href={`/blog/${getPostSlug(post)}`}>
               <Button className="bg-white text-slate-900 hover:bg-slate-100 px-6 py-3 rounded-lg font-medium text-sm md:text-base group/btn">
                 Read Article
                 <ArrowRight className="w-4 h-4 ml-2 group-hover/btn:translate-x-1 transition-transform" />

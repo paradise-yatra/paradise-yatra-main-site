@@ -298,7 +298,7 @@ const TrendingDestinations = () => {
                   className="flex-shrink-0 snap-start h-full w-full px-4"
                   style={{ maxWidth: '100%' }}
                 >
-                  <Link href={`/itinerary/${pkg.slug || pkg._id}`} className="block w-full">
+                  <Link href={`/package/${pkg.slug || pkg._id}`} className="block w-full">
                     <article
                       className="group cursor-pointer bg-white rounded-lg overflow-hidden border border-gray-300 transition-all duration-300 relative w-full"
                     >
@@ -398,7 +398,7 @@ const TrendingDestinations = () => {
                   whileHover={{ y: -10, scale: 1.03 }}
                   className="h-full flex flex-col"
                 >
-                  <Link href={`/itinerary/${pkg.slug || pkg._id}`} className="block h-full w-full">
+                  <Link href={`/package/${pkg.slug || pkg._id}`} className="block h-full w-full">
                     <article
                       className="group cursor-pointer bg-white rounded-lg overflow-hidden border border-gray-300 transition-all duration-300 relative w-full h-full"
                     >

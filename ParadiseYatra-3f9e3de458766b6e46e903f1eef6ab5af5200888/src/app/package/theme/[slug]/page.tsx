@@ -38,9 +38,13 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
     return {
         title,
         description,
+        alternates: {
+            canonical: `/package/theme/${resolvedParams.slug}`,
+        },
         openGraph: {
             title,
             description,
+            url: `/package/theme/${resolvedParams.slug}`,
             type: 'website',
         },
         twitter: {

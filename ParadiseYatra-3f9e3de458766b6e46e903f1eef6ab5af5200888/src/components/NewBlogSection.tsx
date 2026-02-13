@@ -19,6 +19,7 @@ import { getImageUrl } from "@/lib/utils";
 
 interface BlogPost {
   _id: string;
+  slug?: string;
   title: string;
   content: string;
   excerpt: string;
@@ -43,6 +44,10 @@ const generateSlug = (title: string): string => {
     .replace(/\s+/g, "-")
     .replace(/-+/g, "-")
     .trim();
+};
+
+const getPostSlug = (post: BlogPost): string => {
+  return post.slug || generateSlug(post.title);
 };
 
 const NewBlogSection = () => {
@@ -403,7 +408,7 @@ const NewBlogSection = () => {
             <div className="mobile-scroll-container" ref={scrollContainerRef} style={{ paddingLeft: '0.5rem', paddingRight: '0.5rem' }}>
               {allBlogPosts.map((post) => (
                 <div key={post._id} className="mobile-scroll-item">
-                  <Link href={`/blog/${generateSlug(post.title)}`} className="block h-full">
+                  <Link href={`/blog/${getPostSlug(post)}`} className="block h-full">
                     <Card className="overflow-hidden border border-gray-200 h-full bg-white flex flex-col shadow-md">
                       <div className="relative h-52 w-full overflow-hidden">
                         <Image
@@ -483,7 +488,7 @@ const NewBlogSection = () => {
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
               {visibleBlogPosts.map((post, index) => (
                 <div key={post._id} className={newCardIndex === index ? 'card-enter' : ''}>
-                  <Link href={`/blog/${generateSlug(post.title)}`} className="block h-full">
+                  <Link href={`/blog/${getPostSlug(post)}`} className="block h-full">
                     <Card className="desktop-card overflow-hidden border border-gray-200 group h-full bg-white">
                       <div className="desktop-card-image relative h-64 overflow-hidden">
                         <Image

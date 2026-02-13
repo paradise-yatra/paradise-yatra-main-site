@@ -159,50 +159,48 @@ const SearchSuggestions = ({
         setError(null);
 
         try {
-            const [packagesResponse, fixedDeparturesResponse, destinationsResponse, holidayTypesResponse] = await Promise.all([
-                fetch(`/api/packages/suggest?q=${encodeURIComponent(searchQuery)}`, { cache: 'no-store' }),
-                fetch(`/api/fixed-departures/suggest?q=${encodeURIComponent(searchQuery)}`, { cache: 'no-store' }),
-                fetch(`/api/destinations/suggest?q=${encodeURIComponent(searchQuery)}`, { cache: 'no-store' }),
-                fetch(`/api/holiday-types/suggest?q=${encodeURIComponent(searchQuery)}`, { cache: 'no-store' })
+            // Fetch from both all-packages and fixed-departures endpoints
+            const [packagesResponse, fixedResponse] = await Promise.all([
+                fetch(`/api/all-packages?q=${encodeURIComponent(searchQuery)}&limit=10`, { cache: 'no-store' }),
+                fetch(`/api/fixed-departures/suggest?q=${encodeURIComponent(searchQuery)}`, { cache: 'no-store' })
             ]);
 
-            const results = await Promise.all([
-                packagesResponse.ok ? packagesResponse.json() : { suggestions: [] },
-                fixedDeparturesResponse.ok ? fixedDeparturesResponse.json() : { suggestions: [] },
-                destinationsResponse.ok ? destinationsResponse.json() : { suggestions: [] },
-                holidayTypesResponse.ok ? holidayTypesResponse.json() : { suggestions: [] }
-            ]);
+            let packages = [];
+            if (packagesResponse.ok) {
+                const data = await packagesResponse.json();
+                packages = data.packages || [];
+            }
 
-            const allSuggestions = [
-                ...(results[0].suggestions || []),
-                ...(results[1].suggestions || []),
-                ...(results[2].suggestions || []),
-                ...(results[3].suggestions || [])
-            ];
+            let fixedDepartures = [];
+            if (fixedResponse.ok) {
+                const data = await fixedResponse.json();
+                fixedDepartures = data.suggestions || [];
+            }
 
-            const uniqueSuggestions = allSuggestions.reduce((acc: PackageSuggestion[], current: PackageSuggestion) => {
-                const existingIndex = acc.findIndex(item => item.id === current.id);
-                if (existingIndex === -1) {
-                    acc.push(current);
-                } else {
-                    acc[existingIndex] = { ...acc[existingIndex], ...current };
-                }
-                return acc;
-            }, []);
+            const mappedPackages = packages.map((pkg: any) => ({
+                id: pkg._id,
+                title: pkg.name,
+                destination: pkg.location || pkg.state || pkg.country || 'Multiple Locations',
+                price: pkg.price || 0,
+                duration: pkg.duration || 'N/A',
+                category: pkg.category || 'package',
+                slug: pkg.slug || pkg._id,
+                image: pkg.image || (pkg.images && pkg.images.length > 0 ? pkg.images[0] : null),
+                type: 'package' as const,
+                tourType: pkg.tourType
+            }));
 
-            const sortedSuggestions = uniqueSuggestions.sort((a: PackageSuggestion, b: PackageSuggestion) => {
-                const categoryOrder = { 'holiday': 0, 'holiday-type': 1, 'fixed-departure': 2, 'destination': 3 };
-                const aOrder = categoryOrder[a.category as keyof typeof categoryOrder] || 4;
-                const bOrder = categoryOrder[b.category as keyof typeof categoryOrder] || 4;
+            // Transform fixed departures if they aren't already in the right format
+            // Based on our API, they are already formatted as PackageSuggestion by the API route
+            const mappedFixed = fixedDepartures.map((departure: any) => ({
+                ...departure,
+                type: 'fixed-departure' as const,
+                category: 'fixed-departure'
+            }));
 
-                if (aOrder !== bOrder) {
-                    return aOrder - bOrder;
-                }
-
-                return (a.price || 0) - (b.price || 0);
-            });
-
-            setSuggestions(sortedSuggestions.slice(0, 15));
+            // Merge and limit results
+            const allSuggestions = [...mappedPackages, ...mappedFixed].slice(0, 15);
+            setSuggestions(allSuggestions);
         } catch (err) {
             console.error('Error fetching suggestions:', err);
             setError('Failed to load suggestions');

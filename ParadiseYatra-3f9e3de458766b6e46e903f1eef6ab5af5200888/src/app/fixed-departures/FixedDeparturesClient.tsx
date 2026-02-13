@@ -43,6 +43,18 @@ interface FixedDeparturesClientProps {
     departures: Departure[];
 }
 
+const stripHtmlTags = (value: string = "") =>
+    value
+        .replace(/<[^>]*>/g, " ")
+        .replace(/&nbsp;/gi, " ")
+        .replace(/&amp;/gi, "&")
+        .replace(/&quot;/gi, "\"")
+        .replace(/&#39;/gi, "'")
+        .replace(/&lt;/gi, "<")
+        .replace(/&gt;/gi, ">")
+        .replace(/\s+/g, " ")
+        .trim();
+
 export default function FixedDeparturesClient({ departures }: FixedDeparturesClientProps) {
     const [filter, setFilter] = useState('all');
     const [searchQuery, setSearchQuery] = useState('');
@@ -574,7 +586,7 @@ export default function FixedDeparturesClient({ departures }: FixedDeparturesCli
 
                                                         {/* Description */}
                                                         <p className="!text-slate-600 !font-semibold !text-sm leading-relaxed line-clamp-2 mb-6">
-                                                            {item.subtitle || item.shortDescription}
+                                                            {stripHtmlTags(item.subtitle || item.shortDescription)}
                                                         </p>
 
                                                         {/* Info Grid */}

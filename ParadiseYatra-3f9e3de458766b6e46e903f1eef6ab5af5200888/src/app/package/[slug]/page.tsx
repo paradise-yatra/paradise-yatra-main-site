@@ -1,5 +1,5 @@
 import { Metadata } from "next";
-import ItineraryPageClient from "@/app/itinerary/[slug]/ItineraryPageClient";
+import PackageDetailClient from "@/app/package/[slug]/PackageDetailClient";
 
 // Enable ISR with 60 second revalidation
 export const revalidate = 60;
@@ -23,6 +23,7 @@ interface PackageOrDestination {
     description?: string;
     shortDescription?: string;
     price?: number;
+    priceType?: "per_person" | "per_couple";
     originalPrice?: number;
     discount?: number;
     duration?: string;
@@ -55,6 +56,13 @@ interface PackageOrDestination {
     seoAuthor?: string;
     seoPublisher?: string;
 }
+
+const stripHtmlTags = (value: string = "") =>
+    value
+        .replace(/<[^>]*>/g, " ")
+        .replace(/&nbsp;/gi, " ")
+        .replace(/\s+/g, " ")
+        .trim();
 
 // Function to fetch package or destination by slug
 async function getPackage(slug: string): Promise<PackageOrDestination | null> {
@@ -175,7 +183,8 @@ export async function generateMetadata({ params }: { params: Promise<{ slug: str
     const displayTitle = packageData.title || packageData.name || 'Travel Package';
     const displayDestination = packageData.destination || packageData.location || 'Travel Destination';
     const title = packageData.seoTitle || `${displayTitle} | Paradise Yatra Travel Package`;
-    const description = packageData.seoDescription || packageData.shortDescription || (packageData.description ? packageData.description.substring(0, 160) + '...' : '');
+    const fallbackDescriptionSource = stripHtmlTags(packageData.shortDescription || packageData.description || "");
+    const description = packageData.seoDescription || (fallbackDescriptionSource ? `${fallbackDescriptionSource.substring(0, 160)}...` : "");
     const keywords = packageData.seoKeywords || [
         'travel package',
         'travel tour',
@@ -268,10 +277,11 @@ const PackageDetailPage = async ({ params }: { params: Promise<{ slug: string }>
         ...packageData,
         title: packageData.title || packageData.name || 'Travel Package',
         description: packageData.description || packageData.shortDescription || 'No description available.',
-        shortDescription: packageData.shortDescription || (packageData.description ? packageData.description.substring(0, 200) + '...' : 'Tour details coming soon.'),
+        shortDescription: packageData.shortDescription || packageData.description || 'Tour details coming soon.',
         destination: packageData.destination || packageData.location || 'Travel Destination',
         images: Array.isArray(packageData.images) && packageData.images.length > 0 ? packageData.images : (packageData.image ? [packageData.image] : []),
         price: packageData.price || 0,
+        priceType: packageData.priceType || "per_person",
         originalPrice: packageData.originalPrice || 0,
         discount: packageData.discount || 0,
         duration: packageData.duration || 'N/A',
@@ -286,7 +296,7 @@ const PackageDetailPage = async ({ params }: { params: Promise<{ slug: string }>
         itinerary: Array.isArray(packageData.itinerary) ? packageData.itinerary : [],
     };
 
-    return <ItineraryPageClient packageData={normalizedData} slug={resolvedParams.slug} />;
+    return <PackageDetailClient packageData={normalizedData} slug={resolvedParams.slug} />;
 };
 
 export default PackageDetailPage;

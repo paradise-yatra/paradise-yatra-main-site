@@ -3,7 +3,6 @@
 import { useState, useEffect, useCallback } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Edit, Save, X, Plus, Trash2, MapPin, Package, Star, ImageIcon, Search, Calendar, Users, Upload } from "lucide-react";
@@ -13,6 +12,7 @@ import { useLocations } from "@/hooks/useLocations";
 import Image from "next/image";
 import { getImageUrl } from "@/lib/utils";
 import ConfirmationDialog from "@/components/ui/confirmation-dialog";
+import { RichTextEditor } from "@/components/ui/rich-text-editor";
 
 interface FixedDeparture {
   _id: string;
@@ -897,25 +897,25 @@ const AdminFixedDepartures = () => {
 
                 <div>
                   <label className="block text-sm font-medium mb-2 text-gray-900">Short Description *</label>
-                  <Textarea
-                    name="shortDescription"
+                  <RichTextEditor
                     value={formData.shortDescription}
-                    onChange={handleChange}
-                    rows={3}
-                    required
-                    className="bg-white text-gray-900"
+                    onChange={(value) => setFormData(prev => ({ ...prev, shortDescription: value }))}
+                    contentType="packages"
+                    className="min-h-[160px]"
+                    editorViewportClassName="max-h-[240px]"
+                    placeholder="Short summary for cards..."
                   />
                 </div>
 
                 <div>
                   <label className="block text-sm font-medium mb-2 text-gray-900">Full Description *</label>
-                  <Textarea
-                    name="description"
+                  <RichTextEditor
                     value={formData.description}
-                    onChange={handleChange}
-                    rows={5}
-                    required
-                    className="bg-white text-gray-900"
+                    onChange={(value) => setFormData(prev => ({ ...prev, description: value }))}
+                    contentType="packages"
+                    className="min-h-[220px]"
+                    editorViewportClassName="max-h-[320px]"
+                    placeholder="Complete fixed departure details..."
                   />
                 </div>
 

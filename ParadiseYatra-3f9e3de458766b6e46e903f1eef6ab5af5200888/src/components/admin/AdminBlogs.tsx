@@ -128,11 +128,11 @@ const AdminBlogs = ({ initialAction, onActionComplete }: AdminBlogsProps) => {
       const endIndex = startIndex + blogsPerPage;
       const paginatedBlogs = allBlogs.slice(startIndex, endIndex);
       setBlogs(paginatedBlogs);
-      
+
       // Update total pages based on allBlogs
       const totalPagesCount = Math.ceil(allBlogs.length / blogsPerPage);
       setTotalPages(totalPagesCount);
-      
+
       // Reset to page 1 if current page is out of bounds
       if (currentPage > totalPagesCount && totalPagesCount > 0) {
         setCurrentPage(1);
@@ -151,7 +151,7 @@ const AdminBlogs = ({ initialAction, onActionComplete }: AdminBlogsProps) => {
 
       if (response.ok) {
         let blogsArray: BlogPost[] = [];
-        
+
         // Handle both response formats
         if (Array.isArray(data)) {
           blogsArray = data;
@@ -165,15 +165,15 @@ const AdminBlogs = ({ initialAction, onActionComplete }: AdminBlogsProps) => {
         // Sort by createdAt (latest first) - backend should already do this, but ensure it
         blogsArray.sort((a, b) => {
           const dateA = new Date(
-            (a as BlogPost).publishDate || 
-            (a as BlogPost).createdAt || 
-            (a as BlogPost).updatedAt || 
+            (a as BlogPost).publishDate ||
+            (a as BlogPost).createdAt ||
+            (a as BlogPost).updatedAt ||
             0
           ).getTime();
           const dateB = new Date(
-            (b as BlogPost).publishDate || 
-            (b as BlogPost).createdAt || 
-            (b as BlogPost).updatedAt || 
+            (b as BlogPost).publishDate ||
+            (b as BlogPost).createdAt ||
+            (b as BlogPost).updatedAt ||
             0
           ).getTime();
           return dateB - dateA; // Latest first
@@ -181,12 +181,12 @@ const AdminBlogs = ({ initialAction, onActionComplete }: AdminBlogsProps) => {
 
         setAllBlogs(blogsArray);
         setTotalBlogs(blogsArray.length);
-        
+
         // Calculate pagination
         const total = blogsArray.length;
         const totalPagesCount = Math.ceil(total / blogsPerPage);
         setTotalPages(totalPagesCount);
-        
+
         // Reset to page 1 if current page is out of bounds
         if (currentPage > totalPagesCount && totalPagesCount > 0) {
           setCurrentPage(1);
@@ -316,7 +316,7 @@ const AdminBlogs = ({ initialAction, onActionComplete }: AdminBlogsProps) => {
         // Handle image file conversion first - MUST await this
         if (formData.image) {
           let file: File;
-          
+
           try {
             if (formData.image.startsWith("blob:")) {
               // Convert blob URL to file
@@ -342,7 +342,7 @@ const AdminBlogs = ({ initialAction, onActionComplete }: AdminBlogsProps) => {
               // If it's already a file object
               file = formData.image as unknown as File;
             }
-            
+
             uploadFormData.append("image", file);
           } catch (fileError) {
             console.error("Error converting image file:", fileError);
@@ -469,6 +469,7 @@ const AdminBlogs = ({ initialAction, onActionComplete }: AdminBlogsProps) => {
       readTime: blog.readTime?.toString() || "5",
       publishDate: blog.publishDate || "",
       isActive: blog.isActive !== undefined ? blog.isActive : true,
+      slug: blog.slug || "", // Ensure slug is never undefined/null
     };
     setFormData(frontendData);
     setActiveTab("create");
@@ -591,13 +592,13 @@ const AdminBlogs = ({ initialAction, onActionComplete }: AdminBlogsProps) => {
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <h2 className="text-2xl font-bold text-gray-900">Blog Management</h2>
+          <h2 className="!text-2xl !font-bold text-gray-900">Blog Management</h2>
           <p className="text-gray-700">
             {activeTab === "all"
               ? `Manage blog posts and articles (${totalBlogs} blogs)`
               : editing
-              ? "Edit blog post"
-              : "Create new blog post"}
+                ? "Edit blog post"
+                : "Create new blog post"}
           </p>
         </div>
         <Button
@@ -618,21 +619,19 @@ const AdminBlogs = ({ initialAction, onActionComplete }: AdminBlogsProps) => {
       <div className="flex space-x-1 bg-gray-100 p-1 rounded-lg">
         <button
           onClick={handleShowAllBlogs}
-          className={`flex-1 py-2 px-4 rounded-md text-sm font-medium transition-colors ${
-            activeTab === "all"
-              ? "bg-white text-gray-900 shadow-sm"
-              : "text-gray-600 hover:text-gray-900"
-          }`}
+          className={`flex-1 py-2 px-4 rounded-md text-sm font-medium transition-colors ${activeTab === "all"
+            ? "bg-white text-gray-900 shadow-sm"
+            : "text-gray-600 hover:text-gray-900"
+            }`}
         >
           All Blogs ({totalBlogs})
         </button>
         <button
           onClick={handleAddNew}
-          className={`flex-1 py-2 px-4 rounded-md text-sm font-medium transition-colors ${
-            activeTab === "create"
-              ? "bg-white text-gray-900 shadow-sm"
-              : "text-gray-600 hover:text-gray-900"
-          }`}
+          className={`flex-1 py-2 px-4 rounded-md text-sm font-medium transition-colors ${activeTab === "create"
+            ? "bg-white text-gray-900 shadow-sm"
+            : "text-gray-600 hover:text-gray-900"
+            }`}
         >
           {editing ? "Edit Blog" : "Create Blog"}
         </button>
@@ -759,17 +758,57 @@ const AdminBlogs = ({ initialAction, onActionComplete }: AdminBlogsProps) => {
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Slug
-                </label>
-                <Input
-                  value={formData.slug}
-                  onChange={(e) =>
-                    setFormData((prev) => ({ ...prev, slug: e.target.value }))
-                  }
-                  placeholder="blog-post-slug"
-                  className="bg-white border-gray-300 text-gray-900 placeholder-gray-500"
-                />
+                <div className="flex items-center justify-between mb-2">
+                  <label className="block text-sm font-medium text-gray-700">
+                    Slug
+                  </label>
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="sm"
+                    className="h-6 text-xs text-blue-600 hover:text-blue-800"
+                    onClick={() => {
+                      if (!formData.title) {
+                        toast.error("Please enter a title first");
+                        return;
+                      }
+                      const generatedSlug = formData.title
+                        .toLowerCase()
+                        .trim()
+                        .replace(/[^\w\s-]/g, "") // Remove special chars
+                        .replace(/\s+/g, "-") // Replace spaces with hyphens
+                        .replace(/-+/g, "-"); // Prevent multiple hyphens
+                      setFormData((prev) => ({ ...prev, slug: generatedSlug }));
+                      toast.success("Slug generated from title!");
+                    }}
+                  >
+                    Generate from Title
+                  </Button>
+                </div>
+                <div className="relative">
+                  <Input
+                    value={formData.slug}
+                    onChange={(e) => {
+                      // Allow custom input but sanitize slightly (no spaces ideally)
+                      const val = e.target.value.toLowerCase().replace(/\s+/g, "-");
+                      setFormData((prev) => ({ ...prev, slug: val }));
+                    }}
+                    placeholder="blog-post-slug"
+                    className="bg-white border-gray-300 text-gray-900 placeholder-gray-500 pr-8"
+                  />
+                  {formData.slug && (
+                    <button
+                      type="button"
+                      onClick={() => setFormData((prev) => ({ ...prev, slug: "" }))}
+                      className="absolute right-2 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
+                    >
+                      <X className="h-4 w-4" />
+                    </button>
+                  )}
+                </div>
+                <p className="text-xs text-gray-500 mt-1">
+                  SEO friendly URL path (e.g. "kedarnath-yatra-guide")
+                </p>
               </div>
               <div>
                 <div>

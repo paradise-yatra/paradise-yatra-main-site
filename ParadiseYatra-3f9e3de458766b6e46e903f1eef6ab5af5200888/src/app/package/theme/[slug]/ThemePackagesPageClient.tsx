@@ -6,7 +6,7 @@ import { MapPin, Clock, Filter, ChevronDown, Check, ChevronLeft, ChevronRight, X
 import Loading from '@/components/ui/loading';
 import Link from 'next/link';
 import Image from 'next/image';
-import { getImageUrl } from '@/lib/utils';
+import { getImageUrl, getPackagePriceLabel } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
@@ -165,11 +165,25 @@ export default function ThemePackagesPageClient({ slug }: { slug: string }) {
                     setFilteredItems(json.data.packages || []);
                 }
 
-                // Fetch suggestions
-                const sugRes = await fetch(`/api/destinations?limit=9`);
+                // Fetch suggestions from same source as package detail page
+                const sugRes = await fetch(`/api/all-packages?limit=24&isActive=true`, { cache: 'no-store' });
                 if (sugRes.ok) {
                     const sugData = await sugRes.json();
-                    setSuggestions(sugData.destinations || []);
+                    const suggestionsArray = Array.isArray(sugData)
+                        ? sugData
+                        : Array.isArray(sugData?.packages)
+                            ? sugData.packages
+                            : [];
+
+                    const currentThemePackageIds = new Set(
+                        (json?.data?.packages || []).map((pkg: any) => pkg?._id).filter(Boolean)
+                    );
+
+                    setSuggestions(
+                        suggestionsArray
+                            .filter((pkg: any) => pkg?.isActive !== false && !currentThemePackageIds.has(pkg?._id))
+                            .slice(0, 9)
+                    );
                 }
             } catch (err) {
                 console.error('Error fetching theme:', err);
@@ -347,6 +361,7 @@ export default function ThemePackagesPageClient({ slug }: { slug: string }) {
                                                 duration={pkg.duration}
                                                 description={pkg.shortDescription || pkg.description}
                                                 price={pkg.price}
+                                                priceLabel={getPackagePriceLabel(pkg.priceType)}
                                                 image={pkg.image}
                                                 detailUrl={`/package/${pkg.slug || pkg._id}`}
                                                 isInWishlist={isInWishlist(pkg._id)}
@@ -398,7 +413,7 @@ export default function ThemePackagesPageClient({ slug }: { slug: string }) {
                                         You Might Also Like
                                     </h3>
                                     <p className="!text-sm !text-slate-600 md:!text-base !max-w-2xl !font-semibold">
-                                        Explore our popular destinations and create unforgettable memories
+                                        Explore our popular packages and create unforgettable memories
                                     </p>
                                 </div>
                             </div>
@@ -419,24 +434,24 @@ export default function ThemePackagesPageClient({ slug }: { slug: string }) {
                                         scrollSnapType: "x mandatory",
                                     }}
                                 >
-                                    {suggestions.map((dest, idx) => (
+                                    {suggestions.map((pkg, idx) => (
                                         <PackageCard
-                                            key={`${dest._id}-${idx}`}
-                                            id={dest._id}
-                                            title={dest.name}
-                                            destination={dest.location}
-                                            image={getImageUrl(dest.image) || dest.image || ''}
-                                            duration={dest.duration}
-                                            price={dest.price || 0}
-                                            slug={dest.slug || dest._id}
-                                            hrefPrefix="/destinations"
+                                            key={`${pkg._id}-${idx}`}
+                                            id={pkg._id}
+                                            title={pkg.name}
+                                            destination={pkg.location}
+                                            image={getImageUrl(pkg.image) || pkg.image || ''}
+                                            duration={pkg.duration}
+                                            price={pkg.price || 0}
+                                            slug={pkg.slug || pkg._id}
+                                            hrefPrefix="/package"
                                             themeColor="#005beb"
-                                            priceLabel="Per Person"
-                                            isInWishlist={isInWishlist(dest._id)}
+                                            priceLabel={getPackagePriceLabel(pkg.priceType)}
+                                            isInWishlist={isInWishlist(pkg._id)}
                                             onWishlistToggle={(e) => {
                                                 e.preventDefault();
                                                 if (!user) setIsLoginModalOpen(true);
-                                                else toggleWishlist(dest._id);
+                                                else toggleWishlist(pkg._id);
                                             }}
                                         />
                                     ))}

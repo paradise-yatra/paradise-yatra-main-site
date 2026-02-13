@@ -11,12 +11,14 @@ Disallow: /_next/
 Disallow: /uploads/
 
 # Allow important pages
-Allow: /packages/
+Allow: /package/
+Allow: /package/india/
+Allow: /package/international/
+Allow: /package/theme/
 Allow: /destinations/
 Allow: /blog/
 Allow: /fixed-departures/
 Allow: /holiday-types/
-Allow: /itinerary/
 
 # Crawl delay for better server performance
 Crawl-delay: 1

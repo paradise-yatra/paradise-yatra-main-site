@@ -349,7 +349,7 @@ const AdventureEscapes = () => {
                         </div>
 
                         <div className="mt-auto">
-                          <Link href={`/itinerary/${pkg.slug || pkg._id}`}>
+                          <Link href={`/package/${pkg.slug || pkg._id}`}>
                             <Button className="book-button w-full py-3 text-lg font-bold bg-gradient-to-r from-green-600 to-emerald-600 text-white rounded-xl shadow-lg hover:from-green-700 hover:to-emerald-700 hover:cursor-pointer hover:scale-105 transition-all duration-200 focus:ring-2 focus:ring-green-300 animate-pulse">
                               View Details
                             </Button>
@@ -456,7 +456,7 @@ const AdventureEscapes = () => {
                         </div>
 
                         <div className="mt-auto">
-                          <Link href={`/itinerary/${pkg.slug || pkg._id}`}>
+                          <Link href={`/package/${pkg.slug || pkg._id}`}>
                             <Button className="book-button w-full py-3 text-lg font-bold bg-gradient-to-r from-green-600 to-emerald-600 text-white rounded-xl shadow-lg hover:from-green-700 hover:to-emerald-700 hover:cursor-pointer hover:scale-105 transition-all duration-200 focus:ring-2 focus:ring-green-300 animate-pulse">
                               View Details
                             </Button>

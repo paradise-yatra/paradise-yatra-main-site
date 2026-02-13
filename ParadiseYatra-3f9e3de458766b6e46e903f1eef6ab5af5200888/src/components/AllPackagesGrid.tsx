@@ -252,7 +252,7 @@ const AllPackagesGrid = () => {
                                 {visiblePackages.map((pkg) => (
                                     <Link
                                         key={pkg._id}
-                                        href={`/itinerary/${pkg.slug}`}
+                                        href={`/package/${pkg.slug}`}
                                         className="block"
                                     >
                                         <div className="bg-white border border-slate-200 rounded-lg overflow-hidden shadow-sm hover:shadow-md transition-shadow">
@@ -301,7 +301,7 @@ const AllPackagesGrid = () => {
                                 {visiblePackages.map((pkg) => (
                                     <Link
                                         key={pkg._id}
-                                        href={`/itinerary/${pkg.slug}`}
+                                        href={`/package/${pkg.slug}`}
                                         className="block"
                                     >
                                         <div className="bg-white border border-slate-200 rounded-lg overflow-hidden shadow-sm hover:shadow-lg hover:-translate-y-1 transition-all">

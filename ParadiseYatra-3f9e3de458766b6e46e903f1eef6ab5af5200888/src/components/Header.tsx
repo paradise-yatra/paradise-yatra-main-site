@@ -482,7 +482,7 @@ const Header = () => {
                                               key={destIndex}
                                               href={
                                                 dest.type === "package"
-                                                  ? `/itinerary/${dest.id}`
+                                                  ? `/package/${dest.id}`
                                                   : `/destinations/${dest.id}`
                                               }
                                               className="flex items-center text-xs text-gray-600 hover:text-blue-600 transition-colors duration-200"

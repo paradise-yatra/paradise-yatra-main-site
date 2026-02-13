@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { revalidatePath } from "next/cache";
 
-const BACKEND_URL = process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:5000';
+const BACKEND_URL = process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:5001';
 
 export async function GET(
   request: NextRequest,
@@ -17,8 +18,7 @@ export async function GET(
     try {
       response = await fetch(`${BACKEND_URL}/api/blogs/${id}`, {
         signal: controller.signal,
-        cache: 'force-cache', // Use cache aggressively
-        next: { revalidate: 3600 }, // Cache for 1 hour
+        cache: 'no-store',
       });
       clearTimeout(timeoutId);
     } catch (fetchError) {
@@ -95,6 +95,8 @@ export async function PUT(
     }
 
     const data = await response.json();
+    revalidatePath("/blog");
+    revalidatePath(`/blog/${id}`);
 
     if (!response.ok) {
       return NextResponse.json(

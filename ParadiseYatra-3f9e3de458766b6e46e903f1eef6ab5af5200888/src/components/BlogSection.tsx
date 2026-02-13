@@ -24,6 +24,7 @@ import { getImageUrl } from "@/lib/utils";
 
 interface BlogPost {
   _id: string;
+  slug?: string;
   title: string;
   content: string;
   excerpt: string;
@@ -46,6 +47,10 @@ const generateSlug = (title: string): string => {
     .replace(/\s+/g, "-")
     .replace(/-+/g, "-")
     .trim();
+};
+
+const getPostSlug = (post: BlogPost): string => {
+  return post.slug || generateSlug(post.title);
 };
 
 const BlogSection = () => {
@@ -428,7 +433,7 @@ const BlogSection = () => {
 
                       {/* Read More Button */}
                       <div className="mt-auto pt-4">
-                        <Link href={`/blog/${generateSlug(post.title)}`}>
+                        <Link href={`/blog/${getPostSlug(post)}`}>
                           <Button className="w-full py-3 text-sm font-bold bg-gradient-to-r from-blue-600 to-blue-400 text-white rounded-xl shadow-lg hover:from-blue-700 hover:to-blue-500 hover:cursor-pointer hover:scale-105 transition-all duration-200 focus:ring-2 focus:ring-blue-300 group">
                             <span>Read More</span>
                             <ArrowRight className="w-4 h-4 ml-2 group-hover:translate-x-1 transition-transform" />
@@ -567,7 +572,7 @@ const BlogSection = () => {
 
                       {/* Read More Button */}
                       <div className="mt-auto pt-4">
-                        <Link href={`/blog/${generateSlug(post.title)}`}>
+                        <Link href={`/blog/${getPostSlug(post)}`}>
                           <Button className="w-full py-3 text-sm font-bold bg-gradient-to-r from-blue-600 to-blue-400 text-white rounded-xl shadow-lg hover:from-blue-700 hover:to-blue-500 hover:cursor-pointer hover:scale-105 transition-all duration-200 focus:ring-2 focus:ring-blue-300 group">
                             <span>Read More</span>
                             <ArrowRight className="w-4 h-4 ml-2 group-hover:translate-x-1 transition-transform" />

@@ -6,6 +6,7 @@ export interface Package {
   description: string;
   shortDescription: string;
   price: number;
+  priceType?: "per_person" | "per_couple";
   originalPrice?: number;
   discount?: number;
   duration: string;

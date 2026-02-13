@@ -6,7 +6,7 @@ import { MapPin, Clock, Filter, ChevronDown, Check, ChevronLeft, ChevronRight, X
 import Loading from '@/components/ui/loading';
 import Link from 'next/link';
 import Image from 'next/image';
-import { getImageUrl } from '@/lib/utils';
+import { getImageUrl, getPackagePriceLabel } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
@@ -208,13 +208,25 @@ export default function DedicatedPackagesPageClient({ tourType, state, country }
                 setAllItems(packages);
                 setFilteredItems(packages);
 
-                // Fetch suggestions
-                const suggestionsResponse = await fetch(`/api/destinations?limit=9`, { cache: 'no-store' });
+                // Fetch suggestions from the same source as /package/[slug]
+                const suggestionsResponse = await fetch(`/api/all-packages?limit=24&isActive=true`, { cache: 'no-store' });
                 if (suggestionsResponse.ok) {
                     const suggestionsData = await suggestionsResponse.json();
-                    if (suggestionsData && suggestionsData.destinations && Array.isArray(suggestionsData.destinations)) {
-                        setSuggestions(suggestionsData.destinations.slice(0, 9));
-                    }
+                    const suggestionsArray = Array.isArray(suggestionsData)
+                        ? suggestionsData
+                        : Array.isArray(suggestionsData?.packages)
+                            ? suggestionsData.packages
+                            : [];
+
+                    const currentPackageIds = new Set(
+                        packages.map((pkg: any) => pkg?._id).filter(Boolean)
+                    );
+
+                    setSuggestions(
+                        suggestionsArray
+                            .filter((pkg: any) => pkg?.isActive !== false && !currentPackageIds.has(pkg?._id))
+                            .slice(0, 9)
+                    );
                 }
 
                 setLoading(false);
@@ -430,6 +442,7 @@ export default function DedicatedPackagesPageClient({ tourType, state, country }
                                                 duration={item.duration}
                                                 description={item.shortDescription || item.description}
                                                 price={item.price}
+                                                priceLabel={getPackagePriceLabel(item.priceType)}
                                                 image={item.image}
                                                 detailUrl={`/package/${item.slug || item._id}`}
                                                 isInWishlist={isInWishlist(item._id)}
@@ -481,7 +494,7 @@ export default function DedicatedPackagesPageClient({ tourType, state, country }
                                         You Might Also Like
                                     </h3>
                                     <p className="!text-sm !text-slate-600 md:!text-base !max-w-2xl !font-semibold">
-                                        Explore more amazing destinations and create unforgettable memories
+                                        Explore more amazing packages and create unforgettable memories
                                     </p>
                                 </div>
                             </div>
@@ -512,9 +525,9 @@ export default function DedicatedPackagesPageClient({ tourType, state, country }
                                             price={pkg.price || 0}
                                             image={getImageUrl(pkg.image) || `https://picsum.photos/800/500?random=${index + 50}`}
                                             slug={pkg.slug || pkg._id}
-                                            hrefPrefix="/destinations"
+                                            hrefPrefix="/package"
                                             themeColor="#005beb"
-                                            priceLabel="Per Person"
+                                            priceLabel={getPackagePriceLabel(pkg.priceType)}
                                             isInWishlist={isInWishlist(pkg._id)}
                                             onWishlistToggle={handleWishlistToggle}
                                         />

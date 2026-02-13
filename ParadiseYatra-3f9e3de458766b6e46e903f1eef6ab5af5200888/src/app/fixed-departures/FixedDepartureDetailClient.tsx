@@ -61,6 +61,8 @@ interface FixedDepartureDetailClientProps {
     departure: Departure;
 }
 
+const containsHtml = (value: string = ""): boolean => /<\/?[a-z][\s\S]*>/i.test(value);
+
 export default function FixedDepartureDetailClient({ departure }: FixedDepartureDetailClientProps) {
     const [openDay, setOpenDay] = useState<number>(1);
     const [isLeadFormOpen, setIsLeadFormOpen] = useState(false);
@@ -220,9 +222,16 @@ export default function FixedDepartureDetailClient({ departure }: FixedDeparture
                             </div>
 
                             <div className="prose prose-slate max-w-none">
-                                <p className="!text-sm !text-slate-600 leading-relaxed !font-semibold !font-plus-jakarta-sans">
-                                    {departure.longDescription}
-                                </p>
+                                {containsHtml(departure.longDescription || "") ? (
+                                    <div
+                                        className="overflow-x-auto !text-sm !text-slate-600 !font-semibold leading-relaxed !font-plus-jakarta-sans [&_h1]:!text-xl [&_h1]:!font-bold [&_h1]:!text-slate-900 [&_h1]:!mb-3 [&_h2]:!text-lg [&_h2]:!font-bold [&_h2]:!text-slate-900 [&_h2]:!mb-3 [&_h3]:!text-base [&_h3]:!font-semibold [&_h3]:!text-slate-900 [&_h3]:!mb-2 [&_p]:!mb-3 [&_ul]:!list-disc [&_ul]:!pl-6 [&_ul]:!space-y-2 [&_ol]:!list-decimal [&_ol]:!pl-6 [&_ol]:!space-y-2 [&_li]:!mb-1 [&_li]:!pl-1 [&_li]:!text-slate-700 [&_ul_li::marker]:!text-blue-500 [&_ul_li::marker]:!text-base [&_ol_li::marker]:!text-blue-500 [&_ol_li::marker]:!font-bold [&_a]:!text-blue-600 [&_a]:!underline [&_table]:!w-full [&_table]:!my-4 [&_table]:!border [&_table]:!border-slate-200 [&_table]:!border-separate [&_table]:!border-spacing-0 [&_table]:!rounded-lg [&_th]:!bg-slate-100 [&_th]:!text-slate-900 [&_th]:!font-semibold [&_th]:!text-xs [&_th]:!px-3 [&_th]:!py-2 [&_th]:!text-left [&_th]:!border-b [&_th]:!border-r [&_th]:!border-slate-200 [&_td]:!text-slate-700 [&_td]:!text-xs [&_td]:!px-3 [&_td]:!py-2 [&_td]:!align-top [&_td]:!border-b [&_td]:!border-r [&_td]:!border-slate-200 [&_tr:last-child_td]:!border-b-0 [&_tr_th:last-child]:!border-r-0 [&_tr_td:last-child]:!border-r-0"
+                                        dangerouslySetInnerHTML={{ __html: departure.longDescription || "" }}
+                                    />
+                                ) : (
+                                    <p className="!text-sm !text-slate-600 leading-relaxed !font-semibold !font-plus-jakarta-sans">
+                                        {departure.longDescription}
+                                    </p>
+                                )}
                             </div>
                         </motion.section>
 
@@ -296,14 +305,21 @@ export default function FixedDepartureDetailClient({ departure }: FixedDeparture
                                                         <div className="px-5 pb-6 pt-0">
                                                             <div className="h-px bg-slate-50 w-full mb-5" />
                                                             <div className="space-y-3.5">
-                                                                {item.description.split('.').filter(p => p.trim()).map((point, idx) => (
-                                                                    <div key={idx} className="flex gap-3 group/item">
-                                                                        <div className="w-1.5 h-1.5 rounded-full bg-blue-400 group-hover/item:bg-blue-600 mt-2 transition-colors shrink-0" />
-                                                                        <p className="!text-sm !text-slate-600 !font-semibold leading-relaxed !font-plus-jakarta-sans">
-                                                                            {point.trim()}.
-                                                                        </p>
-                                                                    </div>
-                                                                ))}
+                                                                {containsHtml(item.description || "") ? (
+                                                                    <div
+                                                                        className="overflow-x-auto !text-sm !font-semibold !text-slate-700 leading-relaxed !font-plus-jakarta-sans [&_h1]:!text-lg [&_h1]:!font-bold [&_h1]:!text-slate-900 [&_h1]:!mb-3 [&_h2]:!text-base [&_h2]:!font-bold [&_h2]:!text-slate-900 [&_h2]:!mb-2 [&_h3]:!text-sm [&_h3]:!font-semibold [&_h3]:!text-slate-900 [&_h3]:!mb-2 [&_p]:!mb-3 [&_ul]:!list-disc [&_ul]:!pl-6 [&_ul]:!space-y-2 [&_ol]:!list-decimal [&_ol]:!pl-6 [&_ol]:!space-y-2 [&_li]:!mb-1 [&_li]:!pl-1 [&_li]:!text-slate-700 [&_ul_li::marker]:!text-blue-500 [&_ul_li::marker]:!text-base [&_ol_li::marker]:!text-blue-500 [&_ol_li::marker]:!font-bold [&_a]:!text-blue-600 [&_a]:!underline [&_table]:!w-full [&_table]:!my-4 [&_table]:!border [&_table]:!border-slate-200 [&_table]:!border-separate [&_table]:!border-spacing-0 [&_table]:!rounded-lg [&_th]:!bg-slate-100 [&_th]:!text-slate-900 [&_th]:!font-semibold [&_th]:!text-xs [&_th]:!px-3 [&_th]:!py-2 [&_th]:!text-left [&_th]:!border-b [&_th]:!border-r [&_th]:!border-slate-200 [&_td]:!text-slate-700 [&_td]:!text-xs [&_td]:!px-3 [&_td]:!py-2 [&_td]:!align-top [&_td]:!border-b [&_td]:!border-r [&_td]:!border-slate-200 [&_tr:last-child_td]:!border-b-0 [&_tr_th:last-child]:!border-r-0 [&_tr_td:last-child]:!border-r-0"
+                                                                        dangerouslySetInnerHTML={{ __html: item.description || "" }}
+                                                                    />
+                                                                ) : (
+                                                                    item.description.split('.').filter(p => p.trim()).map((point, idx) => (
+                                                                        <div key={idx} className="flex gap-3 group/item">
+                                                                            <div className="w-1.5 h-1.5 rounded-full bg-blue-400 !text-slate-700 group-hover/item:bg-blue-600 mt-2 transition-colors shrink-0" />
+                                                                            <p className="!text-sm !text-slate-600 !font-semibold leading-relaxed !font-plus-jakarta-sans">
+                                                                                {point.trim()}.
+                                                                            </p>
+                                                                        </div>
+                                                                    ))
+                                                                )}
                                                             </div>
 
 

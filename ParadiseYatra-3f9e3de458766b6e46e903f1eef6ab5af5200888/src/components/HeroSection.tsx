@@ -77,7 +77,7 @@ const HeroSection = () => {
     } else if (suggestion.category === "fixed-departure") {
       router.push(`/fixed-departures/${suggestion.slug}`);
     } else {
-      router.push(`/itinerary/${suggestion.slug}`);
+      router.push(`/package/${suggestion.slug}`);
     }
   };
 

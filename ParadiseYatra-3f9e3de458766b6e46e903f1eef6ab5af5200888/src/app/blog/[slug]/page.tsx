@@ -1,5 +1,4 @@
 import { Metadata } from "next";
-import { cache } from "react";
 import BlogDetailClient from "./BlogDetailClient";
 
 interface BlogPost {
@@ -44,7 +43,7 @@ const stripHtml = (html: string): string => {
 // Function to fetch blog post by slug with timeout
 // IMPORTANT: This must call the *Next.js app* (not the backend) because `/api/blogs/[id]`
 // is a Next route that proxies to the backend.
-const getBlogPost = cache(async (slug: string): Promise<BlogPost | null> => {
+const getBlogPost = async (slug: string): Promise<BlogPost | null> => {
   try {
     // For server-side rendering, we need to construct the full URL to THIS Next app.
     // Never use NEXT_PUBLIC_BACKEND_URL here.
@@ -63,8 +62,7 @@ const getBlogPost = cache(async (slug: string): Promise<BlogPost | null> => {
     try {
       response = await fetch(`${baseUrl}/api/blogs/${slug}`, {
         signal: controller.signal,
-        next: { revalidate: 3600 }, // Cache for 1 hour
-        cache: 'force-cache', // Use cache aggressively
+        cache: "no-store",
       });
       clearTimeout(timeoutId);
     } catch (fetchError) {
@@ -86,7 +84,7 @@ const getBlogPost = cache(async (slug: string): Promise<BlogPost | null> => {
     console.error("Error fetching blog post:", error);
     return null;
   }
-});
+};
 
 // Generate metadata for SEO
 export async function generateMetadata({

@@ -7,6 +7,7 @@ import { toast } from "react-toastify";
 import { Country, State } from "country-state-city";
 import type { ICountry, IState } from "country-state-city";
 import ConfirmationDialog from "@/components/ui/confirmation-dialog";
+import { RichTextEditor } from "@/components/ui/rich-text-editor";
 
 interface Package {
     _id: string;
@@ -19,6 +20,7 @@ interface Package {
     country: string;
     state?: string;
     tourType: string;
+    priceType?: "per_person" | "per_couple";
     price: number;
     originalPrice?: number;
     discount?: number;
@@ -74,6 +76,7 @@ const AdminPackages = () => {
         country: "",
         state: "",
         tourType: "india",
+        priceType: "per_person" as "per_person" | "per_couple",
         price: "",
         originalPrice: "",
         discount: "",
@@ -128,6 +131,9 @@ const AdminPackages = () => {
             .replace(/-+/g, '-') // Replace multiple hyphens with single
             .trim();
     };
+
+    const getPriceTypeLabel = (priceType?: string) =>
+        priceType === "per_couple" ? "Per Couple" : "Per Person";
 
     // Handle title change with auto-slug generation
     const handleTitleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -395,6 +401,7 @@ const AdminPackages = () => {
                     country: formData.country.trim(),
                     state: formData.state?.trim() || '',
                     tourType: formData.tourType,
+                    priceType: formData.priceType,
                     price: parseFloat(formData.price),
                     originalPrice: formData.originalPrice ? parseFloat(formData.originalPrice) : undefined,
                     discount: formData.discount ? parseFloat(formData.discount) : undefined,
@@ -448,6 +455,7 @@ const AdminPackages = () => {
                 uploadFormData.append('country', formData.country.trim());
                 if (formData.state?.trim()) uploadFormData.append('state', formData.state.trim());
                 uploadFormData.append('tourType', formData.tourType);
+                uploadFormData.append('priceType', formData.priceType);
                 uploadFormData.append('price', formData.price);
                 if (formData.originalPrice) uploadFormData.append('originalPrice', formData.originalPrice);
                 if (formData.discount) uploadFormData.append('discount', formData.discount);
@@ -522,6 +530,7 @@ const AdminPackages = () => {
                     country: formData.country.trim(),
                     state: formData.state?.trim() || '',
                     tourType: formData.tourType,
+                    priceType: formData.priceType,
                     price: parseFloat(formData.price),
                     originalPrice: formData.originalPrice ? parseFloat(formData.originalPrice) : undefined,
                     discount: formData.discount ? parseFloat(formData.discount) : undefined,
@@ -570,6 +579,7 @@ const AdminPackages = () => {
             uploadFormData.append('country', formData.country.trim());
             if (formData.state?.trim()) uploadFormData.append('state', formData.state.trim());
             uploadFormData.append('tourType', formData.tourType);
+            uploadFormData.append('priceType', formData.priceType);
             uploadFormData.append('price', formData.price);
             if (formData.originalPrice) uploadFormData.append('originalPrice', formData.originalPrice);
             if (formData.discount) uploadFormData.append('discount', formData.discount);
@@ -644,6 +654,7 @@ const AdminPackages = () => {
             country: pkg.country,
             state: pkg.state || "",
             tourType: pkg.tourType,
+            priceType: pkg.priceType || "per_person",
             price: pkg.price.toString(),
             originalPrice: pkg.originalPrice?.toString() || "",
             discount: pkg.discount?.toString() || "",
@@ -746,6 +757,7 @@ const AdminPackages = () => {
             country: "",
             state: "",
             tourType: "india",
+            priceType: "per_person",
             price: "",
             originalPrice: "",
             discount: "",
@@ -1130,15 +1142,17 @@ const AdminPackages = () => {
 
                             <div>
                                 <label className="block text-sm font-medium text-gray-700 mb-1">Short Description</label>
-                                <textarea
+                                <RichTextEditor
                                     value={formData.shortDescription || ""}
-                                    onChange={(e) => setFormData({ ...formData, shortDescription: e.target.value })}
-                                    className="w-full border border-gray-300 rounded-lg px-4 py-2 focus:ring-2 focus:ring-blue-500 outline-none h-24 resize-none"
+                                    onChange={(value) => setFormData({ ...formData, shortDescription: value })}
+                                    contentType="packages"
+                                    className="min-h-[170px]"
+                                    editorViewportClassName="max-h-[260px]"
                                     placeholder="Brief summary for cards..."
                                 />
                             </div>
 
-                            <div className="grid grid-cols-2 gap-4">
+                            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                                 <div>
                                     <label className="block text-sm font-medium text-gray-700 mb-1">Price</label>
                                     <div className="relative">
@@ -1151,6 +1165,17 @@ const AdminPackages = () => {
                                             placeholder="0"
                                         />
                                     </div>
+                                </div>
+                                <div>
+                                    <label className="block text-sm font-medium text-gray-700 mb-1">Price Type</label>
+                                    <select
+                                        value={formData.priceType}
+                                        onChange={(e) => setFormData({ ...formData, priceType: e.target.value as "per_person" | "per_couple" })}
+                                        className="w-full border border-gray-300 rounded-lg px-4 py-2 focus:ring-2 focus:ring-blue-500 outline-none bg-white"
+                                    >
+                                        <option value="per_person">Per Person</option>
+                                        <option value="per_couple">Per Couple</option>
+                                    </select>
                                 </div>
                                 <div>
                                     <label className="block text-sm font-medium text-gray-700 mb-1">Original Price (Optional)</label>
@@ -1283,10 +1308,12 @@ const AdminPackages = () => {
                         <div className="space-y-4">
                             <div>
                                 <label className="block text-sm font-medium text-gray-700 mb-1">Detailed Description</label>
-                                <textarea
+                                <RichTextEditor
                                     value={formData.description || ""}
-                                    onChange={(e) => setFormData({ ...formData, description: e.target.value })}
-                                    className="w-full border border-gray-300 rounded-lg px-4 py-2 focus:ring-2 focus:ring-blue-500 outline-none h-32 resize-none"
+                                    onChange={(value) => setFormData({ ...formData, description: value })}
+                                    contentType="packages"
+                                    className="min-h-[240px]"
+                                    editorViewportClassName="max-h-[320px]"
                                     placeholder="Full details about the package..."
                                 />
                             </div>
@@ -1551,6 +1578,9 @@ const AdminPackages = () => {
                                         </td>
                                         <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
                                             ₹{pkg.price.toLocaleString()}
+                                            <span className="ml-2 text-[10px] uppercase tracking-wide text-blue-700 bg-blue-50 px-2 py-0.5 rounded-full">
+                                                {getPriceTypeLabel(pkg.priceType)}
+                                            </span>
                                             {pkg.originalPrice && (
                                                 <span className="text-xs text-gray-400 line-through ml-2">₹{pkg.originalPrice.toLocaleString()}</span>
                                             )}
@@ -1642,8 +1672,8 @@ const AdminPackages = () => {
             {/* Preview Modal */}
             {previewPackage && (
                 <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4 overflow-y-auto">
-                    <div className="bg-white rounded-3xl max-w-2xl w-full shadow-2xl overflow-hidden animate-in fade-in zoom-in duration-300">
-                        <div className="relative h-72 w-full">
+                    <div className="bg-white rounded-3xl max-w-xl w-full max-h-[88vh] shadow-2xl overflow-hidden animate-in fade-in zoom-in duration-300 flex flex-col">
+                        <div className="relative h-52 w-full shrink-0">
                             {previewPackage.image ? (
                                 <img
                                     src={previewPackage.image}
@@ -1667,13 +1697,13 @@ const AdminPackages = () => {
                                 <span className="bg-blue-600 text-white px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wider">
                                     {previewPackage.tourType}
                                 </span>
-                                <h3 className="text-3xl font-bold text-white mt-2 leading-tight">
+                                <h3 className="text-2xl font-bold text-white mt-2 leading-tight line-clamp-2">
                                     {previewPackage.name}
                                 </h3>
                             </div>
                         </div>
 
-                        <div className="p-8 space-y-6">
+                        <div className="p-6 space-y-5 overflow-y-auto custom-scrollbar">
                             <div className="flex flex-wrap items-center gap-6 text-sm">
                                 <div className="flex items-center gap-2 px-4 py-2 bg-gray-50 rounded-2xl border border-gray-100">
                                     <Clock className="text-blue-500" size={18} />
@@ -1687,6 +1717,9 @@ const AdminPackages = () => {
                                     <IndianRupee className="text-green-600" size={18} />
                                     <div className="flex items-baseline gap-1">
                                         <span className="font-bold text-green-700 text-lg">₹{previewPackage.price.toLocaleString()}</span>
+                                        <span className="text-[10px] uppercase tracking-wide text-blue-700 bg-blue-50 px-2 py-0.5 rounded-full">
+                                            {getPriceTypeLabel(previewPackage.priceType)}
+                                        </span>
                                         {previewPackage.originalPrice && (
                                             <span className="text-xs text-gray-400 line-through">₹{previewPackage.originalPrice.toLocaleString()}</span>
                                         )}
@@ -1697,13 +1730,13 @@ const AdminPackages = () => {
                             <div className="space-y-4">
                                 <div>
                                     <h4 className="text-sm font-bold text-gray-400 uppercase tracking-widest mb-2">Short Description</h4>
-                                    <p className="text-gray-600 leading-relaxed font-medium">
+                                    <div className="text-gray-600 leading-relaxed font-medium max-h-28 overflow-y-auto custom-scrollbar pr-2">
                                         {previewPackage.shortDescription}
-                                    </p>
+                                    </div>
                                 </div>
                                 <div>
                                     <h4 className="text-sm font-bold text-gray-400 uppercase tracking-widest mb-2">Full Details</h4>
-                                    <div className="text-gray-600 leading-relaxed whitespace-pre-line custom-scrollbar max-h-48 overflow-y-auto pr-2">
+                                    <div className="text-gray-600 leading-relaxed whitespace-pre-line custom-scrollbar max-h-40 overflow-y-auto pr-2">
                                         {previewPackage.description}
                                     </div>
                                 </div>
@@ -1746,7 +1779,7 @@ const AdminPackages = () => {
                                         setPreviewPackage(null);
                                         handleEditPackage(previewPackage);
                                     }}
-                                    className="bg-blue-600 text-white px-8 py-3 rounded-2xl font-bold hover:bg-blue-700 transition shadow-lg shadow-blue-200"
+                                    className="bg-blue-600 text-white px-6 py-2.5 rounded-2xl font-bold hover:bg-blue-700 transition shadow-lg shadow-blue-200"
                                 >
                                     Edit This Package
                                 </button>
