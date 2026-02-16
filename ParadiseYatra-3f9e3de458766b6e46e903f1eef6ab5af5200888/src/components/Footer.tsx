@@ -4,6 +4,7 @@ import {
   Facebook,
   Instagram,
   Youtube,
+  Linkedin,
   Phone,
   Mail,
   MapPin,
@@ -56,21 +57,47 @@ const Footer = () => {
   const [footerData, setFooterData] = useState<FooterContent | null>(null);
   const [isLoading, setIsLoading] = useState(true);
 
+  const normalizePlatform = (platform: string) => {
+    const normalized = (platform || "").trim().toLowerCase();
+    if (normalized === "x") return "twitter";
+    if (normalized === "ig" || normalized === "insta") return "instagram";
+    if (normalized === "yt") return "youtube";
+    if (normalized === "fb") return "facebook";
+    if (normalized === "in") return "linkedin";
+    return normalized;
+  };
+
   // Helper function to clean up malformed URLs
   const cleanUrl = (url: string): { href: string } => {
-    if (!url || url === "#") {
+    const rawUrl = (url || "").trim();
+    if (!rawUrl || rawUrl === "#") {
       return { href: "#" };
     }
 
     // Remove leading # if present
-    const cleanedUrl = url.startsWith("#") ? url.substring(1) : url;
+    const cleanedUrl = rawUrl.startsWith("#") ? rawUrl.substring(1).trim() : rawUrl;
 
     // If it's still just # or empty, return default
     if (!cleanedUrl || cleanedUrl === "#") {
       return { href: "#" };
     }
 
-    return { href: cleanedUrl };
+    if (
+      cleanedUrl.startsWith("http://") ||
+      cleanedUrl.startsWith("https://") ||
+      cleanedUrl.startsWith("mailto:") ||
+      cleanedUrl.startsWith("tel:") ||
+      cleanedUrl.startsWith("/")
+    ) {
+      return { href: cleanedUrl };
+    }
+
+    // If protocol is missing but domain looks valid, prefix https://
+    if (/^[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}/.test(cleanedUrl)) {
+      return { href: `https://${cleanedUrl}` };
+    }
+
+    return { href: "#" };
   };
 
   const toggleSection = (section: keyof typeof expandedSections) => {
@@ -140,27 +167,48 @@ const Footer = () => {
 
   const socialIcons = {
     facebook: Facebook,
+    twitter: () => (
+      <Image
+        src="/icons8-x-50.png"
+        alt="X (Twitter)"
+        width={16}
+        height={16}
+        className="w-4 h-4"
+      />
+    ),
     instagram: Instagram,
     youtube: Youtube,
+    linkedin: Linkedin,
   };
 
   const socialColors = {
     facebook: "bg-blue-600 hover:bg-blue-700",
+    twitter: "bg-sky-500 hover:bg-sky-600",
     instagram:
       "bg-gradient-to-tr from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700",
     youtube: "bg-red-600 hover:bg-red-700",
+    linkedin: "bg-blue-700 hover:bg-blue-800",
   };
 
-  // Use dynamic social media data if available, otherwise use fallback
-  const socialLinks = (
-    footerData?.socialMedia?.filter(
-      (social) => social.isActive && social.platform in socialIcons
-    ) || [
-      { platform: "facebook", url: "#", isActive: true },
-      { platform: "instagram", url: "#", isActive: true },
-      { platform: "youtube", url: "#", isActive: true },
-    ]
-  ).filter((social) => social.platform in socialIcons);
+  // Prefer admin-configured social links and normalize platform naming.
+  const adminSocialLinks = (footerData?.socialMedia || [])
+    .map((social) => ({
+      ...social,
+      platform: normalizePlatform(social.platform),
+    }))
+    .filter((social) => social.isActive && social.platform in socialIcons);
+
+  const fallbackSocialLinks =
+    !footerData || adminSocialLinks.length === 0
+      ? [
+          { platform: "facebook", url: "#", isActive: true },
+          { platform: "instagram", url: "#", isActive: true },
+          { platform: "youtube", url: "#", isActive: true },
+        ]
+      : [];
+
+  const socialLinks =
+    adminSocialLinks.length > 0 ? adminSocialLinks : fallbackSocialLinks;
 
   if (isLoading) {
     return (
@@ -447,7 +495,11 @@ const Footer = () => {
                     className={`w-8 h-8 md:w-10 md:h-10 ${bgColor} rounded-full flex items-center justify-center transition-all duration-300 hover:scale-110 shadow hover:shadow-lg`}
                     aria-label={`Follow us on ${social.platform}`}
                   >
-                    <Icon className="w-3 h-3 md:w-4 md:h-4 text-white" />
+                    {social.platform === "twitter" ? (
+                      <Icon />
+                    ) : (
+                      <Icon className="w-3 h-3 md:w-4 md:h-4 text-white" />
+                    )}
                   </motion.a>
                 );
               })}

@@ -91,7 +91,7 @@ const HeroSection = () => {
       <div className="absolute inset-0">
         <video
           className="h-full w-full bg-black object-cover object-center md:object-[center_20%]"
-          src="https://res.cloudinary.com/dwuwpxu0y/video/upload/v1769447728/216103_medium_zlmh3v.mp4"
+          src="https://res.cloudinary.com/dwuwpxu0y/video/upload/q_auto:eco,vc_auto/v1769447728/216103_medium_zlmh3v.mp4"
           autoPlay
           loop
           muted
@@ -143,7 +143,7 @@ const HeroSection = () => {
           <div
             className="-mt-8 w-full rounded-none border-white px-4 pb-24 pt-20 shadow-2xl border-2 border-dashed border-b-0 backdrop-blur-sm md:px-8 md:pb-32 md:pt-24 sm:rounded-t-[80px] sm:rounded-b-none rounded-t-2xl"
             style={{
-              backgroundImage: "url('https://res.cloudinary.com/dwuwpxu0y/image/upload/v1769064117/1329_qnfgyd.jpg')",
+              backgroundImage: "url('https://res.cloudinary.com/dwuwpxu0y/image/upload/f_auto,q_auto,dpr_auto,c_limit,w_1200/v1769064117/1329_qnfgyd.jpg')",
               backgroundSize: 'cover',
               backgroundPosition: 'center',
               backgroundBlendMode: 'overlay',
@@ -227,7 +227,7 @@ const HeroSection = () => {
                 >
                   <div className="w-16 h-16 md:w-24 md:h-24 flex items-center justify-center rounded-full bg-blue-600 p-3 md:p-4">
                     <img
-                      src="https://res.cloudinary.com/dwuwpxu0y/image/upload/v1769084210/Trekking_Icon_c3g7uw.png"
+                      src="https://res.cloudinary.com/dwuwpxu0y/image/upload/f_auto,q_auto,dpr_auto,c_limit,w_1200/v1769084210/Trekking_Icon_c3g7uw.png"
                       alt="Adventure"
                       className="w-full h-full object-contain filter brightness-0 invert"
                     />

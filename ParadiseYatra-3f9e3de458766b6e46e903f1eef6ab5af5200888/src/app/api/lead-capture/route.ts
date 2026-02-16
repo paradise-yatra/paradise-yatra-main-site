@@ -48,12 +48,31 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Create email transporter
+    // Create email transporter (SMTP)
+    const smtpHost = process.env.SMTP_HOST;
+    const smtpPort = Number(process.env.SMTP_PORT || 465);
+    const smtpUser = process.env.SMTP_USER;
+    const smtpPassRaw = process.env.SMTP_PASS;
+    const smtpPass = (smtpPassRaw || "").replace(/^"(.*)"$/, "$1");
+    const smtpSecure =
+      process.env.SMTP_SECURE !== undefined
+        ? process.env.SMTP_SECURE === "true"
+        : smtpPort === 465;
+
+    if (!smtpHost || !smtpUser || !smtpPass) {
+      return NextResponse.json(
+        { error: "SMTP is not configured on server." },
+        { status: 500 }
+      );
+    }
+
     const transporter = createTransport({
-      service: "gmail",
+      host: smtpHost,
+      port: smtpPort,
+      secure: smtpSecure,
       auth: {
-        user: process.env.GMAIL_USER,
-        pass: process.env.GMAIL_APP_PASSWORD,
+        user: smtpUser,
+        pass: smtpPass,
       },
     });
 
@@ -158,8 +177,8 @@ Inquiry received on: ${new Date(body.timestamp).toLocaleString()}
 
     // Send email
     const mailOptions = {
-      from: process.env.GMAIL_USER,
-      to: process.env.GMAIL_USER, // You can change this to any email address
+      from: smtpUser,
+      to: smtpUser,
       subject: emailSubject,
       text: emailText,
       html: emailHtml,

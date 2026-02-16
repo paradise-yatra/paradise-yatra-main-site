@@ -11,7 +11,8 @@ import {
     Star,
     ChevronRight,
     Search,
-    Heart
+    Heart,
+    CreditCard
 } from "lucide-react";
 import { FaYoutube, FaFacebook, FaInstagram } from "react-icons/fa";
 import { useState } from "react";
@@ -36,6 +37,7 @@ const Sidebar = ({ isOpen, onClose, navItems, onBookNow }: SidebarProps) => {
     };
 
     const menuItems = [
+        { name: "Payment", href: "/payment", icon: CreditCard, highlight: false },
         { name: "Fixed Departures", href: "/fixed-departures", icon: Calendar, highlight: true },
         { name: "Why Choose Us", href: "/why-choose-us", icon: Star },
         { name: "About Paradise Yatra", href: "/about", icon: Globe },

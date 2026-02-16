@@ -1,741 +1,521 @@
 "use client";
 
-import { useState, useEffect } from 'react';
-import Image from 'next/image';
+import { useMemo, useState } from "react";
+import { motion, AnimatePresence } from "framer-motion";
 import {
-    Calendar, MapPin, Users, Clock, Check, X,
-    ArrowRight, Shield, Award,
-    ChevronRight, ChevronDown, Phone, MessageCircle, Gem, Sparkles
-} from 'lucide-react';
-import { motion, AnimatePresence } from 'framer-motion';
+  ArrowRight,
+  Calendar,
+  Check,
+  ChevronDown,
+  Clock,
+  CreditCard,
+  Loader2,
+  MapPin,
+  Shield,
+  Users,
+  X,
+} from "lucide-react";
+import Header from "@/components/Header";
 import LeadCaptureForm from "@/components/LeadCaptureForm";
-import Header from '@/components/Header';
+import LoginAlertModal from "@/components/LoginAlertModal";
+import { Card, CardContent } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { useRouter } from "next/navigation";
+import { useAuth } from "@/context/AuthContext";
 
 interface ItineraryItem {
-    day: number;
-    title: string;
-    description: string;
-    meals?: string;
-    hotel?: string;
-    distance?: string;
+  day: number;
+  title: string;
+  description: string;
+  meals?: string;
+  hotel?: string;
 }
 
 interface Departure {
-    _id: string;
-    title: string;
-    slug: string;
-    subtitle?: string;
-    destination: string;
-    departureDate: string;
-    returnDate: string;
-    duration: string;
-    price: number;
-    originalPrice?: number | null;
-    availableSeats: number;
-    totalSeats: number;
-    image: string;
-    tag: string;
-    typeColor?: string;
-    rating?: number;
-    reviews?: number;
-    location?: string;
-    transport?: string;
-    hotel?: string;
-    nextDeparture?: string;
-    shortDescription: string;
-    longDescription: string;
-    highlights: string[];
-    suitableFor: string[];
-    notSuitableFor: string[];
-    itinerary: ItineraryItem[];
-    inclusions: string[];
-    exclusions: string[];
-    accommodationSummary?: { destination: string; nights: string; hotel: string }[];
-    hotels?: string[];
-    paymentPolicy?: string[];
-    cancellationPolicy?: string[];
-    departures?: { date: string; price: number; seats: number; status: string }[];
+  _id: string;
+  title: string;
+  slug: string;
+  subtitle?: string;
+  destination: string;
+  departureDate: string;
+  returnDate: string;
+  duration: string;
+  price: number;
+  originalPrice?: number | null;
+  availableSeats: number;
+  totalSeats: number;
+  image: string;
+  tag: string;
+  shortDescription: string;
+  longDescription: string;
+  highlights: string[];
+  itinerary: ItineraryItem[];
+  inclusions: string[];
+  exclusions: string[];
+  departures?: { date: string; price: number; seats: number; status: string }[];
 }
 
 interface FixedDepartureDetailClientProps {
-    departure: Departure;
+  departure: Departure;
 }
 
 const containsHtml = (value: string = ""): boolean => /<\/?[a-z][\s\S]*>/i.test(value);
 
+const parseFlexibleDate = (value?: string) => {
+  if (!value) return null;
+  const raw = String(value).trim();
+
+  // Support dd/mm/yyyy input from admin forms.
+  const ddmmyyyy = raw.match(/^(\d{2})\/(\d{2})\/(\d{4})$/);
+  if (ddmmyyyy) {
+    const [, dd, mm, yyyy] = ddmmyyyy;
+    const parsed = new Date(`${yyyy}-${mm}-${dd}T00:00:00`);
+    if (!Number.isNaN(parsed.getTime())) return parsed;
+  }
+
+  const parsed = new Date(raw);
+  if (!Number.isNaN(parsed.getTime())) return parsed;
+  return null;
+};
+
+const formatDate = (value?: string) => {
+  if (!value) return "N/A";
+  const parsed = parseFlexibleDate(value);
+  if (!parsed) return value;
+  return parsed.toLocaleDateString("en-IN", {
+    day: "numeric",
+    month: "long",
+    year: "numeric",
+  });
+};
+
+const toDateInput = (value?: string) => {
+  if (!value) return "";
+  const parsed = parseFlexibleDate(value);
+  if (!parsed) return "";
+  const year = parsed.getFullYear();
+  const month = String(parsed.getMonth() + 1).padStart(2, "0");
+  const day = String(parsed.getDate()).padStart(2, "0");
+  return `${year}-${month}-${day}`;
+};
+
+const formatPrice = (amount: number) => `₹${(amount || 0).toLocaleString("en-IN")}`;
+
 export default function FixedDepartureDetailClient({ departure }: FixedDepartureDetailClientProps) {
-    const [openDay, setOpenDay] = useState<number>(1);
-    const [isLeadFormOpen, setIsLeadFormOpen] = useState(false);
-    const [selectedPrice, setSelectedPrice] = useState<number>(departure.price);
-    const [openTermsSection, setOpenTermsSection] = useState<string | null>(null);
+  const router = useRouter();
+  const { user } = useAuth();
 
-    useEffect(() => {
-        if (typeof window !== 'undefined') {
-            // Immediate scroll
-            window.scrollTo({ top: 0, behavior: 'instant' });
+  const [openDay, setOpenDay] = useState<number | null>(0);
+  const [isLeadFormOpen, setIsLeadFormOpen] = useState(false);
+  const [isLoginModalOpen, setIsLoginModalOpen] = useState(false);
+  const [submitting, setSubmitting] = useState(false);
 
-            // Secondary scroll after frame
-            requestAnimationFrame(() => {
-                window.scrollTo({ top: 0, behavior: 'instant' });
-            });
+  const availableBatches = useMemo(
+    () =>
+      (departure.departures || []).filter((d) => {
+        const status = String(d.status || "").toLowerCase().replace(/\s+/g, "");
+        return status !== "soldout";
+      }),
+    [departure.departures]
+  );
 
-            // Tertiary scroll after small delay for Next.js hydration/routing
-            const timeout = setTimeout(() => {
-                window.scrollTo({ top: 0, behavior: 'instant' });
-            }, 100);
+  const defaultBatch = useMemo(() => {
+    if (availableBatches.length > 0) {
+      return availableBatches[0];
+    }
+    return null;
+  }, [availableBatches]);
 
-            return () => clearTimeout(timeout);
-        }
-    }, [departure?.slug]);
+  const [selectedBatchDate, setSelectedBatchDate] = useState<string>(
+    toDateInput(defaultBatch?.date) || toDateInput(departure.departureDate) || ""
+  );
+  const [selectedPrice, setSelectedPrice] = useState<number>(defaultBatch?.price || departure.price);
+  const shortDescription = departure.shortDescription || departure.subtitle || "";
 
+  const discount =
+    departure.originalPrice && departure.originalPrice > selectedPrice
+      ? Math.round(((departure.originalPrice - selectedPrice) / departure.originalPrice) * 100)
+      : 0;
 
-    const formatDate = (dateString: string) => {
-        return new Date(dateString).toLocaleDateString('en-IN', {
-            day: 'numeric',
-            month: 'long',
-            year: 'numeric'
-        });
-    };
+  const handleBatchSelect = (date: string, price: number, openEnquiry = false) => {
+    const normalizedDate = toDateInput(date);
+    setSelectedBatchDate(normalizedDate || "");
+    setSelectedPrice(Number(price || departure.price));
+    if (openEnquiry) {
+      setIsLeadFormOpen(true);
+    }
+  };
 
-    const typeColorClass = 'bg-blue-600';
-    const typeColorText = 'text-blue-600';
-    const typeColorBorder = 'border-blue-100';
-    const typeColorBg = 'bg-blue-50';
+  const handleBookNow = () => {
+    if (!user) {
+      setIsLoginModalOpen(true);
+      return;
+    }
 
-    return (
-        <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            transition={{ duration: 0.5 }}
-            className="min-h-screen bg-slate-50 !font-plus-jakarta-sans pb-20"
-        >
-            <Header />
+    setSubmitting(true);
+    const query = new URLSearchParams({
+      type: "fixed-departure",
+      slug: departure.slug,
+      departureDate: selectedBatchDate || toDateInput(departure.departureDate),
+    });
+    router.push(`/checkout?${query.toString()}`);
+  };
 
-            {/* Compact Header Support */}
-            {/* <div className="bg-white border-b border-slate-100 sticky top-0 z-50">
-                <div className="max-w-6xl mx-auto px-4 md:px-8 py-4 flex items-center justify-between">
-                    <div className="flex items-center gap-3">
-                        <span className={`${typeColorClass} w-2 h-8 rounded-full`}></span>
-                        <div>
-                            <h2 className="!text-[13px] !font-black text-slate-900 !font-plus-jakarta-sans truncate max-w-[200px] md:max-w-md">{departure.title}</h2>
-                            <p className="!text-[9px] !font-black text-slate-400 uppercase tracking-widest !font-plus-jakarta-sans">{departure.duration} Journey</p>
-                        </div>
-                    </div>
-                    <div className="flex items-center gap-4">
-                        <div className="hidden md:block text-right">
-                            <p className="!text-[8px] !font-black text-slate-400 uppercase tracking-widest mb-0.5 !font-plus-jakarta-sans">Starts At</p>
-                            <p className="!text-[14px] !font-black text-slate-900 !font-plus-jakarta-sans">₹{departure.price.toLocaleString()}</p>
-                        </div>
-                        <button 
-                            onClick={() => setIsLeadFormOpen(true)}
-                            className={`${typeColorClass} text-white !text-[10px] !font-black uppercase tracking-widest px-6 py-3 rounded-lg shadow-lg hover:brightness-110 transition-all !font-plus-jakarta-sans`}>
-                            Book Now
-                        </button>
-                    </div>
-                </div>
-            </div> */}
+  return (
+    <motion.div
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      transition={{ duration: 0.2 }}
+      className="min-h-screen bg-white"
+    >
+      <Header />
 
-            {/* Clean Hero Section */}
-            <section className="relative h-[55vh] min-h-[440px] w-full overflow-hidden">
-                <Image
-                    src={departure.image}
-                    alt={departure.title}
-                    fill
-                    className="object-cover"
-                    priority
+      <section className="relative pt-6 sm:pt-8 bg-slate-50/50">
+        <div className="max-w-6xl mx-auto px-4 md:px-8">
+          <div className="relative overflow-hidden rounded-lg shadow-xl h-[350px] sm:h-[420px] lg:h-[500px]">
+            <img src={departure.image} alt={departure.title} className="w-full h-full object-cover" />
+            <div className="absolute inset-0 bg-gradient-to-t from-black/45 via-black/15 to-transparent" />
+            <div className="absolute bottom-0 left-0 right-0 p-6 sm:p-8">
+              <div className="inline-flex items-center px-2 py-1 bg-blue-50 text-blue-700 rounded-full text-xs font-bold uppercase tracking-widest border border-blue-100 mb-3">
+                <MapPin className="h-3.5 w-3.5 mr-2" />
+                {departure.destination}
+              </div>
+              <h1 className="!text-2xl sm:!text-3xl md:!text-4xl !font-black text-white leading-tight">
+                {departure.title}
+              </h1>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <div className="max-w-6xl mx-auto px-4 md:px-8 py-12">
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-12 items-start">
+          <div className="lg:col-span-2 space-y-14">
+            <motion.div
+              initial={{ opacity: 0, y: 15 }}
+              animate={{ opacity: 1, y: 0 }}
+              className="space-y-6"
+            >
+              {containsHtml(shortDescription) ? (
+                <div
+                  className="!text-md !text-slate-500 font-medium max-w-2xl leading-relaxed [&_p]:!mb-2 [&_p]:!text-slate-500 [&_h1]:!text-lg [&_h1]:!font-bold [&_h2]:!text-base [&_h2]:!font-bold [&_h3]:!text-sm [&_h3]:!font-semibold [&_ul]:!list-disc [&_ul]:!pl-5 [&_ol]:!list-decimal [&_ol]:!pl-5 [&_li]:!mb-1 [&_ul_li::marker]:!text-blue-500 [&_ol_li::marker]:!text-blue-500 [&_a]:!text-blue-600 [&_a]:!underline"
+                  dangerouslySetInnerHTML={{ __html: shortDescription }}
                 />
-                <div className="absolute inset-0 bg-gradient-to-t from-slate-900 via-slate-900/40 to-transparent" />
+              ) : (
+                <p className="!text-md !text-slate-500 font-medium max-w-2xl leading-relaxed">
+                  {shortDescription}
+                </p>
+              )}
 
-                <div className="absolute inset-0 flex items-end pb-12">
-                    <div className="max-w-6xl mx-auto px-4 md:px-8 w-full">
-                        <motion.div
-                            initial={{ opacity: 0, y: 20 }}
-                            animate={{ opacity: 1, y: 0 }}
-                            transition={{ duration: 0.5 }}
-                            className="max-w-3xl"
-                        >
-                            <div className="flex flex-wrap gap-2 mb-6">
-                                <span className={`${typeColorClass} text-white !text-[9px] !font-black uppercase tracking-[0.2em] px-3 py-1.5 rounded-lg shadow-lg !font-plus-jakarta-sans`}>
-                                    {departure.tag}
-                                </span>
-                                <span className="bg-white/10 backdrop-blur-md text-white border border-white/20 !text-[9px] !font-black uppercase tracking-[0.2em] px-3 py-1.5 rounded-lg !font-plus-jakarta-sans">
-                                    {departure.destination}
-                                </span>
-                            </div>
-
-                            <h1 className="!text-3xl md:!text-5xl !font-black text-white leading-tight mb-8 !font-plus-jakarta-sans">
-                                {departure.title}
-                            </h1>
-
-                            <div className="flex flex-wrap items-center gap-6">
-                                <div className="flex items-center gap-2.5">
-                                    <div className="w-8 h-8 rounded-lg bg-white/10 backdrop-blur-sm flex items-center justify-center border border-white/20">
-                                        <Clock className="w-4 h-4 text-blue-400" />
-                                    </div>
-                                    <div>
-                                        <p className="!text-[8px] !font-black !text-white uppercase tracking-widest !font-plus-jakarta-sans">Duration</p>
-                                        <p className="!text-[11px] !font-black !text-white !font-plus-jakarta-sans">{departure.duration}</p>
-                                    </div>
-                                </div>
-                                <div className="flex items-center gap-2.5">
-                                    <div className="w-8 h-8 rounded-lg bg-white/10 backdrop-blur-sm flex items-center justify-center border border-white/20">
-                                        <Calendar className="w-4 h-4 text-blue-400" />
-                                    </div>
-                                    <div>
-                                        <p className="!text-[8px] !font-black !text-white uppercase tracking-widest !font-plus-jakarta-sans">Next Departure</p>
-                                        <p className="!text-[11px] !font-black !text-white !font-plus-jakarta-sans">{formatDate(departure.departureDate)}</p>
-                                    </div>
-                                </div>
-                                <div className="flex items-center gap-2.5">
-                                    <div className="w-8 h-8 rounded-lg bg-white/10 backdrop-blur-sm flex items-center justify-center border border-white/20">
-                                        <Users className="w-4 h-4 text-blue-400" />
-                                    </div>
-                                    <div>
-                                        <p className="!text-[8px] !font-black !text-white uppercase tracking-widest !font-plus-jakarta-sans">Availability</p>
-                                        <p className="!text-[11px] !font-black !text-white !font-plus-jakarta-sans">{departure.availableSeats} / {departure.totalSeats} Total Seats</p>
-                                    </div>
-                                </div>
-                            </div>
-                        </motion.div>
-                    </div>
+              <div className="flex flex-wrap items-center gap-4 sm:gap-8 py-6 border-y border-slate-100">
+                <div className="flex items-center gap-3">
+                  <div className="h-10 w-10 rounded-lg bg-blue-50 flex items-center justify-center border border-blue-100">
+                    <Clock className="h-5 w-5 text-blue-600" />
+                  </div>
+                  <div>
+                    <p className="text-xs font-bold !text-slate-700 uppercase tracking-tighter">Duration</p>
+                    <p className="!text-slate-900 font-bold">{departure.duration}</p>
+                  </div>
                 </div>
+                <div className="flex items-center gap-3">
+                  <div className="h-10 w-10 rounded-lg bg-emerald-50 flex items-center justify-center border border-emerald-100">
+                    <Calendar className="h-5 w-5 text-emerald-600" />
+                  </div>
+                  <div>
+                    <p className="text-xs font-bold !text-slate-700 uppercase tracking-tighter">Departure</p>
+                    <p className="!text-slate-900 font-bold">{formatDate(selectedBatchDate || departure.departureDate)}</p>
+                  </div>
+                </div>
+                <div className="flex items-center gap-3">
+                  <div className="h-10 w-10 rounded-lg bg-orange-50 flex items-center justify-center border border-orange-100">
+                    <Users className="h-5 w-5 text-orange-600" />
+                  </div>
+                  <div>
+                    <p className="text-xs font-bold !text-slate-700 uppercase tracking-tighter">Seats</p>
+                    <p className="!text-slate-900 font-bold">{departure.availableSeats} / {departure.totalSeats}</p>
+                  </div>
+                </div>
+              </div>
+            </motion.div>
+
+            <section>
+              <h2 className="!text-2xl !font-bold text-slate-900 mb-4">Trip Overview</h2>
+              {containsHtml(departure.longDescription || "") ? (
+                <div
+                  className="!text-slate-700 !leading-relaxed overflow-x-auto [&_p]:!mb-3 [&_ul]:!list-disc [&_ul]:!pl-5 [&_ol]:!list-decimal [&_ol]:!pl-5"
+                  dangerouslySetInnerHTML={{ __html: departure.longDescription || "" }}
+                />
+              ) : (
+                <p className="!text-slate-700 !leading-relaxed">{departure.longDescription}</p>
+              )}
             </section>
 
-            <main className="max-w-6xl mx-auto px-4 md:px-8 -mt-8 relative z-10">
-                <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-
-                    {/* Left Column */}
-                    <div className="lg:col-span-2 space-y-8">
-                        {/* Trip Overview */}
-                        <motion.section
-                            initial={{ opacity: 0, y: 20 }}
-                            whileInView={{ opacity: 1, y: 0 }}
-                            viewport={{ once: true }}
-                            transition={{ duration: 0.6 }}
-                            className="bg-white rounded-lg border border-slate-200 p-5 md:p-8 shadow-sm"
-                        >
-                            <div className="flex items-center justify-between mb-6">
-                                <h3 className="!text-sm !font-bold !text-slate-700 uppercase tracking-wider !font-plus-jakarta-sans flex items-center gap-2">
-                                    <div className="w-1 h-4 bg-blue-600 rounded"></div>
-                                    Trip Overview
-                                </h3>
-                            </div>
-
-                            <div className="prose prose-slate max-w-none">
-                                {containsHtml(departure.longDescription || "") ? (
-                                    <div
-                                        className="overflow-x-auto !text-sm !text-slate-600 !font-semibold leading-relaxed !font-plus-jakarta-sans [&_h1]:!text-xl [&_h1]:!font-bold [&_h1]:!text-slate-900 [&_h1]:!mb-3 [&_h2]:!text-lg [&_h2]:!font-bold [&_h2]:!text-slate-900 [&_h2]:!mb-3 [&_h3]:!text-base [&_h3]:!font-semibold [&_h3]:!text-slate-900 [&_h3]:!mb-2 [&_p]:!mb-3 [&_ul]:!list-disc [&_ul]:!pl-6 [&_ul]:!space-y-2 [&_ol]:!list-decimal [&_ol]:!pl-6 [&_ol]:!space-y-2 [&_li]:!mb-1 [&_li]:!pl-1 [&_li]:!text-slate-700 [&_ul_li::marker]:!text-blue-500 [&_ul_li::marker]:!text-base [&_ol_li::marker]:!text-blue-500 [&_ol_li::marker]:!font-bold [&_a]:!text-blue-600 [&_a]:!underline [&_table]:!w-full [&_table]:!my-4 [&_table]:!border [&_table]:!border-slate-200 [&_table]:!border-separate [&_table]:!border-spacing-0 [&_table]:!rounded-lg [&_th]:!bg-slate-100 [&_th]:!text-slate-900 [&_th]:!font-semibold [&_th]:!text-xs [&_th]:!px-3 [&_th]:!py-2 [&_th]:!text-left [&_th]:!border-b [&_th]:!border-r [&_th]:!border-slate-200 [&_td]:!text-slate-700 [&_td]:!text-xs [&_td]:!px-3 [&_td]:!py-2 [&_td]:!align-top [&_td]:!border-b [&_td]:!border-r [&_td]:!border-slate-200 [&_tr:last-child_td]:!border-b-0 [&_tr_th:last-child]:!border-r-0 [&_tr_td:last-child]:!border-r-0"
-                                        dangerouslySetInnerHTML={{ __html: departure.longDescription || "" }}
-                                    />
-                                ) : (
-                                    <p className="!text-sm !text-slate-600 leading-relaxed !font-semibold !font-plus-jakarta-sans">
-                                        {departure.longDescription}
-                                    </p>
-                                )}
-                            </div>
-                        </motion.section>
-
-                        {/* Summary Highlights */}
-                        <motion.section
-                            initial={{ opacity: 0, y: 20 }}
-                            whileInView={{ opacity: 1, y: 0 }}
-                            viewport={{ once: true }}
-                            transition={{ duration: 0.6, delay: 0.1 }}
-                            className="bg-white rounded-lg border border-slate-200 p-5 md:p-8 shadow-sm"
-                        >
-                            <h3 className="!text-sm !font-bold !text-slate-700 uppercase tracking-wider mb-6 !font-plus-jakarta-sans flex items-center gap-2">
-                                <div className="w-1 h-4 bg-blue-600 rounded"></div>
-                                Key Experience Highlights
-                            </h3>
-                            <div className="grid grid-cols-1 md:grid-cols-2 gap-y-4 gap-x-8">
-                                {departure.highlights.map((h, i) => (
-                                    <div key={i} className="flex items-start gap-3 group">
-                                        <div className="mt-0.5 w-5 h-5 rounded-full bg-blue-50 flex items-center justify-center !text-blue-600 group-hover:bg-blue-600 group-hover:!text-white transition-all shrink-0">
-                                            <Check className="w-3 h-3" strokeWidth={3} />
-                                        </div>
-                                        <p className="!text-sm !font-semibold !text-slate-600 !font-plus-jakarta-sans group-hover:!text-blue-600 transition-colors leading-relaxed">{h}</p>
-                                    </div>
-                                ))}
-                            </div>
-                        </motion.section>
-
-
-                        {/* Detailed Trip Itinerary */}
-                        <motion.section
-                            initial={{ opacity: 0, y: 20 }}
-                            whileInView={{ opacity: 1, y: 0 }}
-                            viewport={{ once: true }}
-                            transition={{ duration: 0.6 }}
-                            className="space-y-6"
-                        >
-                            <h3 className="!text-sm !font-bold !text-slate-700 uppercase tracking-wider !font-plus-jakarta-sans flex items-center gap-2 mb-6">
-                                <div className="w-1 h-4 bg-blue-600 rounded"></div>
-                                Detailed Trip Itinerary
-                            </h3>
-
-                            <div className="relative space-y-4 before:absolute before:left-[19px] before:top-4 before:bottom-4 before:w-0.5 before:bg-slate-200">
-                                {departure.itinerary.map((item) => (
-                                    <div key={item.day} className="relative pl-12">
-                                        {/* Day Indicator Dot */}
-                                        <div className={`absolute left-0 top-1 w-10 h-10 rounded-full border-4 border-slate-50 flex items-center justify-center !font-black !text-[11px] z-10 transition-all duration-300 ${openDay === item.day ? 'bg-blue-600 text-white border-blue-100 shadow-lg shadow-blue-200' : 'bg-white text-slate-500 border-white shadow-sm'}`}>
-                                            D{item.day}
-                                        </div>
-
-                                        <div className={`bg-white border rounded-lg overflow-hidden transition-all duration-300 ${openDay === item.day ? 'border-blue-200 shadow-md' : 'border-slate-100 shadow-sm'}`}>
-                                            <button
-                                                onClick={() => setOpenDay(openDay === item.day ? 0 : item.day)}
-                                                className="w-full flex items-center justify-between p-4.5 text-left"
-                                            >
-                                                <h4 className={`!text-sm !font-semibold !font-plus-jakarta-sans transition-colors ${openDay === item.day ? '!text-blue-600' : '!text-slate-800'}`}>
-                                                    {item.title}
-                                                </h4>
-                                                <div className={`p-1 rounded-full transition-all duration-300 ${openDay === item.day ? 'bg-blue-50 text-blue-600 rotate-90' : 'text-slate-300'}`}>
-                                                    <ChevronRight className="w-4 h-4" />
-                                                </div>
-                                            </button>
-
-                                            <AnimatePresence>
-                                                {openDay === item.day && (
-                                                    <motion.div
-                                                        initial={{ height: 0, opacity: 0 }}
-                                                        animate={{ height: 'auto', opacity: 1 }}
-                                                        exit={{ height: 0, opacity: 0 }}
-                                                        transition={{ duration: 0.3 }}
-                                                    >
-                                                        <div className="px-5 pb-6 pt-0">
-                                                            <div className="h-px bg-slate-50 w-full mb-5" />
-                                                            <div className="space-y-3.5">
-                                                                {containsHtml(item.description || "") ? (
-                                                                    <div
-                                                                        className="overflow-x-auto !text-sm !font-semibold !text-slate-700 leading-relaxed !font-plus-jakarta-sans [&_h1]:!text-lg [&_h1]:!font-bold [&_h1]:!text-slate-900 [&_h1]:!mb-3 [&_h2]:!text-base [&_h2]:!font-bold [&_h2]:!text-slate-900 [&_h2]:!mb-2 [&_h3]:!text-sm [&_h3]:!font-semibold [&_h3]:!text-slate-900 [&_h3]:!mb-2 [&_p]:!mb-3 [&_ul]:!list-disc [&_ul]:!pl-6 [&_ul]:!space-y-2 [&_ol]:!list-decimal [&_ol]:!pl-6 [&_ol]:!space-y-2 [&_li]:!mb-1 [&_li]:!pl-1 [&_li]:!text-slate-700 [&_ul_li::marker]:!text-blue-500 [&_ul_li::marker]:!text-base [&_ol_li::marker]:!text-blue-500 [&_ol_li::marker]:!font-bold [&_a]:!text-blue-600 [&_a]:!underline [&_table]:!w-full [&_table]:!my-4 [&_table]:!border [&_table]:!border-slate-200 [&_table]:!border-separate [&_table]:!border-spacing-0 [&_table]:!rounded-lg [&_th]:!bg-slate-100 [&_th]:!text-slate-900 [&_th]:!font-semibold [&_th]:!text-xs [&_th]:!px-3 [&_th]:!py-2 [&_th]:!text-left [&_th]:!border-b [&_th]:!border-r [&_th]:!border-slate-200 [&_td]:!text-slate-700 [&_td]:!text-xs [&_td]:!px-3 [&_td]:!py-2 [&_td]:!align-top [&_td]:!border-b [&_td]:!border-r [&_td]:!border-slate-200 [&_tr:last-child_td]:!border-b-0 [&_tr_th:last-child]:!border-r-0 [&_tr_td:last-child]:!border-r-0"
-                                                                        dangerouslySetInnerHTML={{ __html: item.description || "" }}
-                                                                    />
-                                                                ) : (
-                                                                    item.description.split('.').filter(p => p.trim()).map((point, idx) => (
-                                                                        <div key={idx} className="flex gap-3 group/item">
-                                                                            <div className="w-1.5 h-1.5 rounded-full bg-blue-400 !text-slate-700 group-hover/item:bg-blue-600 mt-2 transition-colors shrink-0" />
-                                                                            <p className="!text-sm !text-slate-600 !font-semibold leading-relaxed !font-plus-jakarta-sans">
-                                                                                {point.trim()}.
-                                                                            </p>
-                                                                        </div>
-                                                                    ))
-                                                                )}
-                                                            </div>
-
-
-                                                        </div>
-                                                    </motion.div>
-                                                )}
-                                            </AnimatePresence>
-                                        </div>
-                                    </div>
-                                ))}
-                            </div>
-                        </motion.section>
-
-                        {/* Inclusions / Exclusions Clean Grid */}
-                        <motion.div
-                            initial={{ opacity: 0, y: 20 }}
-                            whileInView={{ opacity: 1, y: 0 }}
-                            viewport={{ once: true }}
-                            transition={{ duration: 0.6 }}
-                            className="grid grid-cols-1 md:grid-cols-2 gap-8"
-                        >
-                            <section className="bg-white rounded-lg border border-slate-200 p-5 md:p-8 shadow-sm">
-                                <h3 className="!text-sm !font-bold !text-emerald-600 uppercase tracking-wider mb-6 !font-plus-jakarta-sans flex items-center gap-2">
-                                    <div className="w-1 h-4 bg-emerald-500 rounded"></div>
-                                    Inclusions
-                                </h3>
-                                <ul className="space-y-3">
-                                    {departure.inclusions.map((item, i) => (
-                                        <li key={i} className="flex gap-3 !text-sm !text-slate-600 !font-semibold !font-plus-jakarta-sans group">
-                                            <div className="w-5 h-5 rounded-full bg-emerald-50 flex items-center justify-center shrink-0 mt-0.5 group-hover:bg-emerald-500 group-hover:!text-white transition-all">
-                                                <Check className="w-3 h-3" strokeWidth={3} />
-                                            </div>
-                                            <span className="leading-relaxed">{item}</span>
-                                        </li>
-                                    ))}
-                                </ul>
-                            </section>
-                            <section className="bg-white rounded-lg border border-slate-200 p-5 md:p-8 shadow-sm">
-                                <h3 className="!text-sm !font-bold !text-rose-600 uppercase tracking-wider mb-6 !font-plus-jakarta-sans flex items-center gap-2">
-                                    <div className="w-1 h-4 bg-rose-500 rounded"></div>
-                                    Exclusions
-                                </h3>
-                                <ul className="space-y-3">
-                                    {departure.exclusions.map((item, i) => (
-                                        <li key={i} className="flex gap-3 !text-sm !text-slate-600 !font-semibold !font-plus-jakarta-sans group">
-                                            <div className="w-5 h-5 rounded-full bg-rose-50 flex items-center justify-center shrink-0 mt-0.5 group-hover:bg-rose-500 group-hover:!text-white transition-all">
-                                                <X className="w-3 h-3" strokeWidth={3} />
-                                            </div>
-                                            <span className="leading-relaxed">{item}</span>
-                                        </li>
-                                    ))}
-                                </ul>
-                            </section>
-                        </motion.div>
-
-                        {/* Available Departure Dates Table */}
-                        {departure.departures && departure.departures.length > 0 && (
-                            <motion.section
-                                initial={{ opacity: 0, y: 20 }}
-                                whileInView={{ opacity: 1, y: 0 }}
-                                viewport={{ once: true }}
-                                transition={{ duration: 0.6 }}
-                                className="bg-white rounded-lg border border-slate-200 p-5 md:p-8 shadow-sm overflow-hidden"
-                            >
-                                <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-8">
-                                    <h3 className="!text-sm !font-bold !text-slate-700 uppercase tracking-wider !font-plus-jakarta-sans flex items-center gap-2">
-                                        <div className="w-1 h-4 bg-blue-600 rounded"></div>
-                                        Available Group Departure Dates
-                                    </h3>
-                                    <div className="flex items-center gap-4">
-                                        <div className="flex items-center gap-2">
-                                            <div className="w-2 h-2 rounded-full bg-emerald-500"></div>
-                                            <span className="!text-xs !font-bold !text-slate-500 uppercase tracking-wide">Available</span>
-                                        </div>
-                                        <div className="flex items-center gap-2">
-                                            <div className="w-2 h-2 rounded-full bg-rose-500"></div>
-                                            <span className="!text-xs !font-bold !text-slate-500 uppercase tracking-wide">Sold Out</span>
-                                        </div>
-                                    </div>
-                                </div>
-
-                                {/* Desktop Table View */}
-                                <div className="hidden md:block border border-slate-100 rounded-lg overflow-x-auto">
-                                    <table className="w-full text-left border-collapse">
-                                        <thead>
-                                            <tr className="bg-slate-50/50 border-b border-slate-100">
-                                                <th className="px-6 py-4 !text-xs !font-bold !text-slate-500 uppercase tracking-wide !font-plus-jakarta-sans whitespace-nowrap">Departure Date</th>
-                                                <th className="px-6 py-4 !text-xs !font-bold !text-slate-500 uppercase tracking-wide !font-plus-jakarta-sans whitespace-nowrap">Total Price</th>
-                                                <th className="px-6 py-4 !text-xs !font-bold !text-slate-500 uppercase tracking-wide !font-plus-jakarta-sans whitespace-nowrap text-center">Seats Status</th>
-                                                <th className="px-6 py-4 !text-xs !font-bold !text-slate-500 uppercase tracking-wide !font-plus-jakarta-sans whitespace-nowrap text-right">Action</th>
-                                            </tr>
-                                        </thead>
-                                        <tbody className="divide-y divide-slate-50">
-                                            {(departure.departures || []).map((d, i) => (
-                                                <tr key={i} className="hover:bg-slate-50/30 transition-colors group">
-                                                    <td className="px-6 py-5">
-                                                        <div className="flex items-center gap-3">
-                                                            <div className="w-10 h-10 rounded-lg bg-slate-50 flex flex-col items-center justify-center border border-slate-100 group-hover:bg-white transition-colors">
-                                                                <Calendar className="w-4 h-4 text-blue-500" />
-                                                            </div>
-                                                            <div>
-                                                                <p className="!text-xs !font-semibold !text-slate-800 !font-plus-jakarta-sans">{formatDate(d.date)}</p>
-                                                                <p className="!text-xs !font-bold !text-slate-500 uppercase tracking-wide !font-plus-jakarta-sans">Group Journey</p>
-                                                            </div>
-                                                        </div>
-                                                    </td>
-                                                    <td className="px-6 py-5">
-                                                        <div>
-                                                            <p className="!text-xs !font-semibold !text-slate-800 !font-plus-jakarta-sans">₹{d.price.toLocaleString()}</p>
-                                                            <p className="!text-xs !font-bold !text-slate-500 uppercase tracking-wide !font-plus-jakarta-sans">Per Person</p>
-                                                        </div>
-                                                    </td>
-                                                    <td className="px-6 py-5">
-                                                        <div className="flex justify-center">
-                                                            {d.status === 'soldout' ? (
-                                                                <div className="flex items-center gap-2 px-3 py-1.5 bg-rose-50 text-rose-600 rounded-full border border-rose-100">
-                                                                    <X className="w-3 h-3" />
-                                                                    <span className="!text-[9px] !font-black uppercase tracking-widest !font-plus-jakarta-sans">Sold Out</span>
-                                                                </div>
-                                                            ) : d.seats < 10 ? (
-                                                                <div className="flex items-center gap-2 px-3 py-1.5 bg-orange-50 text-orange-600 rounded-full border border-orange-100">
-                                                                    <Users className="w-3 h-3" />
-                                                                    <span className="!text-[9px] !font-black uppercase tracking-widest !font-plus-jakarta-sans">{d.seats} Seats Left</span>
-                                                                </div>
-                                                            ) : (
-                                                                <div className="flex items-center gap-2 px-3 py-1.5 bg-emerald-50 text-emerald-600 rounded-full border border-emerald-100">
-                                                                    <Check className="w-3 h-3" />
-                                                                    <span className="!text-[9px] !font-black uppercase tracking-widest !font-plus-jakarta-sans">Available</span>
-                                                                </div>
-                                                            )}
-                                                        </div>
-                                                    </td>
-                                                    <td className="px-2 py-1 text-right">
-                                                        <button
-                                                            onClick={() => {
-                                                                setSelectedPrice(d.price);
-                                                                setIsLeadFormOpen(true);
-                                                            }}
-                                                            disabled={d.status === 'soldout'}
-                                                            className={`!text-[9px] !font-black uppercase tracking-widest px-5 py-2.5 rounded-lg border transition-all !font-plus-jakarta-sans shadow-sm ${d.status === 'soldout' ? 'bg-slate-50 text-slate-300 border-slate-100 cursor-not-allowed' : 'bg-blue-600 text-white border-blue-600 hover:brightness-110 active:scale-95'}`}
-                                                        >
-                                                            {d.status === 'soldout' ? 'Waitlist' : 'Select Batch'}
-                                                        </button>
-                                                    </td>
-                                                </tr>
-                                            ))}
-                                        </tbody>
-                                    </table>
-                                </div>
-
-                                {/* Mobile Card View */}
-                                <div className="md:hidden space-y-4">
-                                    {(departure.departures || []).map((d, i) => (
-                                        <div key={i} className="bg-slate-50/50 border border-slate-100 rounded-xl p-4 space-y-4">
-                                            <div className="flex justify-between items-start">
-                                                <div className="flex items-center gap-3">
-                                                    <div className="w-8 h-8 rounded-lg bg-white flex items-center justify-center border border-slate-100 shadow-sm">
-                                                        <Calendar className="w-4 h-4 text-blue-500" />
-                                                    </div>
-                                                    <div>
-                                                        <p className="!text-[13px] !font-black !text-slate-900 !font-plus-jakarta-sans">{formatDate(d.date)}</p>
-                                                        <p className="!text-[9px] !font-bold !text-slate-500 uppercase tracking-widest !font-plus-jakarta-sans">Departure Date</p>
-                                                    </div>
-                                                </div>
-                                                {d.status === 'soldout' ? (
-                                                    <span className="px-2 py-1 bg-rose-50 text-rose-600 !text-[8px] !font-black uppercase tracking-widest rounded-md border border-rose-100">Sold Out</span>
-                                                ) : (
-                                                    <span className="px-2 py-1 bg-emerald-50 text-emerald-600 !text-[8px] !font-black uppercase tracking-widest rounded-md border border-emerald-100">Available</span>
-                                                )}
-                                            </div>
-
-                                            <div className="flex justify-between items-center py-3 border-y border-slate-100/50">
-                                                <div>
-                                                    <p className="!text-[14px] !font-black !text-slate-900 !font-plus-jakarta-sans">₹{d.price.toLocaleString()}</p>
-                                                    <p className="!text-[9px] !font-bold !text-slate-500 uppercase tracking-widest !font-plus-jakarta-sans">Price Per Person</p>
-                                                </div>
-                                                <div className="text-right">
-                                                    <p className="!text-[11px] !font-bold !text-slate-600 !font-plus-jakarta-sans">{d.seats} Seats</p>
-                                                    <p className="!text-[9px] !font-bold !text-slate-500 uppercase tracking-widest !font-plus-jakarta-sans">Capacity</p>
-                                                </div>
-                                            </div>
-
-                                            <button
-                                                onClick={() => {
-                                                    setSelectedPrice(d.price);
-                                                    setIsLeadFormOpen(true);
-                                                }}
-                                                disabled={d.status === 'soldout'}
-                                                className={`w-full !text-[10px] !font-black uppercase tracking-[0.1em] py-3 rounded-lg border transition-all !font-plus-jakarta-sans ${d.status === 'soldout' ? 'bg-slate-100 text-slate-300 border-slate-200 cursor-not-allowed' : 'bg-blue-600 text-white border-blue-600 shadow-md'}`}
-                                            >
-                                                {d.status === 'soldout' ? 'Batch Sold Out' : 'Book This Batch'}
-                                            </button>
-                                        </div>
-                                    ))}
-                                </div>
-                            </motion.section>
-                        )}
-
-                    </div>
-
-                    {/* Right Column Booking Widget */}
-                    <aside className="lg:col-span-1">
-                        <motion.div
-                            initial={{ opacity: 0, x: 20 }}
-                            whileInView={{ opacity: 1, x: 0 }}
-                            viewport={{ once: true }}
-                            transition={{ duration: 0.6 }}
-                            className="sticky top-24 space-y-6"
-                        >
-                            <div className="bg-white rounded-lg border border-slate-200 shadow-xl overflow-hidden">
-                                <div className={`${typeColorClass} h-1 w-full`} />
-
-                                <div className="p-6 md:p-8 space-y-8">
-                                    <div className="text-center">
-                                        <p className="!text-xs !font-bold !text-slate-600 uppercase tracking-wider mb-2 !font-plus-jakarta-sans">Starting from only</p>
-                                        <div className="flex flex-col items-center">
-                                            <div className="flex items-baseline gap-1.5">
-                                                <span className="!text-4xl !font-black !text-slate-900 !font-plus-jakarta-sans">₹{departure.price.toLocaleString()}</span>
-                                                <span className="!text-xs !font-bold !text-slate-600 uppercase tracking-wide !font-plus-jakarta-sans">/ Person</span>
-                                            </div>
-                                            {departure.originalPrice && (
-                                                <span className="!text-sm !text-slate-400 line-through !font-semibold mt-1 !font-plus-jakarta-sans">₹{departure.originalPrice.toLocaleString()}</span>
-                                            )}
-                                        </div>
-                                    </div>
-
-                                    <div className="space-y-4 pt-4 border-t border-slate-50">
-                                        <div className="flex items-center justify-between !text-slate-600">
-                                            <div className="flex items-center gap-2">
-                                                <Clock className="w-4 h-4 !text-slate-500" />
-                                                <span className="!text-xs uppercase tracking-wide !font-bold !font-plus-jakarta-sans !text-slate-600">Duration</span>
-                                            </div>
-                                            <span className="!text-sm !font-semibold !text-slate-800 !font-plus-jakarta-sans">{departure.duration}</span>
-                                        </div>
-                                        <div className="flex items-center justify-between !text-slate-600">
-                                            <div className="flex items-center gap-2">
-                                                <Calendar className="w-4 h-4 !text-slate-500" />
-                                                <span className="!text-xs uppercase tracking-wide !font-bold !font-plus-jakarta-sans !text-slate-600">Starts</span>
-                                            </div>
-                                            <span className="!text-sm !font-semibold !text-slate-800 !font-plus-jakarta-sans">{formatDate(departure.departureDate)}</span>
-                                        </div>
-                                        <div className="flex items-center justify-between !text-slate-600">
-                                            <div className="flex items-center gap-2">
-                                                <Users className="w-4 h-4 !text-slate-500" />
-                                                <span className="!text-xs uppercase tracking-wide !font-bold !font-plus-jakarta-sans !text-slate-600">Status</span>
-                                            </div>
-                                            <span className="!text-sm !font-semibold !text-slate-800 !font-plus-jakarta-sans">{departure.availableSeats} / {departure.totalSeats} Left</span>
-                                        </div>
-                                    </div>
-
-                                    <div className="space-y-4">
-                                        {departure.departures && departure.departures.some(d => d.status !== 'soldout') && (
-                                            <div className="space-y-2">
-                                                <label className="!text-xs !font-bold !text-slate-600 uppercase tracking-wide ml-1 !font-plus-jakarta-sans">Select Group Batch</label>
-                                                <select className="w-full bg-slate-50 border border-slate-200 rounded-lg px-4 py-3 !text-sm !font-semibold !text-slate-800 focus:border-blue-500 focus:outline-none appearance-none !font-plus-jakarta-sans cursor-pointer">
-                                                    {departure.departures.filter(d => d.status !== 'soldout').map((d, i) => (
-                                                        <option key={i}>{d.date} — ₹{d.price.toLocaleString()}</option>
-                                                    ))}
-                                                </select>
-                                            </div>
-                                        )}
-
-                                        <button
-                                            onClick={() => {
-                                                setSelectedPrice(departure.price);
-                                                setIsLeadFormOpen(true);
-                                            }}
-                                            className={`${typeColorClass} w-full text-white !font-bold py-4 rounded-lg shadow-lg hover:brightness-110 active:scale-[0.98] transition-all !text-xs uppercase tracking-wider !font-plus-jakarta-sans flex items-center justify-center gap-2`}>
-                                            Reserve My Spot
-                                            <ArrowRight className="w-4 h-4" />
-                                        </button>
-
-                                        <a href="https://wa.me/919873391733" className="flex items-center justify-center gap-2 border border-slate-200 py-3 rounded-lg !font-bold !text-xs !text-slate-600 hover:bg-slate-50 transition-colors uppercase tracking-wide !font-plus-jakarta-sans shadow-sm w-full">
-                                            <MessageCircle className="w-4 h-4" />
-                                            WhatsApp
-                                        </a>
-                                    </div>
-
-                                    <div className="pt-2 text-center">
-                                        <div className="flex items-center justify-center gap-2 !text-emerald-600 !font-bold !text-xs uppercase tracking-wide !font-plus-jakarta-sans">
-                                            <Shield className="w-4 h-4" />
-                                            100% Secure Booking
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-
-
-                        </motion.div>
-                    </aside>
-                </div>
-            </main>
-
-            {/* Terms and Conditions Section */}
-            <section className="bg-slate-50 py-12 md:py-16 border-t border-slate-100">
-                <div className="max-w-6xl mx-auto px-4 md:px-8">
-                    <motion.div
-                        initial={{ opacity: 0, y: 20 }}
-                        whileInView={{ opacity: 1, y: 0 }}
-                        viewport={{ once: true }}
-                        transition={{ duration: 0.6 }}
+            {departure.highlights?.length > 0 && (
+              <section>
+                <h2 className="!text-2xl !font-bold text-slate-900 mb-6">Experience Highlights</h2>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  {departure.highlights.map((highlight, index) => (
+                    <div
+                      key={index}
+                      className="flex items-center space-x-3 p-4 bg-blue-50/50 border border-blue-100/50 rounded-lg"
                     >
-                        <h2 className="!text-2xl !font-black !text-slate-900 mb-8 !font-plus-jakarta-sans">Terms and Conditions</h2>
-
-                        <div className="space-y-4">
-                            {[
-                                {
-                                    id: "booking",
-                                    title: "Booking and Payment",
-                                    content: [
-                                        "A deposit of 30% is required to confirm your booking",
-                                        "Full payment must be completed 30 days before departure",
-                                        "All prices are in INR and include taxes",
-                                        "Payment via credit card, bank transfer, or UPI"
-                                    ]
-                                },
-                                {
-                                    id: "cancellation",
-                                    title: "Cancellation Policy",
-                                    content: [
-                                        "Cancellation 60+ days: Full refund minus processing fee",
-                                        "Cancellation 30-59 days: 75% refund",
-                                        "Cancellation 15-29 days: 50% refund",
-                                        "Less than 15 days: No refund"
-                                    ]
-                                },
-                                {
-                                    id: "documents",
-                                    title: "Travel Documents",
-                                    content: [
-                                        "Valid passport required (minimum 6 months validity)",
-                                        "Visa requirements vary by destination",
-                                        "Travel insurance strongly recommended",
-                                        "Accurate personal details required for bookings"
-                                    ]
-                                }
-                            ].map((item) => (
-                                <div key={item.id} className="bg-white border border-slate-200 rounded-lg overflow-hidden shadow-sm">
-                                    <button
-                                        onClick={() => setOpenTermsSection(openTermsSection === item.id ? null : item.id)}
-                                        className="w-full flex items-center justify-between px-6 py-4 text-left hover:bg-slate-50 transition-colors"
-                                    >
-                                        <h3 className="!text-base !font-bold !text-slate-900 !font-plus-jakarta-sans">{item.title}</h3>
-                                        <ChevronDown
-                                            className={`w-5 h-5 text-slate-400 transition-transform duration-300 ${openTermsSection === item.id ? 'rotate-180' : ''
-                                                }`}
-                                        />
-                                    </button>
-                                    <AnimatePresence>
-                                        {openTermsSection === item.id && (
-                                            <motion.div
-                                                initial={{ height: 0, opacity: 0 }}
-                                                animate={{ height: 'auto', opacity: 1 }}
-                                                exit={{ height: 0, opacity: 0 }}
-                                                transition={{ duration: 0.3 }}
-                                            >
-                                                <div className="px-6 pb-5 pt-0">
-                                                    <div className="h-px bg-slate-100 w-full mb-4" />
-                                                    <ul className="space-y-2.5">
-                                                        {item.content.map((point, pIdx) => (
-                                                            <li key={pIdx} className="flex gap-3 !text-sm !text-slate-600 !font-semibold !font-plus-jakarta-sans">
-                                                                <div className="w-1.5 h-1.5 rounded-full bg-blue-400 mt-2 shrink-0" />
-                                                                <span className="leading-relaxed">{point}</span>
-                                                            </li>
-                                                        ))}
-                                                    </ul>
-                                                </div>
-                                            </motion.div>
-                                        )}
-                                    </AnimatePresence>
-                                </div>
-                            ))}
-
-                            {/* Important Notes */}
-                            <div className="bg-white border border-slate-200 rounded-lg overflow-hidden shadow-sm">
-                                <button
-                                    onClick={() => setOpenTermsSection(openTermsSection === 'important' ? null : 'important')}
-                                    className="w-full flex items-center justify-between px-6 py-4 text-left hover:bg-slate-50 transition-colors"
-                                >
-                                    <h3 className="!text-base !font-bold !text-slate-900 !font-plus-jakarta-sans">Important Notes</h3>
-                                    <ChevronDown
-                                        className={`w-5 h-5 text-slate-400 transition-transform duration-300 ${openTermsSection === 'important' ? 'rotate-180' : ''
-                                            }`}
-                                    />
-                                </button>
-                                <AnimatePresence>
-                                    {openTermsSection === 'important' && (
-                                        <motion.div
-                                            initial={{ height: 0, opacity: 0 }}
-                                            animate={{ height: 'auto', opacity: 1 }}
-                                            exit={{ height: 0, opacity: 0 }}
-                                            transition={{ duration: 0.3 }}
-                                        >
-                                            <div className="px-6 pb-5 pt-0">
-                                                <div className="h-px bg-slate-100 w-full mb-4" />
-                                                <div className="bg-blue-50 p-5 rounded-lg border border-blue-100">
-                                                    <p className="!text-sm !text-slate-600 leading-relaxed !font-semibold !font-plus-jakarta-sans">
-                                                        By booking this package, you agree to these terms and conditions. We reserve the right to modify itineraries due to unforeseen circumstances or local conditions while maintaining the quality and value of your experience.
-                                                    </p>
-                                                </div>
-                                            </div>
-                                        </motion.div>
-                                    )}
-                                </AnimatePresence>
-                            </div>
-                        </div>
-                    </motion.div>
+                      <div className="h-8 w-8 rounded-full bg-blue-100 flex items-center justify-center">
+                        <Check className="h-5 w-5 text-blue-600" />
+                      </div>
+                      <span className="!text-md text-slate-700 font-medium">{highlight}</span>
+                    </div>
+                  ))}
                 </div>
+              </section>
+            )}
+
+            {departure.itinerary?.length > 0 && (
+              <section>
+                <h2 className="!text-2xl !font-bold text-slate-900 mb-6">Detailed Itinerary</h2>
+                <div className="space-y-4">
+                  {departure.itinerary.map((day, index) => (
+                    <div key={index} className="border border-slate-100 rounded-xl overflow-hidden bg-white">
+                      <button
+                        onClick={() => setOpenDay(openDay === index ? null : index)}
+                        className="w-full flex items-center gap-4 p-4 text-left bg-slate-50/50 hover:bg-slate-50 transition-colors"
+                      >
+                        <div
+                          className={`flex-shrink-0 w-11 h-11 rounded-xl flex items-center justify-center font-bold !text-sm border ${
+                            openDay === index
+                              ? "bg-blue-600 text-white border-blue-600"
+                              : "bg-white border-slate-200 text-slate-500"
+                          }`}
+                        >
+                          D{day.day}
+                        </div>
+                        <div className="flex-grow">
+                          <h3 className={`!text-base sm:!text-lg !font-semibold ${openDay === index ? "text-blue-700" : "text-slate-800"}`}>
+                            {day.title}
+                          </h3>
+                        </div>
+                        <ChevronDown className={`w-5 h-5 ${openDay === index ? "text-blue-600 rotate-180" : "text-slate-400"}`} />
+                      </button>
+                      <AnimatePresence>
+                        {openDay === index && (
+                          <motion.div
+                            initial={{ height: 0, opacity: 0 }}
+                            animate={{ height: "auto", opacity: 1 }}
+                            exit={{ height: 0, opacity: 0 }}
+                            transition={{ duration: 0.2 }}
+                          >
+                            <div className="p-5 pt-4 border-t border-slate-100 space-y-3">
+                              {containsHtml(day.description || "") ? (
+                                <div
+                                  className="!text-slate-700 overflow-x-auto [&_p]:!mb-2 [&_ul]:!list-disc [&_ul]:!pl-5 [&_ol]:!list-decimal [&_ol]:!pl-5"
+                                  dangerouslySetInnerHTML={{ __html: day.description || "" }}
+                                />
+                              ) : (
+                                <p className="!text-slate-700 leading-relaxed">{day.description}</p>
+                              )}
+                              {(day.meals || day.hotel) && (
+                                <div className="flex flex-wrap gap-3 pt-2">
+                                  {day.meals && (
+                                    <span className="text-xs font-medium bg-orange-50 text-orange-700 px-3 py-1.5 rounded-full">
+                                      Meals: {day.meals}
+                                    </span>
+                                  )}
+                                  {day.hotel && (
+                                    <span className="text-xs font-medium bg-emerald-50 text-emerald-700 px-3 py-1.5 rounded-full">
+                                      Stay: {day.hotel}
+                                    </span>
+                                  )}
+                                </div>
+                              )}
+                            </div>
+                          </motion.div>
+                        )}
+                      </AnimatePresence>
+                    </div>
+                  ))}
+                </div>
+              </section>
+            )}
+
+            <section>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                <div className="bg-slate-50/50 rounded-lg p-6 border border-slate-100">
+                  <h3 className="!text-2xl !font-bold text-slate-900 mb-6">What&apos;s Included</h3>
+                  <ul className="space-y-4">
+                    {departure.inclusions?.map((item, index) => (
+                      <li key={index} className="flex items-start space-x-3">
+                        <div className="mt-1 h-5 w-5 rounded-full bg-green-100 flex items-center justify-center shrink-0">
+                          <Check className="h-3 w-3 text-green-600" />
+                        </div>
+                        <span className="text-slate-600 !text-md">{item}</span>
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+
+                <div className="bg-slate-50/50 rounded-lg p-6 border border-slate-100">
+                  <h3 className="!text-2xl !font-bold text-slate-900 mb-6">What&apos;s Excluded</h3>
+                  <ul className="space-y-4">
+                    {departure.exclusions?.map((item, index) => (
+                      <li key={index} className="flex items-start space-x-3">
+                        <div className="mt-1 h-5 w-5 rounded-full bg-red-100 flex items-center justify-center shrink-0">
+                          <X className="h-3 w-3 text-red-600" />
+                        </div>
+                        <span className="text-slate-600 !text-md">{item}</span>
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              </div>
             </section>
 
-            <LeadCaptureForm
-                isOpen={isLeadFormOpen}
-                onClose={() => setIsLeadFormOpen(false)}
-                packageTitle={departure.title}
-                packagePrice={`₹${selectedPrice.toLocaleString('en-IN')}`}
-            />
-        </motion.div>
-    );
+            {departure.departures && departure.departures.length > 0 && (
+              <section>
+                <h2 className="!text-2xl !font-bold text-slate-900 mb-6">Available Batch Dates</h2>
+                <div className="space-y-3">
+                  {departure.departures.map((batch, index) => {
+                    const status = String(batch.status || "available").toLowerCase().replace(/\s+/g, "");
+                    const isSoldOut = status === "soldout";
+                    const active = toDateInput(batch.date) === selectedBatchDate;
+
+                    return (
+                      <div
+                        key={`${batch.date}-${index}`}
+                        className={`rounded-xl border p-4 md:p-5 flex flex-col md:flex-row md:items-center md:justify-between gap-3 ${
+                          active ? "border-blue-300 bg-blue-50/40" : "border-slate-200 bg-white"
+                        }`}
+                      >
+                        <div className="space-y-1">
+                          <p className="text-xs font-bold uppercase tracking-wider text-slate-500">Date</p>
+                          <p className="text-sm font-semibold text-slate-900">{formatDate(batch.date)}</p>
+                        </div>
+                        <div className="space-y-1">
+                          <p className="text-xs font-bold uppercase tracking-wider text-slate-500">Price</p>
+                          <p className="text-sm font-semibold text-slate-900">{formatPrice(Number(batch.price || departure.price))}</p>
+                        </div>
+                        <div className="space-y-1">
+                          <p className="text-xs font-bold uppercase tracking-wider text-slate-500">Seats</p>
+                          <p className="text-sm font-semibold text-slate-900">{batch.seats}</p>
+                        </div>
+                        <div className="flex items-center gap-2">
+                          <span
+                            className={`text-xs font-bold uppercase tracking-wider px-2.5 py-1 rounded-full ${
+                              isSoldOut ? "bg-red-100 text-red-700" : "bg-emerald-100 text-emerald-700"
+                            }`}
+                          >
+                            {isSoldOut ? "Sold Out" : "Available"}
+                          </span>
+                          <Button
+                            type="button"
+                            onClick={() =>
+                              handleBatchSelect(batch.date, Number(batch.price || departure.price), true)
+                            }
+                            disabled={isSoldOut}
+                            className="h-9 px-4 rounded-lg bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold disabled:bg-slate-300"
+                          >
+                            Select
+                          </Button>
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              </section>
+            )}
+          </div>
+
+          <div className="lg:col-span-1">
+            <motion.div initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} className="sticky top-28">
+              <Card className="p-0 border-none shadow-[0_32px_64px_-16px_rgba(37,99,235,0.2)] rounded-lg overflow-hidden bg-white">
+                <div className="bg-blue-600 p-8 text-white text-center">
+                  <p className="!text-blue-100 !font-bold uppercase tracking-widest text-xs mb-2">Fixed Departure</p>
+                  <div className="text-4xl font-black mb-1">{formatPrice(selectedPrice)}</div>
+                  <p className="!text-blue-100/80 !text-sm !font-medium">Per Person</p>
+                  {discount > 0 && (
+                    <div className="mt-4 bg-white/20 rounded-full py-1 px-4 inline-block text-xs font-bold">
+                      Special {discount}% Off
+                    </div>
+                  )}
+                </div>
+                <CardContent className="p-6 space-y-5">
+                  {departure.departures && departure.departures.length > 0 && (
+                    <div className="space-y-2">
+                      <label className="block text-sm font-semibold text-slate-700">Choose Batch</label>
+                      <select
+                        value={selectedBatchDate}
+                        onChange={(e) => {
+                          const date = e.target.value;
+                          const selected = availableBatches.find((d) => toDateInput(d.date) === date);
+                          if (selected) {
+                            handleBatchSelect(selected.date, selected.price, true);
+                          }
+                        }}
+                        className="w-full border border-slate-200 rounded-xl bg-slate-50 px-4 py-2.5 focus:outline-none focus:ring-2 focus:ring-blue-500/30"
+                      >
+                        {(availableBatches.length > 0 ? availableBatches : departure.departures).map((d, idx) => (
+                          <option key={idx} value={toDateInput(d.date)}>
+                            {formatDate(d.date)} - {formatPrice(Number(d.price || departure.price))}
+                          </option>
+                        ))}
+                      </select>
+                    </div>
+                  )}
+
+                  <div className="space-y-3 text-sm border border-slate-100 rounded-xl p-4 bg-slate-50/50">
+                    <p className="flex justify-between gap-3">
+                      <span className="text-slate-500 font-semibold">Departure</span>
+                      <span className="text-slate-900 font-bold text-right">{formatDate(selectedBatchDate || departure.departureDate)}</span>
+                    </p>
+                    <p className="flex justify-between gap-3">
+                      <span className="text-slate-500 font-semibold">Duration</span>
+                      <span className="text-slate-900 font-bold text-right">{departure.duration}</span>
+                    </p>
+                    <p className="flex justify-between gap-3">
+                      <span className="text-slate-500 font-semibold">Seats</span>
+                      <span className="text-slate-900 font-bold text-right">
+                        {departure.availableSeats}/{departure.totalSeats}
+                      </span>
+                    </p>
+                  </div>
+
+                  <Button
+                    onClick={() => setIsLeadFormOpen(true)}
+                    className="w-full h-14 bg-blue-600 hover:bg-blue-700 text-white rounded-lg !text-lg !font-black"
+                  >
+                    Enquiry <ArrowRight className="ml-2 h-5 w-5" />
+                  </Button>
+
+                  <Button
+                    onClick={handleBookNow}
+                    disabled={submitting}
+                    className="w-full h-14 bg-gradient-to-r from-emerald-500 to-emerald-700 hover:from-emerald-600 hover:to-emerald-800 text-white rounded-lg !text-lg !font-black shadow-lg shadow-emerald-500/30"
+                  >
+                    {submitting ? (
+                      <Loader2 className="h-5 w-5 animate-spin" />
+                    ) : (
+                      <>
+                        Book Now <CreditCard className="ml-2 h-5 w-5" />
+                      </>
+                    )}
+                  </Button>
+
+                  <div className="rounded-xl border border-blue-100 bg-blue-50 p-3 text-xs text-blue-700 font-semibold flex items-start gap-2">
+                    <Shield className="w-4 h-4 mt-0.5 shrink-0" />
+                    Secure payment checkout with instant receipt confirmation.
+                  </div>
+                </CardContent>
+              </Card>
+            </motion.div>
+          </div>
+        </div>
+      </div>
+
+      <LeadCaptureForm
+        isOpen={isLeadFormOpen}
+        onClose={() => setIsLeadFormOpen(false)}
+        packageTitle={departure?.title}
+        packagePrice={formatPrice(selectedPrice)}
+      />
+      <LoginAlertModal isOpen={isLoginModalOpen} onClose={() => setIsLoginModalOpen(false)} theme="blue" />
+    </motion.div>
+  );
 }

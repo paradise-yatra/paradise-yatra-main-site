@@ -61,7 +61,7 @@ export default function CancellationRefundContent() {
     ];
 
     return (
-        <div className="flex flex-col mt-22 min-h-screen bg-[#f6f7f8]">
+        <div className="flex flex-col min-h-screen bg-[#f6f7f8]">
             {/* Main Content Wrapper */}
             <main className="flex-grow w-full max-w-7xl mx-auto px-4 md:px-10 py-8 md:py-12">
                 {/* Page Header Section */}

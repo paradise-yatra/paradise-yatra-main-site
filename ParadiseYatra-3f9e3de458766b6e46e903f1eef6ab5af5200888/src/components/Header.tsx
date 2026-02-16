@@ -21,7 +21,7 @@ import {
   Mail,
   LogOut,
   User as UserIcon,
-  Settings,
+  Ticket,
   ChevronRight,
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
@@ -537,13 +537,13 @@ const Header = () => {
               {/* Desktop specific buttons */}
               <div className="hidden md:flex items-center gap-3 text-sm font-semibold">
                 <motion.button
-                  onClick={() => setIsLeadFormOpen(true)}
+                  onClick={() => router.push("/payment")}
                   className={`rounded-lg border cursor-pointer backdrop-blur-md px-4 py-2 transition ${isTransparent
                     ? "border-white bg-white/10 hover:bg-white/10 text-white"
                     : "border-gray-300 hover:bg-gray-100 text-gray-700"
                     }`}
                 >
-                  Book Now
+                  Payment
                 </motion.button>
 
 
@@ -575,6 +575,16 @@ const Header = () => {
                             <p className="text-sm font-black !text-slate-900 truncate">{user.name}</p>
                             <p className="text-[10px] font-medium !text-slate-500 truncate">{user.email}</p>
                           </div>
+                          <button
+                            onClick={() => {
+                              router.push("/profile");
+                              setShowUserMenu(false);
+                            }}
+                            className="w-full flex items-center gap-3 px-3 py-2 text-sm text-slate-700 hover:bg-slate-50 rounded-lg transition-colors"
+                          >
+                            <Ticket className="w-4 h-4 text-blue-600" />
+                            <span className="font-bold">My Bookings</span>
+                          </button>
                           <button
                             onClick={() => { logout(); setShowUserMenu(false); }}
                             className="w-full flex items-center gap-3 px-3 py-2 text-sm text-red-600 hover:bg-red-50 rounded-lg transition-colors group"
@@ -653,6 +663,35 @@ const Header = () => {
               </div>
             </div>
           </div>
+
+          {user && showUserMenu && (
+            <div className="md:hidden absolute right-4 top-full mt-2 w-56 bg-white rounded-xl shadow-xl border border-slate-200 overflow-hidden z-50 px-1 py-1">
+              <div className="px-4 py-3 border-b border-slate-100 mb-1">
+                <p className="text-sm font-black !text-slate-900 truncate">{user.name}</p>
+                <p className="text-[10px] font-medium !text-slate-500 truncate">{user.email}</p>
+              </div>
+              <button
+                onClick={() => {
+                  router.push("/profile");
+                  setShowUserMenu(false);
+                }}
+                className="w-full flex items-center gap-3 px-3 py-2 text-sm text-slate-700 hover:bg-slate-50 rounded-lg transition-colors"
+              >
+                <Ticket className="w-4 h-4 text-blue-600" />
+                <span className="font-bold">My Bookings</span>
+              </button>
+              <button
+                onClick={() => {
+                  logout();
+                  setShowUserMenu(false);
+                }}
+                className="w-full flex items-center gap-3 px-3 py-2 text-sm text-red-600 hover:bg-red-50 rounded-lg transition-colors group"
+              >
+                <LogOut className="w-4 h-4" />
+                <span className="font-bold">Sign Out</span>
+              </button>
+            </div>
+          )}
 
         </div>
 

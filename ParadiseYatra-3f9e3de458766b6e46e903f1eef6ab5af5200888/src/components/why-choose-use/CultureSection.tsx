@@ -46,7 +46,7 @@ export default function CultureSection() {
   };
 
   const potluckVideo: VideoItem = {
-    url: "https://res.cloudinary.com/dwuwpxu0y/video/upload/v1767784042/Office_Video_1_kr5rta.mp4",
+    url: "https://res.cloudinary.com/dwuwpxu0y/video/upload/q_auto:eco,vc_auto/v1767784042/Office_Video_1_kr5rta.mp4",
     title: "Diwali at Paradise Yatra",
     description: "A festival of lights, colors, sweets, and pure team joy."
   };
@@ -74,7 +74,7 @@ export default function CultureSection() {
           <div className="group relative col-span-12 md:col-span-8 row-span-2 rounded-2xl overflow-hidden shadow-lg bg-slate-100">
             <div 
               className="absolute inset-0 bg-cover bg-center transition-transform duration-500 group-hover:scale-105"
-              style={{ backgroundImage: "url('https://res.cloudinary.com/dwuwpxu0y/image/upload/v1767784328/Office_Photo_1_ctv6zq.webp')" }}
+              style={{ backgroundImage: "url('https://res.cloudinary.com/dwuwpxu0y/image/upload/f_auto,q_auto,dpr_auto,c_limit,w_1200/v1767784328/Office_Photo_1_ctv6zq.webp')" }}
             />
             <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent" />
             
@@ -158,7 +158,7 @@ export default function CultureSection() {
           <div className="group relative col-span-12 md:col-span-4 rounded-2xl overflow-hidden shadow-lg bg-slate-100">
             <div 
               className="absolute inset-0 bg-cover bg-top transition-transform duration-500 group-hover:scale-105"
-              style={{ backgroundImage: "url('https://res.cloudinary.com/dwuwpxu0y/image/upload/v1767784327/Office_Photo_2_kafuyn.webp')" }}
+              style={{ backgroundImage: "url('https://res.cloudinary.com/dwuwpxu0y/image/upload/f_auto,q_auto,dpr_auto,c_limit,w_1200/v1767784327/Office_Photo_2_kafuyn.webp')" }}
             />
             <div className="absolute inset-0 bg-black/20 group-hover:bg-black/40 transition-colors" />
           </div>
@@ -167,7 +167,7 @@ export default function CultureSection() {
           <div className="group relative col-span-12 md:col-span-4 rounded-2xl overflow-hidden shadow-lg bg-slate-100">
             <div 
               className="absolute inset-0 bg-cover bg-center transition-transform duration-500 group-hover:scale-105"
-              style={{ backgroundImage: "url('https://res.cloudinary.com/dwuwpxu0y/image/upload/v1767849355/Office_Photo_3_yjqnf9.webp')" }}
+              style={{ backgroundImage: "url('https://res.cloudinary.com/dwuwpxu0y/image/upload/f_auto,q_auto,dpr_auto,c_limit,w_1200/v1767849355/Office_Photo_3_yjqnf9.webp')" }}
             />
             <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
         

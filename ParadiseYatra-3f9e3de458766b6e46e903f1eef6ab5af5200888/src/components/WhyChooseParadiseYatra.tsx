@@ -7,13 +7,13 @@ import { motion, AnimatePresence } from "framer-motion";
 
 // Add your Cloudinary links here
 const IMAGES = [
-    "https://res.cloudinary.com/dwuwpxu0y/image/upload/v1767784328/Office_Photo_1_ctv6zq.webp",
+    "https://res.cloudinary.com/dwuwpxu0y/image/upload/f_auto,q_auto,dpr_auto,c_limit,w_1200/v1767784328/Office_Photo_1_ctv6zq.webp",
     // Placeholder 1 - Replace with your Cloudinary link
-    "https://res.cloudinary.com/dwuwpxu0y/image/upload/v1767778705/Photo_Testimonial_5_gkvahk.webp",
+    "https://res.cloudinary.com/dwuwpxu0y/image/upload/f_auto,q_auto,dpr_auto,c_limit,w_1200/v1767778705/Photo_Testimonial_5_gkvahk.webp",
     // Placeholder 2 - Replace with your Cloudinary link
-    "https://res.cloudinary.com/dwuwpxu0y/image/upload/v1767849355/Office_Photo_3_yjqnf9.webp",
+    "https://res.cloudinary.com/dwuwpxu0y/image/upload/f_auto,q_auto,dpr_auto,c_limit,w_1200/v1767849355/Office_Photo_3_yjqnf9.webp",
     // Placeholder 3 - Replace with your Cloudinary link
-    "https://res.cloudinary.com/dwuwpxu0y/image/upload/v1767778704/Photo_Testimonial_1_tqhr0g.webp",
+    "https://res.cloudinary.com/dwuwpxu0y/image/upload/f_auto,q_auto,dpr_auto,c_limit,w_1200/v1767778704/Photo_Testimonial_1_tqhr0g.webp",
 ];
 
 const WhyChooseParadiseYatra = () => {

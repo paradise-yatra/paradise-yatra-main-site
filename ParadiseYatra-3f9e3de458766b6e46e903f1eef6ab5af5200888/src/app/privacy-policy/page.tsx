@@ -18,12 +18,12 @@ export const metadata: Metadata = {
 
 export default function PrivacyPolicyPage() {
   return (
-    <main className={`${roboto.className} min-h-screen bg-background w-full`}>
+    <main className={`${roboto.className} min-h-screen bg-background w-full bg-white`}>
       <LazyHeader />
 
 
       {/* Hero */}
-      <section className="bg-gradient-to-br from-blue-50 to-indigo-100 pt-28 lg:pt-32 pb-8 lg:pb-10">
+      <section className="bg-gradient-to-br from-blue-50 to-indigo-100 pt-8">
         <div className="container mx-auto px-4 py-12 md:py-16">
           <h2 className="text-xl md:text-5xl font-bold text-gray-900">Privacy Policy</h2>
           <p className="mt-4 text-gray-700 max-w-3xl">

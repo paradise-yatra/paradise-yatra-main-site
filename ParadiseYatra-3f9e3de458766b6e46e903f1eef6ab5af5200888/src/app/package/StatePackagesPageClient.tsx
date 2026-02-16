@@ -564,8 +564,6 @@ export default function DedicatedPackagesPageClient({ tourType, state, country }
                     </div>
                 </DialogContent>
             </Dialog>
-
-            <Footer />
             <LoginAlertModal isOpen={isLoginModalOpen} onClose={() => setIsLoginModalOpen(false)} theme="blue" />
         </div>
     );
