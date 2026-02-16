@@ -4,22 +4,22 @@ export function InstagramFeed() {
   const posts = [
     {
       url: "https://www.instagram.com/p/DMenU3jJaQq/",
-      image: "https://res.cloudinary.com/dwuwpxu0y/image/upload/v1769665573/522677331_18057454616372951_6374246959180024144_n_qzfgia.webp",
+      image: "https://res.cloudinary.com/dwuwpxu0y/image/upload/f_auto,q_auto,dpr_auto,c_limit,w_1200/v1769665573/522677331_18057454616372951_6374246959180024144_n_qzfgia.webp",
       caption: "🌍✈️ Not all who wander are lost... some just booked with Paradise Yatra.",
     },
     {
       url: "https://www.instagram.com/p/DQthyqWDLFg/",
-      image: "https://res.cloudinary.com/dwuwpxu0y/image/upload/v1769665573/578248826_1255859793232106_2918973461870021639_n_svpoxq.jpg",
+      image: "https://res.cloudinary.com/dwuwpxu0y/image/upload/f_auto,q_auto,dpr_auto,c_limit,w_1200/v1769665573/578248826_1255859793232106_2918973461870021639_n_svpoxq.jpg",
       caption: "✨ Feeling stuck in the same daily routine? It's time to hit pause and explore something new! 🌴✈️",
     },
     {
       url: "https://www.instagram.com/p/DNhyJY7JJx-/",
-      image: "https://res.cloudinary.com/dwuwpxu0y/image/upload/v1769665573/534637262_18059989928372951_5387980187081451818_n_ftudfk.webp",
+      image: "https://res.cloudinary.com/dwuwpxu0y/image/upload/f_auto,q_auto,dpr_auto,c_limit,w_1200/v1769665573/534637262_18059989928372951_5387980187081451818_n_ftudfk.webp",
       caption: "✨ Embark on a divine journey through Uttarakhand's most sacred temples! 🕉️",
     },
     {
       url: "https://www.instagram.com/p/DMR_QfQpARi/",
-      image: "https://res.cloudinary.com/dwuwpxu0y/image/upload/v1769665572/521108789_18056976647372951_1580724475895110177_n_djzpfi.webp",
+      image: "https://res.cloudinary.com/dwuwpxu0y/image/upload/f_auto,q_auto,dpr_auto,c_limit,w_1200/v1769665572/521108789_18056976647372951_1580724475895110177_n_djzpfi.webp",
       caption: "🌄 Explore the Soul of Sikkim – Where Every Stop Tells a Story 🏔️✨",
     }
   ];
@@ -82,7 +82,7 @@ export function InstagramFeed() {
                   <div className="bg-white rounded-full p-[1px] h-full w-full">
                     <div className="bg-slate-100 h-full w-full rounded-full flex items-center justify-center overflow-hidden">
                       <img
-                        src="https://res.cloudinary.com/dwuwpxu0y/image/upload/v1767618411/DP_y3bf1a.png"
+                        src="https://res.cloudinary.com/dwuwpxu0y/image/upload/f_auto,q_auto,dpr_auto,c_limit,w_1200/v1767618411/DP_y3bf1a.png"
                         alt="profile"
                         className="w-full h-full object-cover"
                       />

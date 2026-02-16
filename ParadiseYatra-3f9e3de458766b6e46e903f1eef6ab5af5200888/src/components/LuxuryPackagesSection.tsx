@@ -129,7 +129,7 @@ const LuxuryPackagesSection = () => {
                 className="px-4 py-14 text-gray-900 md:px-8 relative z-20 overflow-hidden min-h-[600px]"
                 style={{
                     backgroundImage:
-                        "url('https://res.cloudinary.com/dwuwpxu0y/image/upload/v1769086965/10491807_4443133_bi9gii.jpg')",
+                        "url('https://res.cloudinary.com/dwuwpxu0y/image/upload/f_auto,q_auto,dpr_auto,c_limit,w_1200/v1769086965/10491807_4443133_bi9gii.jpg')",
                     backgroundSize: "cover",
                     backgroundPosition: "center",
                     backgroundRepeat: "no-repeat",
@@ -152,7 +152,7 @@ const LuxuryPackagesSection = () => {
                 className="px-4 py-14 text-gray-900 md:px-8 relative z-20 overflow-hidden min-h-[600px]"
                 style={{
                     backgroundImage:
-                        "url('https://res.cloudinary.com/dwuwpxu0y/image/upload/v1769086965/10491807_4443133_bi9gii.jpg')",
+                        "url('https://res.cloudinary.com/dwuwpxu0y/image/upload/f_auto,q_auto,dpr_auto,c_limit,w_1200/v1769086965/10491807_4443133_bi9gii.jpg')",
                     backgroundSize: "cover",
                     backgroundPosition: "center",
                     backgroundRepeat: "no-repeat",
@@ -176,7 +176,7 @@ const LuxuryPackagesSection = () => {
             className="px-4 py-14 text-gray-900 md:px-8 relative z-20 overflow-hidden min-h-[600px]"
             style={{
                 backgroundImage:
-                    "url('https://res.cloudinary.com/dwuwpxu0y/image/upload/v1769086965/10491807_4443133_bi9gii.jpg')",
+                    "url('https://res.cloudinary.com/dwuwpxu0y/image/upload/f_auto,q_auto,dpr_auto,c_limit,w_1200/v1769086965/10491807_4443133_bi9gii.jpg')",
                 backgroundSize: "cover",
                 backgroundPosition: "center",
                 backgroundRepeat: "no-repeat",

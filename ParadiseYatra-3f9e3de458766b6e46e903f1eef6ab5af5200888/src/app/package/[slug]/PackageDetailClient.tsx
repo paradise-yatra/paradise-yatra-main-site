@@ -1,7 +1,7 @@
 "use client";
 
 import { motion, AnimatePresence } from "framer-motion";
-import { Loader2, Clock, MapPin, Users, Calendar, Award, Shield, ArrowRight, Plane, Utensils, Camera, Sparkles, Check, AlertCircle, ChevronDown } from "lucide-react";
+import { Loader2, Clock, MapPin, Users, Calendar, Award, Shield, ArrowRight, Plane, Utensils, Camera, Sparkles, Check, AlertCircle, ChevronDown, CreditCard } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
@@ -10,8 +10,10 @@ import { useRouter } from "next/navigation";
 import Link from "next/link";
 import LeadCaptureForm from "@/components/LeadCaptureForm";
 import Header from "@/components/Header";
+import LoginAlertModal from "@/components/LoginAlertModal";
 import PackageCard from "@/components/ui/PackageCard";
 import { getImageUrl, getPackagePriceLabel, getPackagePriceSubLabel } from "@/lib/utils";
+import { useAuth } from "@/context/AuthContext";
 
 interface DayItinerary {
   day: number;
@@ -64,9 +66,11 @@ const ItineraryPageClient = ({ packageData, slug }: ItineraryPageClientProps) =>
   const [selectedImage, setSelectedImage] = useState(0);
   const [openDay, setOpenDay] = useState<number | null>(0);
   const [isLeadFormOpen, setIsLeadFormOpen] = useState(false);
+  const [isLoginModalOpen, setIsLoginModalOpen] = useState(false);
   const [otherPackages, setOtherPackages] = useState<any[]>([]);
   const [packagesLoading, setPackagesLoading] = useState(false);
   const router = useRouter();
+  const { user } = useAuth();
 
   const galleryImages = packageData?.images && packageData.images.length > 0
     ? packageData.images
@@ -496,7 +500,19 @@ const ItineraryPageClient = ({ packageData, slug }: ItineraryPageClientProps) =>
                     </div>
                   </div>
                   <Button onClick={() => setIsLeadFormOpen(true)} className="w-full h-16 bg-blue-600 hover:bg-blue-700 text-white rounded-lg !text-lg !font-black transition-all hover:-translate-y-1">
-                    Book Your Trip <ArrowRight className="ml-2 h-6 w-6" />
+                    Enquiry <ArrowRight className="ml-2 h-6 w-6" />
+                  </Button>
+                  <Button
+                    onClick={() => {
+                      if (!user) {
+                        setIsLoginModalOpen(true);
+                        return;
+                      }
+                      router.push(`/checkout?type=package&slug=${encodeURIComponent(packageData.slug || slug)}`);
+                    }}
+                    className="w-full h-16 bg-gradient-to-r from-emerald-500 to-emerald-700 hover:from-emerald-600 hover:to-emerald-800 text-white rounded-lg !text-lg !font-black transition-all hover:-translate-y-1 shadow-lg shadow-emerald-500/30"
+                  >
+                    Book Now <CreditCard className="ml-2 h-6 w-6" />
                   </Button>
                   <div className="space-y-4 pt-4 border-t border-slate-100">
                     {[{ icon: Shield, text: "Secure Booking Guarantee", sub: "100% encrypted" }, { icon: Award, text: "Best Price Guaranteed", sub: "Verified quotes" }].map((item, idx) => (
@@ -600,6 +616,7 @@ const ItineraryPageClient = ({ packageData, slug }: ItineraryPageClientProps) =>
       </div>
 
       <LeadCaptureForm isOpen={isLeadFormOpen} onClose={() => setIsLeadFormOpen(false)} packageTitle={packageData?.title} packagePrice={formatPrice(packageData.price)} />
+      <LoginAlertModal isOpen={isLoginModalOpen} onClose={() => setIsLoginModalOpen(false)} theme="blue" />
     </motion.div>
   );
 };

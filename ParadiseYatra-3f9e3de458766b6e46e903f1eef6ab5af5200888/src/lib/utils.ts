@@ -6,6 +6,44 @@ export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs));
 }
 
+const CLOUDINARY_HOST = "res.cloudinary.com";
+const CLOUDINARY_IMAGE_AUTO = "f_auto,q_auto,dpr_auto,c_limit,w_1200";
+const CLOUDINARY_VIDEO_AUTO = "q_auto:eco,vc_auto";
+
+function hasTransformationSegment(segment: string): boolean {
+  return /(f_auto|q_auto|w_\d+|h_\d+|c_[a-z]+|dpr_auto|vc_auto|br_\d+)/.test(segment);
+}
+
+function optimizeCloudinaryUrl(url: string, assetType: "image" | "video"): string {
+  try {
+    const parsed = new URL(url);
+    if (parsed.hostname !== CLOUDINARY_HOST) return url;
+
+    const marker = `/${assetType}/upload/`;
+    const markerIndex = parsed.pathname.indexOf(marker);
+    if (markerIndex === -1) return url;
+
+    const prefix = parsed.pathname.slice(0, markerIndex + marker.length);
+    const rest = parsed.pathname.slice(markerIndex + marker.length).replace(/^\/+/, "");
+    if (!rest) return url;
+
+    const firstSegment = rest.split("/")[0] || "";
+    if (hasTransformationSegment(firstSegment)) return url;
+
+    const transformation = assetType === "image" ? CLOUDINARY_IMAGE_AUTO : CLOUDINARY_VIDEO_AUTO;
+    parsed.pathname = `${prefix}${transformation}/${rest}`;
+    return parsed.toString();
+  } catch {
+    return url;
+  }
+}
+
+export function getOptimizedVideoUrl(videoUrl: string | null): string | null {
+  if (!videoUrl) return null;
+  if (!videoUrl.startsWith("http://") && !videoUrl.startsWith("https://")) return videoUrl;
+  return optimizeCloudinaryUrl(videoUrl, "video");
+}
+
 /**
  * Get the proper image URL for display
  * @param imageUrl - The image URL from the API
@@ -21,7 +59,7 @@ export function getImageUrl(imageUrl: string | null): string | null {
 
   // If it's already a full URL, return it directly (no proxy needed)
   if (imageUrl.startsWith('http://') || imageUrl.startsWith('https://')) {
-    return imageUrl;
+    return optimizeCloudinaryUrl(imageUrl, "image");
   }
 
   // If it's a relative URL, construct the full production URL

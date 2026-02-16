@@ -5,6 +5,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { Calendar, Clock } from "lucide-react";
 import { motion } from "framer-motion";
+import { getImageUrl as getOptimizedImageUrl } from "@/lib/utils";
 
 interface BlogPost {
   _id: string;
@@ -39,12 +40,7 @@ const getPostSlug = (post: BlogPost): string => {
   return post.slug || generateSlug(post.title);
 };
 
-const getImageUrl = (image: string | undefined): string => {
-  if (!image) return "/fallback.jpg";
-  if (image.startsWith("http")) return image;
-  if (image.startsWith("/")) return image;
-  return `https://res.cloudinary.com/dwuwpxu0y/image/upload/${image}`;
-};
+const getImageUrl = (image: string | undefined): string => getOptimizedImageUrl(image || null) || "/fallback.jpg";
 
 export default function BlogGrid({ posts, searchQuery, selectedCategory }: BlogGridProps) {
   const filteredPosts = useMemo(() => {

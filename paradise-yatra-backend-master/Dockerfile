@@ -33,21 +33,18 @@ EXPOSE 5000
 ENV NODE_ENV=production
 ENV PORT=5000
 
-
-ENV MONGODB_URI=mongodb+srv://dikshusharma11:dikshant1140@cluster0.w6ybkdx.mongodb.net/paradise-yatra
-# MONGODB_URI=mongodb+srv://shubham230mamgain:15cse23@tvc.g822y.mongodb.net/paradise_sample?retryWrites=true&w=majority&appName=tvc
-ENV CLIENT_ORIGIN=http://localhost:3000
-ENV CLOUDINARY_CLOUD_NAME=dwuwpxu0y
-ENV CLOUDINARY_API_KEY=294911685234965
-ENV CLOUDINARY_API_SECRET=sAAZBp3NnuwDkCZFsC1SAPDj9xs
-ENV  JWT_SECRET=naruto_uzumaki
-
-ENV CLIENT_ORIGIN=https://frontendparadise-frontend.glwcvg.easypanel.host
-
-ENV BACKEND_URL=https://backendparadise-backend.glwcvg.easypanel.host
-
-ENV GMAIL_USER=Digiversion11@gmail.com
-ENV GMAIL_APP_PASSWORD=eubfqhzsdmwdmaqk
+# Inject sensitive values at runtime (Docker/K8s secrets, CI/CD vars, or .env file).
+# Do not hardcode real credentials in images/repository.
+ENV MONGODB_URI=""
+ENV CLIENT_ORIGIN=""
+ENV CLOUDINARY_CLOUD_NAME=""
+ENV CLOUDINARY_API_KEY=""
+ENV CLOUDINARY_API_SECRET=""
+ENV JWT_SECRET=""
+ENV BACKEND_URL=""
+ENV GMAIL_USER=""
+ENV GMAIL_APP_PASSWORD=""
+ENV INTERNAL_API_TOKEN=""
 
 
 

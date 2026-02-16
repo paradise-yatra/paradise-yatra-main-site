@@ -11,6 +11,7 @@ import Header from "@/components/Header";
 import Link from "next/link";
 import Image from "next/image";
 import Loading from "@/components/ui/loading";
+import { getImageUrl as getOptimizedImageUrl } from "@/lib/utils";
 
 interface BlogPost {
   _id: string;
@@ -44,12 +45,7 @@ const getPostSlug = (post: BlogPost): string => {
   return post.slug || generateSlug(post.title);
 };
 
-const getImageUrl = (image: string | undefined): string => {
-  if (!image) return "/fallback.jpg";
-  if (image.startsWith("http")) return image;
-  if (image.startsWith("/")) return image;
-  return `https://res.cloudinary.com/dwuwpxu0y/image/upload/${image}`;
-};
+const getImageUrl = (image: string | undefined): string => getOptimizedImageUrl(image || null) || "/fallback.jpg";
 
 const stripHtml = (value: string): string => value.replace(/<[^>]*>/g, " ");
 

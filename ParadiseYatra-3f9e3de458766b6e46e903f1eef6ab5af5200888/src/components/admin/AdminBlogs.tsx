@@ -57,6 +57,12 @@ interface AdminBlogsProps {
 }
 
 const AdminBlogs = ({ initialAction, onActionComplete }: AdminBlogsProps) => {
+  const parseMetaList = (value: string) =>
+    value
+      .split(/[,\s]+/)
+      .map((item) => item.trim())
+      .filter((item) => item.length > 0);
+
   const [blogs, setBlogs] = useState<BlogPost[]>([]);
   const [allBlogs, setAllBlogs] = useState<BlogPost[]>([]); // Store all blogs
   const [loading, setLoading] = useState(true);
@@ -116,6 +122,8 @@ const AdminBlogs = ({ initialAction, onActionComplete }: AdminBlogsProps) => {
     seoArticleSection: "",
     seoArticleTags: [],
   });
+  const [seoKeywordsInput, setSeoKeywordsInput] = useState("");
+  const [seoArticleTagsInput, setSeoArticleTagsInput] = useState("");
 
   useEffect(() => {
     fetchBlogs(); // Fetch all blogs once
@@ -277,7 +285,7 @@ const AdminBlogs = ({ initialAction, onActionComplete }: AdminBlogsProps) => {
         // SEO fields
         seoTitle: formData.seoTitle?.trim() || "",
         seoDescription: formData.seoDescription?.trim() || "",
-        seoKeywords: Array.isArray(formData.seoKeywords) ? formData.seoKeywords : [],
+        seoKeywords: parseMetaList(seoKeywordsInput),
         seoOgTitle: formData.seoOgTitle?.trim() || "",
         seoOgDescription: formData.seoOgDescription?.trim() || "",
         seoOgImage: formData.seoOgImage?.trim() || "",
@@ -290,7 +298,7 @@ const AdminBlogs = ({ initialAction, onActionComplete }: AdminBlogsProps) => {
         seoAuthor: formData.seoAuthor?.trim() || "",
         seoPublisher: formData.seoPublisher?.trim() || "Paradise Yatra",
         seoArticleSection: formData.seoArticleSection?.trim() || "",
-        seoArticleTags: Array.isArray(formData.seoArticleTags) ? formData.seoArticleTags : [],
+        seoArticleTags: parseMetaList(seoArticleTagsInput),
       };
 
       // Check if we need to upload a file
@@ -472,6 +480,8 @@ const AdminBlogs = ({ initialAction, onActionComplete }: AdminBlogsProps) => {
       slug: blog.slug || "", // Ensure slug is never undefined/null
     };
     setFormData(frontendData);
+    setSeoKeywordsInput((frontendData.seoKeywords || []).join(", "));
+    setSeoArticleTagsInput((frontendData.seoArticleTags || []).join(", "));
     setActiveTab("create");
   };
 
@@ -566,6 +576,8 @@ const AdminBlogs = ({ initialAction, onActionComplete }: AdminBlogsProps) => {
       seoArticleSection: "",
       seoArticleTags: [],
     });
+    setSeoKeywordsInput("");
+    setSeoArticleTagsInput("");
   };
 
   const handleAddNew = () => {
@@ -907,19 +919,21 @@ const AdminBlogs = ({ initialAction, onActionComplete }: AdminBlogsProps) => {
                         SEO Keywords
                       </label>
                       <Input
-                        value={formData.seoKeywords?.join(", ") || ""}
-                        onChange={(e) =>
+                        value={seoKeywordsInput}
+                        onChange={(e) => {
+                          const nextValue = e.target.value;
+                          setSeoKeywordsInput(nextValue);
                           setFormData((prev) => ({
                             ...prev,
-                            seoKeywords: e.target.value
-                              .split(",")
-                              .map((k) => k.trim())
-                              .filter((k) => k.length > 0),
-                          }))
-                        }
+                            seoKeywords: parseMetaList(nextValue),
+                          }));
+                        }}
                         placeholder="keyword1, keyword2, keyword3"
                         className="bg-white border-gray-300 text-gray-900 placeholder-gray-500"
                       />
+                      <p className="text-xs text-gray-500 mt-1">
+                        Use comma or space to separate keywords
+                      </p>
                     </div>
 
                     <div>
@@ -1129,19 +1143,21 @@ const AdminBlogs = ({ initialAction, onActionComplete }: AdminBlogsProps) => {
                         Article Tags
                       </label>
                       <Input
-                        value={formData.seoArticleTags?.join(", ") || ""}
-                        onChange={(e) =>
+                        value={seoArticleTagsInput}
+                        onChange={(e) => {
+                          const nextValue = e.target.value;
+                          setSeoArticleTagsInput(nextValue);
                           setFormData((prev) => ({
                             ...prev,
-                            seoArticleTags: e.target.value
-                              .split(",")
-                              .map((k) => k.trim())
-                              .filter((k) => k.length > 0),
-                          }))
-                        }
+                            seoArticleTags: parseMetaList(nextValue),
+                          }));
+                        }}
                         placeholder="tag1, tag2, tag3"
                         className="bg-white border-gray-300 text-gray-900 placeholder-gray-500"
                       />
+                      <p className="text-xs text-gray-500 mt-1">
+                        Use comma or space to separate tags
+                      </p>
                     </div>
                   </div>
                 </div>
@@ -1302,7 +1318,7 @@ const AdminBlogs = ({ initialAction, onActionComplete }: AdminBlogsProps) => {
                   <div className="flex items-start justify-between">
                     <div className="flex-1">
                       <div className="flex items-center gap-3 mb-2">
-                        <h3 className="text-lg font-semibold text-gray-900">
+                        <h3 className="!text-lg !font-semibold !text-gray-900">
                           {blog.title}
                         </h3>
                         <Badge
@@ -1320,7 +1336,7 @@ const AdminBlogs = ({ initialAction, onActionComplete }: AdminBlogsProps) => {
                           {blog.status}
                         </Badge>
                       </div>
-                      <p className="text-gray-700 mb-2">{blog.excerpt}</p>
+                      <p className="!text-sm !text-gray-700 mb-2">{blog.excerpt}</p>
                       <div className="flex items-center gap-4 text-sm text-gray-500">
                         <span>By {blog.author}</span>
                         <span>•</span>

@@ -225,7 +225,7 @@ const NewPremiumPackages = () => {
     <section 
       className="py-16 bg-cover bg-center bg-no-repeat relative"
       style={{ 
-        backgroundImage: "url('https://res.cloudinary.com/dwuwpxu0y/image/upload/v1768219728/Abstract_background_of_weathered_wood_in_blue_and_red_tones_1_gmdgpd.jpg')"
+        backgroundImage: "url('https://res.cloudinary.com/dwuwpxu0y/image/upload/f_auto,q_auto,dpr_auto,c_limit,w_1200/v1768219728/Abstract_background_of_weathered_wood_in_blue_and_red_tones_1_gmdgpd.jpg')"
       }}
     >
       <div className="absolute inset-0 bg-gradient-to-b from-white/60 via-white/40 to-white-60 pointer-events-none z-0" />
