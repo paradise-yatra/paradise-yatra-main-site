@@ -746,10 +746,18 @@ export default function DestinationPage({ params }: DestinationPageProps) {
 
             <Accordion type="single" collapsible className="space-y-2 sm:space-y-4">
               <AccordionItem value="booking" className="border border-slate-200 rounded-lg">
-                <AccordionTrigger className="!px-4 !py-3 hover:bg-slate-50">
+                <AccordionTrigger
+                  id="destination-terms-booking-trigger"
+                  aria-controls="destination-terms-booking-content"
+                  className="!px-4 !py-3 hover:bg-slate-50"
+                >
                   <h3 className="!text-lg !font-bold text-slate-900 text-left">Booking and Payment</h3>
                 </AccordionTrigger>
-                <AccordionContent className="!px-4 !pb-4">
+                <AccordionContent
+                  id="destination-terms-booking-content"
+                  aria-labelledby="destination-terms-booking-trigger"
+                  className="!px-4 !pb-4"
+                >
                   <ul className="space-y-1.5 sm:space-y-2 !text-sm text-slate-600">
                     <li>• A deposit of 30% is required to confirm your booking</li>
                     <li>• Full payment must be completed 30 days before departure</li>
@@ -760,10 +768,18 @@ export default function DestinationPage({ params }: DestinationPageProps) {
               </AccordionItem>
 
               <AccordionItem value="cancellation" className="border border-slate-200 rounded-lg">
-                <AccordionTrigger className="!px-4 !py-3 hover:bg-slate-50">
+                <AccordionTrigger
+                  id="destination-terms-cancellation-trigger"
+                  aria-controls="destination-terms-cancellation-content"
+                  className="!px-4 !py-3 hover:bg-slate-50"
+                >
                   <h3 className="!text-lg !font-bold text-slate-900 text-left">Cancellation Policy</h3>
                 </AccordionTrigger>
-                <AccordionContent className="!px-4 !pb-4">
+                <AccordionContent
+                  id="destination-terms-cancellation-content"
+                  aria-labelledby="destination-terms-cancellation-trigger"
+                  className="!px-4 !pb-4"
+                >
                   <ul className="space-y-1.5 sm:space-y-2 !text-sm text-slate-600">
                     <li>• Cancellation 60+ days before departure: Full refund minus ₹100 processing fee</li>
                     <li>• Cancellation 30-59 days before departure: 75% refund</li>
@@ -774,10 +790,18 @@ export default function DestinationPage({ params }: DestinationPageProps) {
               </AccordionItem>
 
               <AccordionItem value="documents" className="border border-slate-200 rounded-lg">
-                <AccordionTrigger className="!px-4 !py-3 hover:bg-slate-50">
+                <AccordionTrigger
+                  id="destination-terms-documents-trigger"
+                  aria-controls="destination-terms-documents-content"
+                  className="!px-4 !py-3 hover:bg-slate-50"
+                >
                   <h3 className="!text-lg !font-bold text-slate-900 text-left">Travel Documents</h3>
                 </AccordionTrigger>
-                <AccordionContent className="!px-4 !pb-4">
+                <AccordionContent
+                  id="destination-terms-documents-content"
+                  aria-labelledby="destination-terms-documents-trigger"
+                  className="!px-4 !pb-4"
+                >
                   <ul className="space-y-1.5 sm:space-y-2 !text-sm text-slate-600">
                     <li>• Valid passport required (minimum 6 months validity)</li>
                     <li>• Visa requirements vary by destination - check with embassy</li>
@@ -788,10 +812,18 @@ export default function DestinationPage({ params }: DestinationPageProps) {
               </AccordionItem>
 
               <AccordionItem value="health" className="border border-slate-200 rounded-lg">
-                <AccordionTrigger className="!px-4 !py-3 hover:bg-slate-50">
+                <AccordionTrigger
+                  id="destination-terms-health-trigger"
+                  aria-controls="destination-terms-health-content"
+                  className="!px-4 !py-3 hover:bg-slate-50"
+                >
                   <h3 className="!text-lg !font-bold text-slate-900 text-left">Health and Safety</h3>
                 </AccordionTrigger>
-                <AccordionContent className="!px-4 !pb-4">
+                <AccordionContent
+                  id="destination-terms-health-content"
+                  aria-labelledby="destination-terms-health-trigger"
+                  className="!px-4 !pb-4"
+                >
                   <ul className="space-y-1.5 sm:space-y-2 !text-sm text-slate-600">
                     <li>• Participants must be in good physical condition for adventure activities</li>
                     <li>• Medical conditions must be disclosed before booking</li>
@@ -802,10 +834,18 @@ export default function DestinationPage({ params }: DestinationPageProps) {
               </AccordionItem>
 
               <AccordionItem value="force-majeure" className="border border-slate-200 rounded-lg">
-                <AccordionTrigger className="!px-4 !py-3 hover:bg-slate-50">
+                <AccordionTrigger
+                  id="destination-terms-force-majeure-trigger"
+                  aria-controls="destination-terms-force-majeure-content"
+                  className="!px-4 !py-3 hover:bg-slate-50"
+                >
                   <h3 className="!text-lg !font-bold text-slate-900 text-left">Force Majeure</h3>
                 </AccordionTrigger>
-                <AccordionContent className="!px-4 !pb-4">
+                <AccordionContent
+                  id="destination-terms-force-majeure-content"
+                  aria-labelledby="destination-terms-force-majeure-trigger"
+                  className="!px-4 !pb-4"
+                >
                   <ul className="space-y-1.5 sm:space-y-2 !text-sm text-slate-600">
                     <li>• Tours may be modified or cancelled due to weather, natural disasters, or political unrest</li>
                     <li>• Alternative arrangements will be provided when possible</li>
@@ -816,10 +856,18 @@ export default function DestinationPage({ params }: DestinationPageProps) {
               </AccordionItem>
 
               <AccordionItem value="important" className="border border-slate-200 rounded-lg">
-                <AccordionTrigger className="!px-4 !py-3 hover:bg-slate-50">
+                <AccordionTrigger
+                  id="destination-terms-important-trigger"
+                  aria-controls="destination-terms-important-content"
+                  className="!px-4 !py-3 hover:bg-slate-50"
+                >
                   <h3 className="!text-lg !font-bold text-slate-900 text-left">Important Notes</h3>
                 </AccordionTrigger>
-                <AccordionContent className="!px-4 !pb-4">
+                <AccordionContent
+                  id="destination-terms-important-content"
+                  aria-labelledby="destination-terms-important-trigger"
+                  className="!px-4 !pb-4"
+                >
                   <div className="bg-blue-50 p-4 sm:p-6 rounded-lg">
                     <p className="!text-sm text-slate-600 leading-relaxed">
                       By booking this destination, you agree to these terms and conditions. We reserve the right to modify

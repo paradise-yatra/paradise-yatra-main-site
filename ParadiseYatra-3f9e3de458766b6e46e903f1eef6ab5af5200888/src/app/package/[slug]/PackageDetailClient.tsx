@@ -588,10 +588,18 @@ const ItineraryPageClient = ({ packageData, slug }: ItineraryPageClientProps) =>
                 { title: "Travel Documents", content: ["Valid passport required (min 6 months)", "Visa requirements vary by destination", "Travel insurance strongly recommended", "Accurate personal details required"] }
               ].map((item, idx) => (
                 <AccordionItem key={idx} value={`item-${idx}`} className="border border-slate-200 rounded-lg">
-                  <AccordionTrigger className="!px-4 !py-3 hover:bg-slate-50">
+                  <AccordionTrigger
+                    id={`package-terms-item-${idx}-trigger`}
+                    aria-controls={`package-terms-item-${idx}-content`}
+                    className="!px-4 !py-3 hover:bg-slate-50"
+                  >
                     <h3 className="!text-lg !font-bold text-slate-900 text-left">{item.title}</h3>
                   </AccordionTrigger>
-                  <AccordionContent className="!px-4 !pb-4">
+                  <AccordionContent
+                    id={`package-terms-item-${idx}-content`}
+                    aria-labelledby={`package-terms-item-${idx}-trigger`}
+                    className="!px-4 !pb-4"
+                  >
                     <ul className="space-y-2 !text-sm text-slate-600">
                       {item.content.map((point, pIdx) => <li key={pIdx}>• {point}</li>)}
                     </ul>
@@ -599,10 +607,18 @@ const ItineraryPageClient = ({ packageData, slug }: ItineraryPageClientProps) =>
                 </AccordionItem>
               ))}
               <AccordionItem value="important" className="border border-slate-200 rounded-lg">
-                <AccordionTrigger className="!px-4 !py-3 hover:bg-slate-50">
+                <AccordionTrigger
+                  id="package-terms-important-trigger"
+                  aria-controls="package-terms-important-content"
+                  className="!px-4 !py-3 hover:bg-slate-50"
+                >
                   <h3 className="!text-lg !font-bold text-slate-900 text-left">Important Notes</h3>
                 </AccordionTrigger>
-                <AccordionContent className="!px-4 !pb-4">
+                <AccordionContent
+                  id="package-terms-important-content"
+                  aria-labelledby="package-terms-important-trigger"
+                  className="!px-4 !pb-4"
+                >
                   <div className="bg-blue-50 p-6 rounded-lg">
                     <p className="!text-sm text-slate-600 leading-relaxed">
                       By booking this package, you agree to these terms. We reserve the right to modify itineraries due to local conditions while maintaining quality.

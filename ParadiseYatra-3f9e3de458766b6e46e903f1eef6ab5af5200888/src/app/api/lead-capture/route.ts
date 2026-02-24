@@ -59,22 +59,7 @@ export async function POST(request: NextRequest) {
         ? process.env.SMTP_SECURE === "true"
         : smtpPort === 465;
 
-    if (!smtpHost || !smtpUser || !smtpPass) {
-      return NextResponse.json(
-        { error: "SMTP is not configured on server." },
-        { status: 500 }
-      );
-    }
-
-    const transporter = createTransport({
-      host: smtpHost,
-      port: smtpPort,
-      secure: smtpSecure,
-      auth: {
-        user: smtpUser,
-        pass: smtpPass,
-      },
-    });
+    const isSmtpConfigured = Boolean(smtpHost && smtpUser && smtpPass);
 
     // Email content
     const emailSubject = `New Travel Inquiry - ${body.packageTitle || "General Inquiry"}`;
@@ -175,19 +160,12 @@ ${body.packagePrice ? `Price: ${body.packagePrice}` : ''}
 Inquiry received on: ${new Date(body.timestamp).toLocaleString()}
     `;
 
-    // Send email
-    const mailOptions = {
-      from: smtpUser,
-      to: smtpUser,
-      subject: emailSubject,
-      text: emailText,
-      html: emailHtml,
-    };
-
-    await transporter.sendMail(mailOptions);
-
     // Save lead to database
     const backendUrl = process.env.NEXT_PUBLIC_BACKEND_URL || "http://localhost:5001";
+    let leadSaved = false;
+    let emailSent = false;
+    let emailWarning: string | null = null;
+
     try {
       const dbResponse = await fetch(`${backendUrl}/api/leads`, {
         method: "POST",
@@ -203,12 +181,51 @@ Inquiry received on: ${new Date(body.timestamp).toLocaleString()}
       if (!dbResponse.ok) {
         console.error("Failed to save lead to database:", await dbResponse.text());
       } else {
+        leadSaved = true;
         console.log("Lead saved to database successfully");
       }
     } catch (dbError) {
       console.error("Error connecting to backend to save lead:", dbError);
-      // We don't fail the whole request if DB save fails but email was sent
-      // although ideally we'd want both to succeed.
+      // Continue and try email notification as a fallback signal.
+    }
+
+    // Send email notification only when SMTP is configured.
+    if (isSmtpConfigured) {
+      try {
+        const transporter = createTransport({
+          host: smtpHost,
+          port: smtpPort,
+          secure: smtpSecure,
+          auth: {
+            user: smtpUser,
+            pass: smtpPass,
+          },
+        });
+
+        const mailOptions = {
+          from: smtpUser,
+          to: smtpUser,
+          subject: emailSubject,
+          text: emailText,
+          html: emailHtml,
+        };
+
+        await transporter.sendMail(mailOptions);
+        emailSent = true;
+      } catch (mailError) {
+        console.error("Failed to send lead notification email:", mailError);
+        emailWarning = "Lead saved, but notification email could not be sent.";
+      }
+    } else {
+      emailWarning = "Lead saved without email notification (SMTP not configured).";
+      console.warn("SMTP not configured. Skipping email notification.");
+    }
+
+    if (!leadSaved && !emailSent) {
+      return NextResponse.json(
+        { error: "Failed to submit inquiry. Please try again later." },
+        { status: 500 }
+      );
     }
 
     // Log the lead
@@ -223,7 +240,8 @@ Inquiry received on: ${new Date(body.timestamp).toLocaleString()}
     return NextResponse.json(
       {
         success: true,
-        message: "Inquiry submitted successfully"
+        message: "Inquiry submitted successfully",
+        ...(emailWarning ? { warning: emailWarning } : {})
       },
       { status: 200 }
     );
