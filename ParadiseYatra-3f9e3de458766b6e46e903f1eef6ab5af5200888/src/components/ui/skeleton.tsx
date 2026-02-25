@@ -20,60 +20,7 @@ const Skeleton = ({
   lines = 1,
   animated = true,
 }: SkeletonProps) => {
-  const baseClasses = "bg-gray-200 dark:bg-gray-300";
-
-  const variantClasses = {
-    default: "rounded-md",
-    card: "rounded-xl",
-    text: "rounded-sm",
-    circle: "rounded-full",
-    rect: "rounded-none",
-  };
-
-  const animationVariants = {
-    animate: {
-      opacity: [0.5, 1, 0.5],
-      transition: {
-        duration: 1.5,
-        repeat: Infinity,
-        ease: "easeInOut" as const,
-      },
-    },
-  };
-
-  const style = {
-    width: width || "100%",
-    height: height || "1rem",
-  };
-
-  if (lines > 1) {
-    return (
-      <div className="space-y-2">
-        {Array.from({ length: lines }).map((_, index) => (
-          <motion.div
-            key={index}
-            className={cn(baseClasses, variantClasses[variant], className)}
-            style={{
-              ...style,
-              height: index === lines - 1 ? "0.75rem" : "1rem",
-              width: index === lines - 1 ? "75%" : "100%",
-            }}
-            variants={animated ? animationVariants : undefined}
-            animate={animated ? "animate" : undefined}
-          />
-        ))}
-      </div>
-    );
-  }
-
-  return (
-    <motion.div
-      className={cn(baseClasses, variantClasses[variant], className)}
-      style={style}
-      variants={animated ? animationVariants : undefined}
-      animate={animated ? "animate" : undefined}
-    />
-  );
+  return null;
 };
 
 // Predefined skeleton components for common use cases

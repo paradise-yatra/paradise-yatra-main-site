@@ -2,6 +2,7 @@
 
 import Image from "next/image";
 import Link from "next/link";
+import { ArrowRight } from "lucide-react";
 
 interface FestivalDestination {
     id: number;
@@ -61,17 +62,27 @@ const FestivalSection = () => {
         <section className="bg-white py-14 px-4 text-gray-900 md:px-8">
             <div className="mx-auto max-w-6xl">
                 {/* Header Style matching India Tour Package */}
-                <div className="mb-10 flex flex-col gap-2">
-                    <span className="text-[#005beb] !font-black uppercase tracking-wider text-xs flex items-center gap-2">
-                        <span className="h-px w-8 bg-[#005beb]"></span>
-                        Cultural Joy
-                    </span>
-                    <h2 className="!text-2xl !font-bold text-slate-900 md:text-3xl">
-                        Celebrations Across the World
-                    </h2>
-                    <p className="!text-sm !text-slate-600 md:text-base max-w-2xl font-semibold">
-                        Immerse yourself in vibrant global traditions and iconic celebrations with our curated cultural tour packages.
-                    </p>
+                <div className="mb-10 flex flex-col md:flex-row md:items-end justify-between gap-6">
+                    <div className="flex flex-col gap-2">
+                        <span className="text-[#005beb] !font-black uppercase tracking-wider text-xs flex items-center gap-2">
+                            <span className="h-px w-8 bg-[#005beb]"></span>
+                            Cultural Joy
+                        </span>
+                        <h2 className="!text-2xl !font-bold text-slate-900 md:text-3xl">
+                            Celebrations Across the World
+                        </h2>
+                        <p className="!text-sm !text-slate-600 md:text-base max-w-2xl font-semibold">
+                            Immerse yourself in vibrant global traditions and iconic celebrations with our curated cultural tour packages.
+                        </p>
+                    </div>
+
+                    <Link
+                        href="/package/theme/cultural"
+                        className="group flex items-center gap-2 text-[#005beb] font-bold text-sm transition-all duration-300 w-fit shrink-0"
+                    >
+                        View All Packages
+                        <ArrowRight className="h-4 w-4 group-hover:translate-x-1 transition-transform" />
+                    </Link>
                 </div>
 
                 {/* Masonry Grid Layout */}

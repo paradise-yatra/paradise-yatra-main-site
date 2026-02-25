@@ -263,15 +263,7 @@ const NewTrendingDestinations = () => {
     return duration;
   };
 
-  if (loading) {
-    return (
-      <section className="py-20 bg-white px-4">
-        <div className="max-w-7xl mx-auto grid grid-cols-1 md:grid-cols-3 gap-6">
-          {Array.from({ length: 3 }).map((_, i) => <SkeletonPackageCard key={i} />)}
-        </div>
-      </section>
-    );
-  }
+  if (loading) return null;
 
   const visiblePackages = allPackages.slice(currentIndex, currentIndex + 3);
   const canGoPrevious = currentIndex > 0;

@@ -171,7 +171,7 @@ const HoneymoonPackages = () => {
 
                     <Link
                         href="/package/theme/honeymoon"
-                        className="group flex items-center gap-2 text-[#ff1493] font-bold text-sm bg-pink-50 hover:bg-[#ff1493] hover:text-white px-6 py-3 rounded-xl transition-all duration-300 w-fit shrink-0"
+                        className="group flex items-center gap-2 text-[#ff1493] font-bold text-sm transition-all duration-300 w-fit shrink-0"
                     >
                         View All Packages
                         <ArrowRight className="h-4 w-4 group-hover:translate-x-1 transition-transform" />

@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect, useRef, useCallback } from 'react';
-import { Search, MapPin, Calendar, DollarSign, Plane, Star, Globe, TrendingUp, Sparkles } from 'lucide-react';
+import { Search, MapPin, Calendar, DollarSign, Globe, TrendingUp, X, Star } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { createPortal } from 'react-dom';
 
@@ -65,6 +65,18 @@ const getCategoryColor = (category: string) => {
     return colors[category] || 'bg-gradient-to-r from-gray-500 to-gray-600';
 };
 
+// Featured destination cards for when there's no query
+const FEATURED_DESTINATIONS = [
+    { name: 'Switzerland', label: 'Alpine Views', image: 'https://images.unsplash.com/photo-1531366936337-7c912a4589a7?w=400&q=80&auto=format&fit=crop', size: 'tall' },
+    { name: 'Japan', label: 'Land of Rising Sun', image: 'https://images.unsplash.com/photo-1545569341-9eb8b30979d9?w=400&q=80&auto=format&fit=crop', size: 'normal' },
+    { name: 'Dubai', label: 'The City of Life', image: 'https://images.unsplash.com/photo-1512453979798-5ea266f8880c?w=400&q=80&auto=format&fit=crop', size: 'normal' },
+    { name: 'Singapore', label: 'The Lion City', image: 'https://images.unsplash.com/photo-1525625293386-3f8f99389edd?w=400&q=80&auto=format&fit=crop', size: 'tall' },
+    { name: 'Vietnam', label: 'Land of Ascending Dragon', image: 'https://images.unsplash.com/photo-1559592413-7cec4d0cae2b?w=400&q=80&auto=format&fit=crop', size: 'normal' },
+    { name: 'Maldives', label: 'Create Minds', image: 'https://images.unsplash.com/photo-1506905925346-21bda4d32df4?w=400&q=80&auto=format&fit=crop', size: 'normal' },
+    { name: 'Iceland', label: 'Northern Lights', image: 'https://images.unsplash.com/photo-1531366936337-7c912a4589a7?w=400&q=80&auto=format&fit=crop', size: 'normal' },
+    { name: 'Greece', label: 'Ancient Ruins', image: 'https://images.unsplash.com/photo-1530841377377-3ff06c0ca713?w=400&q=80&auto=format&fit=crop', size: 'normal' },
+];
+
 const SearchSuggestions = ({
     query,
     onQueryChange,
@@ -89,20 +101,20 @@ const SearchSuggestions = ({
 
     const placeholderTexts = variant === 'hero'
         ? [
-            "Where do you want to go?",
+            "Pick your destination...",
             "Explore Bali...",
             "Discover Europe...",
             "Visit Himachal Pradesh...",
             "Adventure in Ladakh...",
             "Relax in Goa...",
             "Experience Kerala...",
-            "Journey to Kashmir..."
+            "Journey to Kashmir...",
         ]
         : [
             "Search destinations, packages...",
             "Find your perfect trip...",
             "Discover amazing places...",
-            "Plan your next adventure..."
+            "Plan your next adventure...",
         ];
 
     // Rotating placeholder effect
@@ -118,34 +130,37 @@ const SearchSuggestions = ({
     // Focus input when hero modal opens
     useEffect(() => {
         if (variant === 'hero' && isOpen && inputRef.current) {
-            // Use a longer delay for mobile to ensure the modal is fully rendered
             const focusTimer = setTimeout(() => {
                 inputRef.current?.focus();
                 setIsFocused(true);
-            }, 300);
-
+            }, 200);
             return () => clearTimeout(focusTimer);
         }
     }, [variant, isOpen]);
 
+    // Escape key to close hero modal
+    useEffect(() => {
+        if (variant !== 'hero' || !isOpen) return;
+        const handleKeyDown = (e: KeyboardEvent) => {
+            if (e.key === 'Escape') onClose();
+        };
+        window.addEventListener('keydown', handleKeyDown);
+        return () => window.removeEventListener('keydown', handleKeyDown);
+    }, [variant, isOpen, onClose]);
+
     const calculateDropdownPosition = useCallback(() => {
         if (!containerRef.current) return;
-
         const rect = containerRef.current.getBoundingClientRect();
         const viewportHeight = window.innerHeight;
         const scrollY = window.scrollY;
-
         const dropdownHeight = 400;
         const spaceBelow = viewportHeight - rect.bottom;
-
         let top = rect.bottom + scrollY + 12;
         let left = rect.left;
         const width = rect.width;
-
         if (spaceBelow < 100) {
             top = rect.top + scrollY - dropdownHeight - 12;
         }
-
         setDropdownPosition({ top, left, width });
     }, []);
 
@@ -154,29 +169,23 @@ const SearchSuggestions = ({
             setSuggestions([]);
             return;
         }
-
         setIsLoading(true);
         setError(null);
-
         try {
-            // Fetch from both all-packages and fixed-departures endpoints
             const [packagesResponse, fixedResponse] = await Promise.all([
                 fetch(`/api/all-packages?q=${encodeURIComponent(searchQuery)}&limit=10`, { cache: 'no-store' }),
                 fetch(`/api/fixed-departures/suggest?q=${encodeURIComponent(searchQuery)}`, { cache: 'no-store' })
             ]);
-
             let packages = [];
             if (packagesResponse.ok) {
                 const data = await packagesResponse.json();
                 packages = data.packages || [];
             }
-
             let fixedDepartures = [];
             if (fixedResponse.ok) {
                 const data = await fixedResponse.json();
                 fixedDepartures = data.suggestions || [];
             }
-
             const mappedPackages = packages.map((pkg: any) => ({
                 id: pkg._id,
                 title: pkg.name,
@@ -189,16 +198,11 @@ const SearchSuggestions = ({
                 type: 'package' as const,
                 tourType: pkg.tourType
             }));
-
-            // Transform fixed departures if they aren't already in the right format
-            // Based on our API, they are already formatted as PackageSuggestion by the API route
             const mappedFixed = fixedDepartures.map((departure: any) => ({
                 ...departure,
                 type: 'fixed-departure' as const,
                 category: 'fixed-departure'
             }));
-
-            // Merge and limit results
             const allSuggestions = [...mappedPackages, ...mappedFixed].slice(0, 15);
             setSuggestions(allSuggestions);
         } catch (err) {
@@ -211,28 +215,16 @@ const SearchSuggestions = ({
     }, []);
 
     useEffect(() => {
-        if (timeoutRef.current) {
-            clearTimeout(timeoutRef.current);
-        }
-
+        if (timeoutRef.current) clearTimeout(timeoutRef.current);
         if (query.trim()) {
-            timeoutRef.current = setTimeout(() => {
-                fetchSuggestions(query);
-            }, 300);
+            timeoutRef.current = setTimeout(() => fetchSuggestions(query), 300);
         } else {
             setSuggestions([]);
         }
-
-        return () => {
-            if (timeoutRef.current) {
-                clearTimeout(timeoutRef.current);
-            }
-        };
+        return () => { if (timeoutRef.current) clearTimeout(timeoutRef.current); };
     }, [query, fetchSuggestions]);
 
-    useEffect(() => {
-        setSelectedIndex(-1);
-    }, [suggestions]);
+    useEffect(() => { setSelectedIndex(-1); }, [suggestions]);
 
     const isMobileDevice = () => {
         if (typeof window === 'undefined') return false;
@@ -241,14 +233,11 @@ const SearchSuggestions = ({
 
     const handleKeyDown = (e: React.KeyboardEvent) => {
         const isMobile = isMobileDevice();
-
         switch (e.key) {
             case 'ArrowDown':
                 if (!isFocused || suggestions.length === 0) return;
                 e.preventDefault();
-                setSelectedIndex(prev =>
-                    prev < suggestions.length - 1 ? prev + 1 : prev
-                );
+                setSelectedIndex(prev => prev < suggestions.length - 1 ? prev + 1 : prev);
                 break;
             case 'ArrowUp':
                 if (!isFocused || suggestions.length === 0) return;
@@ -258,31 +247,19 @@ const SearchSuggestions = ({
             case 'Enter':
                 e.preventDefault();
                 if (isMobile && query.trim()) {
-                    // On mobile: close keyboard but keep results visible
-                    keepFocusedRef.current = true; // Flag to keep results visible
-                    setIsFocused(true); // Ensure results stay visible
-                    if (inputRef.current) {
-                        inputRef.current.blur();
-                    }
-                    // Fetch suggestions if not already loaded
-                    if (suggestions.length === 0 && !isLoading) {
-                        fetchSuggestions(query);
-                    }
-                    // Reset flag after a delay to allow normal blur behavior later
-                    setTimeout(() => {
-                        keepFocusedRef.current = false;
-                    }, 300);
+                    keepFocusedRef.current = true;
+                    setIsFocused(true);
+                    if (inputRef.current) inputRef.current.blur();
+                    if (suggestions.length === 0 && !isLoading) fetchSuggestions(query);
+                    setTimeout(() => { keepFocusedRef.current = false; }, 300);
                 } else if (isFocused && selectedIndex >= 0 && selectedIndex < suggestions.length) {
-                    // Desktop: select the highlighted suggestion
                     onSelect(suggestions[selectedIndex]);
                 }
                 break;
             case 'Escape':
                 e.preventDefault();
                 setIsFocused(false);
-                if (inputRef.current) {
-                    inputRef.current.blur();
-                }
+                if (inputRef.current) inputRef.current.blur();
                 onClose();
                 break;
         }
@@ -294,68 +271,42 @@ const SearchSuggestions = ({
                 setIsFocused(false);
             }
         };
-
-        const handleResize = () => {
-            if (isFocused) {
-                calculateDropdownPosition();
-            }
-        };
-
+        const handleResize = () => { if (isFocused) calculateDropdownPosition(); };
         const handleScroll = () => {
             if (isFocused) {
-                // Only close keyboard on scroll for non-hero variant
                 const isMobile = isMobileDevice();
-                if (isMobile && variant !== 'hero') {
-                    closeMobileKeyboard();
-                }
-
-                if (scrollTimeoutRef.current) {
-                    clearTimeout(scrollTimeoutRef.current);
-                }
-                scrollTimeoutRef.current = setTimeout(() => {
-                    calculateDropdownPosition();
-                }, 16);
+                if (isMobile && variant !== 'hero') closeMobileKeyboard();
+                if (scrollTimeoutRef.current) clearTimeout(scrollTimeoutRef.current);
+                scrollTimeoutRef.current = setTimeout(() => calculateDropdownPosition(), 16);
             }
         };
-
         if (isFocused) {
             document.addEventListener('mousedown', handleClickOutside);
             window.addEventListener('resize', handleResize);
             window.addEventListener('scroll', handleScroll, true);
         }
-
         return () => {
             document.removeEventListener('mousedown', handleClickOutside);
             window.removeEventListener('resize', handleResize);
             window.removeEventListener('scroll', handleScroll, true);
-            if (scrollTimeoutRef.current) {
-                clearTimeout(scrollTimeoutRef.current);
-            }
+            if (scrollTimeoutRef.current) clearTimeout(scrollTimeoutRef.current);
         };
     }, [isFocused, calculateDropdownPosition]);
 
     const closeMobileKeyboard = () => {
         const isMobile = isMobileDevice();
-        if (isMobile && inputRef.current) {
-            inputRef.current.blur();
-        }
+        if (isMobile && inputRef.current) inputRef.current.blur();
     };
 
-    // Handle scroll on results container to close keyboard on mobile
     useEffect(() => {
         const resultsContainer = resultsContainerRef.current;
-        if (!resultsContainer || variant === 'hero') return; // Don't attach these handlers for hero variant
-
+        if (!resultsContainer || variant === 'hero') return;
         const handleResultsScroll = () => {
             const isMobile = isMobileDevice();
-            if (isMobile && isFocused) {
-                closeMobileKeyboard();
-            }
+            if (isMobile && isFocused) closeMobileKeyboard();
         };
-
         resultsContainer.addEventListener('scroll', handleResultsScroll, { passive: true });
         resultsContainer.addEventListener('touchstart', handleResultsScroll, { passive: true });
-
         return () => {
             resultsContainer.removeEventListener('scroll', handleResultsScroll);
             resultsContainer.removeEventListener('touchstart', handleResultsScroll);
@@ -363,9 +314,7 @@ const SearchSuggestions = ({
     }, [isFocused, variant]);
 
     const handleSuggestionClick = (suggestion: PackageSuggestion) => {
-        // Close keyboard on mobile when clicking a suggestion
         closeMobileKeyboard();
-
         if (suggestion.type === 'location' && suggestion.iso2) {
             window.location.href = `/packages?country=${encodeURIComponent(suggestion.destination)}`;
             return;
@@ -376,48 +325,35 @@ const SearchSuggestions = ({
     const handleInputFocus = () => {
         setIsFocused(true);
         calculateDropdownPosition();
-        setTimeout(() => {
-            calculateDropdownPosition();
-        }, 50);
+        setTimeout(() => calculateDropdownPosition(), 50);
     };
 
     const handleInputBlur = () => {
         setTimeout(() => {
-            // Don't hide results if we're keeping focus (e.g., after pressing Enter on mobile)
-            if (keepFocusedRef.current) {
-                return;
-            }
-            // On mobile, if there are results and query, keep results visible even after blur
+            if (keepFocusedRef.current) return;
             const isMobile = isMobileDevice();
-            if (isMobile && query.trim() && suggestions.length > 0) {
-                // Keep results visible on mobile after blur
-                return;
-            }
+            if (isMobile && query.trim() && suggestions.length > 0) return;
             if (!containerRef.current?.contains(document.activeElement)) {
                 setIsFocused(false);
-                if (scrollTimeoutRef.current) {
-                    clearTimeout(scrollTimeoutRef.current);
-                }
+                if (scrollTimeoutRef.current) clearTimeout(scrollTimeoutRef.current);
             }
         }, 150);
     };
 
     const getInputClasses = () => {
         if (variant === 'hero') {
-            return "w-full pl-12 sm:pl-12 pr-4 sm:pr-4 py-3.5 sm:py-2.5 text-base sm:text-sm bg-white rounded-md border border-gray-300 text-slate-900 placeholder-gray-400 focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition-all duration-200";
+            return "w-full pl-12 pr-4 py-3.5 text-base bg-white/10 backdrop-blur-sm rounded-lg border border-[#4ade80] text-white placeholder-white/60 focus:outline-none focus:ring-2 focus:ring-[#4ade80]/50 transition-all duration-200";
         }
         return "w-full pl-11 pr-4 py-3.5 sm:py-3 bg-gray-50 border-2 border-gray-200 rounded-xl text-base sm:text-sm focus:outline-none focus:ring-2 focus:ring-orange-500/20 focus:border-orange-400 transition-all duration-200";
     };
 
     return (
-        <div ref={containerRef} className="relative w-full ">
-            {/* Only show search input in normal position for non-hero variant, or when hero is open */}
+        <div ref={containerRef} className="relative w-full">
             {variant !== 'hero' && (
                 <div className="relative group">
-                    <div className={`absolute left-4 sm:left-4 top-1/2 transform -translate-y-1/2 transition-all duration-300 ${isFocused ? 'scale-110' : 'scale-100'}`}>
-                        <Search className={`h-5 w-5 sm:h-5 sm:w-5 text-gray-400 transition-colors duration-300`} />
+                    <div className={`absolute left-4 top-1/2 transform -translate-y-1/2 transition-all duration-300 ${isFocused ? 'scale-110' : 'scale-100'}`}>
+                        <Search className="h-5 w-5 text-gray-400" />
                     </div>
-
                     <input
                         ref={inputRef}
                         type="text"
@@ -433,6 +369,7 @@ const SearchSuggestions = ({
             )}
 
             <AnimatePresence>
+                {/* ── HERO VARIANT: Premium fullscreen dark overlay ── */}
                 {variant === 'hero' && isOpen && (
                     <>
                         {createPortal(
@@ -440,179 +377,219 @@ const SearchSuggestions = ({
                                 initial={{ opacity: 0 }}
                                 animate={{ opacity: 1 }}
                                 exit={{ opacity: 0 }}
-                                transition={{ duration: 0.3 }}
-                                className="fixed inset-0 bg-white z-[99999] overflow-hidden"
-                                onClick={(e) => {
-                                    if (e.target === e.currentTarget) {
-                                        onClose();
-                                    }
-                                }}
+                                transition={{ duration: 0.25 }}
+                                className="fixed inset-0 z-[99999] overflow-hidden flex flex-col"
+                                style={{ background: 'linear-gradient(135deg, #0f172a 0%, #1e1b4b 40%, #0f172a 100%)' }}
                             >
+                                {/* Subtle map/topography texture overlay */}
+                                <div className="absolute inset-0 opacity-[0.03] pointer-events-none"
+                                    style={{
+                                        backgroundImage: `url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23ffffff' fill-opacity='1'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E")`
+                                    }}
+                                />
+
                                 {/* Close Button */}
                                 <button
                                     onClick={onClose}
-                                    className="fixed top-4 right-4 sm:top-6 sm:right-6 md:top-8 md:right-8 z-50 text-slate-700 hover:text-slate-900 transition-all hover:rotate-90 duration-300 p-2"
+                                    className="absolute top-5 right-5 z-50 p-2 text-white/70 hover:text-white transition-colors cursor-pointer"
                                     aria-label="Close search"
                                 >
-                                    <svg className="w-6 h-6 sm:w-8 sm:h-8 md:w-10 md:h-10" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                                    </svg>
+                                    <X className="w-7 h-7" />
                                 </button>
 
-                                {/* Main Content */}
-                                <main className="h-screen flex flex-col items-center justify-start pt-16 sm:pt-20 md:pt-24 lg:pt-[15vh] px-4 sm:px-6 md:px-8 pb-6 sm:pb-8">
-                                    <motion.div
-                                        initial={{ opacity: 0, y: 20 }}
+                                {/* ── Main Content ── */}
+                                <div className="flex-1 flex flex-col items-center px-4 sm:px-6 pt-14 sm:pt-16 pb-4 overflow-hidden">
+                                    {/* Headline */}
+                                    <motion.h1
+                                        initial={{ opacity: 0, y: -16 }}
                                         animate={{ opacity: 1, y: 0 }}
-                                        transition={{ delay: 0.1, duration: 0.4 }}
-                                        className="w-full max-w-2xl flex flex-col h-full"
+                                        transition={{ delay: 0.05, duration: 0.3 }}
+                                        className="!text-2xl sm:!text-3xl md:!text-4xl !font-bold text-white text-center mb-6 sm:mb-8"
                                     >
-                                        {/* Heading */}
-                                        <h1 className="!text-2xl sm:!text-3xl md:!text-4xl font-bold text-center mb-4 sm:mb-6 md:mb-8 text-slate-800 px-2 flex-shrink-0">
-                                            Where is your next adventure?
-                                        </h1>
+                                        Your Next Adventure Awaits
+                                    </motion.h1>
 
-                                        {/* Search Input */}
-                                        <div className="relative mb-4 sm:mb-6 flex-shrink-0">
-                                            <div className="absolute inset-y-0 left-3 sm:left-4 md:left-5 flex items-center pointer-events-none z-10">
-                                                <Search className="text-blue-600 w-4 h-4 sm:w-5 sm:h-5 md:w-6 md:h-6" />
-                                            </div>
-                                            <input
-                                                ref={inputRef}
-                                                type="text"
-                                                placeholder="Search destinations..."
-                                                value={query}
-                                                onChange={(e) => onQueryChange(e.target.value)}
-                                                onKeyDown={handleKeyDown}
-                                                onFocus={() => setIsFocused(true)}
-                                                onBlur={handleInputBlur}
-                                                className="w-full pl-10 sm:pl-12 md:pl-14 pr-4 sm:pr-6 py-3 sm:py-4 md:py-5 bg-white border-2 border-blue-600 rounded-xl sm:rounded-2xl text-base sm:text-lg md:text-xl shadow-lg shadow-blue-100 focus:outline-none focus:ring-4 focus:ring-blue-600/10 transition-all placeholder:text-slate-400"
-                                            />
+                                    {/* Search Input */}
+                                    <motion.div
+                                        initial={{ opacity: 0, y: 10 }}
+                                        animate={{ opacity: 1, y: 0 }}
+                                        transition={{ delay: 0.1, duration: 0.3 }}
+                                        className="relative w-full max-w-2xl mb-6 sm:mb-8"
+                                    >
+                                        <div className="absolute inset-y-0 left-4 flex items-center pointer-events-none">
+                                            <Search className="w-5 h-5 text-[#4ade80]" />
                                         </div>
-
-                                        {/* Results - Scrollable Container */}
-                                        <div className="flex-1 overflow-y-auto scrollbar-hide min-h-0">
-                                            <div className="space-y-1 sm:space-y-1.5 pb-4">
-                                                {/* Loading State */}
-                                                {isLoading && (
-                                                    <motion.div
-                                                        initial={{ opacity: 0 }}
-                                                        animate={{ opacity: 1 }}
-                                                        className="flex flex-col items-center justify-center py-8 sm:py-12"
-                                                    >
-                                                        <motion.div
-                                                            animate={{ rotate: 360 }}
-                                                            transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
-                                                            className="w-8 h-8 sm:w-10 sm:h-10 md:w-12 md:h-12 rounded-full border-4 border-blue-200 border-t-blue-600"
-                                                        />
-                                                        <p className="mt-3 sm:mt-4 text-xs sm:text-sm md:text-base text-slate-600 font-medium">Searching amazing destinations...</p>
-                                                    </motion.div>
-                                                )}
-
-                                                {/* Error State */}
-                                                {error && (
-                                                    <div className="text-center py-6 sm:py-8">
-                                                        <div className="w-10 h-10 sm:w-12 sm:h-12 mx-auto bg-red-100 rounded-full flex items-center justify-center mb-2 sm:mb-3">
-                                                            <Search className="w-5 h-5 sm:w-6 sm:h-6 text-red-500" />
-                                                        </div>
-                                                        <p className="text-xs sm:text-sm text-red-600 font-medium">{error}</p>
-                                                    </div>
-                                                )}
-
-                                                {/* Suggested Destinations Header */}
-                                                {!isLoading && !error && suggestions.length > 0 && (
-                                                    <>
-                                                        <p className="text-[10px] sm:text-xs font-semibold uppercase tracking-wider text-slate-400 ml-1 sm:ml-2 mb-2 sm:mb-3 sticky top-0 bg-white py-2 z-10">
-                                                            Suggested Destinations
-                                                        </p>
-
-                                                        {suggestions.map((suggestion, index) => (
-                                                            <motion.div
-                                                                key={suggestion.id}
-                                                                initial={{ opacity: 0, y: 10 }}
-                                                                animate={{ opacity: 1, y: 0 }}
-                                                                transition={{ delay: index * 0.05 }}
-                                                                className={`group flex items-center justify-between p-2.5 sm:p-3 md:p-4 bg-white hover:bg-blue-50 rounded-lg sm:rounded-xl cursor-pointer transition-all border-2 border-gray-100 hover:border-blue-200 ${selectedIndex === index ? 'bg-blue-50 border-blue-200' : ''
-                                                                    }`}
-                                                                onClick={() => handleSuggestionClick(suggestion)}
-                                                                onMouseEnter={() => setSelectedIndex(index)}
-                                                            >
-                                                                <div className="flex items-center gap-2 sm:gap-3 md:gap-4 flex-1 min-w-0">
-                                                                    {/* Image/Icon */}
-                                                                    <div className="flex-shrink-0 w-12 h-12 sm:w-14 sm:h-14 md:w-16 md:h-16 rounded-lg overflow-hidden shadow-md ring-1 ring-gray-200">
-                                                                        {suggestion.type === 'location' ? (
-                                                                            <div className="w-full h-full bg-gradient-to-br from-blue-400 via-purple-500 to-pink-500 flex items-center justify-center">
-                                                                                <Globe className="w-5 h-5 sm:w-6 sm:h-6 text-white" />
-                                                                            </div>
-                                                                        ) : suggestion.image ? (
-                                                                            <img
-                                                                                src={suggestion.image}
-                                                                                alt={suggestion.title}
-                                                                                className="w-full h-full object-cover"
-                                                                            />
-                                                                        ) : (
-                                                                            <div className="w-full h-full bg-gradient-to-br from-orange-400 via-red-500 to-pink-500 flex items-center justify-center">
-                                                                                <MapPin className="w-5 h-5 sm:w-6 sm:h-6 text-white" />
-                                                                            </div>
-                                                                        )}
-                                                                    </div>
-
-                                                                    <div className="flex-1 min-w-0">
-                                                                        <span className="text-sm sm:text-base md:text-lg font-medium text-slate-800 truncate block">
-                                                                            {suggestion.title}
-                                                                        </span>
-                                                                        {suggestion.type !== 'location' && (
-                                                                            <div className="flex items-center gap-1.5 sm:gap-2 mt-0.5">
-                                                                                <span className="text-[10px] sm:text-xs text-slate-500">{suggestion.duration}</span>
-                                                                                <span className="text-[10px] sm:text-xs text-green-600 font-semibold">
-                                                                                    {formatPrice(suggestion.price)}
-                                                                                </span>
-                                                                            </div>
-                                                                        )}
-                                                                    </div>
-                                                                </div>
-                                                                {index === 0 && (
-                                                                    <span className="text-[10px] sm:text-xs text-slate-400 group-hover:text-blue-600 transition-colors hidden sm:block whitespace-nowrap">
-                                                                        Popular choice
-                                                                    </span>
-                                                                )}
-                                                            </motion.div>
-                                                        ))}
-                                                    </>
-                                                )}
-
-                                                {/* No Results */}
-                                                {!isLoading && !error && suggestions.length === 0 && query.trim() && (
-                                                    <motion.div
-                                                        initial={{ opacity: 0 }}
-                                                        animate={{ opacity: 1 }}
-                                                        className="text-center py-8 sm:py-12"
-                                                    >
-                                                        <div className="w-12 h-12 sm:w-14 sm:h-14 mx-auto bg-gradient-to-br from-blue-100 to-blue-200 rounded-full flex items-center justify-center mb-3 sm:mb-4">
-                                                            <Search className="w-6 h-6 sm:w-7 sm:h-7 text-blue-600" />
-                                                        </div>
-                                                        <p className="text-sm sm:text-base font-semibold text-slate-700 mb-1 sm:mb-1.5 px-4">
-                                                            No results found for "{query}"
-                                                        </p>
-                                                        <p className="text-xs sm:text-sm text-slate-500 px-4">
-                                                            Try different keywords or explore our destinations
-                                                        </p>
-                                                    </motion.div>
-                                                )}
-                                            </div>
-                                        </div>
+                                        <input
+                                            ref={inputRef}
+                                            type="text"
+                                            placeholder={placeholderTexts[currentPlaceholder]}
+                                            value={query}
+                                            onChange={(e) => onQueryChange(e.target.value)}
+                                            onKeyDown={handleKeyDown}
+                                            onFocus={() => setIsFocused(true)}
+                                            onBlur={handleInputBlur}
+                                            className={getInputClasses()}
+                                        />
                                     </motion.div>
-                                </main>
 
-                                {/* Bottom Gradient Fade */}
-                                <div className="fixed bottom-0 left-0 right-0 h-16 sm:h-20 md:h-24 bg-gradient-to-t from-white to-transparent pointer-events-none" />
+                                    {/* ── Results or Featured Grid ── */}
+                                    <motion.div
+                                        initial={{ opacity: 0, y: 12 }}
+                                        animate={{ opacity: 1, y: 0 }}
+                                        transition={{ delay: 0.15, duration: 0.3 }}
+                                        className="w-full max-w-5xl flex-1 overflow-y-auto scrollbar-hide"
+                                    >
+                                        {/* Loading */}
+                                        {isLoading && (
+                                            <div className="flex flex-col items-center justify-center py-16">
+                                                <motion.div
+                                                    animate={{ rotate: 360 }}
+                                                    transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
+                                                    className="w-10 h-10 rounded-full border-4 border-white/20 border-t-[#4ade80]"
+                                                />
+                                                <p className="mt-4 text-sm text-white/60 font-medium">Searching amazing destinations...</p>
+                                            </div>
+                                        )}
+
+                                        {/* Search Results */}
+                                        {!isLoading && !error && suggestions.length > 0 && (
+                                            <div>
+                                                <p className="text-[10px] font-semibold uppercase tracking-widest text-white/40 mb-3">
+                                                    Suggested Destinations
+                                                </p>
+                                                <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3">
+                                                    {suggestions.map((suggestion, index) => (
+                                                        <motion.div
+                                                            key={suggestion.id}
+                                                            initial={{ opacity: 0, scale: 0.95 }}
+                                                            animate={{ opacity: 1, scale: 1 }}
+                                                            transition={{ delay: index * 0.04 }}
+                                                            className="relative rounded-xl overflow-hidden cursor-pointer group"
+                                                            style={{ height: '140px' }}
+                                                            onClick={() => handleSuggestionClick(suggestion)}
+                                                        >
+                                                            {suggestion.image ? (
+                                                                <img
+                                                                    src={suggestion.image}
+                                                                    alt={suggestion.title}
+                                                                    className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
+                                                                />
+                                                            ) : (
+                                                                <div className="w-full h-full bg-gradient-to-br from-blue-600 to-purple-700 flex items-center justify-center">
+                                                                    <MapPin className="w-8 h-8 text-white/70" />
+                                                                </div>
+                                                            )}
+                                                            {/* Dark overlay */}
+                                                            <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent" />
+                                                            {/* Text */}
+                                                            <div className="absolute bottom-0 left-0 right-0 p-3">
+                                                                <p className="text-white text-xs font-semibold leading-tight line-clamp-2">{suggestion.title}</p>
+                                                                {suggestion.price > 0 && (
+                                                                    <p className="text-[#4ade80] text-[10px] font-bold mt-0.5">{formatPrice(suggestion.price)}</p>
+                                                                )}
+                                                            </div>
+                                                            {/* Hover border */}
+                                                            <div className="absolute inset-0 border-2 border-transparent group-hover:border-[#4ade80]/60 rounded-xl transition-colors duration-300" />
+                                                        </motion.div>
+                                                    ))}
+                                                </div>
+                                            </div>
+                                        )}
+
+                                        {/* No Results */}
+                                        {!isLoading && !error && suggestions.length === 0 && query.trim() && (
+                                            <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="text-center py-16">
+                                                <div className="w-14 h-14 mx-auto rounded-full bg-white/10 flex items-center justify-center mb-4">
+                                                    <Search className="w-7 h-7 text-white/50" />
+                                                </div>
+                                                <p className="text-white/80 font-semibold mb-1.5">No results for "{query}"</p>
+                                                <p className="text-white/40 text-sm">Try different keywords or explore below</p>
+                                            </motion.div>
+                                        )}
+
+                                        {/* Featured Destinations Grid (when no query) */}
+                                        {!isLoading && !query.trim() && (
+                                            <div>
+                                                <p className="text-[10px] font-semibold uppercase tracking-widest text-white/40 mb-4">
+                                                    Popular Destinations
+                                                </p>
+                                                {/* Masonry-style horizontal scroll layout */}
+                                                <div className="flex gap-3 overflow-x-auto scrollbar-hide pb-2">
+                                                    {FEATURED_DESTINATIONS.map((dest, index) => (
+                                                        <motion.div
+                                                            key={dest.name}
+                                                            initial={{ opacity: 0, y: 16 }}
+                                                            animate={{ opacity: 1, y: 0 }}
+                                                            transition={{ delay: index * 0.05 }}
+                                                            className="relative flex-shrink-0 rounded-2xl overflow-hidden cursor-pointer group"
+                                                            style={{
+                                                                width: dest.size === 'tall' ? '160px' : '140px',
+                                                                height: dest.size === 'tall' ? '200px' : '170px',
+                                                            }}
+                                                            onClick={() => {
+                                                                onQueryChange(dest.name);
+                                                            }}
+                                                        >
+                                                            <img
+                                                                src={dest.image}
+                                                                alt={dest.name}
+                                                                className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
+                                                            />
+                                                            {/* Gradient overlay */}
+                                                            <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/10 to-transparent" />
+                                                            {/* Label at top */}
+                                                            <div className="absolute top-3 left-3 right-3">
+                                                                <p className="text-white/70 text-[9px] uppercase tracking-wider font-semibold leading-tight">
+                                                                    {dest.label}
+                                                                </p>
+                                                            </div>
+                                                            {/* Name at bottom */}
+                                                            <div className="absolute bottom-3 left-3 right-3">
+                                                                <p className="text-white text-base font-bold leading-tight">{dest.name}</p>
+                                                            </div>
+                                                            {/* Hover ring */}
+                                                            <div className="absolute inset-0 border-2 border-transparent group-hover:border-[#4ade80]/50 rounded-2xl transition-colors duration-300" />
+                                                        </motion.div>
+                                                    ))}
+                                                </div>
+                                            </div>
+                                        )}
+                                    </motion.div>
+                                </div>
+
+                                {/* ── Bottom Rating Bar ── */}
+                                <motion.div
+                                    initial={{ opacity: 0 }}
+                                    animate={{ opacity: 1 }}
+                                    transition={{ delay: 0.3 }}
+                                    className="flex items-center justify-between px-5 sm:px-8 py-3 border-t border-white/10"
+                                >
+                                    <div className="flex items-center gap-3">
+                                        <div className="w-8 h-8 rounded-full bg-gradient-to-br from-orange-400 to-pink-500 flex items-center justify-center text-white text-xs font-bold">
+                                            PY
+                                        </div>
+                                        <p className="text-white/50 text-xs hidden sm:block">
+                                            We recently completed a 7-day trip for Thailand through Paradise Yatra...
+                                        </p>
+                                        <p className="text-white/50 text-xs sm:hidden">Trusted by thousands of travelers</p>
+                                    </div>
+                                    <div className="flex items-center gap-1.5 flex-shrink-0">
+                                        <div className="flex">
+                                            {[1, 2, 3, 4, 5].map(i => (
+                                                <Star key={i} className={`w-3.5 h-3.5 ${i <= 4 ? 'text-yellow-400 fill-yellow-400' : 'text-yellow-400/40'}`} />
+                                            ))}
+                                        </div>
+                                        <span className="text-white font-bold text-sm">4.6</span>
+                                        <span className="text-white/40 text-xs">/ 5 · 8400+ reviews</span>
+                                    </div>
+                                </motion.div>
                             </motion.div>,
                             document.body
                         )}
                     </>
                 )}
 
-                {/* Non-hero variant dropdown */}
+                {/* ── NON-HERO dropdown (unchanged) ── */}
                 {variant !== 'hero' && isFocused && (query.trim() || isLoading) && (
                     <>
                         {createPortal(
@@ -642,12 +619,8 @@ const SearchSuggestions = ({
                                     maxWidth: '100vw',
                                     zIndex: 999999
                                 }}
-                                onTouchStart={() => {
-                                    // Close keyboard when touching the results dropdown on mobile
-                                    closeMobileKeyboard();
-                                }}
+                                onTouchStart={() => closeMobileKeyboard()}
                             >
-                                {/* Premium Header */}
                                 {suggestions.length > 0 && !isLoading && (
                                     <div className="px-3 sm:px-4 py-2 sm:py-2.5 bg-gradient-to-r from-orange-500/10 via-red-500/10 to-pink-500/10 border-b border-gray-200/50">
                                         <div className="flex items-center justify-between">
@@ -662,11 +635,7 @@ const SearchSuggestions = ({
 
                                 {isLoading && (
                                     <div className="p-6 sm:p-8 text-center">
-                                        <motion.div
-                                            animate={{ rotate: 360 }}
-                                            transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
-                                            className="inline-block"
-                                        >
+                                        <motion.div animate={{ rotate: 360 }} transition={{ duration: 1, repeat: Infinity, ease: "linear" }} className="inline-block">
                                             <div className="w-8 h-8 sm:w-10 sm:h-10 rounded-full border-4 border-orange-200 border-t-orange-600"></div>
                                         </motion.div>
                                         <p className="mt-3 text-xs sm:text-sm text-gray-600 font-medium">Searching amazing destinations...</p>
@@ -683,62 +652,46 @@ const SearchSuggestions = ({
                                 )}
 
                                 {!isLoading && !error && suggestions.length > 0 && (
-                                    <div
-                                        ref={resultsContainerRef}
-                                        className="max-h-[60vh] sm:max-h-[400px] overflow-y-auto scrollbar-hide"
-                                    >
+                                    <div ref={resultsContainerRef} className="max-h-[60vh] sm:max-h-[400px] overflow-y-auto scrollbar-hide">
                                         {suggestions.map((suggestion, index) => (
                                             <motion.div
                                                 key={suggestion.id}
                                                 initial={{ opacity: 0, x: -20 }}
                                                 animate={{ opacity: 1, x: 0 }}
                                                 transition={{ delay: index * 0.05 }}
-                                                className={`p-2 sm:p-2.5 border-b border-gray-100 last:border-b-0 cursor-pointer transition-all duration-300 hover:bg-gradient-to-r hover:from-orange-50 hover:to-red-50 ${selectedIndex === index ? 'bg-gradient-to-r from-orange-50 to-red-50' : ''
-                                                    }`}
+                                                className={`p-2 sm:p-2.5 border-b border-gray-100 last:border-b-0 cursor-pointer transition-all duration-300 hover:bg-gradient-to-r hover:from-orange-50 hover:to-red-50 ${selectedIndex === index ? 'bg-gradient-to-r from-orange-50 to-red-50' : ''}`}
                                                 onClick={() => handleSuggestionClick(suggestion)}
                                                 onMouseEnter={() => setSelectedIndex(index)}
                                             >
                                                 <div className="flex items-start gap-2 sm:gap-2.5">
-                                                    {/* Premium Image */}
                                                     <div className="flex-shrink-0 w-10 h-10 sm:w-12 sm:h-12 rounded-lg overflow-hidden shadow-md ring-1 ring-gray-200">
                                                         {suggestion.type === 'location' ? (
                                                             <div className="w-full h-full bg-gradient-to-br from-blue-400 via-purple-500 to-pink-500 flex items-center justify-center">
                                                                 <Globe className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-white" />
                                                             </div>
                                                         ) : suggestion.image ? (
-                                                            <img
-                                                                src={suggestion.image}
-                                                                alt={suggestion.title}
-                                                                className="w-full h-full object-cover"
-                                                            />
+                                                            <img src={suggestion.image} alt={suggestion.title} className="w-full h-full object-cover" />
                                                         ) : (
                                                             <div className="w-full h-full bg-gradient-to-br from-orange-400 via-red-500 to-pink-500 flex items-center justify-center">
                                                                 <MapPin className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-white" />
                                                             </div>
                                                         )}
                                                     </div>
-
-                                                    {/* Content */}
                                                     <div className="flex-1 min-w-0">
                                                         <div className="flex items-start justify-between gap-1.5 mb-0.5">
-                                                            <h4 className="text-xs sm:text-sm font-semibold text-gray-900 truncate flex-1">
-                                                                {suggestion.title}
-                                                            </h4>
+                                                            <h4 className="text-xs sm:text-sm font-semibold text-gray-900 truncate flex-1">{suggestion.title}</h4>
                                                             <span className={`flex-shrink-0 px-1.5 sm:px-2 py-0.5 text-[9px] sm:text-[10px] text-white rounded-full ${getCategoryColor(suggestion.type === 'location' ? 'location' : suggestion.category)} shadow-sm`}>
                                                                 {suggestion.type === 'location' ? 'Location' :
                                                                     suggestion.category === 'fixed-departure' ? 'Fixed' :
                                                                         suggestion.category === 'destination' ? 'Place' :
-                                                                            suggestion.category === 'holiday-type' ? 'Type' :
-                                                                                'Package'}
+                                                                            suggestion.category === 'holiday-type' ? 'Type' : 'Package'}
                                                             </span>
                                                         </div>
-
                                                         <div className="flex flex-wrap items-center gap-1.5 sm:gap-2 text-[10px] sm:text-xs text-gray-600 mb-0.5">
                                                             <div className="flex items-center gap-0.5">
                                                                 <MapPin className="w-2.5 h-2.5 text-orange-500" />
                                                                 <span className="font-medium truncate max-w-[100px] sm:max-w-none">{suggestion.destination}</span>
                                                             </div>
-
                                                             {suggestion.type !== 'location' && (
                                                                 <>
                                                                     <div className="hidden sm:flex items-center gap-0.5">
@@ -752,35 +705,6 @@ const SearchSuggestions = ({
                                                                 </>
                                                             )}
                                                         </div>
-
-                                                        {/* Mobile duration */}
-                                                        {suggestion.type !== 'location' && (
-                                                            <div className="flex sm:hidden items-center gap-0.5 text-[10px] text-gray-600 mb-0.5">
-                                                                <Calendar className="w-2.5 h-2.5 text-blue-500" />
-                                                                <span>{suggestion.duration}</span>
-                                                            </div>
-                                                        )}
-
-                                                        {/* States for locations */}
-                                                        {suggestion.type === 'location' && suggestion.states && suggestion.states.length > 0 && (
-                                                            <div className="mt-0.5">
-                                                                <div className="flex flex-wrap gap-1">
-                                                                    {suggestion.states.slice(0, 3).map((state, idx) => (
-                                                                        <span
-                                                                            key={idx}
-                                                                            className="inline-block px-1.5 py-0.5 text-[9px] bg-blue-50 text-blue-700 rounded-full border border-blue-200"
-                                                                        >
-                                                                            {state.name}
-                                                                        </span>
-                                                                    ))}
-                                                                    {suggestion.states.length > 3 && (
-                                                                        <span className="inline-block px-1.5 py-0.5 text-[9px] bg-gray-100 text-gray-600 rounded-full">
-                                                                            +{suggestion.states.length - 3}
-                                                                        </span>
-                                                                    )}
-                                                                </div>
-                                                            </div>
-                                                        )}
                                                     </div>
                                                 </div>
                                             </motion.div>
@@ -803,8 +727,6 @@ const SearchSuggestions = ({
                     </>
                 )}
             </AnimatePresence>
-
-
         </div>
     );
 };

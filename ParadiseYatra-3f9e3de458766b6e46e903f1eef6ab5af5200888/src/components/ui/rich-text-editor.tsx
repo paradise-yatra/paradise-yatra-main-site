@@ -37,6 +37,8 @@ import { Input } from "./input";
 import { cn, getImageUrl } from "@/lib/utils";
 import { useState, useEffect, useRef } from "react";
 
+const MAX_IMAGE_SIZE_BYTES = 220 * 1024;
+
 interface RichTextEditorProps {
   value: string;
   onChange: (value: string) => void;
@@ -163,8 +165,8 @@ const ImageUploadDialog = ({
         toast.error(`${file.name} is not a valid image file`);
         return false;
       }
-      if (file.size > 5 * 1024 * 1024) {
-        toast.error(`${file.name} is too large (max 5MB)`);
+      if (file.size > MAX_IMAGE_SIZE_BYTES) {
+        toast.error(`${file.name} is too large (max 220KB)`);
         return false;
       }
       return true;
@@ -285,7 +287,7 @@ const ImageUploadDialog = ({
                 {isUploading ? "Uploading..." : "Choose Files"}
               </Button>
               <p className="text-xs text-gray-500">
-                PNG, JPG, GIF up to 5MB each (multiple files supported)
+                PNG, JPG, GIF up to 220KB each (multiple files supported)
               </p>
             </div>
           </div>
@@ -972,8 +974,8 @@ export const RichTextEditor = ({
           toast.error(`${file.name} is not a valid image file`);
           return false;
         }
-        if (file.size > 5 * 1024 * 1024) {
-          toast.error(`${file.name} is too large (max 5MB)`);
+        if (file.size > MAX_IMAGE_SIZE_BYTES) {
+          toast.error(`${file.name} is too large (max 220KB)`);
           return false;
         }
         return true;

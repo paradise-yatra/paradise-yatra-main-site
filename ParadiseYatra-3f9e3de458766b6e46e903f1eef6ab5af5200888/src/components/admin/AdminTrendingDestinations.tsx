@@ -140,8 +140,8 @@ const AdminTrendingDestinations = () => {
       return;
     }
 
-    if (file.size > 5 * 1024 * 1024) {
-      toast.error('Image size must be less than 5MB');
+    if (file.size > 220 * 1024) {
+      toast.error('Image size must be 220KB or less');
       return;
     }
 
@@ -891,7 +891,7 @@ const AdminTrendingDestinations = () => {
                         <p className="mb-2 text-sm text-gray-500">
                           <span className="font-semibold">Click to upload</span> or drag and drop
                         </p>
-                        <p className="text-xs text-gray-500">PNG, JPG, WEBP (MAX. 5MB)</p>
+                        <p className="text-xs text-gray-500">PNG, JPG, WEBP (MAX. 220KB)</p>
                       </div>
                       <input
                         type="file"

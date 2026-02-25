@@ -123,7 +123,7 @@ const SpiritualJourneysSection = () => {
 
                     <Link
                         href="/package/theme/spiritual"
-                        className="group flex items-center gap-2 text-[#005beb] font-bold text-sm bg-blue-50 hover:bg-[#005beb] hover:text-white px-6 py-3 rounded-xl transition-all duration-300 w-fit shrink-0 border border-blue-100/50"
+                        className="group flex items-center gap-2 text-[#005beb] font-bold text-sm transition-all duration-300 w-fit shrink-0"
                     >
                         View All Packages
                         <ArrowRight className="h-4 w-4 group-hover:translate-x-1 transition-transform" />

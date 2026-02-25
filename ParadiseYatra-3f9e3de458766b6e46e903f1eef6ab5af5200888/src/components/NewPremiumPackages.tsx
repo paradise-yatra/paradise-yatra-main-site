@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import React, { useState, useEffect, useRef, useMemo } from "react";
 import { Card, CardContent } from "@/components/ui/card";
@@ -166,15 +166,7 @@ const NewPremiumPackages = () => {
     return duration;
   };
 
-  if (loading) {
-    return (
-      <section className="py-20 bg-white px-4">
-        <div className="max-w-7xl mx-auto grid grid-cols-1 md:grid-cols-3 gap-6">
-          {Array.from({ length: 3 }).map((_, i) => <SkeletonPackageCard key={i} />)}
-        </div>
-      </section>
-    );
-  }
+  if (loading) return null;
 
   const SafeImage = React.memo(({ src, alt, fallback }: { src: string; alt: string; fallback: string }) => {
     const [imgSrc, setImgSrc] = useState(src);
@@ -222,10 +214,10 @@ const NewPremiumPackages = () => {
   const totalMobileDots = allPackages.length;
 
   return (
-    <section 
+    <section
       className="py-16 bg-cover bg-center bg-no-repeat relative"
-      style={{ 
-        backgroundImage: "url('https://res.cloudinary.com/dwuwpxu0y/image/upload/f_auto,q_auto,dpr_auto,c_limit,w_1200/v1768219728/Abstract_background_of_weathered_wood_in_blue_and_red_tones_1_gmdgpd.jpg')"
+      style={{
+        backgroundImage: "url('https://res.cloudinary.com/dwuwpxu0y/image/upload/f_auto,q_auto:good,w_auto,dpr_auto,c_limit/v1768219728/Abstract_background_of_weathered_wood_in_blue_and_red_tones_1_gmdgpd.jpg')"
       }}
     >
       <div className="absolute inset-0 bg-gradient-to-b from-white/60 via-white/40 to-white-60 pointer-events-none z-0" />
@@ -496,20 +488,9 @@ const NewPremiumPackages = () => {
         )}
 
         <div className="text-center mt-12 px-2">
-          <Link href={getCategoryPageUrl("Premium Packages")} className="inline-block group">
-            <button
-              className="relative overflow-hidden rounded-full w-full sm:w-auto shadow-xl transition-all duration-300 bg-gradient-to-r from-blue-500 via-blue-600 to-indigo-600"
-            >
-              <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-1000"></div>
-              <div className="flex items-center justify-center">
-                <span className="text-white font-bold text-sm sm:text-md pl-8 pr-4 whitespace-nowrap">
-                  View All Packages
-                </span>
-                <div className="bg-white rounded-full p-2 m-1.5 transition-all duration-300 group-hover:-rotate-45 group-hover:scale-110 shadow-md">
-                  <ArrowRight className="w-4 h-4 text-indigo-600" strokeWidth={2.5} />
-                </div>
-              </div>
-            </button>
+          <Link href={getCategoryPageUrl("Premium Packages")} className="inline-flex items-center gap-2 text-indigo-600 font-bold text-sm group transition-all duration-300">
+            View All Packages
+            <ArrowRight className="h-4 w-4 group-hover:translate-x-1 transition-transform" />
           </Link>
         </div>
       </div>

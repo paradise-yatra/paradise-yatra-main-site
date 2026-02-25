@@ -5,15 +5,13 @@ import Image from "next/image";
 import Link from "next/link";
 import { motion, AnimatePresence } from "framer-motion";
 
-// Add your Cloudinary links here
 const IMAGES = [
-    "https://res.cloudinary.com/dwuwpxu0y/image/upload/f_auto,q_auto,dpr_auto,c_limit,w_1200/v1767784328/Office_Photo_1_ctv6zq.webp",
-    // Placeholder 1 - Replace with your Cloudinary link
-    "https://res.cloudinary.com/dwuwpxu0y/image/upload/f_auto,q_auto,dpr_auto,c_limit,w_1200/v1767778705/Photo_Testimonial_5_gkvahk.webp",
-    // Placeholder 2 - Replace with your Cloudinary link
-    "https://res.cloudinary.com/dwuwpxu0y/image/upload/f_auto,q_auto,dpr_auto,c_limit,w_1200/v1767849355/Office_Photo_3_yjqnf9.webp",
-    // Placeholder 3 - Replace with your Cloudinary link
-    "https://res.cloudinary.com/dwuwpxu0y/image/upload/f_auto,q_auto,dpr_auto,c_limit,w_1200/v1767778704/Photo_Testimonial_1_tqhr0g.webp",
+    "/Home/Why%20Choose%20Us/1.jpeg",
+    "/Home/Why%20Choose%20Us/2.jpeg",
+    "/Home/Why%20Choose%20Us/3.jpeg",
+    "/Home/Why%20Choose%20Us/4.jpeg",
+    "/Home/Why%20Choose%20Us/5.jpeg",
+    "/Home/Why%20Choose%20Us/6.jpeg",
 ];
 
 const WhyChooseParadiseYatra = () => {
@@ -22,7 +20,7 @@ const WhyChooseParadiseYatra = () => {
     useEffect(() => {
         const timer = setInterval(() => {
             setCurrentImageIndex((prevIndex) => (prevIndex + 1) % IMAGES.length);
-        }, 4000); // Change image every 4 seconds
+        }, 2000); // Change image every 2 seconds
 
         return () => clearInterval(timer);
     }, []);
@@ -47,7 +45,7 @@ const WhyChooseParadiseYatra = () => {
                                         src={IMAGES[currentImageIndex]}
                                         alt={`Travelers enjoying Paradise Yatra experience ${currentImageIndex + 1}`}
                                         fill
-                                        className="object-cover"
+                                        className="object-cover object-top"
                                         priority={currentImageIndex === 0}
                                     />
                                 </motion.div>
@@ -104,3 +102,4 @@ const WhyChooseParadiseYatra = () => {
 };
 
 export default WhyChooseParadiseYatra;
+

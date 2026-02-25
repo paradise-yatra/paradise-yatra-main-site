@@ -4,6 +4,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { MapPin, Heart, ArrowRight } from "lucide-react";
 import React from "react";
+import { getImageUrl } from "@/lib/utils";
 
 interface PackageCardProps {
     id: string | number;
@@ -34,6 +35,15 @@ const PackageCard: React.FC<PackageCardProps> = ({
     isInWishlist,
     onWishlistToggle
 }) => {
+    const optimizedImage =
+        getImageUrl(image, {
+            width: 600,
+            height: 600,
+            crop: "fill",
+            gravity: "auto",
+            quality: "good",
+        }) || image;
+
     return (
         <Link href={`${hrefPrefix}/${slug}`} className="block flex-shrink-0">
             <article
@@ -45,7 +55,7 @@ const PackageCard: React.FC<PackageCardProps> = ({
 
                 <div className="relative h-64 w-full overflow-hidden">
                     <Image
-                        src={image}
+                        src={optimizedImage}
                         alt={destination}
                         fill
                         className="object-cover transition-transform duration-700"

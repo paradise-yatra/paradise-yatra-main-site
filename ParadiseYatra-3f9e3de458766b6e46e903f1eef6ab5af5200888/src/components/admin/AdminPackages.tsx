@@ -171,8 +171,8 @@ const AdminPackages = () => {
             return;
         }
 
-        if (file.size > 5 * 1024 * 1024) {
-            toast.error('Image size must be less than 5MB');
+        if (file.size > 220 * 1024) {
+            toast.error('Image size must be 220KB or less');
             return;
         }
 
@@ -1423,7 +1423,7 @@ const AdminPackages = () => {
                                         <label htmlFor="image-upload" className="cursor-pointer block">
                                             <Upload className="mx-auto h-8 w-8 text-gray-400 mb-2" />
                                             <span className="text-sm text-gray-500">Click to upload image</span>
-                                            <p className="text-xs text-gray-400 mt-1">MAX. 5MB</p>
+                                            <p className="text-xs text-gray-400 mt-1">MAX. 220KB</p>
                                         </label>
                                     </div>
                                 ) : (

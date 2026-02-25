@@ -159,6 +159,10 @@
   font-family: var(--font-roboto), "Roboto", sans-serif;
 }
 
+.font-unbounded {
+  font-family: var(--font-unbounded), sans-serif !important;
+}
+
 .font-apple-system {
   font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display",
     "SF Pro Text", "Helvetica Neue", Helvetica, Arial, sans-serif;

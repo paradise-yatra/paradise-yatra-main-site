@@ -112,6 +112,13 @@ const nextConfig: NextConfig = {
         port: '',
         pathname: '/**',
       },
+      // Add Google user content support
+      {
+        protocol: 'https',
+        hostname: 'lh3.googleusercontent.com',
+        port: '',
+        pathname: '/**',
+      },
       // Add backend server support
       {
         protocol: 'https',
@@ -132,6 +139,13 @@ const nextConfig: NextConfig = {
         port: '',
         pathname: '/**',
 
+      },
+      // Add Wikimedia support for flag icons
+      {
+        protocol: 'https',
+        hostname: 'upload.wikimedia.org',
+        port: '',
+        pathname: '/**',
       },
       // Only allow localhost in development
       ...(process.env.NODE_ENV === 'development' ? [
@@ -263,6 +277,18 @@ const nextConfig: NextConfig = {
           {
             key: 'Referrer-Policy',
             value: 'strict-origin-when-cross-origin',
+          },
+          {
+            key: 'Accept-CH',
+            value: 'DPR, Width, Viewport-Width',
+          },
+          {
+            key: 'Critical-CH',
+            value: 'DPR, Width, Viewport-Width',
+          },
+          {
+            key: 'Vary',
+            value: 'DPR, Width, Viewport-Width',
           },
         ],
       },

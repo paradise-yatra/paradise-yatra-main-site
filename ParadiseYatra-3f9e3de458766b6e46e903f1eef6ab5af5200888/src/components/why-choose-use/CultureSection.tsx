@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 import { useState } from 'react';
 import { Play, Users, Calendar, Award, Star, Briefcase, PartyPopper, X } from 'lucide-react';
 
@@ -46,7 +46,7 @@ export default function CultureSection() {
   };
 
   const potluckVideo: VideoItem = {
-    url: "https://res.cloudinary.com/dwuwpxu0y/video/upload/q_auto:eco,vc_auto/v1767784042/Office_Video_1_kr5rta.mp4",
+    url: "https://res.cloudinary.com/dwuwpxu0y/video/upload/q_auto:eco,f_auto,vc_auto,w_1280/v1767784042/Office_Video_1_kr5rta.mp4",
     title: "Diwali at Paradise Yatra",
     description: "A festival of lights, colors, sweets, and pure team joy."
   };
@@ -72,12 +72,12 @@ export default function CultureSection() {
         <div className="grid grid-cols-12 auto-rows-[280px] gap-6 mb-16">
           {/* Item 1: Large Video Feature (Spans 8 cols, 2 rows) */}
           <div className="group relative col-span-12 md:col-span-8 row-span-2 rounded-2xl overflow-hidden shadow-lg bg-slate-100">
-            <div 
+            <div
               className="absolute inset-0 bg-cover bg-center transition-transform duration-500 group-hover:scale-105"
-              style={{ backgroundImage: "url('https://res.cloudinary.com/dwuwpxu0y/image/upload/f_auto,q_auto,dpr_auto,c_limit,w_1200/v1767784328/Office_Photo_1_ctv6zq.webp')" }}
+              style={{ backgroundImage: "url('https://res.cloudinary.com/dwuwpxu0y/image/upload/f_auto,q_auto:good,w_auto,dpr_auto,c_limit/v1767784328/Office_Photo_1_ctv6zq.webp')" }}
             />
             <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent" />
-            
+
             {/* Content Overlay */}
             <div className="absolute bottom-0 left-0 p-8 w-full z-10 flex flex-col items-start gap-4">
               <div className="space-y-2 max-w-lg">
@@ -85,18 +85,18 @@ export default function CultureSection() {
                   Christmas at Paradise Yatra: Joy, Laughter & Togetherness
                 </h3>
                 <p className="!text-slate-200 text-sm md:text-base hidden md:block">
-                We celebrate Christmas the Paradise way — with smiles, surprises, and a lot of festive energy. A day filled with games, decorating, gifts, and unforgettable team moments.
+                  We celebrate Christmas the Paradise way — with smiles, surprises, and a lot of festive energy. A day filled with games, decorating, gifts, and unforgettable team moments.
                 </p>
               </div>
             </div>
           </div>
 
           {/* Item 2: Vertical Portrait - NOW WITH VIDEO */}
-          <div 
+          <div
             onClick={() => setSelectedVideo(potluckVideo)}
             className="cursor-pointer group relative col-span-12 md:col-span-4 row-span-2 rounded-2xl overflow-hidden shadow-lg bg-slate-100 hover:shadow-2xl transition-all duration-500"
           >
-            <video 
+            <video
               className="absolute inset-0 w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
               src={potluckVideo.url}
               autoPlay
@@ -105,7 +105,7 @@ export default function CultureSection() {
               playsInline
             />
             <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent opacity-60 group-hover:opacity-80 transition-opacity" />
-            
+
             {/* Play Button Overlay */}
             <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
               <div className="w-16 h-16 rounded-full bg-white/90 backdrop-blur-sm flex items-center justify-center shadow-2xl transform group-hover:scale-110 transition-transform">
@@ -138,7 +138,7 @@ export default function CultureSection() {
               </p>
               <footer className="flex items-center gap-3">
                 <div className="w-10 h-10 rounded-full bg-slate-200 overflow-hidden">
-                  <img 
+                  <img
                     alt={testimonial.author}
                     className="w-full h-full object-cover"
                     src={testimonial.avatar}
@@ -156,21 +156,21 @@ export default function CultureSection() {
 
           {/* Item 4: Small Video/Image (Spans 4 cols, 1 row) */}
           <div className="group relative col-span-12 md:col-span-4 rounded-2xl overflow-hidden shadow-lg bg-slate-100">
-            <div 
+            <div
               className="absolute inset-0 bg-cover bg-top transition-transform duration-500 group-hover:scale-105"
-              style={{ backgroundImage: "url('https://res.cloudinary.com/dwuwpxu0y/image/upload/f_auto,q_auto,dpr_auto,c_limit,w_1200/v1767784327/Office_Photo_2_kafuyn.webp')" }}
+              style={{ backgroundImage: "url('https://res.cloudinary.com/dwuwpxu0y/image/upload/f_auto,q_auto:good,w_auto,dpr_auto,c_limit/v1767784327/Office_Photo_2_kafuyn.webp')" }}
             />
             <div className="absolute inset-0 bg-black/20 group-hover:bg-black/40 transition-colors" />
           </div>
 
           {/* Item 5: Small Image (Spans 4 cols, 1 row) */}
           <div className="group relative col-span-12 md:col-span-4 rounded-2xl overflow-hidden shadow-lg bg-slate-100">
-            <div 
+            <div
               className="absolute inset-0 bg-cover bg-center transition-transform duration-500 group-hover:scale-105"
-              style={{ backgroundImage: "url('https://res.cloudinary.com/dwuwpxu0y/image/upload/f_auto,q_auto,dpr_auto,c_limit,w_1200/v1767849355/Office_Photo_3_yjqnf9.webp')" }}
+              style={{ backgroundImage: "url('https://res.cloudinary.com/dwuwpxu0y/image/upload/f_auto,q_auto:good,w_auto,dpr_auto,c_limit/v1767849355/Office_Photo_3_yjqnf9.webp')" }}
             />
             <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
-        
+
           </div>
         </div>
       </section>

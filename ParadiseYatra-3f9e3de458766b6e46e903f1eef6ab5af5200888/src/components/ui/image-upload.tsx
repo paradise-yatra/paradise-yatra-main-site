@@ -26,6 +26,7 @@ const ImageUpload = ({
   className = "",
   contentType,
 }: ImageUploadProps) => {
+  const MAX_IMAGE_SIZE_BYTES = 220 * 1024;
   const [isUploading, setIsUploading] = useState(false);
   const [previewUrl, setPreviewUrl] = useState<string | null>(value || null);
   const [isDragOver, setIsDragOver] = useState(false);
@@ -43,9 +44,9 @@ const ImageUpload = ({
       return;
     }
 
-    // Validate file size (5MB limit)
-    if (file.size > 5 * 1024 * 1024) {
-      toast.error("File size must be less than 5MB");
+    // Validate file size (220KB limit)
+    if (file.size > MAX_IMAGE_SIZE_BYTES) {
+      toast.error("File size must be 220KB or less");
       return;
     }
 
@@ -262,7 +263,7 @@ const ImageUpload = ({
                       : "Drag and drop an image here, or click to select"}
                   </p>
                   <p className="text-xs text-gray-500 mt-1">
-                    PNG, JPG, GIF up to 5MB
+                    PNG, JPG, GIF up to 220KB
                   </p>
                 </div>
                 <Button

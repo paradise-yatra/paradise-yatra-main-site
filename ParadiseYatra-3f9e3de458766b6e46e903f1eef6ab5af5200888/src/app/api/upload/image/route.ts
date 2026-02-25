@@ -2,8 +2,17 @@ import { NextRequest, NextResponse } from 'next/server';
 
 export async function POST(request: NextRequest) {
   try {
+    const MAX_IMAGE_SIZE_BYTES = 220 * 1024;
     const formData = await request.formData();
+    const image = formData.get("image");
     const token = request.headers.get('authorization');
+
+    if (image && typeof image !== "string" && image.size > MAX_IMAGE_SIZE_BYTES) {
+      return NextResponse.json(
+        { message: "File size must be 220KB or less" },
+        { status: 400 }
+      );
+    }
 
     if (!token) {
       return NextResponse.json(

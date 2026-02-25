@@ -200,24 +200,7 @@ const NewAdventureEscapes = () => {
   const canGoPrevious = currentIndex > 0;
   const canGoNext = currentIndex < allPackages.length - 3;
 
-  if (loading) {
-    return (
-      <section className="py-20 bg-slate-50 px-4">
-        <div className="max-w-7xl mx-auto">
-          <div className="text-center mb-10">
-            <div className="h-8 w-48 bg-gray-200 rounded mx-auto mb-4" />
-            <div className="h-12 w-80 bg-gray-200 rounded mx-auto mb-3" />
-            <div className="h-6 w-96 bg-gray-200 rounded mx-auto" />
-          </div>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-            {Array(3).fill(0).map((_, i) => (
-              <SkeletonPackageCard key={i} />
-            ))}
-          </div>
-        </div>
-      </section>
-    );
-  }
+  if (loading) return null;
 
   if (allPackages.length === 0) {
     return (

@@ -116,6 +116,8 @@ const leadRoutes = require("./routes/leads");
 const wishlistRoutes = require("./routes/wishlist");
 const allPackageRoutes = require("./routes/allPackages");
 const purchaseRoutes = require("./routes/purchases");
+const newsletterRoutes = require("./routes/newsletter");
+
 
 app.use("/api/auth", authRoutes);
 app.use("/api/packages", packageRoutes);
@@ -138,6 +140,8 @@ app.use("/api/tags", tagRoutes);
 app.use("/api/leads", leadRoutes);
 app.use("/api/wishlist", wishlistRoutes);
 app.use("/api/purchases", purchaseRoutes);
+app.use("/api/newsletter", newsletterRoutes);
+
 
 // Basic route
 app.get("/", (req, res) => {

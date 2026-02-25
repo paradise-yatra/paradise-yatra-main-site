@@ -1,4 +1,4 @@
-// "use client"
+﻿// "use client"
 
 // import { useState, useEffect } from 'react';
 // import { X, ZoomIn } from 'lucide-react';
@@ -18,7 +18,7 @@
 //       title: 'Uttarakhand Tourism Development Board', 
 //       regId: 'UTDB/2024/001', 
 //       desc: 'Officially registered with Uttarakhand Tourism Development Board for conducting tours in Uttarakhand.',
-//       certImage: 'https://res.cloudinary.com/dwuwpxu0y/image/upload/f_auto,q_auto,dpr_auto,c_limit,w_1200/v1767850583/Uttarakhand_Tourism_Certificate_cpxada.webp'
+//       certImage: 'https://res.cloudinary.com/dwuwpxu0y/image/upload/f_auto,q_auto:good,w_auto,dpr_auto,c_limit/v1767850583/Uttarakhand_Tourism_Certificate_cpxada.webp'
 //     },
 //     { 
 //       title: 'Ministry of Tourism', 
@@ -108,7 +108,7 @@
 //                       </>
 //                     ) : (
 //                       <div className="text-center p-3 mt-8">
-//                         <div className="text-4xl md:text-5xl mb-2 transition-transform duration-500 group-hover:scale-110">🏆</div>
+//                         <div className="text-4xl md:text-5xl mb-2 transition-transform duration-500 group-hover:scale-110">ðŸ†</div>
 //                         <div className="text-xs font-semibold text-slate-500 uppercase tracking-wide">{cert.regId}</div>
 //                       </div>
 //                     )}
@@ -226,13 +226,13 @@
 //       title: 'Uttarakhand Tourism Development Board', 
 //       regId: 'UTDB/2024/001', 
 //       desc: 'Officially registered with Uttarakhand Tourism Development Board for conducting tours in Uttarakhand.',
-//       certImage: 'https://res.cloudinary.com/dwuwpxu0y/image/upload/f_auto,q_auto,dpr_auto,c_limit,w_1200/v1767850583/Uttarakhand_Tourism_Certificate_cpxada.webp'
+//       certImage: 'https://res.cloudinary.com/dwuwpxu0y/image/upload/f_auto,q_auto:good,w_auto,dpr_auto,c_limit/v1767850583/Uttarakhand_Tourism_Certificate_cpxada.webp'
 //     },
 //     { 
 //       title: 'Ministry of Tourism', 
 //       regId: '#12345678', 
 //       desc: 'Recognized by the Govt. of India as an approved Inbound Tour Operator.',
-//       certImage:"https://res.cloudinary.com/dwuwpxu0y/image/upload/f_auto,q_auto,dpr_auto,c_limit,w_1200/v1767854400/Udhyam_Certificate_3_xkgfjk.webp",
+//       certImage:"https://res.cloudinary.com/dwuwpxu0y/image/upload/f_auto,q_auto:good,w_auto,dpr_auto,c_limit/v1767854400/Udhyam_Certificate_3_xkgfjk.webp",
 //     },
 //     { 
 //       title: 'IATA Accredited', 
@@ -311,7 +311,7 @@
 //                       </>
 //                     ) : (
 //                       <div className="text-center p-3 mt-8">
-//                         <div className="text-4xl md:text-5xl mb-2 transition-transform duration-500 group-hover:scale-110">🏆</div>
+//                         <div className="text-4xl md:text-5xl mb-2 transition-transform duration-500 group-hover:scale-110">ðŸ†</div>
 //                         <div className="text-xs font-semibold text-slate-500 uppercase tracking-wide">{cert.regId}</div>
 //                       </div>
 //                     )}
@@ -432,17 +432,17 @@ export default function CertificationsSection() {
       title: 'Uttarakhand Tourism Development Board', 
       regId: 'UTDB/2024/001', 
       desc: 'Officially registered under the Uttarakhand Tourism Development Board as a certified Travel Agent and Domestic Tour Operator. Authorized to operate tours within Uttarakhand with government verification.',
-      certImage: 'https://res.cloudinary.com/dwuwpxu0y/image/upload/f_auto,q_auto,dpr_auto,c_limit,w_1200/v1767850583/Uttarakhand_Tourism_Certificate_cpxada.webp'
+      certImage: 'https://res.cloudinary.com/dwuwpxu0y/image/upload/f_auto,q_auto:good,w_auto,dpr_auto,c_limit/v1767850583/Uttarakhand_Tourism_Certificate_cpxada.webp'
     },
     { 
       title: 'Udyam Registration Certificate', 
       regId: '#12345678', 
       desc: 'Registered under the Ministry of Micro, Small & Medium Enterprises (MSME), Government of India. Certified as a Service Provider operating in the travel and tourism sector.',
       certImage: [
-        "https://res.cloudinary.com/dwuwpxu0y/image/upload/f_auto,q_auto,dpr_auto,c_limit,w_1200/v1767854400/Udhyam_Certificate_1_ivc8rs.webp",
-        "https://res.cloudinary.com/dwuwpxu0y/image/upload/f_auto,q_auto,dpr_auto,c_limit,w_1200/v1767854401/Udhyam_Certificate_2_oypw9m.webp",
-        "https://res.cloudinary.com/dwuwpxu0y/image/upload/f_auto,q_auto,dpr_auto,c_limit,w_1200/v1767854400/Udhyam_Certificate_3_xkgfjk.webp",
-        "https://res.cloudinary.com/dwuwpxu0y/image/upload/f_auto,q_auto,dpr_auto,c_limit,w_1200/v1767854402/Udhyam_Certificate_4_cejwib.webp"
+        "https://res.cloudinary.com/dwuwpxu0y/image/upload/f_auto,q_auto:good,w_auto,dpr_auto,c_limit/v1767854400/Udhyam_Certificate_1_ivc8rs.webp",
+        "https://res.cloudinary.com/dwuwpxu0y/image/upload/f_auto,q_auto:good,w_auto,dpr_auto,c_limit/v1767854401/Udhyam_Certificate_2_oypw9m.webp",
+        "https://res.cloudinary.com/dwuwpxu0y/image/upload/f_auto,q_auto:good,w_auto,dpr_auto,c_limit/v1767854400/Udhyam_Certificate_3_xkgfjk.webp",
+        "https://res.cloudinary.com/dwuwpxu0y/image/upload/f_auto,q_auto:good,w_auto,dpr_auto,c_limit/v1767854402/Udhyam_Certificate_4_cejwib.webp"
       ]
     },
     { 
@@ -450,8 +450,8 @@ export default function CertificationsSection() {
       regId: '#99-9999', 
       desc: 'Registered under the Goods & Services Tax Act (GST) as a verified business entity. Authorized to conduct commercial operations and issue valid tax invoices for travel services.',
        certImage: [
-        "https://res.cloudinary.com/dwuwpxu0y/image/upload/f_auto,q_auto,dpr_auto,c_limit,w_1200/v1767857409/GST_Certificate_1_eurpc2.webp",
-        "https://res.cloudinary.com/dwuwpxu0y/image/upload/f_auto,q_auto,dpr_auto,c_limit,w_1200/v1767857408/GST_Certificate_2_fpt1wq.webp",
+        "https://res.cloudinary.com/dwuwpxu0y/image/upload/f_auto,q_auto:good,w_auto,dpr_auto,c_limit/v1767857409/GST_Certificate_1_eurpc2.webp",
+        "https://res.cloudinary.com/dwuwpxu0y/image/upload/f_auto,q_auto:good,w_auto,dpr_auto,c_limit/v1767857408/GST_Certificate_2_fpt1wq.webp",
 
       ]
     },
@@ -592,7 +592,7 @@ export default function CertificationsSection() {
                         </>
                       ) : (
                         <div className="text-center p-3 mt-8">
-                          <div className="text-4xl md:text-5xl mb-2 transition-transform duration-500 group-hover:scale-110">🏆</div>
+                          <div className="text-4xl md:text-5xl mb-2 transition-transform duration-500 group-hover:scale-110">ðŸ†</div>
                           <div className="text-xs font-semibold text-slate-500 uppercase tracking-wide">{cert.regId}</div>
                         </div>
                       )}

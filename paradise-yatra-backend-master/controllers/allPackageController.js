@@ -198,7 +198,7 @@ const createPackage = async (req, res) => {
             console.log('📤 Uploading package image to Cloudinary...');
             const cloudinaryResult = await uploadToCloudinary(
                 req.file.path,
-                'all-packages',
+                'packages',
                 null,
                 null
             );
@@ -295,7 +295,7 @@ const updatePackage = async (req, res) => {
 
             const cloudinaryResult = await uploadToCloudinary(
                 req.file.path,
-                'all-packages',
+                'packages',
                 null,
                 oldPublicId // This will delete the old image
             );

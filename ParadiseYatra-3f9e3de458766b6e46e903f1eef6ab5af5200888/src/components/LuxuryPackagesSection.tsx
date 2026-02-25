@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import { useEffect, useRef, useState } from "react";
 import Image from "next/image";
@@ -129,7 +129,7 @@ const LuxuryPackagesSection = () => {
                 className="px-4 py-14 text-gray-900 md:px-8 relative z-20 overflow-hidden min-h-[600px]"
                 style={{
                     backgroundImage:
-                        "url('https://res.cloudinary.com/dwuwpxu0y/image/upload/f_auto,q_auto,dpr_auto,c_limit,w_1200/v1769086965/10491807_4443133_bi9gii.jpg')",
+                        "url('https://res.cloudinary.com/dwuwpxu0y/image/upload/f_auto,q_auto:good,w_auto,dpr_auto,c_limit/v1769086965/10491807_4443133_bi9gii.jpg')",
                     backgroundSize: "cover",
                     backgroundPosition: "center",
                     backgroundRepeat: "no-repeat",
@@ -152,7 +152,7 @@ const LuxuryPackagesSection = () => {
                 className="px-4 py-14 text-gray-900 md:px-8 relative z-20 overflow-hidden min-h-[600px]"
                 style={{
                     backgroundImage:
-                        "url('https://res.cloudinary.com/dwuwpxu0y/image/upload/f_auto,q_auto,dpr_auto,c_limit,w_1200/v1769086965/10491807_4443133_bi9gii.jpg')",
+                        "url('https://res.cloudinary.com/dwuwpxu0y/image/upload/f_auto,q_auto:good,w_auto,dpr_auto,c_limit/v1769086965/10491807_4443133_bi9gii.jpg')",
                     backgroundSize: "cover",
                     backgroundPosition: "center",
                     backgroundRepeat: "no-repeat",
@@ -176,7 +176,7 @@ const LuxuryPackagesSection = () => {
             className="px-4 py-14 text-gray-900 md:px-8 relative z-20 overflow-hidden min-h-[600px]"
             style={{
                 backgroundImage:
-                    "url('https://res.cloudinary.com/dwuwpxu0y/image/upload/f_auto,q_auto,dpr_auto,c_limit,w_1200/v1769086965/10491807_4443133_bi9gii.jpg')",
+                    "url('https://res.cloudinary.com/dwuwpxu0y/image/upload/f_auto,q_auto:good,w_auto,dpr_auto,c_limit/v1769086965/10491807_4443133_bi9gii.jpg')",
                 backgroundSize: "cover",
                 backgroundPosition: "center",
                 backgroundRepeat: "no-repeat",
@@ -213,7 +213,7 @@ const LuxuryPackagesSection = () => {
 
                     <Link
                         href="/package/theme/luxury"
-                        className="group flex items-center gap-2 text-white font-bold text-sm bg-amber-600/20 hover:bg-amber-600 border border-amber-500/30 px-6 py-3 rounded-xl transition-all duration-300 w-fit shrink-0"
+                        className="group flex items-center gap-2 text-white font-bold text-sm transition-all duration-300 w-fit shrink-0"
                         style={{ fontFamily: "'Orange Avenue', serif" }}
                     >
                         View All Luxury
@@ -315,3 +315,4 @@ const LuxuryPackagesSection = () => {
 };
 
 export default LuxuryPackagesSection;
+

@@ -338,20 +338,19 @@ router.post("/", adminAuth, uploadSingleImage, handleUploadError, async (req, re
     
     // Upload image to Cloudinary if file exists
     if (req.file) {
-      // HARDCODE 'premium-packages' for this route - same pattern as destinations.js uses 'popular-packages'
-      // This ensures images ALWAYS go to the correct folder regardless of what category is sent
-      const result = await uploadToCloudinary(req.file.path, 'premium-packages');
+      // Upload package image to the unified packages folder.
+      const result = await uploadToCloudinary(req.file.path, 'packages');
       imageUrl = result.url;
       
       // Verify the URL contains the correct path
-      if (!imageUrl.includes('paradise-yatra/packages/premium-packages')) {
+      if (!imageUrl.includes('paradise-yatra/packages')) {
         console.error('❌ ERROR: Image uploaded to wrong folder!');
-        console.error('❌ Expected: paradise-yatra/packages/premium-packages');
+        console.error('❌ Expected: paradise-yatra/packages');
         console.error('❌ Got:', imageUrl);
         throw new Error('Image uploaded to incorrect Cloudinary folder');
       }
       
-      console.log('✅ Image uploaded successfully to premium-packages folder:', imageUrl);
+      console.log('✅ Image uploaded successfully to packages folder:', imageUrl);
     }
 
     // Parse highlights if it's a string
@@ -550,24 +549,23 @@ router.put("/:id", adminAuth, uploadSingleImage, handleUploadError, async (req, 
     // ✅ Handle image update
     if (req.file) {
       // New file uploaded - upload to Cloudinary
-      // HARDCODE 'premium-packages' for this route - same pattern as destinations.js
       // Extract old image public_id for deletion
       const oldPublicId = pkg.images && pkg.images.length > 0 
         ? extractPublicId(pkg.images[0]) 
         : null;
       
-      // Upload new image and delete old one - ALWAYS use 'premium-packages'
-      const result = await uploadToCloudinary(req.file.path, 'premium-packages', oldPublicId);
+      // Upload new image and delete old one in unified packages folder.
+      const result = await uploadToCloudinary(req.file.path, 'packages', oldPublicId);
       
       // Verify the URL contains the correct path
-      if (!result.url.includes('paradise-yatra/packages/premium-packages')) {
+      if (!result.url.includes('paradise-yatra/packages')) {
         console.error('❌ ERROR: Image uploaded to wrong folder!');
-        console.error('❌ Expected: paradise-yatra/packages/premium-packages');
+        console.error('❌ Expected: paradise-yatra/packages');
         console.error('❌ Got:', result.url);
         throw new Error('Image uploaded to incorrect Cloudinary folder');
       }
       
-      console.log('✅ Image updated successfully to premium-packages folder:', result.url);
+      console.log('✅ Image updated successfully to packages folder:', result.url);
       pkg.images = [result.url];
     } else if (req.body.images) {
       // No file uploaded but images field provided (e.g., ImageUpload component already uploaded it)

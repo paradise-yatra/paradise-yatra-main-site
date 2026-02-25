@@ -57,15 +57,22 @@ const HorizontalPackageCard: React.FC<HorizontalPackageCardProps> = ({
     onWishlistToggle,
 }) => {
     const plainDescription = stripHtmlTags(description);
+    const optimizedImageUrl = getImageUrl(image, {
+        width: 900,
+        height: 640,
+        crop: "fill",
+        gravity: "auto",
+        quality: "good",
+    });
 
     return (
         <div className="group relative bg-white rounded-lg border border-slate-100 shadow-sm hover:shadow-xl hover:shadow-blue-900/5 transition-all duration-300 overflow-hidden">
             <Link href={detailUrl} className="flex flex-col md:flex-row h-full">
                 {/* Image Section */}
                 <div className="relative w-full md:w-72 lg:w-80 h-64 md:h-auto flex-shrink-0 overflow-hidden">
-                    {getImageUrl(image) ? (
+                    {optimizedImageUrl ? (
                         <Image
-                            src={getImageUrl(image)!}
+                            src={optimizedImageUrl}
                             alt={title || `Travel package to ${destination || "destination"}`}
                             fill
                             className="object-cover group-hover:scale-110 transition-transform duration-700"

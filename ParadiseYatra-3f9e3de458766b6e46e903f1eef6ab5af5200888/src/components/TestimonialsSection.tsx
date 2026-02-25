@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import { useEffect, useRef, useState } from "react";
 import Image from "next/image";
@@ -17,33 +17,33 @@ const TESTIMONIALS: Testimonial[] = [
     {
         id: 1,
         destination: "Mussoorie",
-        video: "https://res.cloudinary.com/dwuwpxu0y/video/upload/q_auto:eco,vc_auto/v1767783817/Video_Testimonial_9_rjvcfy.mp4",
+        video: "https://res.cloudinary.com/dwuwpxu0y/video/upload/q_auto:eco,f_auto,vc_auto,w_1280/v1767783817/Video_Testimonial_9_rjvcfy.mp4",
         quote: '"Got back from Vietnam"',
     },
     {
         id: 2,
         destination: "Kerala",
-        video: "https://res.cloudinary.com/dwuwpxu0y/video/upload/q_auto:eco,vc_auto/v1767782676/Video_Testimonial_5_cmw9wg.mp4",
+        video: "https://res.cloudinary.com/dwuwpxu0y/video/upload/q_auto:eco,f_auto,vc_auto,w_1280/v1767782676/Video_Testimonial_5_cmw9wg.mp4",
         isCouple: true,
         coupleName: "Roobal & Anjali",
     },
     {
         id: 3,
         destination: "Kerala",
-        video: "https://res.cloudinary.com/dwuwpxu0y/video/upload/q_auto:eco,vc_auto/v1767782300/Video_Testimonial_3_fisxcc.mp4",
+        video: "https://res.cloudinary.com/dwuwpxu0y/video/upload/q_auto:eco,f_auto,vc_auto,w_1280/v1767782300/Video_Testimonial_3_fisxcc.mp4",
         quote: "I'm here today in Bali.",
     },
     {
         id: 4,
         destination: "Goa",
-        video: "https://res.cloudinary.com/dwuwpxu0y/video/upload/q_auto:eco,vc_auto/v1767763881/Sardar_Ji_Review_xjorqh.mp4",
+        video: "https://res.cloudinary.com/dwuwpxu0y/video/upload/q_auto:eco,f_auto,vc_auto,w_1280/v1767763881/Sardar_Ji_Review_xjorqh.mp4",
         isCouple: true,
         coupleName: "Pranav & Anjali",
     },
     {
         id: 5,
         destination: "Shimla",
-        video: "https://res.cloudinary.com/dwuwpxu0y/video/upload/q_auto:eco,vc_auto/v1767783726/Video_Testimonial_8_n20d0f.mp4",
+        video: "https://res.cloudinary.com/dwuwpxu0y/video/upload/q_auto:eco,f_auto,vc_auto,w_1280/v1767783726/Video_Testimonial_8_n20d0f.mp4",
     },
 ];
 
@@ -93,7 +93,7 @@ const TestimonialsSection = () => {
             className="py-8 md:py-10 px-4 md:px-8 overflow-hidden relative"
             style={{
                 backgroundImage:
-                    "url('https://res.cloudinary.com/dwuwpxu0y/image/upload/f_auto,q_auto,dpr_auto,c_limit,w_1200/v1769064117/1329_qnfgyd.jpg')",
+                    "url('https://res.cloudinary.com/dwuwpxu0y/image/upload/f_auto,q_auto:good,w_auto,dpr_auto,c_limit/v1769064117/1329_qnfgyd.jpg')",
                 backgroundSize: "cover",
                 backgroundPosition: "center",
                 backgroundRepeat: "no-repeat",
@@ -114,7 +114,7 @@ const TestimonialsSection = () => {
                 <h2 className="!text-xl md:!text-3xl !font-unbounded !font-black tracking-tight text-white mb-6 drop-shadow-2xl leading-[1.1]">
                     Moments Shared <br className="md:hidden" /> by Travelers{" "}
                     <span className="relative inline-block ml-1">
-                        <span className="relative z-10 text-rose-500 animate-pulse">❤️</span>
+                        <span className="relative z-10 text-rose-500">❤️</span>
                         <span className="absolute inset-0 blur-2xl bg-rose-500/40 -z-10"></span>
                     </span>
                 </h2>

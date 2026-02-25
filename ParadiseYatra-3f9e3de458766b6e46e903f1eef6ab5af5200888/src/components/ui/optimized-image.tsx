@@ -68,7 +68,10 @@ export function OptimizedImage({
     );
   }
 
-  const processedSrc = getImageUrl(src);
+  const processedSrc = getImageUrl(src, {
+    width,
+    quality: "good",
+  });
 
   // If no valid image source, show fallback
   if (!processedSrc) {

@@ -112,7 +112,7 @@ const NewBlogSection = () => {
       try {
         if (!isMounted) return;
         setLoading(true);
-        
+
         let response;
         try {
           // Fetch latest 10 published blogs, show 3 at a time with pagination
@@ -162,15 +162,15 @@ const NewBlogSection = () => {
         // Use fallback to publishDate or updatedAt if createdAt is missing
         blogsArray.sort((a, b) => {
           const dateA = new Date(
-            a.publishDate || 
-            a.createdAt || 
-            a.updatedAt || 
+            a.publishDate ||
+            a.createdAt ||
+            a.updatedAt ||
             0
           ).getTime();
           const dateB = new Date(
-            b.publishDate || 
-            b.createdAt || 
-            b.updatedAt || 
+            b.publishDate ||
+            b.createdAt ||
+            b.updatedAt ||
             0
           ).getTime();
           return dateB - dateA; // Latest first (descending order)
@@ -256,23 +256,7 @@ const NewBlogSection = () => {
     }
   };
 
-  if (loading) {
-    return (
-      <section className="section-padding bg-white px-4 sm:px-6">
-        <div className="container mx-auto">
-          <div className="text-center mb-8">
-            <Skeleton height="2.5rem" width="300px" className="mx-auto mb-4" />
-            <Skeleton height="1.25rem" width="200px" className="mx-auto" />
-          </div>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {Array.from({ length: 3 }).map((_, index) => (
-              <SkeletonPackageCard key={index} />
-            ))}
-          </div>
-        </div>
-      </section>
-    );
-  }
+  if (loading) return null;
 
   // Don't render if allBlogPosts is not an array
   if (!Array.isArray(allBlogPosts)) {

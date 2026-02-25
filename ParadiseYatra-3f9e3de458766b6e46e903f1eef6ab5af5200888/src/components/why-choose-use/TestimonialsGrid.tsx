@@ -1,4 +1,4 @@
-'use client';
+﻿'use client';
 
 import { useState, useEffect } from 'react';
 import {
@@ -65,11 +65,11 @@ export function TestimonialsGrid() {
     {
       type: 'video',
       id: 1,
-      url: "https://res.cloudinary.com/dwuwpxu0y/video/upload/q_auto:eco,vc_auto/v1767763881/Sardar_Ji_Review_xjorqh.mp4",
+      url: "https://res.cloudinary.com/dwuwpxu0y/video/upload/q_auto:eco,f_auto,vc_auto,w_1280/v1767763881/Sardar_Ji_Review_xjorqh.mp4",
     },
-     { type: 'photo', id: 10 },
-      { type: 'photo', id: 11 },
-       { type: 'photo', id: 12 },
+    { type: 'photo', id: 10 },
+    { type: 'photo', id: 11 },
+    { type: 'photo', id: 12 },
     { type: 'photo', id: 1 },
     { type: 'text', id: 1 },
     { type: 'whatsapp', id: 2 },
@@ -77,18 +77,18 @@ export function TestimonialsGrid() {
     {
       type: 'video',
       id: 2,
-      url: "https://res.cloudinary.com/dwuwpxu0y/video/upload/q_auto:eco,vc_auto/v1767779623/Video_Testimonial_2_mypkf8.mp4",
+      url: "https://res.cloudinary.com/dwuwpxu0y/video/upload/q_auto:eco,f_auto,vc_auto,w_1280/v1767779623/Video_Testimonial_2_mypkf8.mp4",
       title: "Paris Girls Trip",
     },
-     { type: 'photo', id: 13 },
-      { type: 'photo', id: 14 },
+    { type: 'photo', id: 13 },
+    { type: 'photo', id: 14 },
     { type: 'text', id: 2 },
     { type: 'photo', id: 3 },
     { type: 'whatsapp', id: 3 },
     {
       type: 'video',
       id: 3,
-      url: "https://res.cloudinary.com/dwuwpxu0y/video/upload/q_auto:eco,vc_auto/v1767783817/Video_Testimonial_9_rjvcfy.mp4",
+      url: "https://res.cloudinary.com/dwuwpxu0y/video/upload/q_auto:eco,f_auto,vc_auto,w_1280/v1767783817/Video_Testimonial_9_rjvcfy.mp4",
       title: "Paris Girls Trip",
     },
     { type: 'text', id: 3 },
@@ -96,46 +96,46 @@ export function TestimonialsGrid() {
     {
       type: 'video',
       id: 4,
-      url: "https://res.cloudinary.com/dwuwpxu0y/video/upload/q_auto:eco,vc_auto/v1767783726/Video_Testimonial_8_n20d0f.mp4",
+      url: "https://res.cloudinary.com/dwuwpxu0y/video/upload/q_auto:eco,f_auto,vc_auto,w_1280/v1767783726/Video_Testimonial_8_n20d0f.mp4",
       title: "Paris Girls Trip",
     },
     { type: 'photo', id: 4 },
     {
       type: 'video',
       id: 5,
-      url: "https://res.cloudinary.com/dwuwpxu0y/video/upload/q_auto:eco,vc_auto/v1767782676/Video_Testimonial_5_cmw9wg.mp4",
+      url: "https://res.cloudinary.com/dwuwpxu0y/video/upload/q_auto:eco,f_auto,vc_auto,w_1280/v1767782676/Video_Testimonial_5_cmw9wg.mp4",
       title: "Paris Girls Trip",
     },
     { type: 'photo', id: 4 },
     {
       type: 'video',
       id: 6,
-      url: "https://res.cloudinary.com/dwuwpxu0y/video/upload/q_auto:eco,vc_auto/v1767783373/Video_Testimonial_6_fqi18i.mp4",
+      url: "https://res.cloudinary.com/dwuwpxu0y/video/upload/q_auto:eco,f_auto,vc_auto,w_1280/v1767783373/Video_Testimonial_6_fqi18i.mp4",
       title: "Paris Girls Trip",
     },
-     { type: 'photo', id: 15 },
-      { type: 'photo', id: 16 },
+    { type: 'photo', id: 15 },
+    { type: 'photo', id: 16 },
     {
       type: 'video',
       id: 7,
-      url: "https://res.cloudinary.com/dwuwpxu0y/video/upload/q_auto:eco,vc_auto/v1767782325/Video_Testimonial_4_xxzxvh.mp4",
+      url: "https://res.cloudinary.com/dwuwpxu0y/video/upload/q_auto:eco,f_auto,vc_auto,w_1280/v1767782325/Video_Testimonial_4_xxzxvh.mp4",
       title: "Paris Girls Trip",
     },
-     { type: 'photo', id: 17 },
-      { type: 'photo', id: 18 },
-       { type: 'photo', id: 19 },
-        { type: 'photo', id: 9 },
-         { type: 'photo', id: 8 },
-         { type: 'photo', id: 20 },
+    { type: 'photo', id: 17 },
+    { type: 'photo', id: 18 },
+    { type: 'photo', id: 19 },
+    { type: 'photo', id: 9 },
+    { type: 'photo', id: 8 },
+    { type: 'photo', id: 20 },
     {
       type: 'video',
       id: 7,
-      url: "https://res.cloudinary.com/dwuwpxu0y/video/upload/q_auto:eco,vc_auto/v1767782300/Video_Testimonial_3_fisxcc.mp4",
+      url: "https://res.cloudinary.com/dwuwpxu0y/video/upload/q_auto:eco,f_auto,vc_auto,w_1280/v1767782300/Video_Testimonial_3_fisxcc.mp4",
       title: "Paris Girls Trip",
     },
     { type: 'photo', id: 5 },
     { type: 'photo', id: 6 },
-     { type: 'photo', id: 7 },
+    { type: 'photo', id: 7 },
   ];
 
   const loadMore = () => {
@@ -416,7 +416,7 @@ function WhatsAppChatWrapper({ id, isNewItem }: { id: number; isNewItem: boolean
       messages: [
         { type: 'received', text: 'The trip was smooth and well organised. No issues during the stay', time: '2:15 PM' },
         { type: 'sent', text: "Thanks for sharing your feedback. Happy to hear you enjoyed the experience.", time: '2:17 PM' },
-        
+
       ]
     },
     3: {
@@ -424,15 +424,15 @@ function WhatsAppChatWrapper({ id, isNewItem }: { id: number; isNewItem: boolean
       avatar: "https://lh3.googleusercontent.com/aida-public/AB6AXuBJJ4tIHyY7GjJwoycb4Igv1ITnv_JCQrXUt0_zDcjh9xpZx3INlLxi7OMq15xglk5uWQp-LnhyYgKB4aKgD_tgBD0xLnMunuUnkHB8T17EYiDbgG0jSqNAuc5CghNPhgVcLGhvDaWMqBL1YGst755tNuYn5r6dIEZQbtzIgNzkgvUb1udqvzSi-qE1u3NtkEZ4WJS0ajU04QQ0-I5et8VfSJRb7eZ6UnjVfTIE2YwGTF1taHtfRzw6PHYEhDzR1PBTBNSJszQIu7w",
       messages: [
         { type: 'received', text: 'Family ke saath travel easy raha. Planning achi thi, sab manage ho gaya.', time: '8:30 PM' },
-        { type: 'sent', text: "Thank you for trusting us. We’re glad your family had a good experience.", time: '8:32 PM' }
+        { type: 'sent', text: "Thank you for trusting us. We're glad your family had a good experience.", time: '8:32 PM' }
       ]
     },
-     4: {
+    4: {
       name: "(Client) Mrs. Anjali",
       avatar: "https://lh3.googleusercontent.com/aida-public/AB6AXuBJJ4tIHyY7GjJwoycb4Igv1ITnv_JCQrXUt0_zDcjh9xpZx3INlLxi7OMq15xglk5uWQp-LnhyYgKB4aKgD_tgBD0xLnMunuUnkHB8T17EYiDbgG0jSqNAuc5CghNPhgVcLGhvDaWMqBL1YGst755tNuYn5r6dIEZQbtzIgNzkgvUb1udqvzSi-qE1u3NtkEZ4WJS0ajU04QQ0-I5et8VfSJRb7eZ6UnjVfTIE2YwGTF1taHtfRzw6PHYEhDzR1PBTBNSJszQIu7w",
       messages: [
         { type: 'received', text: 'Overall very satisfied. The itinerary and hotels matched what was discussed.', time: '8:30 PM' },
-        { type: 'sent', text: "Thank you for your feedback. We’re happy everything went as planned.", time: '8:32 PM' }
+        { type: 'sent', text: "Thank you for your feedback. We're happy everything went as planned.", time: '8:32 PM' }
       ]
     }
   };
@@ -456,26 +456,26 @@ function PhotoCard({
   isMobile: boolean;
 }) {
   const photos: Record<number, any> = {
-    1: { location: "Kerala, India", img: "https://res.cloudinary.com/dwuwpxu0y/image/upload/f_auto,q_auto,dpr_auto,c_limit,w_1200/v1767778704/Photo_Testimonial_4_ojrqb3.webp" },
-    2: { location: "Jammu & Kashmir, India", img: "https://res.cloudinary.com/dwuwpxu0y/image/upload/f_auto,q_auto,dpr_auto,c_limit,w_1200/v1767778704/Photo_Testimonial_2_qll0zb.webp" },
-    3: { location: "Manali, Himachal Pradesh", img: "https://res.cloudinary.com/dwuwpxu0y/image/upload/f_auto,q_auto,dpr_auto,c_limit,w_1200/v1767778704/Photo_Testimonial_3_el3rrl.webp" },
-    4: { location: "Kerala, India", img: "https://res.cloudinary.com/dwuwpxu0y/image/upload/f_auto,q_auto,dpr_auto,c_limit,w_1200/v1767779423/Photo_Testimonial_6_zlvdfl.webp" },
-    5: { location: "Himachal Pradesh, India", img: "https://res.cloudinary.com/dwuwpxu0y/image/upload/f_auto,q_auto,dpr_auto,c_limit,w_1200/v1767778705/Photo_Testimonial_5_gkvahk.webp" },
-    6: { location: "Sikkim, India", img: "https://res.cloudinary.com/dwuwpxu0y/image/upload/f_auto,q_auto,dpr_auto,c_limit,w_1200/v1767778704/Photo_Testimonial_1_tqhr0g.webp" },
-    7: { location: "Sikkim, India", img: "https://res.cloudinary.com/dwuwpxu0y/image/upload/f_auto,q_auto,dpr_auto,c_limit,w_1200/v1767782192/Photo_Testimonial_17_jsiqkn.webp" },
-    8: { location: "Sikkim, India", img: "https://res.cloudinary.com/dwuwpxu0y/image/upload/f_auto,q_auto,dpr_auto,c_limit,w_1200/v1767781996/Photo_Testimonial_16_blmyx4.webp" },
-    9: { location: "Jammu & Kashmir, India", img: "https://res.cloudinary.com/dwuwpxu0y/image/upload/f_auto,q_auto,dpr_auto,c_limit,w_1200/v1767781899/Photo_Testimonial_14_trlwjc.webp" },
-    10: { location: "Himachal Pradesh, India", img: "https://res.cloudinary.com/dwuwpxu0y/image/upload/f_auto,q_auto,dpr_auto,c_limit,w_1200/v1767783178/Photo_Testimonial_19_j2t8xl.webp" },
-    11: { location: "Himachal Pradesh, India", img: "https://res.cloudinary.com/dwuwpxu0y/image/upload/f_auto,q_auto,dpr_auto,c_limit,w_1200/v1767783167/Photo_Testimonial_18_v9agyj.webp" },
-    12: { location: "Sikkim, India", img: "https://res.cloudinary.com/dwuwpxu0y/image/upload/f_auto,q_auto,dpr_auto,c_limit,w_1200/v1767781907/Photo_Testimonial_15_i6w6d4.webp" },
-    13: { location: "Sikkim, India", img: "https://res.cloudinary.com/dwuwpxu0y/image/upload/f_auto,q_auto,dpr_auto,c_limit,w_1200/v1767781494/Photo_Testimonial_12_hqwgyc.webp" },
-    14: { location: "Sikkim, India", img: "https://res.cloudinary.com/dwuwpxu0y/image/upload/f_auto,q_auto,dpr_auto,c_limit,w_1200/v1767781685/Photo_Testimonial_13_kc5eml.webp" },
-    15: { location: "Jammu & Kashmir, India", img: "https://res.cloudinary.com/dwuwpxu0y/image/upload/f_auto,q_auto,dpr_auto,c_limit,w_1200/v1767781489/Photo_Testimonial_11_fvdexw.webp" },
-    16: { location: "Kerala, India", img: "https://res.cloudinary.com/dwuwpxu0y/image/upload/f_auto,q_auto,dpr_auto,c_limit,w_1200/v1767780194/Photo_Testimonial_7_uhgy3c.webp" },
-    17: { location: "Kerala, India", img: "https://res.cloudinary.com/dwuwpxu0y/image/upload/f_auto,q_auto,dpr_auto,c_limit,w_1200/v1767780927/Photo_Testimonial_8_bfgbd9.webp" },
-    18: { location: "Sikkim, India", img: "https://res.cloudinary.com/dwuwpxu0y/image/upload/f_auto,q_auto,dpr_auto,c_limit,w_1200/v1767781049/Photo_Testimonial_9_ey6bqc.webp" },
-    19: { location: "Sikkim, India", img: "https://res.cloudinary.com/dwuwpxu0y/image/upload/f_auto,q_auto,dpr_auto,c_limit,w_1200/v1767781353/Photo_Testimonial_10_zlwfla.webp" },
-    20: { location: "Kerala, India", img: "https://res.cloudinary.com/dwuwpxu0y/image/upload/f_auto,q_auto,dpr_auto,c_limit,w_1200/v1767783344/Photo_Testimonial_20_sqvytb.webp" },
+    1: { location: "Kerala, India", img: "https://res.cloudinary.com/dwuwpxu0y/image/upload/f_auto,q_auto:good,w_auto,dpr_auto,c_limit/v1767778704/Photo_Testimonial_4_ojrqb3.webp" },
+    2: { location: "Jammu & Kashmir, India", img: "https://res.cloudinary.com/dwuwpxu0y/image/upload/f_auto,q_auto:good,w_auto,dpr_auto,c_limit/v1767778704/Photo_Testimonial_2_qll0zb.webp" },
+    3: { location: "Manali, Himachal Pradesh", img: "https://res.cloudinary.com/dwuwpxu0y/image/upload/f_auto,q_auto:good,w_auto,dpr_auto,c_limit/v1767778704/Photo_Testimonial_3_el3rrl.webp" },
+    4: { location: "Kerala, India", img: "https://res.cloudinary.com/dwuwpxu0y/image/upload/f_auto,q_auto:good,w_auto,dpr_auto,c_limit/v1767779423/Photo_Testimonial_6_zlvdfl.webp" },
+    5: { location: "Himachal Pradesh, India", img: "https://res.cloudinary.com/dwuwpxu0y/image/upload/f_auto,q_auto:good,w_auto,dpr_auto,c_limit/v1767778705/Photo_Testimonial_5_gkvahk.webp" },
+    6: { location: "Sikkim, India", img: "https://res.cloudinary.com/dwuwpxu0y/image/upload/f_auto,q_auto:good,w_auto,dpr_auto,c_limit/v1767778704/Photo_Testimonial_1_tqhr0g.webp" },
+    7: { location: "Sikkim, India", img: "https://res.cloudinary.com/dwuwpxu0y/image/upload/f_auto,q_auto:good,w_auto,dpr_auto,c_limit/v1767782192/Photo_Testimonial_17_jsiqkn.webp" },
+    8: { location: "Sikkim, India", img: "https://res.cloudinary.com/dwuwpxu0y/image/upload/f_auto,q_auto:good,w_auto,dpr_auto,c_limit/v1767781996/Photo_Testimonial_16_blmyx4.webp" },
+    9: { location: "Jammu & Kashmir, India", img: "https://res.cloudinary.com/dwuwpxu0y/image/upload/f_auto,q_auto:good,w_auto,dpr_auto,c_limit/v1767781899/Photo_Testimonial_14_trlwjc.webp" },
+    10: { location: "Himachal Pradesh, India", img: "https://res.cloudinary.com/dwuwpxu0y/image/upload/f_auto,q_auto:good,w_auto,dpr_auto,c_limit/v1767783178/Photo_Testimonial_19_j2t8xl.webp" },
+    11: { location: "Himachal Pradesh, India", img: "https://res.cloudinary.com/dwuwpxu0y/image/upload/f_auto,q_auto:good,w_auto,dpr_auto,c_limit/v1767783167/Photo_Testimonial_18_v9agyj.webp" },
+    12: { location: "Sikkim, India", img: "https://res.cloudinary.com/dwuwpxu0y/image/upload/f_auto,q_auto:good,w_auto,dpr_auto,c_limit/v1767781907/Photo_Testimonial_15_i6w6d4.webp" },
+    13: { location: "Sikkim, India", img: "https://res.cloudinary.com/dwuwpxu0y/image/upload/f_auto,q_auto:good,w_auto,dpr_auto,c_limit/v1767781494/Photo_Testimonial_12_hqwgyc.webp" },
+    14: { location: "Sikkim, India", img: "https://res.cloudinary.com/dwuwpxu0y/image/upload/f_auto,q_auto:good,w_auto,dpr_auto,c_limit/v1767781685/Photo_Testimonial_13_kc5eml.webp" },
+    15: { location: "Jammu & Kashmir, India", img: "https://res.cloudinary.com/dwuwpxu0y/image/upload/f_auto,q_auto:good,w_auto,dpr_auto,c_limit/v1767781489/Photo_Testimonial_11_fvdexw.webp" },
+    16: { location: "Kerala, India", img: "https://res.cloudinary.com/dwuwpxu0y/image/upload/f_auto,q_auto:good,w_auto,dpr_auto,c_limit/v1767780194/Photo_Testimonial_7_uhgy3c.webp" },
+    17: { location: "Kerala, India", img: "https://res.cloudinary.com/dwuwpxu0y/image/upload/f_auto,q_auto:good,w_auto,dpr_auto,c_limit/v1767780927/Photo_Testimonial_8_bfgbd9.webp" },
+    18: { location: "Sikkim, India", img: "https://res.cloudinary.com/dwuwpxu0y/image/upload/f_auto,q_auto:good,w_auto,dpr_auto,c_limit/v1767781049/Photo_Testimonial_9_ey6bqc.webp" },
+    19: { location: "Sikkim, India", img: "https://res.cloudinary.com/dwuwpxu0y/image/upload/f_auto,q_auto:good,w_auto,dpr_auto,c_limit/v1767781353/Photo_Testimonial_10_zlwfla.webp" },
+    20: { location: "Kerala, India", img: "https://res.cloudinary.com/dwuwpxu0y/image/upload/f_auto,q_auto:good,w_auto,dpr_auto,c_limit/v1767783344/Photo_Testimonial_20_sqvytb.webp" },
 
   };
   const p = photos[id] || photos[1];
@@ -566,7 +566,7 @@ function WhatsAppChat({ avatar, name, messages, isNewItem }: WhatsAppChatProps &
       <div
         className="p-5 min-h-[220px] bg-[#e5ddd5]"
         style={{
-          backgroundImage: `url("https://res.cloudinary.com/dwuwpxu0y/image/upload/f_auto,q_auto,dpr_auto,c_limit,w_1200/v1767608109/Whatsapp_Chat_Background_l6ocjd.webp")`,
+          backgroundImage: `url("https://res.cloudinary.com/dwuwpxu0y/image/upload/f_auto,q_auto:good,w_auto,dpr_auto,c_limit/v1767608109/Whatsapp_Chat_Background_l6ocjd.webp")`,
           backgroundSize: 'cover'
         }}
       >
@@ -579,8 +579,8 @@ function WhatsAppChat({ avatar, name, messages, isNewItem }: WhatsAppChatProps &
             >
               <div
                 className={`${msg.type === 'sent'
-                    ? 'bg-[#dcf8c6] rounded-br-none'
-                    : 'bg-white rounded-bl-none'
+                  ? 'bg-[#dcf8c6] rounded-br-none'
+                  : 'bg-white rounded-bl-none'
                   } px-3 py-2 rounded-lg max-w-[85%] shadow-sm relative`}
               >
                 <p className="!text-[#303030] text-sm leading-snug pr-12">{msg.text}</p>

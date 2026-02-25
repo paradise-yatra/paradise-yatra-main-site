@@ -169,17 +169,7 @@ const NewHolidaysSection = () => {
     router.push(`/holiday-types/${slug}`);
   };
 
-  if (loading) {
-    return (
-      <section className="py-20 bg-white px-4">
-        <div className="max-w-7xl mx-auto grid grid-cols-1 md:grid-cols-3 gap-6">
-          {Array.from({ length: 3 }).map((_, i) => (
-            <SkeletonPackageCard key={i} />
-          ))}
-        </div>
-      </section>
-    );
-  }
+  if (loading) return null;
 
   const visibleCategories = categories.slice(currentIndex, currentIndex + 3);
   const canGoPrevious = currentIndex > 0;
@@ -293,22 +283,20 @@ const NewHolidaysSection = () => {
             <button
               onClick={handlePrevious}
               disabled={!canGoPrevious || isTransitioning}
-              className={`w-8 h-10 border border-gray-200 rounded-sm flex items-center justify-center shadow-sm duration-300 cursor-pointer ${
-                !canGoPrevious
+              className={`w-8 h-10 border border-gray-200 rounded-sm flex items-center justify-center shadow-sm duration-300 cursor-pointer ${!canGoPrevious
                   ? "bg-gray-100 border-gray-200 text-gray-400"
                   : "bg-white border-blue-200 text-blue-600 hover:bg-blue-50 hover:border-blue-400 hover:scale-110"
-              }`}
+                }`}
             >
               <ChevronLeft className="w-6 h-6" />
             </button>
             <button
               onClick={handleNext}
               disabled={!canGoNext || isTransitioning}
-              className={`w-8 h-10 border border-gray-200 rounded-sm flex items-center justify-center shadow-sm cursor-pointer ${
-                !canGoNext
+              className={`w-8 h-10 border border-gray-200 rounded-sm flex items-center justify-center shadow-sm cursor-pointer ${!canGoNext
                   ? "bg-gray-100 border-gray-200 text-gray-400"
                   : "bg-white border-blue-200 text-blue-600 hover:bg-blue-50 hover:border-blue-400 hover:shadow-xl hover:scale-110"
-              }`}
+                }`}
             >
               <ChevronRight className="w-6 h-6" />
             </button>

@@ -1,90 +1,139 @@
 "use client";
 
-import type React from "react";
-
-import { useState } from "react";
+import React, { useState } from "react";
+import { ArrowRight, Check } from "lucide-react";
 
 export default function NewsletterSubscribe() {
-  const [email, setEmail] = useState("");
-  const [isLoading, setIsLoading] = useState(false);
-  const [message, setMessage] = useState("");
+    const [email, setEmail] = useState("");
+    const [status, setStatus] = useState<"idle" | "loading" | "success" | "duplicate" | "error">("idle");
+    const [message, setMessage] = useState("");
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setIsLoading(true);
-    setMessage("");
+    const handleSubmit = async (e: React.FormEvent) => {
+        e.preventDefault();
 
-    try {
-      const response = await fetch("/api/subscribe", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email }),
-      });
+        if (!email) {
+            setStatus("error");
+            setMessage("Please enter your email address to continue.");
+            setTimeout(() => setStatus("idle"), 3000);
+            return;
+        }
 
-      if (response.ok) {
-        setMessage("Successfully subscribed!");
-        setEmail("");
-      } else {
-        setMessage("Failed to subscribe. Please try again.");
-      }
-    } catch (error) {
-      setMessage("An error occurred. Please try again.");
-    } finally {
-      setIsLoading(false);
-    }
-  };
+        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+        if (!emailRegex.test(email)) {
+            setStatus("error");
+            setMessage("Please enter a valid email address.");
+            setTimeout(() => setStatus("idle"), 3000);
+            return;
+        }
 
-  return (
-    <section className="relative overflow-hidden py-16 px-4 md:px-8 bg-white">
-      {/* Decorative Elements */}
-      <div className="absolute top-0 right-0 h-64 w-64 translate-x-1/2 -translate-y-1/2 rounded-full bg-white/10 blur-3xl pointer-events-none"></div>
-      <div className="absolute bottom-0 left-0 h-64 w-64 -translate-x-1/2 translate-y-1/2 rounded-full bg-white/10 blur-3xl pointer-events-none"></div>
+        setStatus("loading");
+        setMessage("");
 
-      <div className="bg-gradient-to-br from-[#0052CC] to-[#0066FF] relative mx-auto max-w-6xl rounded-lg bg-white/5 p-8 md:p-12 shadow-2xl backdrop-blur-sm border border-white/10">
-        <div className="flex flex-col gap-8 md:flex-row md:items-center md:justify-between">
-          {/* Text Content */}
-          <div className="flex-1 text-center md:text-left">
-            <span className="mb-2 inline-block text-xs font-bold uppercase tracking-wider text-[#E8F2FF]">
-              Stay Updated
-            </span>
-            <h2 className="mb-4 text-3xl font-bold text-white md:text-4xl">
-              Subscribe to Our Newsletter
-            </h2>
-            <p className="max-w-xl !text-[#F0F7FF] text-base md:text-lg leading-relaxed">
-              Get travel inspiration, exclusive deals, and the latest updates delivered straight to your inbox.
-            </p>
-          </div>
+        try {
+            const response = await fetch("/api/subscribe", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ email, source: 'footer-newsletter-form' }),
+            });
 
-          {/* Form */}
-          <div className="w-full md:w-auto md:min-w-[400px]">
-            <form onSubmit={handleSubmit} className="flex flex-col gap-3">
-              <div className="relative">
-                <input
-                  type="email"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  placeholder="Your email address"
-                  required
-                  className="w-full rounded-lg border border-white/20 bg-white/10 px-4 py-3 text-white placeholder-white/60 backdrop-blur-md focus:border-white focus:bg-white/20 focus:outline-none focus:ring-2 focus:ring-white/20 transition-all"
-                />
-              </div>
-              <button
-                type="submit"
-                disabled={isLoading}
-                className="w-full rounded-lg bg-white px-6 py-3 font-bold text-[#0052CC] shadow-lg transition-colors hover:bg-[#E8F2FF] disabled:opacity-70"
-              >
-                {isLoading ? "Subscribing..." : "Subscribe Now"}
-              </button>
-            </form>
-            {message && (
-              <p className={`mt-3 text-center text-sm font-medium ${message.includes("Successfully") ? "text-green-300" : "text-red-300"
-                }`}>
-                {message}
-              </p>
-            )}
-          </div>
-        </div>
-      </div>
-    </section>
-  );
+            if (response.status === 201) {
+                // New subscription
+                setStatus("success");
+                setMessage("Thank you! Your journey begins soon.");
+                setEmail("");
+                setTimeout(() => {
+                    setStatus("idle");
+                    setMessage("");
+                }, 4000);
+            } else if (response.status === 200) {
+                // Already subscribed
+                setStatus("duplicate");
+                setMessage("You're already part of our travel family! 🌍");
+                setTimeout(() => {
+                    setStatus("idle");
+                    setMessage("");
+                }, 4000);
+            } else {
+                setStatus("error");
+                setMessage("Subscription failed. Please try again.");
+                setTimeout(() => setStatus("idle"), 3000);
+            }
+        } catch (error) {
+            setStatus("error");
+            setMessage("An error occurred. Please try again.");
+            setTimeout(() => setStatus("idle"), 3000);
+        }
+    };
+
+    return (
+        <section className="bg-white px-4 py-8 text-gray-900 md:px-8">
+            <div className="mx-auto max-w-6xl">
+                {/* Newsletter Card - Thematic Blue #005beb */}
+                <div className="bg-black rounded-[6px] overflow-hidden flex flex-col md:flex-row relative shadow-[0_10px_40px_rgba(0,0,0,0.1)] items-stretch">
+
+                    {/* Left Part: Image */}
+                    <div className="w-full md:w-[40%] h-[200px] md:h-auto relative shrink-0">
+                        <img
+                            src="https://images.unsplash.com/photo-1533105079780-92b9be482077?q=80&w=1974&auto=format&fit=crop"
+                            alt="Escape to Paradise"
+                            className="absolute inset-0 w-full h-full object-cover"
+                        />
+                        {/* Darker overlay to blend with blue better */}
+                        <div className="absolute inset-0 bg-blue-900/10"></div>
+                    </div>
+
+                    {/* Right Part: Content - Switched to white text for blue background */}
+                    <div className="w-full md:w-[60%] p-6 md:p-10 flex flex-col justify-center bg-black">
+
+                        <h2 className="text-xl md:text-2xl font-unbounded !font-bold text-white leading-tight mb-3 tracking-tight">
+                            Stay Updated
+                        </h2>
+
+                        <p className="text-white/80 mb-6 leading-relaxed text-xs md:text-sm max-w-md">
+                            Exclusive itineraries and boutique travel offers delivered directly to your inbox every Sunday. <span className="font-semibold text-white">Unsubscribe Anytime.</span>
+                        </p>
+
+                        <form onSubmit={handleSubmit} noValidate className="relative max-w-sm">
+                            <div className={`relative flex items-center border-b ${status === 'error' ? 'border-red-400' : 'border-white/30 focus-within:border-white'} transition-colors duration-500 pb-1.5`}>
+                                <input
+                                    type="email"
+                                    value={email}
+                                    onChange={(e) => setEmail(e.target.value)}
+                                    placeholder="Enter your email address"
+                                    disabled={status === 'loading' || status === 'success'}
+                                    style={{ color: 'white', caretColor: 'white', WebkitTextFillColor: 'white' }}
+                                    className="w-full bg-transparent placeholder-white/40 focus:outline-none disabled:opacity-50 pr-10 text-sm font-medium"
+                                />
+
+                                <button
+                                    type="submit"
+                                    disabled={status === 'loading' || status === 'success'}
+                                    className="absolute right-0 text-white hover:text-white/70 transition-all duration-300 p-1 cursor-pointer disabled:cursor-default"
+                                    aria-label="Subscribe"
+                                >
+                                    {(status === 'idle' || status === 'duplicate') && <ArrowRight className="w-4 h-4 stroke-[2]" />}
+                                    {status === 'loading' && (
+                                        <div className="w-4 h-4 border-2 border-white/20 border-t-white rounded-full animate-spin" />
+                                    )}
+                                    {status === 'success' && <Check className="w-4 h-4 text-emerald-400" />}
+                                    {status === 'error' && <ArrowRight className="w-4 h-4 stroke-[2]" />}
+                                </button>
+                            </div>
+
+                            <div
+                                className={`absolute top-full left-0 mt-2 text-[10px] font-medium transition-all duration-500 ${(status === 'success' || status === 'error' || status === 'duplicate') ? 'opacity-100 translate-y-0' : 'opacity-0 -translate-y-1 pointer-events-none'
+                                    } ${status === 'success' ? 'text-emerald-400' :
+                                        status === 'duplicate' ? 'text-amber-400' :
+                                            'text-red-400'
+                                    }`}
+                            >
+                                {message}
+                            </div>
+                        </form>
+
+                    </div>
+                </div>
+            </div>
+        </section>
+    );
 }

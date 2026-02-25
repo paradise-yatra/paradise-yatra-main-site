@@ -197,28 +197,14 @@ const BlogSectionNew = () => {
                             Journeys, Stories & Tips
                         </h3>
                     </div>
-                    <div className="flex flex-wrap items-center gap-3">
-                        <div className="flex flex-wrap gap-2">
-                            {filters.map((filter) => (
-                                <button
-                                    key={filter.id}
-                                    onClick={() => setActiveFilter(filter.id)}
-                                    className={`px-4 py-1.5 rounded-full font-bold text-[11px] uppercase tracking-wider transition-all cursor-pointer ${activeFilter === filter.id
-                                        ? "bg-slate-900 text-white shadow-md"
-                                        : "bg-slate-100 text-slate-600 hover:bg-slate-200"
-                                        }`}
-                                >
-                                    {filter.label}
-                                </button>
-                            ))}
-                        </div>
-                        <Link
-                            href="/blog"
-                            className="text-xs font-black uppercase tracking-widest text-[#005beb] hover:opacity-70 transition-opacity ml-2"
-                        >
-                            View all
-                        </Link>
-                    </div>
+
+                    <Link
+                        href="/blog"
+                        className="group flex items-center gap-2 text-[#005beb] font-bold text-[14px] hover:opacity-80 transition-all"
+                    >
+                        View All Articles
+                        <ArrowRight className="w-4 h-4 transition-transform group-hover:translate-x-1" />
+                    </Link>
                 </div>
 
                 {/* Carousel */}

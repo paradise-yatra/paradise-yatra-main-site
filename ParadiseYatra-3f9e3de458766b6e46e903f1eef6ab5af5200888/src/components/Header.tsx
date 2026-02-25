@@ -23,13 +23,16 @@ import {
   User as UserIcon,
   Ticket,
   ChevronRight,
+  ArrowRight,
+  Sparkles,
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import LeadCaptureForm from "./LeadCaptureForm";
 import Sidebar from "./Sidebar";
 import { usePathname, useRouter } from "next/navigation";
 import { useAuth } from "@/context/AuthContext";
+import Link from "next/link";
 
 import { useNavigation } from "@/hooks/useNavigation";
 import Image from "next/image";
@@ -43,14 +46,27 @@ const Header = () => {
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [isLeadFormOpen, setIsLeadFormOpen] = useState(false);
   const [isNavigating, setIsNavigating] = useState(false);
+  const [showPromoBar, setShowPromoBar] = useState(true);
 
   const pathname = usePathname();
   const isHome = pathname === "/";
-  const isTransparent = isHome; // Always transparent on home page
+  const isTransparent = isHome && !isScrolled; // Transparent on home page only at top
 
   // Use the custom hook for dynamic navigation
   const { navItems, loading } = useNavigation();
   const router = useRouter();
+  const timeoutRef = useRef<NodeJS.Timeout | null>(null);
+
+  const handleMouseEnter = (index: number) => {
+    if (timeoutRef.current) clearTimeout(timeoutRef.current);
+    setActiveDropdown(index);
+  };
+
+  const handleMouseLeave = () => {
+    timeoutRef.current = setTimeout(() => {
+      setActiveDropdown(null);
+    }, 300);
+  };
 
   // Fetch India states and International countries from all-packages API
   const [indiaStates, setIndiaStates] = useState<string[]>([]);
@@ -237,73 +253,78 @@ const Header = () => {
     };
   }, [isSidebarOpen]);
 
-
+  // Helper to get badges for destinations (matching the requirement image)
+  const getBadgeForLocation = (location: string) => {
+    const loc = location.toLowerCase();
+    if (loc.includes('bali') || loc.includes('vietnam') || loc.includes('kerala'))
+      return { text: 'TRENDING', class: 'bg-[#ffefef] text-[#d64141] border-[#ffdadb]' };
+    if (loc.includes('maldives') || loc.includes('andaman') || loc.includes('mauritius'))
+      return { text: 'HONEYMOON', class: 'bg-[#ffeef5] text-[#d64188] border-[#ffdae9]' };
+    if (loc.includes('thailand') || loc.includes('dubai') || loc.includes('rajasthan'))
+      return { text: 'BUDGET', class: 'bg-[#fdf6ec] text-[#a67c52] border-[#f5e4cc]' };
+    if (loc.includes('abu dhabi') || loc.includes('singapore') || loc.includes('kashmir'))
+      return { text: 'POPULAR', class: 'bg-[#eef2ff] text-[#4159d6] border-[#dadaff]' };
+    return null;
+  };
 
   return (
-    <header className={`${isHome ? "absolute" : "relative"} z-50 w-full top-0 left-0 right-0 font-plus-jakarta-sans`}>
+    <header className={`fixed top-0 left-0 right-0 z-[60] w-full font-plus-jakarta-sans transition-all duration-300 ${isTransparent ? 'bg-transparent border-transparent shadow-none' : 'bg-white border-b border-gray-100/60 shadow-[0_1px_2px_rgba(0,0,0,0.04)]'}`}>
 
-      {/* <div className="pointer-events-none absolute top-0 left-0 w-full h-22 bg-gradient-to-b from-black/60 via-black/20 to-transparent z-[-1]" /> */}
 
-      <div className="pointer-events-none absolute top-0 left-0 w-full h-32 bg-gradient-to-b from-black/40 from-0% via-black/15 via-40% via-black/5 via-70% to-transparent to-100% z-[-1]" />
-
-      {/* Top Banner - Char Dham Yatra */}
-      <div className={`w-full transition-all duration-300 ${isTransparent ? "bg-black/30" : "bg-blue-600"} backdrop-blur-md border-b border-white/10 relative z-10`}>
-        <div className="max-w-6xl mx-auto px-4 py-1.5 flex justify-center items-center">
+      {/* PROMO STRIP START */}
+      <AnimatePresence>
+        {showPromoBar && (
           <motion.div
-            initial={{ opacity: 0, y: -10 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.5 }}
-            className="flex items-center gap-4 md:gap-8"
+            initial={{ height: 0, opacity: 0 }}
+            animate={{ height: "auto", opacity: 1 }}
+            exit={{ height: 0, opacity: 0 }}
+            transition={{ duration: 0.4, ease: "easeInOut" }}
+            className="relative z-50 overflow-hidden"
           >
-            <div className="hidden sm:flex items-center gap-1">
-              {[1, 2, 3].map((i) => (
-                <div
-                  key={`left-${i}`}
-                  className="w-1 h-1 rounded-full bg-[#FDA800] animate-pulse"
-                  style={{ animationDelay: `${i * 200}ms` }}
-                />
-              ))}
-            </div>
+            <Link href="/package/theme/char-dham-yatra" className="block group">
+              <div className="promo-strip bg-black text-white px-4 py-1.5 shadow-lg transition-all duration-500 hover:brightness-105">
+                <div className="max-w-7xl mx-auto flex items-center justify-center text-center gap-3 sm:gap-6 relative">
 
-            <a
-              href="/package/theme/char-dham-yatra"
-              className="text-xs md:text-sm font-black tracking-[0.2em] text-white hover:text-[#FDA800] transition-all duration-300 uppercase flex items-center gap-2"
-            >
-              <Star className="w-3 h-3 md:w-4 md:h-4 fill-[#FDA800] text-[#FDA800] animate-spin-slow" />
-              Char Dham Yatra 2026
-              <Star className="w-3 h-3 md:w-4 md:h-4 fill-[#FDA800] text-[#FDA800] animate-spin-slow" />
-            </a>
+                  {/* Icon & Main Text */}
+                  <div className="flex items-center gap-2 text-[10px] sm:text-xs font-bold tracking-wider">
+                    <span className="text-orange-500 text-sm">ॐ</span>
+                    <span className="drop-shadow-sm uppercase">Char Dham Yatra 2026 Registrations Open!</span>
+                  </div>
 
-            <div className="hidden sm:flex items-center gap-1">
-              {[3, 2, 1].map((i) => (
-                <div
-                  key={`right-${i}`}
-                  className="w-1 h-1 rounded-full bg-[#FDA800] animate-pulse"
-                  style={{ animationDelay: `${i * 200}ms` }}
-                />
-              ))}
-            </div>
+                  {/* Book Now Button Only */}
+                  <div className="hidden sm:flex items-center">
+                    <span className="text-white text-[9px] sm:text-[11px] font-black px-3 py-1.5 rounded-full flex items-center gap-1.5 transition-all duration-300">
+                      BOOK NOW <ArrowRight className="w-2.5 h-2.5 transition-transform group-hover:translate-x-1" />
+                    </span>
+                  </div>
+
+                  {/* Close Button */}
+                  <button
+                    onClick={(e) => {
+                      e.preventDefault();
+                      e.stopPropagation();
+                      setShowPromoBar(false);
+                    }}
+                    className="absolute right-0 top-1/2 -translate-y-1/2 p-1 hover:bg-white/20 rounded-full transition-colors cursor-pointer"
+                    aria-label="Close promo"
+                  >
+                    <X className="w-3.5 h-3.5 text-white/80 hover:text-white" />
+                  </button>
+
+                </div>
+              </div>
+            </Link>
           </motion.div>
-        </div>
-      </div>
+        )}
+      </AnimatePresence>
+      {/* PROMO STRIP END */}
 
       {/* Main header */}
-      <motion.div
-        initial={{ opacity: 0, y: -20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ delay: 0.3, duration: 0.5 }}
-        className={`transition-all duration-300 ${isTransparent
-          ? "bg-transparent border-transparent"
-          : "bg-white border-b border-gray-100/50 shadow-[0_1px_2px_rgba(0,0,0,0.02)]"
-          }`}
-      >
+      <div className="bg-transparent">
         <div className="max-w-6xl mx-auto px-4 md:px-6">
           <div className="flex items-center justify-between py-5">
             {/* Logo - Left side */}
-            <motion.div
-              whileHover={{ scale: 1.05 }}
-              className="flex items-center gap-3"
-            >
+            <div className="flex items-center gap-3">
               <button
                 type="button"
                 onClick={() => router.push("/")}
@@ -332,7 +353,7 @@ const Header = () => {
                   </p>
                 </div>
               </button>
-            </motion.div>
+            </div>
 
             {/* Navigation - Desktop - Centered */}
             <nav className="hidden md:flex items-center gap-8 text-sm font-semibold">
@@ -341,19 +362,21 @@ const Header = () => {
                   <div
                     key={index}
                     className="relative"
-                    onMouseEnter={() => setActiveDropdown(index)}
-                    onMouseLeave={() => setActiveDropdown(null)}
+                    onMouseEnter={() => handleMouseEnter(index)}
+                    onMouseLeave={handleMouseLeave}
                   >
                     <motion.button
-                      className={`flex items-center gap-1 transition-colors ${isTransparent
-                        ? "text-white"
-                        : "text-gray-700 hover:text-[#FDA800]"
+                      className={`flex items-center gap-1 transition-all cursor-pointer ${isTransparent
+                        ? "text-white opacity-80 hover:opacity-100"
+                        : "text-slate-700 hover:text-slate-900"
                         }`}
                     >
                       {item.name}
-                      <svg xmlns="http://www.w3.org/2000/svg" className={`h-4 w-4 transition-transform duration-200 ${activeDropdown === index ? "rotate-180" : ""}`} fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.5" d="M19 9l-7 7-7-7" />
-                      </svg>
+                      {item.submenu && item.submenu.length > 0 && (
+                        <svg xmlns="http://www.w3.org/2000/svg" className={`h-4 w-4 transition-transform duration-200 ${activeDropdown === index ? "rotate-180" : ""}`} fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.5" d="M19 9l-7 7-7-7" />
+                        </svg>
+                      )}
                     </motion.button>
 
 
@@ -364,9 +387,9 @@ const Header = () => {
                           animate={{ opacity: 1, y: 0, scale: 1 }}
                           exit={{ opacity: 0, y: 10, scale: 0.95 }}
                           transition={{ duration: 0.3, ease: "easeOut" }}
-                          className={`absolute left-0 top-full mt-6 bg-white rounded-lg shadow-xl border border-slate-200/60 z-20 overflow-hidden backdrop-blur-xl bg-white/99 ${item.name === "International Tour" || item.name === "India Tour Package"
-                            ? "w-[500px] max-w-[90vw]"
-                            : "w-96"
+                          className={`absolute left-0 top-full mt-4 bg-white rounded-[6px] shadow-2xl border border-slate-200/50 z-20 overflow-hidden backdrop-blur-xl bg-white/95 ${item.name === "International Tour" || item.name === "India Tour Package"
+                            ? "w-[680px] max-w-[95vw] p-5"
+                            : "w-80"
                             }`}
                         >
                           {item.submenu.map((subItem, subIndex) => {
@@ -380,25 +403,43 @@ const Header = () => {
                               // Only render once to show all states in grid
                               if (subIndex === 0) {
                                 return (
-                                  <div key="india-states-grid" className="p-2.5">
+                                  <div key="india-states-grid">
                                     {locationsLoading ? (
-                                      <div className="text-center py-4 text-sm text-slate-500">Loading states...</div>
+                                      <div className="flex flex-col items-center justify-center py-8 space-y-3">
+                                        <div className="w-6 h-6 border-2 border-blue-600 border-t-transparent rounded-full animate-spin"></div>
+                                        <p className="text-xs font-semibold text-slate-400 uppercase tracking-widest">Loading Regions</p>
+                                      </div>
                                     ) : indiaStates.length > 0 ? (
-                                      <div className="grid grid-cols-3 gap-x-2.5 gap-y-1">
-                                        {indiaStates.map((state, stateIndex) => (
-                                          <a
-                                            key={stateIndex}
-                                            href={`/package/india/${state.toLowerCase().replace(/\s+/g, "-")}`}
-                                            onClick={() => setIsNavigating(true)}
-                                            className="text-sm cursor-pointer text-slate-900 hover:text-blue-600 font-bold py-1 px-1.5 rounded-sm hover:bg-gradient-to-r hover:from-blue-50/80 hover:to-indigo-50/80 transition-all duration-200 truncate whitespace-nowrap border border-transparent hover:border-blue-100"
-                                            title={state}
-                                          >
-                                            {state}
-                                          </a>
-                                        ))}
+                                      <div className="grid grid-cols-3 gap-x-6 gap-y-2">
+                                        {indiaStates.slice(0, 14).map((state, stateIndex) => {
+                                          const badge = getBadgeForLocation(state);
+                                          return (
+                                            <a
+                                              key={stateIndex}
+                                              href={`/package/india/${state.toLowerCase().replace(/\s+/g, "-")}`}
+                                              onClick={() => setIsNavigating(true)}
+                                              className="text-[15px] cursor-pointer text-slate-600 hover:text-blue-600 font-medium transition-all duration-200 flex items-center justify-between group"
+                                              title={state}
+                                            >
+                                              <span className="truncate pr-2">{state}</span>
+                                              {badge && (
+                                                <span className={`text-[8px] font-black px-1.5 py-0.5 rounded-full border leading-none tracking-wider ${badge.class}`}>
+                                                  {badge.text}
+                                                </span>
+                                              )}
+                                            </a>
+                                          );
+                                        })}
+                                        <a
+                                          href="/package/india"
+                                          onClick={() => setIsNavigating(true)}
+                                          className="text-[15px] cursor-pointer text-slate-500 hover:text-blue-600 font-semibold transition-all duration-200"
+                                        >
+                                          Explore 30+ States
+                                        </a>
                                       </div>
                                     ) : (
-                                      <div className="text-center py-4 text-sm text-slate-500">No states found</div>
+                                      <div className="text-center py-6 text-sm text-slate-500">No states found</div>
                                     )}
                                   </div>
                                 );
@@ -411,25 +452,43 @@ const Header = () => {
                               // Only render once to show all countries in grid
                               if (subIndex === 0) {
                                 return (
-                                  <div key="international-countries-grid" className="p-2.5">
+                                  <div key="international-countries-grid">
                                     {locationsLoading ? (
-                                      <div className="text-center py-4 text-sm text-slate-500">Loading countries...</div>
+                                      <div className="flex flex-col items-center justify-center py-8 space-y-3">
+                                        <div className="w-6 h-6 border-2 border-blue-600 border-t-transparent rounded-full animate-spin"></div>
+                                        <p className="text-xs font-semibold text-slate-400 uppercase tracking-widest">Loading Destinations</p>
+                                      </div>
                                     ) : internationalCountries.length > 0 ? (
-                                      <div className="grid grid-cols-3 gap-x-2.5 gap-y-1">
-                                        {internationalCountries.map((country, countryIndex) => (
-                                          <a
-                                            key={countryIndex}
-                                            href={`/package/international/${country.toLowerCase().replace(/\s+/g, "-")}`}
-                                            onClick={() => setIsNavigating(true)}
-                                            className="text-sm cursor-pointer text-slate-900 hover:text-blue-600 font-bold py-1 px-1.5 rounded-sm hover:bg-gradient-to-r hover:from-blue-50/80 hover:to-indigo-50/80 transition-all duration-200 truncate whitespace-nowrap border border-transparent hover:border-blue-100"
-                                            title={country}
-                                          >
-                                            {country}
-                                          </a>
-                                        ))}
+                                      <div className="grid grid-cols-3 gap-x-6 gap-y-2">
+                                        {internationalCountries.slice(0, 14).map((country, countryIndex) => {
+                                          const badge = getBadgeForLocation(country);
+                                          return (
+                                            <a
+                                              key={countryIndex}
+                                              href={`/package/international/${country.toLowerCase().replace(/\s+/g, "-")}`}
+                                              onClick={() => setIsNavigating(true)}
+                                              className="text-[15px] cursor-pointer text-slate-600 hover:text-blue-600 font-medium transition-all duration-200 flex items-center justify-between group"
+                                              title={country}
+                                            >
+                                              <span className="truncate pr-2">{country}</span>
+                                              {badge && (
+                                                <span className={`text-[8px] font-black px-1.5 py-0.5 rounded-full border leading-none tracking-wider ${badge.class}`}>
+                                                  {badge.text}
+                                                </span>
+                                              )}
+                                            </a>
+                                          );
+                                        })}
+                                        <a
+                                          href="/destinations"
+                                          onClick={() => setIsNavigating(true)}
+                                          className="text-[15px] cursor-pointer text-slate-500 hover:text-blue-600 font-semibold transition-all duration-200"
+                                        >
+                                          Explore 40+ Destinations
+                                        </a>
                                       </div>
                                     ) : (
-                                      <div className="text-center py-4 text-sm text-slate-500">No countries found</div>
+                                      <div className="text-center py-6 text-sm text-slate-500">No countries found</div>
                                     )}
                                   </div>
                                 );
@@ -445,10 +504,12 @@ const Header = () => {
                               >
                                 <a
                                   href={subItem.href}
-                                  className="flex items-center px-4 py-3 text-sm text-gray-700 hover:bg-gradient-to-r hover:from-blue-50 hover:to-purple-50 hover:text-blue-600 transition-all duration-200 border-l-4 border-transparent hover:border-blue-500"
+                                  className="flex items-center px-5 py-3 text-sm text-slate-800 hover:text-blue-600 transition-all duration-200 group/item"
                                 >
-                                  <DestinationIcon className="w-4 h-4 mr-3 text-blue-500" />
-                                  <span className="flex-1 font-medium">
+                                  <div className="w-9 h-9 rounded-lg bg-slate-50 flex items-center justify-center mr-3 transition-colors group-hover/item:bg-slate-100 shadow-sm border border-slate-100/50">
+                                    <DestinationIcon className="w-4 h-4 text-blue-600" />
+                                  </div>
+                                  <span className="flex-1 font-bold text-sm tracking-tight">
                                     {subItem.name}
                                   </span>
                                   {subItem.featured && (
@@ -456,8 +517,10 @@ const Header = () => {
                                       initial={{ scale: 0 }}
                                       animate={{ scale: 1 }}
                                       transition={{ delay: 0.1 }}
+                                      className="flex items-center gap-1 bg-amber-50 px-2 py-0.5 rounded-full border border-amber-100"
                                     >
-                                      <Star className="w-3 h-3 text-yellow-500 ml-2" />
+                                      <Star className="w-3 h-3 text-amber-500 fill-amber-500" />
+                                      <span className="text-[10px] font-black text-amber-700 uppercase tracking-widest">Top Pick</span>
                                     </motion.div>
                                   )}
                                 </a>
@@ -467,14 +530,17 @@ const Header = () => {
                                   subItem.destinations.length > 0 &&
                                   item.name !== "India Tour Package" &&
                                   item.name !== "International Tour" && (
-                                    <div className="bg-gray-50/50 px-4 py-2 max-h-32 overflow-y-auto scrollbar-thin scrollbar-thumb-gray-300 scrollbar-track-gray-100 relative">
-                                      {subItem.destinations.length > 5 && (
-                                        <div className="absolute top-2 right-2 w-2 h-2 bg-blue-400 rounded-full animate-pulse"></div>
-                                      )}
-                                      <div className="text-xs text-gray-500 mb-2 font-medium">
-                                        Popular Destinations:
+                                    <div className="bg-slate-50/30 px-5 py-3 border-t border-slate-100/50">
+                                      <div className="flex items-center justify-between mb-3">
+                                        <div className="text-[10px] text-slate-400 font-black uppercase tracking-[0.15em] flex items-center gap-2">
+                                          <Sparkles className="w-3 h-3 text-blue-400" />
+                                          Popular Destinations
+                                        </div>
+                                        {subItem.destinations.length > 5 && (
+                                          <div className="w-1.5 h-1.5 bg-blue-500 rounded-full animate-pulse shadow-[0_0_8px_rgba(59,130,246,0.6)]"></div>
+                                        )}
                                       </div>
-                                      <div className="space-y-1">
+                                      <div className="flex flex-wrap gap-2">
                                         {subItem.destinations
                                           .slice(0, 5)
                                           .map((dest, destIndex) => (
@@ -485,27 +551,20 @@ const Header = () => {
                                                   ? `/package/${dest.id}`
                                                   : `/destinations/${dest.id}`
                                               }
-                                              className="flex items-center text-xs text-gray-600 hover:text-blue-600 transition-colors duration-200"
+                                              className="flex items-center text-xs text-slate-500 hover:text-blue-600 font-bold bg-white px-3 py-1.5 rounded-lg border border-slate-100 shadow-sm transition-all duration-200 group/dest"
                                             >
-                                              <MapPin className="w-3 h-3 mr-2 text-blue-400" />
+                                              <MapPin className="w-3 h-3 mr-1.5 text-slate-300 group-hover/dest:text-blue-500" />
                                               <span className="truncate">
                                                 {dest.name}
                                               </span>
                                               {dest.isTrending && (
-                                                <motion.div
-                                                  initial={{ scale: 0 }}
-                                                  animate={{ scale: 1 }}
-                                                  transition={{ delay: 0.1 }}
-                                                >
-                                                  <Star className="w-2 h-4 text-yellow-500 ml-1" />
-                                                </motion.div>
+                                                <Star className="w-2.5 h-2.5 text-amber-500 fill-amber-500 ml-1.5" />
                                               )}
                                             </a>
                                           ))}
                                         {subItem.destinations.length > 5 && (
-                                          <div className="text-xs text-blue-600 hover:text-blue-700 cursor-pointer pt-1">
-                                            +{subItem.destinations.length - 5}{" "}
-                                            more
+                                          <div className="text-[10px] font-black text-blue-600/70 hover:text-blue-600 cursor-pointer py-1.5 px-2 uppercase tracking-wider">
+                                            +{subItem.destinations.length - 5} More
                                           </div>
                                         )}
                                       </div>
@@ -522,9 +581,9 @@ const Header = () => {
               })}
               <a
                 href="/fixed-departures"
-                className={`transition-colors ${isTransparent
-                  ? "text-white hover:text-[#FDA800]"
-                  : "text-gray-700 hover:text-[#FDA800]"
+                className={`transition-all ${isTransparent
+                  ? "text-white opacity-80 hover:opacity-100"
+                  : "text-slate-700 hover:text-slate-900"
                   }`}
               >
                 Fixed Departure
@@ -538,7 +597,7 @@ const Header = () => {
               <div className="hidden md:flex items-center gap-3 text-sm font-semibold">
                 <motion.button
                   onClick={() => router.push("/payment")}
-                  className={`rounded-lg border cursor-pointer backdrop-blur-md px-4 py-2 transition ${isTransparent
+                  className={`rounded-[6px] border cursor-pointer backdrop-blur-md px-4 py-2 transition shadow-none ${isTransparent
                     ? "border-white bg-white/10 hover:bg-white/10 text-white"
                     : "border-gray-300 hover:bg-gray-100 text-gray-700"
                     }`}
@@ -552,7 +611,7 @@ const Header = () => {
                   <div className="relative">
                     <button
                       onClick={() => setShowUserMenu(!showUserMenu)}
-                      className={`flex items-center gap-2 p-1.5 rounded-full transition-all border ${isTransparent
+                      className={`flex items-center gap-2 p-1.5 rounded-full transition-all border cursor-pointer ${isTransparent
                         ? "border-white/30 bg-white/10 hover:bg-white/20 text-white"
                         : "border-slate-200 bg-slate-50 hover:bg-slate-100 text-slate-700"
                         }`}
@@ -598,12 +657,11 @@ const Header = () => {
                   </div>
                 ) : (
                   <motion.button
-                    whileHover={{ scale: 1.02 }}
                     whileTap={{ scale: 0.98 }}
                     onClick={() => router.push("/login")}
-                    className={`rounded-lg px-5 py-2 font-bold transition-all shadow-sm flex items-center gap-2 group ${isTransparent
-                      ? "bg-white text-blue-900 hover:bg-blue-50"
-                      : "bg-blue-600 text-white hover:bg-blue-700"
+                    className={`rounded-[6px] px-5 py-2 font-bold transition-all shadow-none flex items-center gap-2 group cursor-pointer ${isTransparent
+                      ? "bg-white text-blue-900"
+                      : "bg-blue-600 text-white"
                       }`}
                   >
                     Login
@@ -628,7 +686,7 @@ const Header = () => {
                 {user ? (
                   <button
                     onClick={() => setShowUserMenu(!showUserMenu)}
-                    className={`flex h-10 w-10 items-center justify-center rounded-xl border transition-all duration-300 ${isTransparent
+                    className={`flex h-10 w-10 items-center justify-center rounded-xl border transition-all duration-300 cursor-pointer ${isTransparent
                       ? "border-white/40 bg-white/10 text-white"
                       : "border-gray-200 bg-gray-50 text-slate-700"
                       }`}
@@ -640,7 +698,7 @@ const Header = () => {
                 ) : (
                   <button
                     onClick={() => router.push("/login")}
-                    className={`flex h-10 w-10 items-center justify-center rounded-xl border transition-all duration-300 ${isTransparent
+                    className={`flex h-10 w-10 items-center justify-center rounded-[6px] border transition-all duration-300 cursor-pointer ${isTransparent
                       ? "border-white/40 bg-white/10 text-white"
                       : "border-gray-200 bg-gray-50 text-slate-700"
                       }`}
@@ -651,7 +709,7 @@ const Header = () => {
                 )}
 
                 <button
-                  className={`flex h-10 w-10 items-center justify-center rounded-xl border transition-all duration-300 ${isTransparent
+                  className={`flex h-10 w-10 items-center justify-center rounded-xl border transition-all duration-300 cursor-pointer ${isTransparent
                     ? "border-white/40 bg-white/10 text-white active:bg-white/20"
                     : "border-gray-200 bg-gray-50 text-gray-700 active:bg-gray-100"
                     }`}
@@ -696,43 +754,45 @@ const Header = () => {
         </div>
 
 
-      </motion.div>
+      </div>
 
       {/* Lead Capture Form */}
-      <LeadCaptureForm
+      < LeadCaptureForm
         isOpen={isLeadFormOpen}
         onClose={() => setIsLeadFormOpen(false)}
       />
 
       {/* Navigation Loading Overlay */}
-      {isNavigating && (
-        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-[60] flex items-center justify-center">
-          <div className="bg-white rounded-2xl p-8 shadow-2xl max-w-sm mx-4 text-center">
-            <div className="animate-spin rounded-full h-16 w-16 border-b-4 border-blue-600 mx-auto mb-4"></div>
-            <h3 className="text-lg font-semibold text-gray-800 mb-2">
-              Loading Packages
-            </h3>
-            <p className="text-gray-600 text-sm mb-4">
-              Please wait while we fetch the best packages for you...
-            </p>
+      {
+        isNavigating && (
+          <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-[60] flex items-center justify-center">
+            <div className="bg-white rounded-2xl p-8 shadow-2xl max-w-sm mx-4 text-center">
+              <div className="animate-spin rounded-full h-16 w-16 border-b-4 border-blue-600 mx-auto mb-4"></div>
+              <h3 className="text-lg font-semibold text-gray-800 mb-2">
+                Loading Packages
+              </h3>
+              <p className="text-gray-600 text-sm mb-4">
+                Please wait while we fetch the best packages for you...
+              </p>
 
-            {/* Progress indicator */}
-            <div className="w-full bg-gray-200 rounded-full h-2 mb-4">
-              <div
-                className="bg-blue-600 h-2 rounded-full animate-pulse"
-                style={{ width: "60%" }}
-              ></div>
-            </div>
+              {/* Progress indicator */}
+              <div className="w-full bg-gray-200 rounded-full h-2 mb-4">
+                <div
+                  className="bg-blue-600 h-2 rounded-full animate-pulse"
+                  style={{ width: "60%" }}
+                ></div>
+              </div>
 
-            <div className="text-xs text-gray-500">
-              <div className="flex items-center justify-center space-x-2">
-                <div className="w-2 h-2 bg-blue-600 rounded-full animate-bounce"></div>
-                <span>Fetching destinations</span>
+              <div className="text-xs text-gray-500">
+                <div className="flex items-center justify-center space-x-2">
+                  <div className="w-2 h-2 bg-blue-600 rounded-full animate-bounce"></div>
+                  <span>Fetching destinations</span>
+                </div>
               </div>
             </div>
           </div>
-        </div>
-      )}
+        )
+      }
       {/* Sidebar */}
       <Sidebar
         isOpen={isSidebarOpen}
@@ -741,7 +801,7 @@ const Header = () => {
         onBookNow={() => setIsLeadFormOpen(true)}
       />
 
-    </header>
+    </header >
   );
 };
 

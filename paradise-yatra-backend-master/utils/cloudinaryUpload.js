@@ -21,13 +21,14 @@ const getFolderPath = (contentType, category = null) => {
     'default': 'paradise-yatra/misc', // Map 'default' to 'misc' folder
 
     // Package categories
+    'packages': 'paradise-yatra/packages',
     'trending-destinations': 'paradise-yatra/packages/trending-destinations',
     'popular-packages': 'paradise-yatra/packages/popular-packages',
     'holiday-packages': 'paradise-yatra/packages/holiday-packages',
     'adventure-packages': 'paradise-yatra/packages/adventure-packages',
     'premium-packages': 'paradise-yatra/packages/premium-packages',
     'fixed-departure': 'paradise-yatra/packages/fixed-departure',
-    'all-packages': 'paradise-yatra/packages/all-images',
+    'all-packages': 'paradise-yatra/packages',
   };
 
   console.log(`📁 getFolderPath called with contentType: "${contentType}", normalized: "${normalizedContentType}", category: "${category}"`);
@@ -110,11 +111,20 @@ const uploadToCloudinary = async (filePath, contentTypeOrCategory = "misc", cate
 
     const folder = getFolderPath(contentType, normalizedCategory);
 
-    // CRITICAL: Ensure folder is set correctly - force 'paradise-yatra/blogs' for blogs
+    // Ensure blogs and packages are always stored in their required top-level folders.
     let finalFolder = folder;
     if (contentType && contentType.toLowerCase().trim() === 'blogs') {
       finalFolder = 'paradise-yatra/blogs';
       console.log(`🔧 FORCED folder to: "${finalFolder}" for blogs content type`);
+    } else if (
+      contentType &&
+      [
+        'packages',
+        'all-packages',
+      ].includes(contentType.toLowerCase().trim())
+    ) {
+      finalFolder = 'paradise-yatra/packages';
+      console.log(`🔧 FORCED folder to: "${finalFolder}" for package content type`);
     }
 
     console.log(`📤 Uploading to Cloudinary folder: "${finalFolder}"`);
