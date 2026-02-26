@@ -4,6 +4,7 @@ import { useState, useEffect, useRef, useCallback } from 'react';
 import { Search, MapPin, Calendar, DollarSign, Globe, TrendingUp, X, Star } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { createPortal } from 'react-dom';
+import { getImageUrl } from '@/lib/utils';
 
 interface PackageSuggestion {
     id: string;
@@ -194,7 +195,7 @@ const SearchSuggestions = ({
                 duration: pkg.duration || 'N/A',
                 category: pkg.category || 'package',
                 slug: pkg.slug || pkg._id,
-                image: pkg.image || (pkg.images && pkg.images.length > 0 ? pkg.images[0] : null),
+                image: getImageUrl(pkg.image || (pkg.images && pkg.images.length > 0 ? pkg.images[0] : null)) || null,
                 type: 'package' as const,
                 tourType: pkg.tourType
             }));

@@ -73,7 +73,7 @@ const ItineraryPageClient = ({ packageData, slug }: ItineraryPageClientProps) =>
   const { user } = useAuth();
 
   const galleryImages = packageData?.images && packageData.images.length > 0
-    ? packageData.images
+    ? packageData.images.map((img: string) => getImageUrl(img, { width: 1200, quality: "auto" }) || img)
     : ["https://images.unsplash.com/photo-1488646953014-85cb44e25828?w=1920&q=80"];
 
   const inclusions = Array.isArray(packageData?.inclusions) ? packageData.inclusions : [];

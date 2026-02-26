@@ -15,6 +15,7 @@ import { SkeletonPackageCard } from "@/components/ui/skeleton";
 import Link from "next/link";
 import Image from "next/image";
 import { getCategoryPageUrl } from "@/lib/categoryUtils";
+import { getImageUrl } from "@/lib/utils";
 
 interface PremiumPackage {
   _id: string;
@@ -354,7 +355,7 @@ const NewPremiumPackages = () => {
                   <Card className="overflow-hidden border border-gray-200 h-full bg-white flex flex-col shadow-md">
                     <div className="relative h-52 w-full overflow-hidden">
                       <SafeImage
-                        src={pkg.images?.[0] || FALLBACK_IMAGE}
+                        src={getImageUrl(pkg.images?.[0]) || FALLBACK_IMAGE}
                         alt={pkg.title}
                         fallback={FALLBACK_IMAGE}
                       />
@@ -423,7 +424,7 @@ const NewPremiumPackages = () => {
                   <Card className="desktop-card overflow-hidden border border-gray-200 group h-full bg-white">
                     <div className="desktop-card-image relative h-64 overflow-hidden">
                       <SafeImage
-                        src={pkg.images?.[0] || FALLBACK_IMAGE}
+                        src={getImageUrl(pkg.images?.[0]) || FALLBACK_IMAGE}
                         alt={pkg.title}
                         fallback={FALLBACK_IMAGE}
                       />
