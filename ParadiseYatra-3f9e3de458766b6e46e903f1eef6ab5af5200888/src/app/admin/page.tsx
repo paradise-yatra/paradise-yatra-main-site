@@ -27,6 +27,7 @@ import {
   LazyAdminUsers,
 } from "@/components/lazy-admin-components";
 import AdminFAQ from "@/components/admin/AdminFAQ";
+import AdminDestinationFAQ from "@/components/admin/AdminDestinationFAQ";
 
 type AdminSection =
   | "dashboard"
@@ -42,6 +43,7 @@ type AdminSection =
   | "fixed-departures"
   | "itinerary"
   | "faq"
+  | "destination-faq"
   | "tags"
   | "all-packages"
   | "leads"
@@ -168,6 +170,8 @@ const AdminPage = () => {
         return <LazyAdminItinerary />;
       case "faq":
         return <AdminFAQ />;
+      case "destination-faq":
+        return <AdminDestinationFAQ />;
       case "tags":
         return <LazyAdminTags />;
       case "all-packages":

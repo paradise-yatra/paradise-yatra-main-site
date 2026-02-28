@@ -13,15 +13,15 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
     const formattedCountry = country.charAt(0).toUpperCase() + country.slice(1);
 
     return {
-        title: `${formattedCountry} International Tour Packages | Paradise Yatra`,
-        description: `Explore the best international tour packages for ${formattedCountry}. Premium travel experiences curated by Paradise Yatra.`,
-        keywords: [`${country} tour packages`, `${country} international tours`, `${country} holiday`, 'Paradise Yatra', country],
+        title: `${formattedCountry} Tour Packages | Paradise Yatra`,
+        description: `Explore the best tour packages for ${formattedCountry}. Premium travel experiences curated by Paradise Yatra.`,
+        keywords: [`${country} tour packages`, `${country} tours`, `${country} holiday`, 'Paradise Yatra', country],
         alternates: {
             canonical: `/package/international/${resolvedParams.country}`,
         },
         openGraph: {
-            title: `${formattedCountry} International Tour Packages | Paradise Yatra`,
-            description: `Book your international vacation in ${formattedCountry} with Paradise Yatra.`,
+            title: `${formattedCountry} Tour Packages | Paradise Yatra`,
+            description: `Book your vacation in ${formattedCountry} with Paradise Yatra.`,
             url: `/package/international/${resolvedParams.country}`,
             type: 'website',
         },

@@ -8,8 +8,12 @@ export default function FooterWrapper() {
 
     // List of routes where the footer should be hidden
     const hideFooterRoutes = ["/login", "/signup"];
+    const hideFooterPrefixes = ["/admin"];
 
-    if (hideFooterRoutes.includes(pathname)) {
+    if (
+        hideFooterRoutes.includes(pathname) ||
+        hideFooterPrefixes.some((prefix) => pathname.startsWith(prefix))
+    ) {
         return null;
     }
 

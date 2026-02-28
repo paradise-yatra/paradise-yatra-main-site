@@ -2,7 +2,7 @@
 
 import { Suspense, useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { MapPin, Clock, Filter, ChevronDown, Check, ChevronLeft, ChevronRight, X, ArrowRight, Heart, Search, Tag as TagIcon } from 'lucide-react';
+import { MapPin, Clock, Filter, ChevronDown, Check, ChevronLeft, ChevronRight, X, ArrowRight, Heart, Search, Tag as TagIcon, SearchX } from 'lucide-react';
 import Loading from '@/components/ui/loading';
 import Link from 'next/link';
 import Image from 'next/image';
@@ -64,41 +64,49 @@ const Pagination = ({ currentPage, totalPages, onPageChange, className = "" }: P
     };
 
     return (
-        <div className={`flex items-center justify-center space-x-2 ${className}`}>
+        <div className={`flex items-center justify-end space-x-2 ${className}`}>
             <Button
+                variant="outline"
                 size="sm"
                 onClick={() => handlePageChange(currentPage - 1)}
                 disabled={currentPage === 1}
-                className="bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white font-semibold px-3 xl:px-4 py-2 rounded-lg transition-all duration-300 shadow-lg disabled:opacity-50 border-0"
+                className="!text-[12px] !font-bold text-[#314594] border-[#dfe1df] rounded-[6px] transition-all !shadow-none whitespace-nowrap disabled:opacity-30 h-9 px-4 hover:!bg-[#314594] hover:!text-white"
             >
+                <ChevronLeft className="w-4 h-4 mr-1" />
                 Previous
             </Button>
-            {getPageNumbers().map((page, index) => (
-                <div key={index}>
-                    {page === '...' ? (
-                        <span className="px-3 py-2 text-blue-500 font-bold">...</span>
-                    ) : (
-                        <Button
-                            variant={currentPage === page ? "default" : "outline"}
-                            size="sm"
-                            onClick={() => handlePageChange(page as number)}
-                            className={`px-3 py-2 font-bold ${currentPage === page
-                                ? 'bg-blue-600 text-white hover:bg-blue-700 border-0 shadow-md'
-                                : 'bg-blue-500 text-white hover:bg-blue-600 border-0'
-                                }`}
-                        >
-                            {page}
-                        </Button>
-                    )}
-                </div>
-            ))}
+
+            <div className="flex items-center space-x-1">
+                {getPageNumbers().map((page, index) => (
+                    <div key={index}>
+                        {page === '...' ? (
+                            <span className="px-2 text-slate-400 font-bold">...</span>
+                        ) : (
+                            <Button
+                                variant={currentPage === page ? "default" : "outline"}
+                                size="sm"
+                                onClick={() => handlePageChange(page as number)}
+                                className={`w-9 h-9 !p-0 !text-[12px] !font-bold rounded-[6px] transition-all !shadow-none ${currentPage === page
+                                    ? '!bg-[#314594] !text-white border-transparent'
+                                    : '!bg-white !text-[#000945] border-[#dfe1df] hover:bg-slate-50'
+                                    }`}
+                            >
+                                {page}
+                            </Button>
+                        )}
+                    </div>
+                ))}
+            </div>
+
             <Button
+                variant="outline"
                 size="sm"
                 onClick={() => handlePageChange(currentPage + 1)}
                 disabled={currentPage === totalPages}
-                className="bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white font-semibold px-3 xl:px-4 py-2 rounded-lg transition-all duration-300 shadow-lg disabled:opacity-50 border-0"
+                className="!text-[12px] !font-bold text-[#314594] border-[#dfe1df] rounded-[6px] transition-all !shadow-none whitespace-nowrap disabled:opacity-30 h-9 px-4 hover:!bg-[#314594] hover:!text-white"
             >
                 Next
+                <ChevronRight className="w-4 h-4 ml-1" />
             </Button>
         </div>
     );
@@ -111,7 +119,7 @@ const ThemeLoadingSkeleton = () => (
             <div className="container mx-auto px-4 py-8">
                 <div className="flex flex-col lg:flex-row gap-8">
                     <aside className="lg:w-80 hidden lg:block">
-                        <div className="bg-white rounded-2xl shadow-sm p-6 sticky top-24 border border-slate-100 h-[600px] animate-pulse"></div>
+                        <div className="bg-white rounded-2xl shadow-sm p-6 sticky top-32 mt-0.5 border border-slate-100 h-[600px] animate-pulse"></div>
                     </aside>
                     <div className="flex-1">
                         <div className="grid gap-6">
@@ -291,7 +299,7 @@ export default function ThemePackagesPageClient({ slug }: { slug: string }) {
                         <div className="flex flex-col lg:flex-row gap-6">
                             {/* Sidebar Filters */}
                             <aside className="lg:w-80 flex-shrink-0">
-                                <div className="lg:sticky lg:top-24">
+                                <div className="lg:sticky lg:top-32 lg:mt-0.5">
                                     <div className="lg:hidden mb-4">
                                         <Button
                                             onClick={() => setIsFiltersOpen(true)}
@@ -384,15 +392,15 @@ export default function ThemePackagesPageClient({ slug }: { slug: string }) {
                                         )}
                                     </div>
                                 ) : (
-                                    <div className="text-center py-20 bg-white rounded-3xl border border-slate-200 shadow-sm mx-1">
-                                        <div className="inline-flex items-center justify-center w-20 h-20 bg-slate-50 rounded-full mb-6">
-                                            <Search className="w-10 h-10 !text-slate-300" />
+                                    <div className="text-center py-16 bg-white rounded-[6px] border border-[#dfe1df] shadow-none mx-1">
+                                        <div className="inline-flex items-center justify-center w-16 h-16 bg-slate-50 rounded-full mb-5">
+                                            <SearchX className="w-8 h-8 text-[#000945] opacity-20" />
                                         </div>
-                                        <h3 className="!text-2xl !font-black !text-slate-900 mb-2">No Packages Found</h3>
-                                        <p className="!text-slate-500 !font-bold max-w-sm mx-auto">We couldn't find any packages matching your current filters.</p>
+                                        <h3 className="!text-xl !font-bold !text-[#000945] mb-2">No Packages Found</h3>
+                                        <p className="!text-[#000945]/70 !text-sm !font-medium max-w-sm mx-auto">We couldn't find any packages matching your current filters.</p>
                                         <Button
                                             onClick={() => { setDurationFilter('all'); setPriceFilter('all'); }}
-                                            className="mt-8 bg-blue-600 hover:bg-blue-700 !px-8 !py-6 !text-lg !font-black rounded-2xl shadow-lg shadow-blue-200 transition-all active:scale-95"
+                                            className="mt-8 !bg-white !text-[#155dfc] !text-sm !font-bold py-2 px-8 rounded-[6px] h-auto !shadow-none transition-all !border !border-[#dfe1df] hover:bg-slate-50"
                                         >
                                             Clear All Filters
                                         </Button>
@@ -409,7 +417,7 @@ export default function ThemePackagesPageClient({ slug }: { slug: string }) {
                         <div className="mx-auto flex max-w-6xl flex-col gap-10 relative z-10">
                             <div className="flex flex-col gap-2 md:flex-row md:items-end md:justify-between mb-2">
                                 <div className="flex flex-col gap-1 px-1">
-                                    <h3 className="!text-2xl md:!text-3xl !font-bold !text-slate-900 !leading-tight flex items-center gap-3 flex-wrap">
+                                    <h3 className="!text-2xl md:!text-3xl !font-bold !text-[#000945] !leading-tight tracking-tight">
                                         You Might Also Like
                                     </h3>
                                     <p className="!text-sm !text-slate-600 md:!text-base !max-w-2xl !font-semibold">
@@ -463,9 +471,9 @@ export default function ThemePackagesPageClient({ slug }: { slug: string }) {
             </main>
 
             <Dialog open={isFiltersOpen} onOpenChange={setIsFiltersOpen}>
-                <DialogContent className="max-w-md max-h-[90vh] flex flex-col p-0 overflow-hidden">
+                <DialogContent className="max-w-md max-h-[90vh] flex flex-col p-0 overflow-hidden rounded-[6px]">
                     <DialogHeader className="p-6 pb-0">
-                        <DialogTitle className="!text-xl !font-black !text-slate-900">Filters</DialogTitle>
+                        <DialogTitle className="!text-xl !font-bold !text-[#000945]">Filters</DialogTitle>
                     </DialogHeader>
                     <div className="flex-grow overflow-y-auto px-0">
                         <div className="p-6 pt-2">
@@ -480,7 +488,6 @@ export default function ThemePackagesPageClient({ slug }: { slug: string }) {
                                     setSortBy('recommended');
                                 }}
                                 onApply={() => setIsFiltersOpen(false)}
-                                onClose={() => setIsFiltersOpen(false)}
                             />
                         </div>
                     </div>

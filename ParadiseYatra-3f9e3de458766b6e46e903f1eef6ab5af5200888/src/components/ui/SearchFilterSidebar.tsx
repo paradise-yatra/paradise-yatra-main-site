@@ -28,7 +28,7 @@ const SearchFilterSidebar: React.FC<SearchFilterSidebarProps> = ({
         <div className="flex flex-col h-full">
             <div className="p-6 pb-4 flex-shrink-0 flex items-center justify-between">
                 <div className="flex items-center gap-2">
-                    <h2 className="!text-lg !font-bold !text-slate-900 !uppercase">Filters</h2>
+                    <h2 className="!text-xl !font-bold !text-[#000945]">Filters</h2>
                 </div>
                 {onClose && (
                     <Button variant="ghost" size="icon" onClick={onClose} className="lg:hidden text-slate-500">
@@ -42,8 +42,8 @@ const SearchFilterSidebar: React.FC<SearchFilterSidebarProps> = ({
                 {/* Duration Filter */}
                 <div className="mb-6">
                     <div className="flex items-center gap-2 mb-3">
-                        <div className="w-1 h-4 bg-blue-600 rounded"></div>
-                        <Label className="!text-sm !font-bold !text-slate-700 !uppercase !tracking-wider">Duration</Label>
+                        <div className="w-1 h-4 bg-[#314594] rounded"></div>
+                        <Label className="!text-sm !font-bold !text-[#000945] !tracking-wider">Duration</Label>
                     </div>
                     <RadioGroup value={durationFilter} onValueChange={(value) => setDurationFilter(value)}>
                         <div className="space-y-2">
@@ -69,8 +69,8 @@ const SearchFilterSidebar: React.FC<SearchFilterSidebarProps> = ({
                 {/* Price Filter */}
                 <div className="mb-6">
                     <div className="flex items-center gap-2 mb-3">
-                        <div className="w-1 h-4 bg-blue-600 rounded"></div>
-                        <Label className="!text-sm !font-bold !text-slate-700 !uppercase !tracking-wider">Price</Label>
+                        <div className="w-1 h-4 bg-[#314594] rounded"></div>
+                        <Label className="!text-sm !font-bold !text-[#000945] !tracking-wider">Price</Label>
                     </div>
                     <RadioGroup value={priceFilter} onValueChange={(value) => setPriceFilter(value)}>
                         <div className="space-y-2">
@@ -96,14 +96,14 @@ const SearchFilterSidebar: React.FC<SearchFilterSidebarProps> = ({
             <div className="p-6 pt-4 flex-shrink-0 border-t border-slate-200 flex flex-col gap-3">
                 <Button
                     variant="outline"
-                    className="w-full !text-sm !text-slate-600 !font-bold !border-slate-200 hover:!bg-slate-50 transition-colors"
+                    className="w-full !text-sm !text-[#155dfc] !font-bold !border !border-[#dfe1df] !shadow-none hover:!bg-slate-50 transition-colors"
                     onClick={onClearFilters}
                 >
                     Clear All Filters
                 </Button>
                 {onApply && (
                     <Button
-                        className="w-full !text-sm !font-bold bg-blue-600 hover:bg-blue-700 text-white lg:hidden"
+                        className="w-full !text-sm !font-bold bg-[#314594] hover:bg-[#253675] text-white lg:hidden rounded-[6px] shadow-none"
                         onClick={onApply}
                     >
                         Apply Filters

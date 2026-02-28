@@ -63,18 +63,10 @@ const LoginAlertModal = ({ isOpen, onClose, theme = "blue" }: LoginAlertModalPro
 
     return (
         <Dialog open={isOpen} onOpenChange={onClose}>
-            <DialogContent className="sm:max-w-[440px] p-0 border-0 shadow-3xl bg-white overflow-visible !rounded-2xl">
-                {/* Close Button */}
-                <button
-                    onClick={onClose}
-                    className="absolute -right-2 -top-2 sm:-right-3 sm:-top-3 p-2 bg-white rounded-lg shadow-lg hover:bg-slate-50 transition-all z-[110] border border-slate-100 group cursor-pointer"
-                >
-                    <X className="h-5 w-5 text-slate-400 group-hover:text-slate-600 transition-colors" />
-                </button>
-
+            <DialogContent className="sm:max-w-[440px] p-0 border border-[#dfe1df] shadow-2xl bg-white overflow-visible !rounded-[6px]">
                 <div className="flex flex-col items-center px-6 sm:px-10 pt-10 pb-10">
                     {/* Logo Section */}
-                    <div className="mb-6 relative h-14 w-14 flex items-center justify-center bg-blue-50 rounded-xl border border-blue-100">
+                    <div className="mb-6 relative h-14 w-14 flex items-center justify-center bg-blue-50 rounded-[6px] border border-blue-100">
                         <Image
                             src="/favicon.png"
                             alt="Paradise Yatra Logo"
@@ -85,22 +77,21 @@ const LoginAlertModal = ({ isOpen, onClose, theme = "blue" }: LoginAlertModalPro
                     </div>
 
                     {/* Text Section */}
-                    <h2 className="!text-lg sm:!text-xl !font-black !text-slate-900 text-center leading-[1.4] mb-8 tracking-tight px-2">
+                    <h2 className="!text-lg sm:!text-xl !font-black !text-[#000945] text-center leading-[1.4] mb-8 tracking-tight px-2">
                         {headingText}
                     </h2>
 
                     {/* Buttons Section */}
                     <div className="flex flex-col gap-3 w-full">
-                        {/* Google Login Button - Look-alike design */}
                         <div className="relative w-full h-11 group">
                             {/* The "Look-alike" container that matches email button style */}
-                            <div className="absolute inset-0 w-full h-full rounded-lg border border-slate-300 bg-white group-hover:bg-slate-50 flex items-center justify-center gap-3 px-6 transition-all group-active:scale-[0.98] pointer-events-none shadow-none">
+                            <div className="absolute inset-0 w-full h-full rounded-[6px] border border-slate-300 bg-white group-hover:bg-slate-50 flex items-center justify-center gap-3 px-6 transition-all group-active:scale-[0.98] pointer-events-none shadow-none text-slate-700">
                                 {loading ? (
                                     <Loader2 className="h-5 w-5 animate-spin text-blue-600" />
                                 ) : (
                                     <FcGoogle className="h-5 w-5" />
                                 )}
-                                <span className="text-sm font-bold text-slate-700">
+                                <span className="text-sm font-bold">
                                     {loading ? "Processing..." : "Continue with Google"}
                                 </span>
                             </div>
@@ -123,7 +114,7 @@ const LoginAlertModal = ({ isOpen, onClose, theme = "blue" }: LoginAlertModalPro
                         <Button
                             onClick={handleLoginRedirect}
                             variant="outline"
-                            className="w-full h-11 rounded-lg border border-slate-300 !text-slate-700 bg-white hover:bg-slate-50 !font-bold flex items-center justify-center gap-3 px-6 transition-all !text-sm active:scale-[0.98] !shadow-none"
+                            className="w-full h-11 rounded-[6px] border border-slate-300 !text-slate-700 bg-white hover:bg-slate-50 !font-bold flex items-center justify-center gap-3 px-6 transition-all !text-sm active:scale-[0.98] !shadow-none"
                         >
                             <Mail className="h-5 w-5 text-slate-500" />
                             Continue with email
@@ -131,9 +122,9 @@ const LoginAlertModal = ({ isOpen, onClose, theme = "blue" }: LoginAlertModalPro
                     </div>
 
                     {/* Footer Text */}
-                    <div className="mt-8 text-center max-w-[300px]">
-                        <p className="!text-[10px] !text-slate-400 !leading-relaxed !font-bold uppercase tracking-wider">
-                            By proceeding, you agree to our <span className="!text-blue-600 underline cursor-pointer hover:!text-blue-700">Terms of Use</span> and confirm you have read our <span className="!text-blue-600 underline cursor-pointer hover:!text-blue-700">Privacy and Cookie Statement</span>.
+                    <div className="mt-8 text-center max-w-[320px]">
+                        <p className="!text-[10px] !text-slate-500 !leading-relaxed !font-medium">
+                            By proceeding, you agree to our <span className="!text-blue-600 underline cursor-pointer hover:!text-blue-700 font-bold">Terms of Use</span> and confirm you have read our <span className="!text-blue-600 underline cursor-pointer hover:!text-blue-700 font-bold">Privacy and Cookie Statement</span>.
                         </p>
                     </div>
                 </div>

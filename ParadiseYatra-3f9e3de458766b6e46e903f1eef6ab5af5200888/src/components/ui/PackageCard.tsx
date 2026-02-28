@@ -37,7 +37,7 @@ const PackageCard: React.FC<PackageCardProps> = ({
 }) => {
     const optimizedImage =
         getImageUrl(image, {
-            width: 600,
+            width: "auto",
             height: 600,
             crop: "fill",
             gravity: "auto",
@@ -66,7 +66,7 @@ const PackageCard: React.FC<PackageCardProps> = ({
                     {/* Wishlist Button */}
                     <button
                         onClick={(e) => onWishlistToggle(e, String(id))}
-                        className="absolute top-3 right-3 z-40 p-2 rounded-full bg-white border border-white/30 hover:bg-white transition-all shadow-sm group/heart"
+                        className="absolute top-3 right-3 z-40 p-2 rounded-full bg-white border border-white/30 hover:bg-white transition-all shadow-sm group/heart cursor-pointer"
                     >
                         <Heart
                             className="w-4 h-4 transition-colors"
@@ -80,7 +80,7 @@ const PackageCard: React.FC<PackageCardProps> = ({
                     {/* Content on Image */}
                     <div className="absolute bottom-4 left-4 right-4 text-white">
                         <div className="flex items-center gap-1.5 mb-1.5 opacity-90">
-                            <MapPin className="h-3.5 w-3.5" style={{ color: themeColor }} />
+                            <MapPin className="h-3.5 w-3.5" style={{ color: 'white' }} />
                             <span className="!text-xs !font-semibold tracking-wide uppercase">{destination}</span>
                         </div>
                         <h4 className="text-md !font-bold leading-snug line-clamp-2 text-shadow-sm">
@@ -100,7 +100,7 @@ const PackageCard: React.FC<PackageCardProps> = ({
                         </div>
                         <div className="flex flex-col items-end">
                             <span className="text-xs text-slate-800 font-black uppercase tracking-wide">Price</span>
-                            <span className="!text-lg font-black" style={{ color: themeColor }}>
+                            <span className="!text-lg font-black" style={{ color: '#155dfc' }}>
                                 ₹{price.toLocaleString()}
                             </span>
                         </div>

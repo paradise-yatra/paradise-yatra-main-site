@@ -2,13 +2,8 @@
 
 import * as React from "react"
 import { X } from "lucide-react"
-
+import { motion, AnimatePresence, HTMLMotionProps } from "framer-motion"
 import { cn } from "@/lib/utils"
-// Note: In a real production app we might use @radix-ui/react-dialog or similar. 
-// For this standalone implementation we'll build a custom one using React portals could be complex, 
-// so I'll stick to a simpler implementation that works within the component tree or uses a basic portal if needed.
-// Given strict "don't use placeholders rule", I should make it functional.
-// I will use a simple fixed overlay strategy.
 
 interface DialogProps {
     open?: boolean;
@@ -16,37 +11,88 @@ interface DialogProps {
     children?: React.ReactNode;
 }
 
+const DialogContext = React.createContext<{
+    onOpenChange?: (open: boolean) => void;
+}>({});
+
 const Dialog = ({ open, onOpenChange, children }: DialogProps) => {
-    if (!open) return null;
+    // Escape key listener
+    React.useEffect(() => {
+        const handleEsc = (e: KeyboardEvent) => {
+            if (e.key === 'Escape' && open) {
+                onOpenChange?.(false);
+            }
+        };
+        window.addEventListener('keydown', handleEsc);
+        return () => window.removeEventListener('keydown', handleEsc);
+    }, [open, onOpenChange]);
+
+    // Prevent scrolling when dialog is open
+    React.useEffect(() => {
+        if (open) {
+            document.body.style.overflow = 'hidden';
+        } else {
+            document.body.style.overflow = 'unset';
+        }
+        return () => {
+            document.body.style.overflow = 'unset';
+        };
+    }, [open]);
 
     return (
-        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 sm:p-6 overflow-y-auto">
-            <div
-                className="fixed inset-0 bg-black/60 backdrop-blur-sm transition-opacity duration-300"
-                onClick={() => onOpenChange?.(false)}
-            />
-            <div className="relative z-[101] w-full max-w-lg pointer-events-none">
-                {children}
-            </div>
-        </div>
+        <DialogContext.Provider value={{ onOpenChange }}>
+            <AnimatePresence>
+                {open && (
+                    <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 sm:p-6 overflow-hidden">
+                        <motion.div
+                            initial={{ opacity: 0 }}
+                            animate={{ opacity: 1 }}
+                            exit={{ opacity: 0 }}
+                            transition={{ duration: 0.2 }}
+                            className="fixed inset-0 bg-black/40 backdrop-blur-[1px]"
+                            onClick={() => onOpenChange?.(false)}
+                        />
+                        <div className="relative z-[101] w-full max-w-lg pointer-events-none flex items-center justify-center h-full">
+                            {children}
+                        </div>
+                    </div>
+                )}
+            </AnimatePresence>
+        </DialogContext.Provider>
     )
 }
 
 const DialogContent = React.forwardRef<
     HTMLDivElement,
-    React.HTMLAttributes<HTMLDivElement>
->(({ className, children, ...props }, ref) => (
-    <div
-        ref={ref}
-        className={cn(
-            "relative flex w-full flex-col bg-white shadow-2xl rounded-[32px] overflow-hidden pointer-events-auto animate-in fade-in zoom-in-95 duration-200",
-            className
-        )}
-        {...props}
-    >
-        {children}
-    </div>
-))
+    HTMLMotionProps<"div">
+>(({ className, children, ...props }, ref) => {
+    const { onOpenChange } = React.useContext(DialogContext);
+
+    return (
+        <motion.div
+            ref={ref}
+            initial={{ opacity: 0, scale: 0.95, y: 10 }}
+            animate={{ opacity: 1, scale: 1, y: 0 }}
+            exit={{ opacity: 0, scale: 0.95, y: 10 }}
+            transition={{ duration: 0.3, ease: [0.16, 1, 0.3, 1] }}
+            className={cn(
+                "relative flex w-full max-h-[90vh] flex-col bg-white shadow-2xl rounded-[6px] border border-[#dfe1df] overflow-hidden pointer-events-auto",
+                className
+            )}
+            {...props}
+        >
+            {/* Close Button Inside */}
+            <button
+                onClick={() => onOpenChange?.(false)}
+                className="absolute top-4 right-4 z-50 p-1.5 text-[#000945] opacity-50 hover:opacity-100 transition-all cursor-pointer active:scale-90"
+                aria-label="Close"
+            >
+                <X className="w-5 h-5" />
+            </button>
+            {children}
+        </motion.div>
+    );
+});
 DialogContent.displayName = "DialogContent"
 
 const DialogHeader = ({
@@ -70,7 +116,7 @@ const DialogTitle = React.forwardRef<
     <h2
         ref={ref}
         className={cn(
-            "text-lg font-semibold leading-none tracking-tight",
+            "text-lg font-bold leading-none tracking-tight text-[#000945]",
             className
         )}
         {...props}

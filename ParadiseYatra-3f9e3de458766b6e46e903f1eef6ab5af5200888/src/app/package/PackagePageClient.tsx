@@ -2,13 +2,13 @@
 
 import { Suspense, useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { MapPin, Clock, Filter, ChevronDown, Check, ChevronLeft, ChevronRight, X, ArrowRight, Heart, Search } from 'lucide-react';
+import { MapPin, Clock, Filter, ChevronDown, Check, ChevronLeft, ChevronRight, X, ArrowRight, Heart, Search, Users, SearchX } from 'lucide-react';
 import Loading from '@/components/ui/loading';
 import Link from 'next/link';
 import Image from 'next/image';
 import { getImageUrl, getPackagePriceLabel } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
-import { Card } from '@/components/ui/card';
+import { Card, CardContent } from '@/components/ui/card';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import Header from '@/components/Header';
@@ -20,7 +20,7 @@ import { useAuth } from '@/context/AuthContext';
 import LoginAlertModal from '@/components/LoginAlertModal';
 import Footer from '@/components/Footer';
 
-// Pagination Component (Matching the style of packages/[tourType]/[state]/PackagesPageClient)
+// Pagination Component
 interface PaginationProps {
     currentPage: number;
     totalPages: number;
@@ -72,43 +72,49 @@ const Pagination = ({ currentPage, totalPages, onPageChange, className = "" }: P
     };
 
     return (
-        <div className={`flex items-center justify-center space-x-2 ${className}`}>
+        <div className={`flex items-center justify-end space-x-2 ${className}`}>
             <Button
+                variant="outline"
                 size="sm"
                 onClick={() => handlePageChange(currentPage - 1)}
                 disabled={currentPage === 1}
-                className="bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white font-semibold px-3 xl:px-4 py-2 rounded-lg transition-all duration-300 shadow-lg whitespace-nowrap disabled:opacity-50 disabled:cursor-not-allowed border-0"
+                className="!text-[12px] !font-bold text-[#314594] border-[#dfe1df] rounded-[6px] transition-all !shadow-none whitespace-nowrap disabled:opacity-30 h-9 px-4 hover:!bg-[#314594] hover:!text-white"
             >
+                <ChevronLeft className="w-4 h-4 mr-1" />
                 Previous
             </Button>
 
-            {getPageNumbers().map((page, index) => (
-                <div key={index}>
-                    {page === '...' ? (
-                        <span className="px-3 py-2 text-blue-500 font-bold">...</span>
-                    ) : (
-                        <Button
-                            variant={currentPage === page ? "default" : "outline"}
-                            size="sm"
-                            onClick={() => handlePageChange(page as number)}
-                            className={`px-3 py-2 font-bold ${currentPage === page
-                                ? 'bg-blue-600 text-white hover:bg-blue-700 border-0 shadow-md'
-                                : 'bg-blue-500 text-white hover:bg-blue-600 border-0'
-                                }`}
-                        >
-                            {page}
-                        </Button>
-                    )}
-                </div>
-            ))}
+            <div className="flex items-center space-x-1">
+                {getPageNumbers().map((page, index) => (
+                    <div key={index}>
+                        {page === '...' ? (
+                            <span className="px-2 text-slate-400 font-bold">...</span>
+                        ) : (
+                            <Button
+                                variant={currentPage === page ? "default" : "outline"}
+                                size="sm"
+                                onClick={() => handlePageChange(page as number)}
+                                className={`w-9 h-9 !p-0 !text-[12px] !font-bold rounded-[6px] transition-all !shadow-none ${currentPage === page
+                                    ? '!bg-[#314594] !text-white border-transparent'
+                                    : '!bg-white !text-[#000945] border-[#dfe1df] hover:bg-slate-50'
+                                    }`}
+                            >
+                                {page}
+                            </Button>
+                        )}
+                    </div>
+                ))}
+            </div>
 
             <Button
+                variant="outline"
                 size="sm"
                 onClick={() => handlePageChange(currentPage + 1)}
                 disabled={currentPage === totalPages}
-                className="bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white font-semibold px-3 xl:px-4 py-2 rounded-lg transition-all duration-300 shadow-lg whitespace-nowrap disabled:opacity-50 disabled:cursor-not-allowed border-0"
+                className="!text-[12px] !font-bold text-[#314594] border-[#dfe1df] rounded-[6px] transition-all !shadow-none whitespace-nowrap disabled:opacity-30 h-9 px-4 hover:!bg-[#314594] hover:!text-white"
             >
                 Next
+                <ChevronRight className="w-4 h-4 ml-1" />
             </Button>
         </div>
     );
@@ -119,7 +125,7 @@ const PackagesLoadingSkeleton = () => (
         <div className="container mx-auto px-4 py-8">
             <div className="flex flex-col lg:flex-row gap-8">
                 <aside className="lg:w-80 hidden lg:block">
-                    <div className="bg-white rounded-2xl shadow-sm p-6 sticky top-24 border border-slate-100 h-[600px] animate-pulse"></div>
+                    <div className="bg-white rounded-2xl shadow-sm p-6 sticky top-32 mt-0.5 border border-slate-100 h-[600px] animate-pulse"></div>
                 </aside>
                 <div className="flex-1">
                     <div className="grid gap-6">
@@ -196,7 +202,7 @@ export default function PackagePageClient() {
                 setAllItems(packages);
                 setFilteredItems(packages);
 
-                // Fetch suggestions (from all-packages API for consistency)
+                // Fetch suggestions
                 const suggestionsResponse = await fetch(`/api/all-packages?limit=9`, { cache: 'no-store' });
                 if (suggestionsResponse.ok) {
                     const suggestionsData = await suggestionsResponse.json();
@@ -242,9 +248,7 @@ export default function PackagePageClient() {
             const extractDays = (duration: string): number => {
                 if (!duration) return 0;
                 const match = duration.match(/(\d+)\s*(?:Days?|D)/i);
-                if (match) {
-                    return parseInt(match[1], 10);
-                }
+                if (match) return parseInt(match[1], 10);
                 const firstNumber = duration.match(/\d+/);
                 return firstNumber ? parseInt(firstNumber[0], 10) : 0;
             };
@@ -297,43 +301,6 @@ export default function PackagePageClient() {
     const endIndex = startIndex + itemsPerPage;
     const paginatedItems = filteredItems.slice(startIndex, endIndex);
 
-    // Carousel scroll handling for suggestions
-    const updateScrollState = () => {
-        if (carouselRef.current) {
-            const { scrollLeft, scrollWidth, clientWidth } = carouselRef.current;
-            setCanScrollLeft(scrollLeft > 0);
-            setCanScrollRight(scrollLeft < scrollWidth - clientWidth - 1);
-        }
-    };
-
-    useEffect(() => {
-        const carousel = carouselRef.current;
-        if (carousel) {
-            carousel.addEventListener("scroll", updateScrollState);
-            window.addEventListener("resize", updateScrollState);
-            setTimeout(updateScrollState, 500);
-
-            return () => {
-                carousel.removeEventListener("scroll", updateScrollState);
-                window.removeEventListener("resize", updateScrollState);
-            };
-        }
-    }, [suggestions]);
-
-    const scrollByStep = (direction: number) => {
-        if (carouselRef.current) {
-            const card = carouselRef.current.querySelector("article");
-            const gap = 24;
-            const cardWidth = card ? card.getBoundingClientRect().width : 290;
-            const step = cardWidth + gap;
-
-            carouselRef.current.scrollBy({
-                left: direction * step,
-                behavior: "smooth",
-            });
-        }
-    };
-
     if (loading) {
         return (
             <div className="min-h-screen bg-slate-50">
@@ -346,75 +313,88 @@ export default function PackagePageClient() {
     }
 
     return (
-        <div className="min-h-screen bg-slate-50 flex flex-col">
+        <div className="min-h-screen bg-slate-50 flex flex-col font-plus-jakarta-sans">
             <Header />
 
-            <main className="flex-grow">
-                {/* Same Header Design as PackagesPageClient */}
-                <SearchHeader
-                    title={<>Explore All <span className="text-blue-600">Packages</span></>}
-                    subtitle="Discover handpicked premium tour packages curated for comfort, luxury, and authentic local adventures across the globe."
-                />
+            <main className="flex-grow pt-0">
 
-                <div className="bg-white border-b border-slate-200">
-                    <div className="max-w-6xl mx-auto px-4 md:px-8 py-3 flex flex-col md:flex-row md:items-center justify-between gap-4">
-                        <div className="flex items-center gap-2 text-xs font-bold uppercase tracking-widest text-slate-500">
-                            <Link href="/" className="hover:text-blue-600 transition-colors">Home</Link>
-                            <ChevronRight className="w-3 h-3 text-slate-300" />
-                            <span className="text-blue-600">Package</span>
-                        </div>
+                {/* Hero Section */}
+                <section className="relative flex flex-col md:flex-row w-full md:h-[496px] md:overflow-hidden items-center justify-center bg-white md:bg-transparent">
+                    <div className="md:hidden w-full px-4 pt-6 pb-2 bg-white text-left z-10 flex-shrink-0">
+                        <h1 className="!text-[28px] !font-black text-slate-800 font-plus-jakarta-sans tracking-tight leading-tight">
+                            Explore All <span className="text-[#000945]">Premium Packages</span>
+                        </h1>
+                    </div>
 
-                        {/* Search Bar */}
-                        <div className="relative w-full md:w-96 flex-shrink-0">
-                            <div className="absolute inset-y-0 left-3 flex items-center pointer-events-none">
-                                <Search className="h-4 w-4 text-slate-400" />
-                            </div>
-                            <input
-                                type="text"
-                                placeholder="Search packages, destinations..."
-                                value={searchQuery}
-                                onChange={(e) => setSearchQuery(e.target.value)}
-                                className="w-full pl-10 pr-4 py-2 bg-slate-50 border border-slate-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all font-medium text-slate-700"
-                            />
-                            {searchQuery && (
-                                <button
-                                    onClick={() => setSearchQuery("")}
-                                    className="absolute inset-y-0 right-3 flex items-center text-slate-400 hover:text-slate-600"
-                                >
-                                    <X className="h-4 w-4" />
-                                </button>
-                            )}
+                    {/* Image Container */}
+                    <div className="relative w-full h-[230.4px] md:absolute md:inset-0 md:h-auto flex-shrink-0">
+                        <Image
+                            src="/hero/sikkim-hero-v3.png"
+                            alt="Paradise Yatra Packages"
+                            fill
+                            className="object-cover"
+                            priority
+                        />
+                        <div className="absolute inset-0 bg-black/20" />
+                    </div>
+
+                    {/* Centered Hub (Hidden on mobile since highlights are hidden) */}
+                    <div className="hidden md:block max-w-6xl w-full mx-auto px-4 md:px-8 relative z-30">
+                        <div className="flex flex-col items-center max-w-4xl mx-auto w-full">
+                            <Card className="bg-white rounded-[6px] shadow-none border border-slate-100 overflow-hidden w-full md:h-[150px] flex items-center">
+                                <CardContent className="p-0 md:p-6 w-full h-full flex flex-col justify-center items-center">
+                                    {/* Desktop Heading */}
+                                    <h1 className="hidden md:block !text-xl md:!text-[44px] !font-black text-slate-800 mb-4 text-center font-plus-jakarta-sans tracking-tight leading-tight">
+                                        Explore All <span className="text-[#000945]">Premium Packages</span>
+                                    </h1>
+
+                                    <div className="hidden md:flex flex-nowrap items-center justify-center gap-x-6 lg:gap-x-12 w-full px-2 md:px-4 overflow-x-auto no-scrollbar">
+                                        <div className="flex items-center gap-3 group flex-shrink-0">
+                                            <div className="flex items-center justify-center w-6 h-6 rounded-full bg-blue-50 text-blue-600 border border-blue-100 flex-shrink-0">
+                                                <Check className="w-3.5 h-3.5 stroke-[2.5]" />
+                                            </div>
+                                            <span className="text-[#000945] font-medium text-[12px] md:text-[15px] tracking-tight whitespace-nowrap">Snow views available</span>
+                                        </div>
+
+                                        <div className="flex items-center gap-3 group flex-shrink-0">
+                                            <div className="flex items-center justify-center w-6 h-6 rounded-full bg-blue-50 text-blue-600 border border-blue-100 flex-shrink-0">
+                                                <Check className="w-3.5 h-3.5 stroke-[2.5]" />
+                                            </div>
+                                            <span className="text-[#000945] font-medium text-[12px] md:text-[15px] tracking-tight whitespace-nowrap">Private cab included</span>
+                                        </div>
+
+                                        <div className="flex items-center gap-3 group flex-shrink-0">
+                                            <div className="flex items-center justify-center w-6 h-6 rounded-full bg-blue-50 text-blue-600 border border-blue-100 flex-shrink-0">
+                                                <Check className="w-3.5 h-3.5 stroke-[2.5]" />
+                                            </div>
+                                            <span className="text-[#000945] font-medium text-[12px] md:text-[15px] tracking-tight whitespace-nowrap">Handpicked hotels</span>
+                                        </div>
+
+                                        <div className="flex items-center gap-3 group flex-shrink-0">
+                                            <div className="flex items-center justify-center w-6 h-6 rounded-full bg-blue-50 text-blue-600 border border-blue-100 flex-shrink-0">
+                                                <Check className="w-3.5 h-3.5 stroke-[2.5]" />
+                                            </div>
+                                            <span className="text-[#000945] font-medium text-[12px] md:text-[15px] tracking-tight whitespace-nowrap">Local expert support</span>
+                                        </div>
+                                    </div>
+                                </CardContent>
+                            </Card>
                         </div>
                     </div>
-                </div>
+                </section>
 
-                {/* Main Content Area - Matching horizontal card layout */}
-                <section className="py-8 px-4 md:px-8">
+                {/* Main Content Area */}
+                <section className="py-8 md:py-20 px-4 md:px-8">
                     <div className="max-w-6xl mx-auto">
-                        <div className="flex flex-col lg:flex-row gap-6">
+                        <div className="flex flex-col lg:flex-row gap-8">
 
                             {/* Sidebar Filters */}
                             <aside className="lg:w-80 flex-shrink-0">
-                                <div className="lg:sticky lg:top-24">
-                                    {/* Mobile Filter Button */}
-                                    <div className="lg:hidden mb-4">
-                                        <Button
-                                            onClick={() => setIsFiltersOpen(true)}
-                                            variant="outline"
-                                            className="w-full border border-slate-300 text-slate-900 hover:bg-slate-50"
-                                        >
-                                            <Filter className="mr-2 h-4 w-4" />
-                                            Filters
-                                        </Button>
-                                    </div>
+                                <div className="lg:sticky lg:top-32 lg:mt-0.5">
 
-                                    {/* Desktop Filters Sidebar */}
-                                    <Card className="hidden lg:block border border-slate-200 shadow-sm overflow-hidden p-0 bg-white">
-                                        <div className="p-6 pb-2">
-                                            <h3 className="!text-sm !font-black text-slate-900 uppercase tracking-wider mb-4 flex items-center gap-2">
-                                                <span className="w-1.5 h-1.5 rounded-full bg-blue-600"></span>
-                                                Tour Type
-                                            </h3>
+                                    <Card className="hidden lg:block border border-[#dfe1df] shadow-none overflow-hidden p-0 bg-white rounded-[24px]">
+                                        <div className="p-8 pb-2">
+                                            <h3 className="!text-xs !font-black text-slate-400 uppercase tracking-widest mb-4">Tour Category</h3>
                                             <div className="space-y-1 mb-6">
                                                 {[
                                                     { id: 'all', label: 'All Packages' },
@@ -424,7 +404,7 @@ export default function PackagePageClient() {
                                                     <button
                                                         key={type.id}
                                                         onClick={() => setTourTypeFilter(type.id)}
-                                                        className={`w-full flex items-center justify-between px-3 py-2 rounded-lg text-sm font-bold transition-all ${tourTypeFilter === type.id
+                                                        className={`w-full flex items-center justify-between px-4 py-3 rounded-xl text-sm font-bold transition-all ${tourTypeFilter === type.id
                                                             ? 'bg-blue-50 text-blue-700'
                                                             : 'text-slate-600 hover:bg-slate-50'
                                                             }`}
@@ -454,44 +434,35 @@ export default function PackagePageClient() {
 
                             {/* Package Content */}
                             <div className="flex-1">
-                                {/* Sort and Count Header */}
-                                <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6">
-                                    <p className="!text-sm font-bold !text-slate-600">
-                                        Showing {startIndex + 1}-{Math.min(endIndex, filteredItems.length)} of {filteredItems.length} results
-                                    </p>
-                                    <div className="flex items-center gap-3">
-                                        <span className="text-sm font-bold text-slate-700">Sort By:</span>
-                                        <Select
-                                            value={
-                                                sortBy === 'recommended' ? 'Recommended' :
-                                                    sortBy === 'price-asc' ? 'Price: Low to High' :
-                                                        sortBy === 'price-desc' ? 'Price: High to Low' :
-                                                            sortBy === 'duration-asc' ? 'Duration' : 'Recommended'
-                                            }
-                                            onValueChange={(value) => {
-                                                if (value === 'Recommended') setSortBy('recommended');
-                                                else if (value === 'Price: Low to High') setSortBy('price-asc');
-                                                else if (value === 'Price: High to Low') setSortBy('price-desc');
-                                                else if (value === 'Duration') setSortBy('duration-asc');
-                                            }}
-                                        >
-                                            <SelectTrigger className="w-[200px] bg-white border-slate-200 font-medium text-slate-700">
-                                                <SelectValue placeholder="Sort By" />
+                                <div className="flex items-center justify-between lg:justify-end gap-3 mb-6 md:mb-8">
+                                    <Button
+                                        onClick={() => setIsFiltersOpen(true)}
+                                        variant="outline"
+                                        className="lg:hidden flex items-center justify-center h-9 rounded-full border-slate-200 text-slate-900 hover:bg-slate-50 font-medium text-xs px-6"
+                                    >
+                                        <Filter className="mr-2 h-3.5 w-3.5" />
+                                        Filters
+                                    </Button>
+
+                                    <div className="flex items-center gap-2 sm:gap-3">
+                                        <span className="hidden sm:inline text-sm font-medium text-slate-500">Sort by:</span>
+                                        <Select value={sortBy} onValueChange={setSortBy}>
+                                            <SelectTrigger className="w-[140px] bg-white border-slate-200 font-medium text-slate-900 rounded-full h-9 text-xs px-4">
+                                                <SelectValue placeholder="Recommended" />
                                             </SelectTrigger>
                                             <SelectContent className="rounded-xl">
-                                                <SelectItem value="Recommended">Recommended</SelectItem>
-                                                <SelectItem value="Price: Low to High">Price: Low to High</SelectItem>
-                                                <SelectItem value="Price: High to Low">Price: High to Low</SelectItem>
-                                                <SelectItem value="Duration">Duration</SelectItem>
+                                                <SelectItem value="recommended">Recommended</SelectItem>
+                                                <SelectItem value="price-asc">Price: Low to High</SelectItem>
+                                                <SelectItem value="price-desc">Price: High to Low</SelectItem>
+                                                <SelectItem value="duration-asc">Duration</SelectItem>
                                             </SelectContent>
                                         </Select>
                                     </div>
                                 </div>
 
-                                {/* Package Cards List */}
                                 {filteredItems.length > 0 ? (
                                     <div className="space-y-6">
-                                        {paginatedItems.map((item, index) => (
+                                        {paginatedItems.map((item) => (
                                             <HorizontalPackageCard
                                                 key={item._id}
                                                 id={item._id}
@@ -508,9 +479,8 @@ export default function PackagePageClient() {
                                             />
                                         ))}
 
-                                        {/* Pagination */}
                                         {totalPages > 1 && (
-                                            <div className="mt-8">
+                                            <div className="mt-12">
                                                 <Pagination
                                                     currentPage={currentPage}
                                                     totalPages={totalPages}
@@ -521,22 +491,25 @@ export default function PackagePageClient() {
                                         )}
                                     </div>
                                 ) : (
-                                    <div className="text-center py-16 bg-white rounded-lg shadow-md">
-                                        <div className="text-gray-300 text-6xl mb-4">🏔️</div>
-                                        <h3 className="!text-xl !font-semibold text-gray-600 mb-3">No packages found</h3>
-                                        <p className="!text-gray-500 font-semibold max-w-md mx-auto mb-6">
-                                            We couldn't find any packages matching your filters.
+                                    <div className="text-center py-16 bg-white rounded-[6px] border border-[#dfe1df] shadow-none">
+                                        <div className="w-16 h-16 bg-slate-50 rounded-full flex items-center justify-center mx-auto mb-5">
+                                            <SearchX className="w-8 h-8 text-[#000945] opacity-20" />
+                                        </div>
+                                        <h3 className="!text-xl !font-bold text-[#000945] mb-2">No packages found</h3>
+                                        <p className="!text-[#000945]/70 !text-sm font-medium max-w-sm mx-auto mb-8">
+                                            We couldn't find any packages matching your filters or search query.
                                         </p>
                                         <Button
                                             onClick={() => {
                                                 setDurationFilter('all');
                                                 setPriceFilter('all');
                                                 setTourTypeFilter('all');
+                                                setSearchQuery("");
                                                 setSortBy('recommended');
                                             }}
-                                            className="bg-blue-600 text-sm text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors"
+                                            className="!bg-white !text-[#155dfc] font-bold py-2 px-8 rounded-[6px] h-auto text-sm transition-all !border !border-[#dfe1df] !shadow-none hover:bg-slate-50"
                                         >
-                                            Clear Filters
+                                            Clear All Filters
                                         </Button>
                                     </div>
                                 )}
@@ -544,17 +517,17 @@ export default function PackagePageClient() {
                         </div>
                     </div>
                 </section>
-
             </main>
 
-            {/* Mobile Filter Dialog */}
+            <Footer />
+
             <Dialog open={isFiltersOpen} onOpenChange={setIsFiltersOpen}>
-                <DialogContent className="max-w-md max-h-[90vh] flex flex-col p-0 overflow-hidden">
-                    <DialogHeader className="p-6 pb-0">
-                        <DialogTitle className="!text-xl !font-black !text-slate-900">Filters</DialogTitle>
+                <DialogContent className="max-w-md max-h-[90vh] flex flex-col p-0 overflow-hidden rounded-[6px]">
+                    <DialogHeader className="p-8 pb-4">
+                        <DialogTitle className="!text-xl !font-bold !text-[#000945]">Filters</DialogTitle>
                     </DialogHeader>
                     <div className="flex-grow overflow-y-auto px-0">
-                        <div className="p-6 pt-2">
+                        <div className="p-8 pt-0">
                             <h3 className="!text-xs !font-black !text-slate-400 !uppercase !tracking-widest !mb-4">Tour Category</h3>
                             <div className="grid grid-cols-2 gap-3 mb-6">
                                 {[
@@ -565,9 +538,9 @@ export default function PackagePageClient() {
                                     <button
                                         key={type.id}
                                         onClick={() => setTourTypeFilter(type.id)}
-                                        className={`flex items-center justify-center px-4 py-3 rounded-xl text-sm font-bold transition-all border ${tourTypeFilter === type.id
-                                            ? 'bg-blue-600 text-white border-blue-600 shadow-md'
-                                            : 'bg-white text-slate-600 border-slate-200'
+                                        className={`flex items-center justify-center px-4 py-3 rounded-[6px] text-sm font-bold transition-all border ${tourTypeFilter === type.id
+                                            ? 'bg-blue-50 text-blue-700 border-blue-100 shadow-sm'
+                                            : 'bg-white text-slate-600 border-[#dfe1df]'
                                             }`}
                                     >
                                         {type.label}
@@ -586,15 +559,12 @@ export default function PackagePageClient() {
                                     setTourTypeFilter('all');
                                     setSortBy('recommended');
                                 }}
-                                onClose={() => setIsFiltersOpen(false)}
                                 onApply={() => setIsFiltersOpen(false)}
                             />
                         </div>
                     </div>
                 </DialogContent>
             </Dialog>
-
-            <Footer />
             <LoginAlertModal isOpen={isLoginModalOpen} onClose={() => setIsLoginModalOpen(false)} theme="blue" />
         </div>
     );

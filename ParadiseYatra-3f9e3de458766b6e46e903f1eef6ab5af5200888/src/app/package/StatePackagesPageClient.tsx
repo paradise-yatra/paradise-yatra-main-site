@@ -2,13 +2,13 @@
 
 import { Suspense, useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { MapPin, Clock, Filter, ChevronDown, Check, ChevronLeft, ChevronRight, X, ArrowRight, Heart, Search } from 'lucide-react';
+import { MapPin, Clock, Filter, ChevronDown, Check, ChevronLeft, ChevronRight, X, ArrowRight, Heart, Search, Users, SearchX } from 'lucide-react';
 import Loading from '@/components/ui/loading';
 import Link from 'next/link';
 import Image from 'next/image';
 import { getImageUrl, getPackagePriceLabel } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
-import { Card } from '@/components/ui/card';
+import { Card, CardContent } from '@/components/ui/card';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import Header from '@/components/Header';
@@ -20,6 +20,8 @@ import { useAuth } from '@/context/AuthContext';
 import LoginAlertModal from '@/components/LoginAlertModal';
 import Footer from '@/components/Footer';
 import CarouselArrows from '@/components/ui/CarouselArrows';
+import WhyParadiseDifference from '@/components/WhyParadiseDifference';
+import FAQSection from '@/components/FAQSection';
 
 // Helper to format duration display
 const formatDurationDisplay = (duration: string) => {
@@ -79,43 +81,49 @@ const Pagination = ({ currentPage, totalPages, onPageChange, className = "" }: P
     };
 
     return (
-        <div className={`flex items-center justify-center space-x-2 ${className}`}>
+        <div className={`flex items-center justify-end space-x-2 ${className}`}>
             <Button
+                variant="outline"
                 size="sm"
                 onClick={() => handlePageChange(currentPage - 1)}
                 disabled={currentPage === 1}
-                className="bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white font-semibold px-3 xl:px-4 py-2 rounded-lg transition-all duration-300 shadow-lg whitespace-nowrap disabled:opacity-50 disabled:cursor-not-allowed border-0"
+                className="!text-[12px] !font-bold text-[#314594] border-[#dfe1df] rounded-[6px] transition-all !shadow-none whitespace-nowrap disabled:opacity-30 h-9 px-4 hover:!bg-[#314594] hover:!text-white"
             >
+                <ChevronLeft className="w-4 h-4 mr-1" />
                 Previous
             </Button>
 
-            {getPageNumbers().map((page, index) => (
-                <div key={index}>
-                    {page === '...' ? (
-                        <span className="px-3 py-2 text-blue-500 font-bold">...</span>
-                    ) : (
-                        <Button
-                            variant={currentPage === page ? "default" : "outline"}
-                            size="sm"
-                            onClick={() => handlePageChange(page as number)}
-                            className={`px-3 py-2 font-bold ${currentPage === page
-                                ? 'bg-blue-600 text-white hover:bg-blue-700 border-0 shadow-md'
-                                : 'bg-blue-500 text-white hover:bg-blue-600 border-0'
-                                }`}
-                        >
-                            {page}
-                        </Button>
-                    )}
-                </div>
-            ))}
+            <div className="flex items-center space-x-1">
+                {getPageNumbers().map((page, index) => (
+                    <div key={index}>
+                        {page === '...' ? (
+                            <span className="px-2 text-slate-400 font-bold">...</span>
+                        ) : (
+                            <Button
+                                variant={currentPage === page ? "default" : "outline"}
+                                size="sm"
+                                onClick={() => handlePageChange(page as number)}
+                                className={`w-9 h-9 !p-0 !text-[12px] !font-bold rounded-[6px] transition-all !shadow-none ${currentPage === page
+                                    ? '!bg-[#314594] !text-white border-transparent'
+                                    : '!bg-white !text-[#000945] border-[#dfe1df] hover:bg-slate-50'
+                                    }`}
+                            >
+                                {page}
+                            </Button>
+                        )}
+                    </div>
+                ))}
+            </div>
 
             <Button
+                variant="outline"
                 size="sm"
                 onClick={() => handlePageChange(currentPage + 1)}
                 disabled={currentPage === totalPages}
-                className="bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white font-semibold px-3 xl:px-4 py-2 rounded-lg transition-all duration-300 shadow-lg whitespace-nowrap disabled:opacity-50 disabled:cursor-not-allowed border-0"
+                className="!text-[12px] !font-bold text-[#314594] border-[#dfe1df] rounded-[6px] transition-all !shadow-none whitespace-nowrap disabled:opacity-30 h-9 px-4 hover:!bg-[#314594] hover:!text-white"
             >
                 Next
+                <ChevronRight className="w-4 h-4 ml-1" />
             </Button>
         </div>
     );
@@ -126,7 +134,7 @@ const PackagesLoadingSkeleton = () => (
         <div className="container mx-auto px-4 py-8">
             <div className="flex flex-col lg:flex-row gap-8">
                 <aside className="lg:w-80 hidden lg:block">
-                    <div className="bg-white rounded-2xl shadow-sm p-6 sticky top-24 border border-slate-100 h-[600px] animate-pulse"></div>
+                    <div className="bg-white rounded-2xl shadow-sm p-6 sticky top-32 mt-0.5 border border-slate-100 h-[600px] animate-pulse"></div>
                 </aside>
                 <div className="flex-1">
                     <div className="grid gap-6">
@@ -347,40 +355,94 @@ export default function DedicatedPackagesPageClient({ tourType, state, country }
 
     const locationLabel = state || country || 'Travel';
     const formattedLocation = locationLabel.charAt(0).toUpperCase() + locationLabel.slice(1).replace(/-/g, ' ');
-    const tourTypeLabel = tourType === 'india' ? 'India' : 'International';
+    const tourTypeLabel = 'Tour';
 
     return (
-        <div className="min-h-screen bg-slate-50 flex flex-col">
+        <div className="min-h-screen bg-slate-50 flex flex-col font-plus-jakarta-sans">
             <Header />
 
-            <main className="flex-grow">
-                <SearchHeader
-                    title={<>{tourTypeLabel} Packages in <span className="text-blue-600">{formattedLocation}</span></>}
-                    subtitle={`Explore our premium collection of tour packages in ${formattedLocation}, curated for an unforgettable travel experience.`}
-                />
+            <main className="flex-grow pt-0 bg-white">
 
+                {/* Hero Section */}
+                <section className="relative flex flex-col md:flex-row w-full md:h-[496px] md:overflow-hidden items-center justify-center bg-white md:bg-transparent">
+                    <div className="md:hidden w-full px-4 pt-6 pb-2 bg-white text-left z-10 flex-shrink-0">
+                        <h1 className="!text-[28px] !font-black text-slate-800 font-plus-jakarta-sans tracking-tight leading-tight">
+                            {tourTypeLabel} Packages in <span className="text-[#000945]">{formattedLocation}</span>
+                        </h1>
+                    </div>
 
+                    {/* Image Container */}
+                    <div className="relative w-full h-[230.4px] md:absolute md:inset-0 md:h-auto flex-shrink-0">
+                        <Image
+                            src={formattedLocation.toLowerCase().includes('sikkim') || formattedLocation.toLowerCase().includes('gangtok') || formattedLocation.toLowerCase().includes('kalimpong') ? '/hero/sikkim-hero-v3.png' : "https://images.unsplash.com/photo-1544735716-a9ff2824d7c1?q=80&w=2070&auto=format&fit=crop"}
+                            alt={`${formattedLocation} Tourism`}
+                            fill
+                            className="object-cover"
+                            priority
+                        />
+                        <div className="absolute inset-0 bg-black/20" />
+                    </div>
+
+                    {/* Centered Hub (Hidden on mobile since highlights are hidden) */}
+                    <div className="hidden md:block max-w-6xl w-full mx-auto px-4 md:px-8 relative z-30">
+                        <div className="flex flex-col items-center max-w-5xl mx-auto w-full">
+                            <Card className="bg-white rounded-[6px] shadow-none border border-slate-100 overflow-hidden w-full md:h-[150px] flex items-center">
+                                <CardContent className="p-0 md:p-6 w-full h-full flex flex-col justify-center items-center">
+                                    {/* Desktop Heading */}
+                                    <h1 className="hidden md:block !text-xl md:!text-[44px] !font-black text-slate-800 mb-4 text-center font-plus-jakarta-sans tracking-tight leading-tight">
+                                        {tourTypeLabel} Packages in <span className="text-[#000945]">{formattedLocation}</span>
+                                    </h1>
+
+                                    <div className="hidden md:flex flex-nowrap items-center justify-center gap-x-6 lg:gap-x-12 w-full px-2 md:px-4 overflow-x-auto no-scrollbar">
+                                        <div className="flex items-center gap-3 group flex-shrink-0">
+                                            <div className="flex items-center justify-center w-6 h-6 rounded-full bg-blue-50 text-blue-600 border border-blue-100 flex-shrink-0">
+                                                <Check className="w-3.5 h-3.5 stroke-[2.5]" />
+                                            </div>
+                                            <span className="text-[#000945] font-medium text-[12px] md:text-[15px] tracking-tight whitespace-nowrap">Best pricing</span>
+                                        </div>
+
+                                        <div className="flex items-center gap-3 group flex-shrink-0">
+                                            <div className="flex items-center justify-center w-6 h-6 rounded-full bg-blue-50 text-blue-600 border border-blue-100 flex-shrink-0">
+                                                <Check className="w-3.5 h-3.5 stroke-[2.5]" />
+                                            </div>
+                                            <span className="text-[#000945] font-medium text-[12px] md:text-[15px] tracking-tight whitespace-nowrap">Private cab included</span>
+                                        </div>
+
+                                        <div className="flex items-center gap-3 group flex-shrink-0">
+                                            <div className="flex items-center justify-center w-6 h-6 rounded-full bg-blue-50 text-blue-600 border border-blue-100 flex-shrink-0">
+                                                <Check className="w-3.5 h-3.5 stroke-[2.5]" />
+                                            </div>
+                                            <span className="text-[#000945] font-medium text-[12px] md:text-[15px] tracking-tight whitespace-nowrap">Handpicked hotels</span>
+                                        </div>
+
+                                        <div className="flex items-center gap-3 group flex-shrink-0">
+                                            <div className="flex items-center justify-center w-6 h-6 rounded-full bg-blue-50 text-blue-600 border border-blue-100 flex-shrink-0">
+                                                <Check className="w-3.5 h-3.5 stroke-[2.5]" />
+                                            </div>
+                                            <span className="text-[#000945] font-medium text-[12px] md:text-[15px] tracking-tight whitespace-nowrap">Local expert support</span>
+                                        </div>
+                                    </div>
+                                </CardContent>
+                            </Card>
+                        </div>
+                    </div>
+                </section>
 
                 {/* Main Content Area */}
-                <section className="py-8 px-4 md:px-8">
+                <section className="py-8 md:py-16 px-4 md:px-8 bg-white">
                     <div className="max-w-6xl mx-auto">
-                        <div className="flex flex-col lg:flex-row gap-6">
+                        <div className="mb-6 text-left">
+                            <h2 className="!text-[24px] md:!text-[36px] !font-bold text-[#000945] mb-2">
+                                Handpicked Curated Journeys
+                            </h2>
+                        </div>
+                        <div className="flex flex-col lg:flex-row gap-0 lg:gap-8">
 
                             {/* Sidebar Filters */}
-                            <aside className="lg:w-80 flex-shrink-0">
-                                <div className="lg:sticky lg:top-24">
-                                    <div className="lg:hidden mb-4">
-                                        <Button
-                                            onClick={() => setIsFiltersOpen(true)}
-                                            variant="outline"
-                                            className="w-full border border-slate-300 text-slate-900 hover:bg-slate-50"
-                                        >
-                                            <Filter className="mr-2 h-4 w-4" />
-                                            Filters
-                                        </Button>
-                                    </div>
+                            <aside className="hidden lg:block lg:w-80 flex-shrink-0">
+                                <div className="lg:sticky lg:top-32 lg:mt-0.5">
 
-                                    <Card className="hidden lg:block border border-slate-200 shadow-sm overflow-hidden p-0 bg-white">
+                                    <Card className="hidden lg:block border border-[#dfe1df] shadow-none overflow-hidden p-0 bg-white rounded-[24px]">
                                         <SearchFilterSidebar
                                             durationFilter={durationFilter}
                                             setDurationFilter={setDurationFilter}
@@ -398,34 +460,33 @@ export default function DedicatedPackagesPageClient({ tourType, state, country }
 
                             {/* Package Content */}
                             <div className="flex-1">
-                                <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6">
-                                    <p className="!text-sm font-bold !text-slate-600">
-                                        Showing {startIndex + 1}-{Math.min(endIndex, filteredItems.length)} of {filteredItems.length} results
-                                    </p>
-                                    <div className="flex items-center gap-3">
-                                        <span className="text-sm font-bold text-slate-700">Sort By:</span>
+                                <div className="flex items-center justify-between lg:justify-end gap-3 mb-6 md:mb-8">
+                                    <button
+                                        onClick={() => setIsFiltersOpen(true)}
+                                        className="lg:hidden flex items-center justify-center h-9 rounded-[6px] border border-slate-200 bg-white text-slate-900 font-medium text-xs px-6 shadow-none"
+                                        style={{ boxShadow: 'none' }}
+                                    >
+                                        <Filter className="mr-2 h-3.5 w-3.5 text-slate-500" />
+                                        Filters
+                                    </button>
+
+                                    <div className="flex items-center gap-2 sm:gap-3">
+                                        <span className="hidden sm:inline text-sm font-medium text-slate-500">Sort by:</span>
                                         <Select
-                                            value={
-                                                sortBy === 'recommended' ? 'Recommended' :
-                                                    sortBy === 'price-asc' ? 'Price: Low to High' :
-                                                        sortBy === 'price-desc' ? 'Price: High to Low' :
-                                                            sortBy === 'duration-asc' ? 'Duration' : 'Recommended'
-                                            }
-                                            onValueChange={(value) => {
-                                                if (value === 'Recommended') setSortBy('recommended');
-                                                else if (value === 'Price: Low to High') setSortBy('price-asc');
-                                                else if (value === 'Price: High to Low') setSortBy('price-desc');
-                                                else if (value === 'Duration') setSortBy('duration-asc');
-                                            }}
+                                            value={sortBy}
+                                            onValueChange={setSortBy}
                                         >
-                                            <SelectTrigger className="w-[200px] bg-white border-slate-200 font-medium text-slate-700">
-                                                <SelectValue placeholder="Sort By" />
+                                            <SelectTrigger
+                                                className="w-[140px] bg-white border-slate-200 font-medium text-slate-900 rounded-[6px] h-9 text-xs px-4 shadow-none !shadow-none"
+                                                style={{ boxShadow: 'none' }}
+                                            >
+                                                <SelectValue placeholder="Recommended" />
                                             </SelectTrigger>
-                                            <SelectContent className="rounded-xl">
-                                                <SelectItem value="Recommended">Recommended</SelectItem>
-                                                <SelectItem value="Price: Low to High">Price: Low to High</SelectItem>
-                                                <SelectItem value="Price: High to Low">Price: High to Low</SelectItem>
-                                                <SelectItem value="Duration">Duration</SelectItem>
+                                            <SelectContent className="rounded-xl border-slate-100 shadow-xl">
+                                                <SelectItem value="recommended">Recommended</SelectItem>
+                                                <SelectItem value="price-asc">Price: Low to High</SelectItem>
+                                                <SelectItem value="price-desc">Price: High to Low</SelectItem>
+                                                <SelectItem value="duration-asc">Duration</SelectItem>
                                             </SelectContent>
                                         </Select>
                                     </div>
@@ -451,7 +512,7 @@ export default function DedicatedPackagesPageClient({ tourType, state, country }
                                         ))}
 
                                         {totalPages > 1 && (
-                                            <div className="mt-8">
+                                            <div className="mt-12">
                                                 <Pagination
                                                     currentPage={currentPage}
                                                     totalPages={totalPages}
@@ -462,10 +523,12 @@ export default function DedicatedPackagesPageClient({ tourType, state, country }
                                         )}
                                     </div>
                                 ) : (
-                                    <div className="text-center py-16 bg-white rounded-lg shadow-md">
-                                        <div className="text-gray-300 text-6xl mb-4">🏔️</div>
-                                        <h3 className="!text-xl !font-semibold text-gray-600 mb-3">No packages found</h3>
-                                        <p className="!text-gray-500 font-semibold max-w-md mx-auto mb-6">
+                                    <div className="text-center py-16 bg-white rounded-[6px] border border-[#dfe1df] shadow-none">
+                                        <div className="w-16 h-16 bg-slate-50 rounded-full flex items-center justify-center mx-auto mb-5">
+                                            <SearchX className="w-8 h-8 text-[#000945] opacity-20" />
+                                        </div>
+                                        <h3 className="!text-xl !font-bold text-[#000945] mb-2">No packages found</h3>
+                                        <p className="!text-[#000945]/70 !text-sm font-medium max-w-sm mx-auto mb-8">
                                             We couldn't find any packages for {formattedLocation} matching your filters.
                                         </p>
                                         <Button
@@ -474,9 +537,9 @@ export default function DedicatedPackagesPageClient({ tourType, state, country }
                                                 setPriceFilter('all');
                                                 setSortBy('recommended');
                                             }}
-                                            className="bg-blue-600 text-sm text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors"
+                                            className="!bg-white !text-[#155dfc] font-bold py-2 px-8 rounded-[6px] h-auto text-sm transition-all !border !border-[#dfe1df] !shadow-none hover:bg-slate-50"
                                         >
-                                            Clear Filters
+                                            Clear All Filters
                                         </Button>
                                     </div>
                                 )}
@@ -485,15 +548,23 @@ export default function DedicatedPackagesPageClient({ tourType, state, country }
                     </div>
                 </section>
 
+                <WhyParadiseDifference />
+                <FAQSection destination={state || country} tourType={tourType} />
+
                 {suggestions.length > 0 && (
-                    <section className="!bg-white px-4 py-16 text-gray-900 md:px-8 relative z-20 overflow-hidden">
-                        <div className="mx-auto flex max-w-6xl flex-col gap-10 relative z-10">
+                    <motion.section
+                        initial={{ opacity: 0, y: 20 }}
+                        whileInView={{ opacity: 1, y: 0 }}
+                        viewport={{ once: true }}
+                        className="!bg-white px-4 py-6 text-gray-900 md:px-8 relative z-20"
+                    >
+                        <div className="mx-auto flex max-w-6xl flex-col gap-6 relative z-10">
                             <div className="flex flex-col gap-2 md:flex-row md:items-end md:justify-between mb-2">
                                 <div className="flex flex-col gap-1">
-                                    <h3 className="!text-2xl md:!text-3xl !font-bold !text-slate-900 !leading-tight flex items-center gap-3 flex-wrap">
+                                    <h3 className="!text-[24px] md:!text-[36px] !font-bold !text-[#000945] !leading-tight tracking-tight">
                                         You Might Also Like
                                     </h3>
-                                    <p className="!text-sm !text-slate-600 md:!text-base !max-w-2xl !font-semibold">
+                                    <p className="!text-sm !text-slate-500 md:!text-base !max-w-2xl !font-medium">
                                         Explore more amazing packages and create unforgettable memories
                                     </p>
                                 </div>
@@ -508,7 +579,7 @@ export default function DedicatedPackagesPageClient({ tourType, state, country }
                                 />
                                 <div
                                     ref={carouselRef}
-                                    className="flex gap-2 overflow-x-auto scroll-smooth pb-8 pt-2 scrollbar-hide px-2"
+                                    className="flex gap-6 overflow-x-auto scroll-smooth pb-8 pt-2 scrollbar-hide px-2"
                                     style={{
                                         scrollbarWidth: "none",
                                         msOverflowStyle: "none",
@@ -535,18 +606,20 @@ export default function DedicatedPackagesPageClient({ tourType, state, country }
                                 </div>
                             </div>
                         </div>
-                    </section>
+                    </motion.section>
                 )}
             </main>
+
+            <Footer />
 
             {/* Mobile Filter Dialog */}
             <Dialog open={isFiltersOpen} onOpenChange={setIsFiltersOpen}>
                 <DialogContent className="max-w-md max-h-[90vh] flex flex-col p-0 overflow-hidden">
-                    <DialogHeader className="p-6 pb-0">
-                        <DialogTitle className="!text-xl !font-black !text-slate-900">Filters</DialogTitle>
+                    <DialogHeader className="p-8 pb-4">
+                        <DialogTitle className="!text-xl !font-bold !text-[#000945]">Filters</DialogTitle>
                     </DialogHeader>
                     <div className="flex-grow overflow-y-auto px-0">
-                        <div className="p-6 pt-2">
+                        <div className="p-8 pt-0">
                             <SearchFilterSidebar
                                 durationFilter={durationFilter}
                                 setDurationFilter={setDurationFilter}
@@ -557,7 +630,6 @@ export default function DedicatedPackagesPageClient({ tourType, state, country }
                                     setPriceFilter('all');
                                     setSortBy('recommended');
                                 }}
-                                onClose={() => setIsFiltersOpen(false)}
                                 onApply={() => setIsFiltersOpen(false)}
                             />
                         </div>

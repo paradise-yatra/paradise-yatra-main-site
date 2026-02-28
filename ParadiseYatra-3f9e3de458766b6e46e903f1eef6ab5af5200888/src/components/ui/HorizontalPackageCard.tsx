@@ -2,7 +2,7 @@
 
 import Image from "next/image";
 import Link from "next/link";
-import { MapPin, Clock, Heart, ArrowRight } from "lucide-react";
+import { MapPin, Clock, Heart, ArrowRight, Hotel, Utensils, Car, Camera } from "lucide-react";
 import { getImageUrl } from "@/lib/utils";
 import React from "react";
 
@@ -58,7 +58,7 @@ const HorizontalPackageCard: React.FC<HorizontalPackageCardProps> = ({
 }) => {
     const plainDescription = stripHtmlTags(description);
     const optimizedImageUrl = getImageUrl(image, {
-        width: 900,
+        width: "auto",
         height: 640,
         crop: "fill",
         gravity: "auto",
@@ -66,85 +66,92 @@ const HorizontalPackageCard: React.FC<HorizontalPackageCardProps> = ({
     });
 
     return (
-        <div className="group relative bg-white rounded-lg border border-slate-100 shadow-sm hover:shadow-xl hover:shadow-blue-900/5 transition-all duration-300 overflow-hidden">
-            <Link href={detailUrl} className="flex flex-col md:flex-row h-full">
-                {/* Image Section */}
-                <div className="relative w-full md:w-72 lg:w-80 h-64 md:h-auto flex-shrink-0 overflow-hidden">
-                    {optimizedImageUrl ? (
-                        <Image
-                            src={optimizedImageUrl}
-                            alt={title || `Travel package to ${destination || "destination"}`}
-                            fill
-                            className="object-cover group-hover:scale-110 transition-transform duration-700"
-                        />
-                    ) : (
-                        <div className="w-full h-full bg-slate-100 flex items-center justify-center">
-                            <div className="text-slate-400 flex flex-col items-center">
-                                <div className="w-12 h-12 bg-slate-200 rounded-full flex items-center justify-center mb-2">
-                                    <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
-                                    </svg>
-                                </div>
-                                <span className="!text-xs !font-medium">Image unavailable</span>
-                            </div>
-                        </div>
-                    )}
+        <div className="group relative bg-white rounded-[6px] border border-[#dfe1df] transition-all duration-300 overflow-hidden h-auto sm:h-64 flex flex-col sm:flex-row">
+            {/* Image Placeholder or Optimized Image */}
+            <div className="relative w-full h-48 sm:w-2/5 sm:h-full overflow-hidden shrink-0">
+                {optimizedImageUrl ? (
+                    <Image
+                        src={optimizedImageUrl}
+                        alt={title}
+                        fill
+                        className="object-cover"
+                        unoptimized={true}
+                    />
+                ) : (
+                    <div className="w-full h-full bg-slate-50 flex items-center justify-center">
+                        <MapPin className="w-8 h-8 text-slate-200" />
+                    </div>
+                )}
 
-                    <div className="absolute top-4 left-4 bg-white/95 backdrop-blur-sm px-3 py-1.5 rounded-full !text-xs !font-bold !text-blue-600 flex items-center gap-1.5 shadow-sm border border-blue-50/50 !uppercase">
-                        <MapPin className="w-3.5 h-3.5" />
-                        {destination}
+
+                {/* Wishlist Button */}
+                <button
+                    onClick={(e) => onWishlistToggle(e, id)}
+                    className="absolute top-3 right-3 z-40 p-2 rounded-full bg-white/90 backdrop-blur-md border border-white/50 hover:bg-white transition-all shadow-sm cursor-pointer"
+                >
+                    <Heart
+                        className="w-3.5 h-3.5 transition-all duration-300"
+                        strokeWidth={2.5}
+                        style={{
+                            color: "#005beb",
+                            fill: isInWishlist ? "#005beb" : "none",
+                        }}
+                    />
+                </button>
+            </div>
+
+            {/* Content Section */}
+            <div className="flex-1 p-5 sm:pb-5 flex flex-col justify-between min-w-0">
+                <div className="block">
+                    <div className="inline-flex items-center bg-[#EFF6FF] text-[#314594] text-[10px] font-bold px-2.5 py-1 rounded-full uppercase tracking-wider mb-1.5">
+                        {formatDurationDisplay(duration)}
                     </div>
 
-                    {/* Wishlist Button */}
-                    <button
-                        onClick={(e) => onWishlistToggle(e, id)}
-                        className="absolute top-4 right-4 z-40 p-2 rounded-full bg-white border border-white/30 hover:bg-white transition-all shadow-sm group/heart"
-                    >
-                        <Heart
-                            className="w-4 h-4 transition-colors"
-                            style={{
-                                color: "#005beb",
-                                fill: isInWishlist ? "#005beb" : "none",
-                            }}
-                        />
-                    </button>
-                </div>
-
-                {/* Content Section */}
-                <div className="flex-1 p-6 md:py-8 md:px-8 flex flex-col justify-between">
-                    <div>
-                        <div className="flex items-center flex-wrap gap-2 !text-xs !font-semibold !text-slate-500 mb-4">
-                            <span className="flex items-center gap-1.5 bg-slate-50 px-2.5 py-1 rounded-md text-slate-600 border border-slate-100">
-                                <Clock className="w-3.5 h-3.5 text-blue-500" />
-                                {formatDurationDisplay(duration)}
-                            </span>
-                        </div>
-
-                        <h3 className="!text-xl !font-bold text-slate-900 mb-1 group-hover:text-blue-600 transition-colors leading-tight">
+                    <Link href={detailUrl} className="block group/title">
+                        <h3 className="!text-lg sm:!text-[20px] !font-bold text-[#000945] leading-tight mb-1 transition-colors line-clamp-1 group-hover/title:underline">
                             {title}
                         </h3>
+                    </Link>
 
-                        <p className="!text-slate-600 !font-semibold !text-sm leading-relaxed line-clamp-2 mb-6">
-                            {plainDescription}
-                        </p>
-                    </div>
+                    <p className="!text-[14px] !text-[#000945] font-normal leading-snug line-clamp-2 mb-3">
+                        {plainDescription}
+                    </p>
 
-                    <div className="flex items-end justify-between pt-2 border-t border-dashed border-slate-200">
-                        <div className="flex flex-col">
-                            <span className="!text-xs !font-bold !text-slate-600 !uppercase !tracking-wider mb-1">{priceLabel}</span>
-                            <span className="!text-2xl !font-black !text-transparent !bg-clip-text !bg-gradient-to-r !from-blue-600 !to-indigo-600">
-                                ₹ {(price || 0).toLocaleString()}
-                            </span>
+                    <div className="flex items-center space-x-4 mb-3 sm:mb-1">
+                        <div className="flex items-center text-[#000945] transition-colors" title="Hotel Included">
+                            <Hotel className="w-4 h-4" />
                         </div>
-                        <div className="flex items-center gap-2 !text-sm !font-bold !text-slate-900 group-hover:translate-x-1 transition-transform">
-                            View Itinerary
-                            <div className="bg-gradient-to-r from-blue-600 to-indigo-600 text-white p-2 rounded-full shadow-md shadow-blue-500/20">
-                                <ArrowRight className="w-4 h-4" />
-                            </div>
+                        <div className="flex items-center text-[#000945] transition-colors" title="Meals Included">
+                            <Utensils className="w-4 h-4" />
                         </div>
+                        <div className="flex items-center text-[#000945] transition-colors" title="Transfers Included">
+                            <Car className="w-4 h-4" />
+                        </div>
+                        <div className="flex items-center text-[#000945] transition-colors" title="Sightseeing Included">
+                            <Camera className="w-4 h-4" />
+                        </div>
+                        <span className="text-[10px] text-[#000945] font-medium border-l border-slate-200 pl-3">+2 more</span>
                     </div>
                 </div>
-            </Link>
+
+                <div className="flex items-end justify-between pt-4 border-t border-dashed border-slate-200">
+                    <div>
+                        <p className="text-[12px] text-[#000945] mb-0.5">from</p>
+                        <div className="flex items-baseline">
+                            <span className="text-xl font-bold text-[#155dfc]">₹ {(price || 0).toLocaleString()}</span>
+                            <span className="text-[10px] text-[#000945] ml-1 font-medium italic">/ person</span>
+                        </div>
+                    </div>
+
+                    <Link
+                        href={detailUrl}
+                        className="bg-[#314594] hover:bg-[#253675] text-white text-[11px] font-bold py-2 px-4 rounded-[6px] transition-all duration-300 flex items-center gap-2 group/btn shadow-md shadow-slate-200/50"
+                    >
+                        View Details
+                        <ArrowRight className="w-3.5 h-3.5 transform group-hover/btn:translate-x-0.5 transition-transform" />
+                    </Link>
+                </div>
+            </div>
         </div>
     );
 };

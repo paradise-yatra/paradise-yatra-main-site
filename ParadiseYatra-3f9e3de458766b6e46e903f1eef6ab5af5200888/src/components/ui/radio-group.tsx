@@ -42,7 +42,7 @@ interface RadioGroupItemProps extends Omit<React.InputHTMLAttributes<HTMLInputEl
 const RadioGroupItem = React.forwardRef<HTMLInputElement, RadioGroupItemProps>(
   ({ className, value: itemValue, id, ...props }, ref) => {
     const { value: contextValue, onValueChange } = React.useContext(RadioGroupContext);
-    
+
     const isChecked = contextValue === itemValue;
     const handleChange = () => {
       if (itemValue && onValueChange) {
@@ -51,18 +51,28 @@ const RadioGroupItem = React.forwardRef<HTMLInputElement, RadioGroupItemProps>(
     };
 
     return (
-      <input
-        ref={ref}
-        type="radio"
-        id={id}
-        checked={isChecked}
-        onChange={handleChange}
-        className={cn(
-          "h-4 w-4 text-blue-600 border-slate-300 focus:ring-blue-500 cursor-pointer",
-          className
-        )}
-        {...props}
-      />
+      <div className="relative flex items-center">
+        <input
+          ref={ref}
+          type="radio"
+          id={id}
+          checked={isChecked}
+          onChange={handleChange}
+          className="peer sr-only"
+          {...props}
+        />
+        <div
+          onClick={handleChange}
+          className={cn(
+            "h-4 w-4 rounded-full border border-slate-300 peer-checked:border-[#000945] flex items-center justify-center cursor-pointer transition-all",
+            className
+          )}
+        >
+          {isChecked && (
+            <div className="h-2 w-2 rounded-full bg-[#000945]" />
+          )}
+        </div>
+      </div>
     );
   }
 );

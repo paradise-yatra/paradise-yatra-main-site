@@ -5,13 +5,15 @@ const {
     getPackage,
     createPackage,
     updatePackage,
-    deletePackage
+    deletePackage,
+    exportPackages
 } = require('../controllers/allPackageController');
 const { adminAuth } = require('../middleware/auth');
 const { uploadSingleImage } = require('../middleware/upload'); // Using existing upload middleware
 
 // Public routes
 router.get('/', getAllPackages);
+router.post('/export', adminAuth, exportPackages);
 router.get('/:id', getPackage);
 
 // Admin routes

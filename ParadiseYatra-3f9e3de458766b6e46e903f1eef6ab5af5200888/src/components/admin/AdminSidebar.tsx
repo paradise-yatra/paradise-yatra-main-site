@@ -17,7 +17,8 @@ import {
   Tag,
   Package,
   Users,
-  User
+  User,
+  Globe
 } from "lucide-react";
 import Image from "next/image";
 
@@ -178,6 +179,13 @@ const AdminSidebar = ({
       id: "faq",
       label: "FAQ Management",
       icon: HelpCircle,
+      hasSubmenu: false,
+      hasNotification: false,
+    },
+    {
+      id: "destination-faq",
+      label: "Destination FAQ",
+      icon: Globe,
       hasSubmenu: false,
       hasNotification: false,
     },

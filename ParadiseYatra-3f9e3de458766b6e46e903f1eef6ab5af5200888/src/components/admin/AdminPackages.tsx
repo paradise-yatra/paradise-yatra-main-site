@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
-import { MapPin, Star, Clock, Edit, Trash2, Plus, Eye, Loader2, Upload, Image as ImageIcon, IndianRupee, Tag, X } from "lucide-react";
+import { MapPin, Star, Clock, Edit, Trash2, Plus, Eye, Loader2, Upload, Image as ImageIcon, IndianRupee, Tag, X, Download } from "lucide-react";
 import Image from "next/image";
 import { toast } from "react-toastify";
 import { Country, State } from "country-state-city";
@@ -44,6 +44,8 @@ const AdminPackages = () => {
     const [allTags, setAllTags] = useState<any[]>([]);
     const [deletingId, setDeletingId] = useState<string | null>(null);
     const [confirmDeleteId, setConfirmDeleteId] = useState<string | null>(null);
+    const [exportingAll, setExportingAll] = useState(false);
+    const [exportingFiltered, setExportingFiltered] = useState(false);
 
     // Filter states
     const [searchTerm, setSearchTerm] = useState("");
@@ -134,6 +136,106 @@ const AdminPackages = () => {
 
     const getPriceTypeLabel = (priceType?: string) =>
         priceType === "per_couple" ? "Per Couple" : "Per Person";
+
+    const buildLocalExportTimestamp = () => {
+        const now = new Date();
+        const pad = (value: number) => String(value).padStart(2, "0");
+        return `${now.getFullYear()}-${pad(now.getMonth() + 1)}-${pad(now.getDate())}_${pad(now.getHours())}-${pad(now.getMinutes())}`;
+    };
+
+    const downloadExportFile = (blob: Blob, fileName: string) => {
+        const url = window.URL.createObjectURL(blob);
+        const anchor = document.createElement("a");
+        anchor.href = url;
+        anchor.download = fileName;
+        document.body.appendChild(anchor);
+        anchor.click();
+        anchor.remove();
+        window.URL.revokeObjectURL(url);
+    };
+
+    const exportPackagesToExcel = async (
+        scope: "all" | "ids",
+        options?: { packageIds?: string[]; fileNamePrefix?: string; successMessage?: string }
+    ) => {
+        const token = localStorage.getItem("adminToken");
+        if (!token) {
+            toast.error("Authentication required. Please login again.");
+            return false;
+        }
+
+        const payload: { scope: "all" | "ids"; packageIds?: string[] } = { scope };
+        if (scope === "ids") {
+            payload.packageIds = options?.packageIds || [];
+        }
+
+        const response = await fetch("/api/all-packages/export", {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json",
+                Authorization: `Bearer ${token}`,
+            },
+            body: JSON.stringify(payload),
+        });
+
+        if (!response.ok) {
+            const errorData = await response.json().catch(() => ({}));
+            throw new Error(errorData.message || "Failed to export packages");
+        }
+
+        const blob = await response.blob();
+        const fileNamePrefix = options?.fileNamePrefix || "packages-export";
+        const fileName = `${fileNamePrefix}-${buildLocalExportTimestamp()}.xlsx`;
+        downloadExportFile(blob, fileName);
+
+        if (options?.successMessage) {
+            toast.success(options.successMessage);
+        }
+
+        return true;
+    };
+
+    const handleExportAll = async () => {
+        if (exportingAll || exportingFiltered) return;
+
+        try {
+            setExportingAll(true);
+            await exportPackagesToExcel("all", {
+                fileNamePrefix: "packages-all",
+                successMessage: "All packages exported successfully!",
+            });
+        } catch (err) {
+            const errorMessage = err instanceof Error ? err.message : "Failed to export all packages";
+            console.error("Export all packages error:", err);
+            toast.error(errorMessage);
+        } finally {
+            setExportingAll(false);
+        }
+    };
+
+    const handleExportFiltered = async () => {
+        if (exportingFiltered || exportingAll) return;
+
+        if (filteredPackages.length === 0) {
+            toast.error("No packages available for filtered export.");
+            return;
+        }
+
+        try {
+            setExportingFiltered(true);
+            await exportPackagesToExcel("ids", {
+                packageIds: filteredPackages.map((pkg) => pkg._id),
+                fileNamePrefix: `packages-filtered-${filteredPackages.length}`,
+                successMessage: `${filteredPackages.length} filtered packages exported successfully!`,
+            });
+        } catch (err) {
+            const errorMessage = err instanceof Error ? err.message : "Failed to export filtered packages";
+            console.error("Export filtered packages error:", err);
+            toast.error(errorMessage);
+        } finally {
+            setExportingFiltered(false);
+        }
+    };
 
     // Handle title change with auto-slug generation
     const handleTitleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -863,21 +965,64 @@ const AdminPackages = () => {
         <div className="space-y-6">
             <div className="flex justify-between items-center">
                 <h1 className="!text-3xl font-bold text-gray-800">All Packages</h1>
-                <button
-                    onClick={() => {
-                        resetForm();
-                        setShowAddForm(!showAddForm);
-                    }}
-                    className="bg-blue-600 text-white px-4 py-2 rounded-lg flex items-center gap-2 hover:bg-blue-700 transition"
-                >
-                    {showAddForm ? (
-                        <>Cancel</>
-                    ) : (
-                        <>
-                            <Plus size={20} /> Add New Package
-                        </>
-                    )}
-                </button>
+                <div className="flex items-center gap-2">
+                    <button
+                        onClick={handleExportAll}
+                        disabled={exportingAll || exportingFiltered || loading}
+                        className="bg-emerald-600 text-white px-4 py-2 rounded-lg flex items-center gap-2 hover:bg-emerald-700 transition disabled:opacity-50 disabled:cursor-not-allowed"
+                    >
+                        {exportingAll ? (
+                            <>
+                                <Loader2 size={18} className="animate-spin" />
+                                Exporting All...
+                            </>
+                        ) : (
+                            <>
+                                <Download size={18} />
+                                Export All
+                            </>
+                        )}
+                    </button>
+
+                    <button
+                        onClick={handleExportFiltered}
+                        disabled={
+                            exportingFiltered ||
+                            exportingAll ||
+                            loading ||
+                            filteredPackages.length === 0
+                        }
+                        className="bg-slate-700 text-white px-4 py-2 rounded-lg flex items-center gap-2 hover:bg-slate-800 transition disabled:opacity-50 disabled:cursor-not-allowed"
+                    >
+                        {exportingFiltered ? (
+                            <>
+                                <Loader2 size={18} className="animate-spin" />
+                                Exporting Filtered...
+                            </>
+                        ) : (
+                            <>
+                                <Download size={18} />
+                                Export Filtered
+                            </>
+                        )}
+                    </button>
+
+                    <button
+                        onClick={() => {
+                            resetForm();
+                            setShowAddForm(!showAddForm);
+                        }}
+                        className="bg-blue-600 text-white px-4 py-2 rounded-lg flex items-center gap-2 hover:bg-blue-700 transition"
+                    >
+                        {showAddForm ? (
+                            <>Cancel</>
+                        ) : (
+                            <>
+                                <Plus size={20} /> Add New Package
+                            </>
+                        )}
+                    </button>
+                </div>
             </div>
 
             {/* Filters Section */}
