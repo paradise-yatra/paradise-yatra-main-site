@@ -389,9 +389,9 @@ export default function DedicatedPackagesPageClient({ tourType, state, country }
                             <Card className="bg-white rounded-[6px] shadow-none border border-slate-100 overflow-hidden w-full md:h-[150px] flex items-center">
                                 <CardContent className="p-0 md:p-6 w-full h-full flex flex-col justify-center items-center">
                                     {/* Desktop Heading */}
-                                    <h1 className="hidden md:block !text-xl md:!text-[44px] !font-black text-slate-800 mb-4 text-center font-plus-jakarta-sans tracking-tight leading-tight">
+                                    <h2 className="hidden md:block !text-xl md:!text-[44px] !font-black text-slate-800 mb-4 text-center font-plus-jakarta-sans tracking-tight leading-tight">
                                         {tourTypeLabel} Packages in <span className="text-[#000945]">{formattedLocation}</span>
-                                    </h1>
+                                    </h2>
 
                                     <div className="hidden md:flex flex-nowrap items-center justify-center gap-x-6 lg:gap-x-12 w-full px-2 md:px-4 overflow-x-auto no-scrollbar">
                                         <div className="flex items-center gap-3 group flex-shrink-0">

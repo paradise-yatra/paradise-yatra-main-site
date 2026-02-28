@@ -340,12 +340,12 @@ const Header = () => {
                     />
                   </div>
                   <div className="text-left">
-                    <h1
-                      className={`!text-xl !font-black tracking-tight ${isTransparent ? "!text-white" : "text-slate-900"
+                    <span
+                      className={`!text-xl !font-black tracking-tight block ${isTransparent ? "!text-white" : "text-slate-900"
                         }`}
                     >
                       Paradise Yatra
-                    </h1>
+                    </span>
                     <p
                       className={`text-xs !font-bold -mt-1 ${isTransparent ? "!text-white/90" : "!text-blue-700"
                         }`}

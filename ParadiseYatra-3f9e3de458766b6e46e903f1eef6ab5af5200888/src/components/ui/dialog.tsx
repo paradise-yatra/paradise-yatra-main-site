@@ -64,7 +64,7 @@ const Dialog = ({ open, onOpenChange, children }: DialogProps) => {
 
 const DialogContent = React.forwardRef<
     HTMLDivElement,
-    HTMLMotionProps<"div">
+    Omit<HTMLMotionProps<"div">, "children"> & { children?: React.ReactNode }
 >(({ className, children, ...props }, ref) => {
     const { onOpenChange } = React.useContext(DialogContext);
 

@@ -9,10 +9,10 @@ export default function WhyParadiseDifference() {
             <div className="max-w-6xl mx-auto flex flex-col lg:flex-row gap-8 lg:gap-12">
                 {/* Left Column */}
                 <div className="w-full lg:w-5/12">
-                    <h2 className="!text-[24px] md:!text-[36px] !font-bold text-[#000945] !leading-[1.1] mb-5 tracking-tight">
+                    <h3 className="!text-[24px] md:!text-[36px] !font-bold text-[#000945] !leading-[1.1] mb-5 tracking-tight">
                         Why Choose<br />
                         Paradise Yatra
-                    </h2>
+                    </h3>
                     <p className="text-slate-600 font-medium mb-8 leading-relaxed text-[15px] md:text-base max-w-sm">
                         For over a decade, we've been a proud travel partner, earning and maintaining the trust of travelers across India and beyond.
                     </p>

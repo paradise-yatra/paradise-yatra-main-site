@@ -112,7 +112,7 @@ const ItineraryPageClient = ({ packageData, slug }: ItineraryPageClientProps) =>
           destination: packageData.destination?.split(',')[0].trim() || "Not specified",
           budget: packageData.price ? formatPrice(packageData.price) : "Not specified",
           message: enhancedMessage,
-          packageTitle: packageData.title || packageData.name || "",
+          packageTitle: packageData.title || "",
           packagePrice: packageData.price ? formatPrice(packageData.price) : "",
           newsletterConsent: false,
           timestamp: new Date().toISOString(),
@@ -252,7 +252,7 @@ const ItineraryPageClient = ({ packageData, slug }: ItineraryPageClientProps) =>
         {/* Header Section */}
         <div className="mb-8">
           <div className="flex flex-col gap-4">
-            <h1 className="text-3xl font-extrabold tracking-tight text-[#000945] md:text-4xl lg:!text-[44px] leading-tight">
+            <h1 style={{ fontWeight: 800 }} className="text-3xl tracking-tight text-[#000945] md:text-4xl lg:!text-[44px] leading-tight">
               {packageData.title}
             </h1>
 
@@ -404,11 +404,11 @@ const ItineraryPageClient = ({ packageData, slug }: ItineraryPageClientProps) =>
                           containsHtml(activity) ? (
                             <div
                               key={actIndex}
-                              className="text-[#000945] text-sm [&_p]:!mb-1 [&_*]:!text-[#000945]"
+                              className="!text-[#000945] text-sm [&_p]:!mb-1 [&_*]:!text-[#000945] [&_p]:!text-[#000945]"
                               dangerouslySetInnerHTML={{ __html: activity }}
                             />
                           ) : (
-                            <p key={actIndex} className="text-[#000945] text-[15px] leading-relaxed">
+                            <p key={actIndex} className="!text-[#000945] text-[15px] leading-relaxed">
                               {activity}
                             </p>
                           )
@@ -466,7 +466,7 @@ const ItineraryPageClient = ({ packageData, slug }: ItineraryPageClientProps) =>
 
             {/* Terms and Conditions */}
             <section className="scroll-mt-32">
-              <h2 style={{ fontWeight: 700 }} className="!text-[24px] md:!text-[36px] text-[#000945] mb-6">Booking Information</h2>
+              <h3 style={{ fontWeight: 700 }} className="!text-[24px] md:!text-[36px] text-[#000945] mb-6">Booking Information</h3>
               <Accordion type="single" collapsible className="space-y-0">
                 {[
                   { title: "Booking and Payment", content: ["A deposit of 30% is required to confirm your booking", "Full payment must be completed 30 days before departure", "All prices are in INR and include taxes", "Payment via credit card, bank transfer, or UPI"] },
