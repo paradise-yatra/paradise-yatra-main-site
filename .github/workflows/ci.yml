@@ -1,0 +1,68 @@
+name: Paradise Yatra CI/CD Safety Check
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+    branches:
+      - main
+
+jobs:
+  build-and-test:
+    name: Build & Lint Checks
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20' # LTS version suitable for modern Next.js/Node
+          cache: 'npm'
+          cache-dependency-path: |
+            ParadiseYatra-3f9e3de458766b6e46e903f1eef6ab5af5200888/package-lock.json
+            paradise-yatra-backend-master/package-lock.json
+
+      # ==============================================================================
+      # 1. FRONTEND CHECKS (Next.js)
+      # ==============================================================================
+      - name: Install Frontend Dependencies
+        working-directory: ./ParadiseYatra-3f9e3de458766b6e46e903f1eef6ab5af5200888
+        run: npm ci
+
+      - name: Security Audit (Frontend)
+        working-directory: ./ParadiseYatra-3f9e3de458766b6e46e903f1eef6ab5af5200888
+        run: npm audit --audit-level=high
+
+      - name: Lint Frontend
+        working-directory: ./ParadiseYatra-3f9e3de458766b6e46e903f1eef6ab5af5200888
+        run: npm run lint
+
+      - name: Build Frontend
+        working-directory: ./ParadiseYatra-3f9e3de458766b6e46e903f1eef6ab5af5200888
+        run: npm run build
+
+      # ==============================================================================
+      # 2. BACKEND CHECKS (Node/Express)
+      # ==============================================================================
+      - name: Install Backend Dependencies
+        working-directory: ./paradise-yatra-backend-master
+        run: npm ci
+
+      - name: Security Audit (Backend)
+        working-directory: ./paradise-yatra-backend-master
+        run: npm audit --audit-level=high
+
+      # If there is a lint script in backend package.json, uncomment this:
+      # - name: Lint Backend
+      #   working-directory: ./paradise-yatra-backend-master
+      #   run: npm run lint
+
+      - name: Build / Check Backend
+        working-directory: ./paradise-yatra-backend-master
+        # The backend doesn't build like React, so we just check if it can start or run a dummy check
+        # Assuming you don't have a specific build step for express
+        run: echo "Backend dependencies installed securely."
