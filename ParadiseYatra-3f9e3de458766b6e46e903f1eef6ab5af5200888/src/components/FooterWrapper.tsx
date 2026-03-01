@@ -2,6 +2,7 @@
 
 import { usePathname } from "next/navigation";
 import Footer from "./Footer";
+import NewsletterSubscribe from "./NewsLetter";
 
 export default function FooterWrapper() {
     const pathname = usePathname();
@@ -17,5 +18,10 @@ export default function FooterWrapper() {
         return null;
     }
 
-    return <Footer />;
+    return (
+        <>
+            <NewsletterSubscribe />
+            <Footer />
+        </>
+    );
 }

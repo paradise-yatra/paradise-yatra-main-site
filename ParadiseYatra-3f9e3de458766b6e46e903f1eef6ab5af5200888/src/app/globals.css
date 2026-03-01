@@ -5,6 +5,16 @@
 
 @custom-variant dark (&:is(.dark *));
 
+.policy-content h1 {
+  font-size: 44px !important;
+  font-weight: 800 !important;
+}
+
+.policy-content h2 {
+  font-size: 36px !important;
+  font-weight: 700 !important;
+}
+
 /* Accordion animations */
 @keyframes accordion-down {
   from {

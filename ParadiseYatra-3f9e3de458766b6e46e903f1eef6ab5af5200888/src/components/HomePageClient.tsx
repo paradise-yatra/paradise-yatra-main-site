@@ -17,7 +17,6 @@ import {
 } from "@/components/lazy-components";
 import PerformanceMonitor from "@/components/ui/PerformanceMonitor";
 import ShutdownPopup from "@/components/ShutdownPopup";
-import NewsletterSubscribe from "./NewsLetter";
 
 import HoneymoonPackages from "./HoneymoonPackages";
 import TrendingPackagesSection from "./TrendingPackagesSection";
@@ -78,8 +77,6 @@ const HomePageClient = memo(() => {
       <FestivalSection />
       <TestimonialsSection />
       <BlogSectionNew />
-
-      <NewsletterSubscribe />
 
       {/* Performance monitoring - only visible in development */}
       <PerformanceMonitor showInProduction={false} />

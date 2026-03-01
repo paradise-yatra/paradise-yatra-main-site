@@ -516,7 +516,7 @@ const ItineraryPageClient = ({ packageData, slug }: ItineraryPageClientProps) =>
                       <div className="flex items-center gap-3 p-3 bg-slate-50 rounded-[6px] border border-slate-100">
                         <User className="h-5 w-5 text-blue-600 shrink-0" />
                         <div className="flex-1">
-                          <p className="text-[10px] font-bold !text-[#000945] tracking-wider mb-1">Full Name</p>
+                          <p className="text-[14px] font-bold !text-[#000945] tracking-wider mb-1">Full Name</p>
                           <input
                             type="text"
                             placeholder="Enter your name"
@@ -530,7 +530,7 @@ const ItineraryPageClient = ({ packageData, slug }: ItineraryPageClientProps) =>
                       <div className="flex items-center gap-3 p-3 bg-slate-50 rounded-[6px] border border-slate-100">
                         <Mail className="h-5 w-5 text-blue-600 shrink-0" />
                         <div className="flex-1">
-                          <p className="text-[10px] font-bold !text-[#000945] tracking-wider mb-1">Email Data</p>
+                          <p className="text-[14px] font-bold !text-[#000945] tracking-wider mb-1">Email</p>
                           <input
                             type="email"
                             placeholder="your@email.com"
@@ -544,7 +544,7 @@ const ItineraryPageClient = ({ packageData, slug }: ItineraryPageClientProps) =>
                       <div className="flex items-center gap-3 p-3 bg-slate-50 rounded-[6px] border border-slate-100">
                         <Phone className="h-5 w-5 text-blue-600 shrink-0" />
                         <div className="flex-1">
-                          <p className="text-[10px] font-bold !text-[#000945] tracking-wider mb-1">Phone Number</p>
+                          <p className="text-[14px] font-bold !text-[#000945] tracking-wider mb-1">Phone Number</p>
                           <input
                             type="tel"
                             placeholder="+91 Enter your number"
@@ -559,7 +559,7 @@ const ItineraryPageClient = ({ packageData, slug }: ItineraryPageClientProps) =>
                       <div className="flex items-center gap-3 p-3 bg-slate-50 rounded-[6px] border border-slate-100">
                         <Calendar className="h-5 w-5 text-blue-600 shrink-0" />
                         <div className="flex-1">
-                          <p className="text-[10px] font-bold !text-[#000945] tracking-wider mb-1">Travel Date</p>
+                          <p className="text-[14px] font-bold !text-[#000945] tracking-wider mb-1">Travel Date</p>
                           <Popover open={calendarOpen} onOpenChange={setCalendarOpen}>
                             <PopoverTrigger asChild>
                               <Button
@@ -588,7 +588,7 @@ const ItineraryPageClient = ({ packageData, slug }: ItineraryPageClientProps) =>
                         <Users className="h-5 w-5 text-blue-600 shrink-0 mt-0.5" />
                         <div className="flex-1 flex flex-col gap-3">
                           <div className="flex items-center justify-between">
-                            <p className="text-[12px] font-bold !text-[#000945] tracking-wider">Adults</p>
+                            <p className="text-[14px] font-bold !text-[#000945] tracking-wider">Adults</p>
                             <div className="flex items-center bg-white border border-[#dfe1df] rounded-[6px] overflow-hidden">
                               <button onClick={() => setAdults(Math.max(1, adults - 1))} className="w-7 h-7 flex items-center justify-center text-[#000945] hover:bg-slate-100 transition"><Minus className="w-3 h-3" /></button>
                               <span className="text-[13px] font-semibold text-[#000945] w-6 flex items-center justify-center border-x border-[#dfe1df] h-7">{adults}</span>
@@ -596,7 +596,7 @@ const ItineraryPageClient = ({ packageData, slug }: ItineraryPageClientProps) =>
                             </div>
                           </div>
                           <div className="flex items-center justify-between">
-                            <p className="text-[12px] font-bold !text-[#000945] tracking-wider">Children</p>
+                            <p className="text-[14px] font-bold !text-[#000945] tracking-wider">Children</p>
                             <div className="flex items-center bg-white border border-[#dfe1df] rounded-[6px] overflow-hidden">
                               <button onClick={() => setChildren(Math.max(0, children - 1))} className="w-7 h-7 flex items-center justify-center text-[#000945] hover:bg-slate-100 transition"><Minus className="w-3 h-3" /></button>
                               <span className="text-[13px] font-semibold text-[#000945] w-6 flex items-center justify-center border-x border-[#dfe1df] h-7">{children}</span>
@@ -609,7 +609,7 @@ const ItineraryPageClient = ({ packageData, slug }: ItineraryPageClientProps) =>
                       <div className="flex items-start gap-3 p-3 bg-slate-50 rounded-[6px] border border-slate-100">
                         <MessageSquare className="h-5 w-5 text-blue-600 shrink-0 mt-0.5" />
                         <div className="flex-1">
-                          <p className="text-[10px] font-bold !text-[#000945] tracking-wider mb-1">Message</p>
+                          <p className="text-[14px] font-bold !text-[#000945] tracking-wider mb-1">Message</p>
                           <textarea
                             placeholder="Any special requests?"
                             value={message}

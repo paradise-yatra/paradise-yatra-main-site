@@ -273,7 +273,7 @@ const Footer = () => {
             <div className="footer-legal-links flex gap-6 text-sm">
               <Link href="/privacy-policy" className="text-slate-400 hover:text-blue-400 transition-colors">Privacy Policy</Link>
               <Link href="/terms-and-conditions" className="text-slate-400 hover:text-blue-400 transition-colors">Terms of Service</Link>
-              <Link href="/cookie-policy" className="text-slate-400 hover:text-blue-400 transition-colors">Cookie Policy</Link>
+              <Link href="/refund-policy" className="text-slate-400 hover:text-blue-400 transition-colors">Refund Policy</Link>
             </div>
           </div>
         </div>
@@ -284,7 +284,7 @@ const Footer = () => {
         initial={{ opacity: 0, x: 100 }}
         animate={{ opacity: 1, x: 0 }}
         transition={{ duration: 0.8 }}
-        className="fixed bottom-4 right-4 md:bottom-6 md:right-6 z-50 group"
+        className="fixed bottom-12 right-6 md:bottom-16 md:right-8 z-50 group"
       >
         <a
           href="https://wa.me/919873391733?text=Hi, I'm interested in your tour packages. Can you help me?"

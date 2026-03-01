@@ -1,323 +1,238 @@
 'use client';
 
-import { useEffect, useState } from 'react';
-import {
-    Info,
-    ShoppingBag,
-    AlertTriangle,
-    Wallet,
-    Clock,
-    Mail,
-    MessageCircle,
-    BookOpen,
-    AlertCircle,
-    PackageX,
-    ShieldAlert,
-    History
-} from 'lucide-react';
+import { motion } from 'framer-motion';
+import Image from 'next/image';
+import { Card, CardContent } from '@/components/ui/card';
 
 export default function CancellationRefundContent() {
-    const [activeSection, setActiveSection] = useState('overview');
-    const [isVisible, setIsVisible] = useState(false);
-
-    useEffect(() => {
-        setIsVisible(true);
-
-        const handleScroll = () => {
-            const scrollPosition = window.scrollY + 120;
-            const sections = ['overview', 'cancellation', 'perishable', 'damaged', 'refunds'];
-
-            let currentSection = 'overview';
-            sections.forEach((section) => {
-                const element = document.getElementById(section);
-                if (element && element.offsetTop <= scrollPosition) {
-                    currentSection = section;
-                }
-            });
-
-            setActiveSection(currentSection);
-        };
-
-        window.addEventListener('scroll', handleScroll);
-        handleScroll();
-
-        return () => window.removeEventListener('scroll', handleScroll);
-    }, []);
-
-    const scrollToSection = (sectionId: string) => {
-        const element = document.getElementById(sectionId);
-        if (element) {
-            element.scrollIntoView({ behavior: 'smooth', block: 'start' });
-            window.history.replaceState(null, '', `#${sectionId}`);
+    const containerVariants: any = {
+        hidden: { opacity: 0 },
+        visible: {
+            opacity: 1,
+            transition: { staggerChildren: 0.1 }
         }
     };
 
-    const tocItems = [
-        { id: 'overview', label: 'Policy Overview', Icon: Info },
-        { id: 'cancellation', label: 'Cancellation Policy', Icon: PackageX },
-        { id: 'perishable', label: 'Perishable Items', Icon: ShoppingBag },
-        { id: 'damaged', label: 'Damaged & Defective Items', Icon: ShieldAlert },
-        { id: 'refunds', label: 'Refund Processing', Icon: Wallet },
-    ];
+    const itemVariants: any = {
+        hidden: { opacity: 0, y: 20 },
+        visible: {
+            opacity: 1,
+            y: 0,
+            transition: { duration: 0.5 }
+        }
+    };
 
     return (
-        <div className="flex flex-col min-h-screen bg-[#f6f7f8]">
-            {/* Main Content Wrapper */}
-            <main className="flex-grow w-full max-w-7xl mx-auto px-4 md:px-10 py-8 md:py-12">
-                {/* Page Header Section */}
-                <div
-                    className={`flex flex-col md:flex-row justify-between items-start md:items-end gap-6 mb-12 border-b border-slate-200 pb-8 transition-all duration-700 ease-out ${isVisible ? 'opacity-100 translate-y-0' : 'opacity-0 -translate-y-4'
-                        }`}
-                >
-                    <div className="max-w-2xl">
-                        <h1 className="!text-4xl md:!text-5xl !font-black text-slate-900 mb-4 transition-all duration-500 hover:text-[#197fe6]">
-                            Cancellation &amp; Refund Policy
-                        </h1>
-                        <p className="!text-slate-500 !text-lg transition-colors duration-300">
-                            Our commitment to helping our customers with a liberal cancellation and refund policy for your peace of mind.
-                        </p>
-                        <div className="flex items-center gap-1.5 !text-slate-500 mt-4 font-bold">
-                            <History size={18} />
-                            <span>Last Updated: January 8, 2026</span>
-                        </div>
-                    </div>
-                    <div className="flex gap-3">
-                        <a href="mailto:support@paradiseyatra.com">
-                            <button className="flex cursor-pointer items-center justify-center gap-2 h-10 px-5 bg-white border border-slate-200 hover:border-[#197fe6]/50 text-slate-700 rounded-sm text-sm font-bold transition-all duration-300 shadow-sm hover:shadow-md hover:scale-105 hover:text-[#197fe6]">
-                                <Mail size={18} className="transition-transform duration-300 group-hover:rotate-12" />
-                                <span>Contact Support</span>
-                            </button>
-                        </a>
+        <div className="min-h-screen bg-white font-plus-jakarta-sans pb-20 policy-content">
+            {/* Hero Section */}
+            <section className="relative flex flex-col md:flex-row w-full md:h-[496px] md:overflow-hidden items-center justify-center bg-white md:bg-transparent">
+                <div className="md:hidden w-full px-4 pt-6 pb-2 bg-white text-left z-10 flex-shrink-0">
+                    <div className="!text-[28px] !font-black text-slate-800 font-plus-jakarta-sans tracking-tight leading-tight">
+                        Refund <span className="text-[#000945]">Policy</span>
                     </div>
                 </div>
 
-                {/* Content Layout: Sidebar + Main Content */}
-                <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-12 relative">
-                    {/* Sticky Sidebar Navigation */}
-                    <aside className="hidden lg:block lg:col-span-3">
-                        <div
-                            className={`sticky top-32 space-y-8 transition-all duration-700 ease-out delay-100 ${isVisible ? 'opacity-100 translate-x-0' : 'opacity-0 -translate-x-8'
-                                }`}
-                        >
-                            {/* Navigation Card */}
-                            <div className="bg-white rounded-sm p-6 shadow-sm border border-slate-200 transition-all duration-300 hover:shadow-lg hover:border-slate-300">
-                                <div className="flex items-center gap-3 mb-6">
-                                    <div className="bg-[#197fe6]/10 p-2 rounded-sm text-[#197fe6] transition-all duration-300 hover:bg-[#197fe6] hover:text-white hover:scale-110">
-                                        <BookOpen size={20} />
-                                    </div>
-                                    <h3 className="!font-bold !text-slate-900 !text-lg">Table of Contents</h3>
-                                </div>
-                                <nav className="flex flex-col space-y-1">
-                                    {tocItems.map((item, index) => (
-                                        <button
-                                            key={item.id}
-                                            onClick={() => scrollToSection(item.id)}
-                                            style={{ transitionDelay: `${index * 50}ms` }}
-                                            className={`flex items-center gap-3 px-3 py-2.5 rounded-sm font-medium transition-all duration-300 text-left transform hover:translate-x-1 ${activeSection === item.id
-                                                    ? 'bg-[#197fe6]/10 text-[#197fe6] shadow-sm'
-                                                    : 'text-slate-600 hover:bg-slate-50 hover:text-slate-900'
-                                                }`}
-                                        >
-                                            <item.Icon
-                                                size={20}
-                                                className={`transition-all duration-300 ${activeSection === item.id ? 'text-[#197fe6] scale-110' : 'group-hover:text-[#197fe6]'
-                                                    }`}
-                                            />
-                                            <span className="text-sm">{item.label}</span>
-                                        </button>
-                                    ))}
-                                </nav>
-                            </div>
+                {/* Image Container */}
+                <div className="relative w-full h-[230.4px] md:absolute md:inset-0 md:h-auto flex-shrink-0">
+                    <Image
+                        src="/Legal/Refund%20Policy/Hero%20Image.jpg"
+                        alt="Paradise Yatra Refund Policy"
+                        fill
+                        className="object-cover"
+                        priority
+                    />
+                    <div className="absolute inset-0 bg-black/20" />
+                </div>
 
-                            {/* Mini CTA */}
-                            <div className="bg-gradient-to-br from-[#197fe6] to-blue-600 rounded-sm p-6 text-white shadow-lg shadow-blue-200 relative overflow-hidden transition-all duration-300 hover:shadow-xl hover:shadow-blue-300 hover:scale-105 group">
-                                <div className="relative z-10">
-                                    <h4 className="font-bold text-lg mb-2 transition-transform duration-300 group-hover:translate-x-1">Need Help?</h4>
-                                    <p className="!text-blue-100 text-sm mb-4 transition-all duration-300">
-                                        Our support team is available 24/7 to answer your questions.
-                                    </p>
-                                    <a
-                                        href="https://api.whatsapp.com/send/?phone=918979269388&text&type=phone_number&app_absent=0"
-                                        target="_blank"
-                                        rel="noopener noreferrer"
-                                    >
-                                        <button className="w-full bg-white text-[#197fe6] text-sm font-bold py-2 rounded-sm hover:bg-blue-50 transition-all duration-300 flex items-center justify-center gap-2 hover:scale-105 hover:shadow-md">
-                                            <MessageCircle size={16} className="transition-transform duration-300 hover:rotate-12" />
-                                            Chat Now
-                                        </button>
-                                    </a>
-                                </div>
-                                <div className="absolute -bottom-4 -right-4 size-24 bg-white/10 rounded-full blur-2xl transition-all duration-500 group-hover:scale-150"></div>
-                            </div>
-                        </div>
-                    </aside>
+                {/* Centered Hub (Hidden on mobile) */}
+                <div className="hidden md:block max-w-6xl w-full mx-auto px-4 md:px-8 relative z-30">
+                    <div className="flex flex-col items-center max-w-5xl mx-auto w-full">
+                        <Card className="bg-white rounded-[6px] shadow-none border border-slate-100 overflow-hidden w-full md:h-[150px] flex items-center">
+                            <CardContent className="p-0 md:p-6 w-full h-full flex flex-col justify-center items-center">
+                                {/* Desktop Heading */}
+                                <h1 className="hidden md:block !text-xl md:!text-[44px] !font-black text-slate-800 mb-4 text-center font-plus-jakarta-sans tracking-tight leading-tight">
+                                    Refund <span className="text-[#000945]">Policy</span>
+                                </h1>
 
-                    {/* Main Text Content */}
-                    <div className="lg:col-span-9 flex flex-col gap-8">
-                        {/* Section: Policy Overview */}
-                        <section
-                            id="overview"
-                            className={`bg-white p-8 rounded-sm shadow-sm border border-slate-200 scroll-mt-24 transition-all duration-700 ease-out delay-200 hover:shadow-lg hover:border-slate-300 ${isVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-8'
-                                }`}
-                        >
-                            <h2 className="text-2xl font-bold text-slate-900 mb-4 flex items-center gap-3 group">
-                                <span className="flex items-center justify-center size-8 rounded-full bg-[#197fe6]/10 text-[#197fe6] text-sm transition-all duration-300">
-                                    01
-                                </span>
-                                <span className="transition-colors duration-300">Policy Overview</span>
-                            </h2>
-                            <div className="prose prose-slate max-w-none leading-relaxed">
-                                <p className="mb-4 transition-colors duration-300 !text-slate-700">
-                                    PARADISE YATRA believes in helping its customers as far as possible, and has therefore a liberal cancellation policy. Under this policy:
-                                </p>
-                            </div>
-                        </section>
-
-                        {/* Section: Cancellation Policy */}
-                        <section
-                            id="cancellation"
-                            className={`bg-white p-8 rounded-sm shadow-sm border border-slate-200 scroll-mt-24 transition-all duration-700 ease-out delay-300 hover:shadow-lg hover:border-slate-300 ${isVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-8'
-                                }`}
-                        >
-                            <h2 className="text-2xl font-bold text-slate-900 mb-6 flex items-center gap-3 group">
-                                <span className="flex items-center justify-center size-8 rounded-full bg-[#197fe6]/10 text-[#197fe6] text-sm transition-all">
-                                    02
-                                </span>
-                                <span className="transition-colors duration-300">Cancellation Policy</span>
-                            </h2>
-                            <div className="space-y-6">
-                                <div className="text-slate-600 leading-relaxed">
-                                    <p className="mb-4 transition-colors duration-300 !text-slate-700">
-                                        Cancellations will be considered only if the request is made immediately after placing the order. However, the cancellation request may not be entertained if the orders have been communicated to the vendors/merchants and they have initiated the process of shipping them.
-                                    </p>
+                                <div className="hidden md:flex flex-nowrap items-center justify-center w-full px-2 md:px-4">
+                                    <span className="text-slate-500 font-medium text-[15px] tracking-tight">Last updated: <span className="text-[#000945] font-bold">2nd March 2026</span></span>
                                 </div>
-                                <div className="bg-orange-50 border border-orange-100 p-5 rounded-sm transition-all duration-300 hover:bg-orange-100 hover:border-orange-200 hover:shadow-md">
-                                    <div className="flex gap-3">
-                                        <AlertTriangle size={20} className="text-orange-600 flex-shrink-0 mt-0.5 transition-transform duration-300 hover:scale-110" />
-                                        <div>
-                                            <h4 className="font-bold text-orange-800 text-sm mb-1">Important Note</h4>
-                                            <p className="!text-orange-700 text-sm transition-colors duration-300">
-                                                Once your order has been communicated to vendors/merchants and shipping has been initiated, cancellation may not be possible. Please request cancellations immediately after placing your order.
-                                            </p>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                        </section>
-
-                        {/* Section: Perishable Items */}
-                        <section
-                            id="perishable"
-                            className={`bg-white p-8 rounded-sm shadow-sm border border-slate-200 scroll-mt-24 transition-all duration-700 ease-out delay-400 hover:shadow-lg hover:border-slate-300 ${isVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-8'
-                                }`}
-                        >
-                            <h2 className="text-2xl font-bold text-slate-900 mb-6 flex items-center gap-3 group">
-                                <span className="flex items-center justify-center size-8 rounded-full bg-[#197fe6]/10 text-[#197fe6] text-sm">
-                                    03
-                                </span>
-                                <span className="transition-colors">Perishable Items</span>
-                            </h2>
-                            <div className="space-y-6">
-                                <div className="text-slate-600 leading-relaxed">
-                                    <p className="mb-4 transition-colors duration-300 !text-slate-700">
-                                        PARADISE YATRA does not accept cancellation requests for perishable items like flowers, eatables etc. However, refund/replacement can be made if the customer establishes that the quality of product delivered is not good.
-                                    </p>
-                                </div>
-                                <div className="bg-[#197fe6]/5 border-l-4 border-[#197fe6] p-5 rounded-sm transition-all duration-300 hover:bg-[#197fe6]/10 hover:border-[#197fe6] hover:translate-x-1 hover:shadow-md">
-                                    <h4 className="text-[#197fe6] font-bold mb-2 flex items-center gap-2">
-                                        <ShoppingBag size={20} className="transition-transform duration-300 hover:rotate-12" />
-                                        Quality Assurance
-                                    </h4>
-                                    <p className="text-sm !text-slate-700 transition-colors duration-300">
-                                        While cancellations are not accepted for perishable items, we ensure quality standards. If you receive a product that does not meet quality expectations, you may be eligible for a refund or replacement.
-                                    </p>
-                                </div>
-                            </div>
-                        </section>
-
-                        {/* Section: Damaged & Defective Items */}
-                        <section
-                            id="damaged"
-                            className={`bg-white p-8 rounded-sm shadow-sm border border-slate-200 scroll-mt-24 transition-all duration-700 ease-out delay-500 hover:shadow-lg hover:border-slate-300 ${isVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-8'
-                                }`}
-                        >
-                            <h2 className="text-2xl font-bold text-slate-900 mb-6 flex items-center gap-3 group">
-                                <span className="flex items-center justify-center size-8 rounded-full bg-[#197fe6]/10 text-[#197fe6] text-sm">
-                                    04
-                                </span>
-                                <span className="transition-colors">Damaged &amp; Defective Items</span>
-                            </h2>
-                            <div className="space-y-6">
-                                <div className="text-slate-600 leading-relaxed">
-                                    <p className="mb-4 transition-colors duration-300 !text-slate-700">
-                                        In case of receipt of damaged or defective items please report the same to our Customer Service team. The request will, however, be entertained once the merchant has checked and determined the same at his own end. This should be reported within 30+ Days of receipt of the products.
-                                    </p>
-                                    <p className="mb-4 transition-colors duration-300 !text-slate-700">
-                                        In case you feel that the product received is not as shown on the site or as per your expectations, you must bring it to the notice of our customer service within 30+ Days of receiving the product. The Customer Service Team after looking into your complaint will take an appropriate decision.
-                                    </p>
-                                </div>
-                                <div className="bg-[#197fe6]/5 border-l-4 border-[#197fe6] p-5 rounded-sm transition-all duration-300 hover:bg-[#197fe6]/10 hover:border-[#197fe6] hover:translate-x-1 hover:shadow-md">
-                                    <h4 className="text-[#197fe6] font-bold mb-2 flex items-center gap-2">
-                                        <ShieldAlert size={20} className="transition-transform duration-300 hover:rotate-12" />
-                                        Reporting Timeline
-                                    </h4>
-                                    <p className="text-sm !text-slate-700 transition-colors duration-300">
-                                        Please report any issues with damaged, defective, or misrepresented products within 30+ Days of receipt. Our Customer Service team will investigate and make an appropriate decision after merchant verification.
-                                    </p>
-                                </div>
-                                <div className="bg-slate-50 p-5 rounded-sm transition-all duration-300 hover:bg-slate-100 hover:shadow-md">
-                                    <h4 className="font-bold text-slate-900 mb-3 flex items-center gap-2">
-                                        <AlertCircle size={20} className="transition-transform duration-300 hover:scale-110" />
-                                        Warranty Products
-                                    </h4>
-                                    <p className="text-sm !text-slate-600 transition-colors duration-300">
-                                        In case of complaints regarding products that come with a warranty from manufacturers, please refer the issue to them.
-                                    </p>
-                                </div>
-                            </div>
-                        </section>
-
-                        {/* Section: Refund Processing */}
-                        <section
-                            id="refunds"
-                            className={`bg-white p-8 rounded-sm shadow-sm border border-slate-200 scroll-mt-24 transition-all duration-700 ease-out delay-600 hover:shadow-lg hover:border-slate-300 ${isVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-8'
-                                }`}
-                        >
-                            <h2 className="text-2xl font-bold text-slate-900 mb-6 flex items-center gap-3 group">
-                                <span className="flex items-center justify-center size-8 rounded-full bg-[#197fe6]/10 text-[#197fe6] text-sm">
-                                    05
-                                </span>
-                                <span className="transition-colors">Refund Processing</span>
-                            </h2>
-                            <div className="space-y-6">
-                                <div className="text-slate-600 leading-relaxed">
-                                    <p className="mb-4 transition-colors duration-300 !text-slate-700">
-                                        In case of any Refunds approved by the PARADISE YATRA, it'll take 16-30 Days for the refund to be processed to the end customer.
-                                    </p>
-                                </div>
-                                <div className="bg-[#197fe6]/5 border-l-4 border-[#197fe6] p-5 rounded-sm transition-all duration-300 hover:bg-[#197fe6]/10 hover:border-[#197fe6] hover:translate-x-1 hover:shadow-md">
-                                    <h4 className="text-[#197fe6] font-bold mb-2 flex items-center gap-2">
-                                        <Wallet size={20} className="transition-transform duration-300 hover:rotate-12" />
-                                        Refund Timeline
-                                    </h4>
-                                    <p className="text-sm !text-slate-700 transition-colors duration-300">
-                                        Once your refund request is approved by PARADISE YATRA, please allow 16-30 Days for the refund amount to be processed and credited back to your original payment method.
-                                    </p>
-                                </div>
-                                <div className="bg-slate-50 p-5 rounded-sm transition-all duration-300 hover:bg-slate-100 hover:shadow-md">
-                                    <h4 className="font-bold text-slate-900 mb-3 flex items-center gap-2">
-                                        <Clock size={20} className="transition-transform duration-300 hover:rotate-12" />
-                                        Need Assistance?
-                                    </h4>
-                                    <p className="text-sm !text-slate-600 transition-colors duration-300">
-                                        If you have any questions or concerns about cancellations or refunds, please contact our Customer Service team using the contact information provided on this website.
-                                    </p>
-                                </div>
-                            </div>
-                        </section>
+                            </CardContent>
+                        </Card>
                     </div>
                 </div>
-            </main>
+            </section>
+
+            {/* Main Content Area */}
+            <div className="max-w-4xl mx-auto px-4 md:px-8 py-12">
+                <div className="relative items-start">
+                    <div className="w-full">
+                        <motion.div
+                            variants={containerVariants}
+                            initial="hidden"
+                            animate="visible"
+                            className="space-y-8"
+                        >
+                            {/* Section 1: Booking Confirmation */}
+                            <motion.section variants={itemVariants} id="confirmation" className="scroll-mt-28">
+                                <div className="mb-6">
+                                    <h2 style={{ fontWeight: 700, color: '#000945' }} className="text-[24px] md:text-[36px] tracking-tight">Booking Confirmation</h2>
+                                </div>
+                                <div className="space-y-4 leading-relaxed text-[15px]">
+                                    <ul className="list-disc pl-6 space-y-2" style={{ color: '#000945', fontWeight: 500 }}>
+                                        <li>A booking shall be considered confirmed only after receipt of the required advance payment.</li>
+                                        <li>The balance amount must be cleared before the commencement of travel.</li>
+                                        <li>By making any payment, the customer agrees to this Cancellation & Refund Policy.</li>
+                                    </ul>
+                                </div>
+                            </motion.section>
+
+                            {/* Section 2: Cancellation by Customer */}
+                            <motion.section variants={itemVariants} id="cancellation" className="scroll-mt-28">
+                                <div className="mb-6">
+                                    <h2 style={{ fontWeight: 700, color: '#000945' }} className="text-[24px] md:text-[36px] tracking-tight">Cancellation by Customer</h2>
+                                </div>
+                                <div className="space-y-4 leading-relaxed text-[15px]">
+                                    <p style={{ color: '#000945', fontWeight: 500 }}>
+                                        All cancellation requests must be submitted in writing via official email or registered WhatsApp number of Paradise Yatra.
+                                    </p>
+                                    <p style={{ color: '#000945', fontWeight: 700 }}>Holiday Packages (Domestic & International)</p>
+                                    <ul className="list-disc pl-6 space-y-2" style={{ color: '#000945', fontWeight: 500 }}>
+                                        <li><strong>30 days or more before departure:</strong> 25% of total package cost will be charged as cancellation fee.</li>
+                                        <li><strong>15–20 days before departure:</strong> 50% of total package cost will be charged as cancellation fee.</li>
+                                        <li><strong>Within 15 days of departure / No Show:</strong> 100% cancellation charges (No Refund).</li>
+                                    </ul>
+                                    <p className="mt-4 italic" style={{ color: '#000945', fontWeight: 500 }}>
+                                        Cancellation charges are calculated on total package cost and not on advance amount.
+                                    </p>
+                                </div>
+                            </motion.section>
+
+                            {/* Section 3: Flight Tickets */}
+                            <motion.section variants={itemVariants} id="flights" className="scroll-mt-28">
+                                <div className="mb-6">
+                                    <h2 style={{ fontWeight: 700, color: '#000945' }} className="text-[24px] md:text-[36px] tracking-tight">Flight Tickets</h2>
+                                </div>
+                                <div className="space-y-4 leading-relaxed text-[15px]">
+                                    <ul className="list-disc pl-6 space-y-2" style={{ color: '#000945', fontWeight: 500 }}>
+                                        <li>Flight ticket cancellations are strictly subject to the airline’s cancellation policy.</li>
+                                        <li>Paradise Yatra will refund only the amount received from the airline after deducting applicable service charges.</li>
+                                    </ul>
+                                </div>
+                            </motion.section>
+
+                            {/* Section 4: Hotel Bookings */}
+                            <motion.section variants={itemVariants} id="hotels" className="scroll-mt-28">
+                                <div className="mb-6">
+                                    <h2 style={{ fontWeight: 700, color: '#000945' }} className="text-[24px] md:text-[36px] tracking-tight">Hotel Bookings</h2>
+                                </div>
+                                <div className="space-y-4 leading-relaxed text-[15px]">
+                                    <ul className="list-disc pl-6 space-y-2" style={{ color: '#000945', fontWeight: 500 }}>
+                                        <li>Refund eligibility depends entirely on the respective hotel’s cancellation policy.</li>
+                                        <li>Non-refundable hotel bookings are not eligible for any refund.</li>
+                                    </ul>
+                                </div>
+                            </motion.section>
+
+                            {/* Section 5: Visa, Insurance & Processing Charges */}
+                            <motion.section variants={itemVariants} id="visa" className="scroll-mt-28">
+                                <div className="mb-6">
+                                    <h2 style={{ fontWeight: 700, color: '#000945' }} className="text-[24px] md:text-[36px] tracking-tight">Visa, Insurance & Processing Charges</h2>
+                                </div>
+                                <div className="space-y-4 leading-relaxed text-[15px]">
+                                    <p style={{ color: '#000945', fontWeight: 500 }}>
+                                        Visa fees, travel insurance charges, documentation charges, and service fees are strictly non-refundable, even in case of visa rejection or cancellation by the customer.
+                                    </p>
+                                </div>
+                            </motion.section>
+
+                            {/* Section 6: No Show Policy */}
+                            <motion.section variants={itemVariants} id="no-show" className="scroll-mt-28">
+                                <div className="mb-6">
+                                    <h2 style={{ fontWeight: 700, color: '#000945' }} className="text-[24px] md:text-[36px] tracking-tight">No Show Policy</h2>
+                                </div>
+                                <div className="space-y-4 leading-relaxed text-[15px]">
+                                    <p style={{ color: '#000945', fontWeight: 500 }}>
+                                        Failure to report on the date of departure will be treated as a No Show and 100% cancellation charges will apply.
+                                    </p>
+                                </div>
+                            </motion.section>
+
+                            {/* Section 7: Refund Processing Timeline */}
+                            <motion.section variants={itemVariants} id="timeline" className="scroll-mt-28">
+                                <div className="mb-6">
+                                    <h2 style={{ fontWeight: 700, color: '#000945' }} className="text-[24px] md:text-[36px] tracking-tight">Refund Processing Timeline</h2>
+                                </div>
+                                <div className="space-y-4 leading-relaxed text-[15px]">
+                                    <ul className="list-disc pl-6 space-y-2" style={{ color: '#000945', fontWeight: 500 }}>
+                                        <li>All eligible refunds will be processed within 45 working days from the date of cancellation approval.</li>
+                                        <li>Refunds will be issued through the original mode of payment.</li>
+                                        <li>Bank charges, payment gateway fees, and supplier deductions (if any) will be applicable.</li>
+                                    </ul>
+                                </div>
+                            </motion.section>
+
+                            {/* Section 8: Cancellation by Paradise Yatra */}
+                            <motion.section variants={itemVariants} id="cancellation-paradiseyatra" className="scroll-mt-28">
+                                <div className="mb-6">
+                                    <h2 style={{ fontWeight: 700, color: '#000945' }} className="text-[24px] md:text-[36px] tracking-tight">Cancellation by Paradise Yatra</h2>
+                                </div>
+                                <div className="space-y-4 leading-relaxed text-[15px]">
+                                    <p style={{ color: '#000945', fontWeight: 500 }}>
+                                        In case of unavoidable circumstances such as natural calamities, government restrictions, operational issues, strikes, or force majeure events, Paradise Yatra reserves the right to cancel the booking.
+                                    </p>
+                                    <p style={{ color: '#000945', fontWeight: 700 }}>Customers will be offered:</p>
+                                    <ul className="list-disc pl-6 space-y-2" style={{ color: '#000945', fontWeight: 500 }}>
+                                        <li>An alternative travel option <span className="font-bold">OR</span></li>
+                                        <li>Refund subject to supplier policies</li>
+                                    </ul>
+                                    <p style={{ color: '#000945', fontWeight: 500 }}>
+                                        Paradise Yatra shall not be liable for any additional compensation.
+                                    </p>
+                                </div>
+                            </motion.section>
+
+                            {/* Section 9: Amendments / Date Changes */}
+                            <motion.section variants={itemVariants} id="amendments" className="scroll-mt-28">
+                                <div className="mb-6">
+                                    <h2 style={{ fontWeight: 700, color: '#000945' }} className="text-[24px] md:text-[36px] tracking-tight">Amendments / Date Changes</h2>
+                                </div>
+                                <div className="space-y-4 leading-relaxed text-[15px]">
+                                    <ul className="list-disc pl-6 space-y-2" style={{ color: '#000945', fontWeight: 500 }}>
+                                        <li>All amendments are subject to availability and supplier approval.</li>
+                                        <li>Fare difference and amendment charges will apply.</li>
+                                    </ul>
+                                </div>
+                            </motion.section>
+
+                            {/* Section 10: Force Majeure */}
+                            <motion.section variants={itemVariants} id="force-majeure" className="scroll-mt-28">
+                                <div className="mb-6">
+                                    <h2 style={{ fontWeight: 700, color: '#000945' }} className="text-[24px] md:text-[36px] tracking-tight">Force Majeure</h2>
+                                </div>
+                                <div className="space-y-4 leading-relaxed text-[15px]">
+                                    <p style={{ color: '#000945', fontWeight: 500 }}>
+                                        Paradise Yatra shall not be held responsible for delays or cancellations caused by events beyond control including natural disasters, pandemics, war, weather disruptions, or government orders.
+                                    </p>
+                                </div>
+                            </motion.section>
+
+                            {/* Disclaimer */}
+                            <motion.section variants={itemVariants} id="disclaimer" className="scroll-mt-28">
+                                <div className="mb-6">
+                                    <h2 style={{ fontWeight: 700, color: '#000945' }} className="text-[24px] md:text-[36px] tracking-tight">Disclaimer</h2>
+                                </div>
+                                <div className="space-y-4 leading-relaxed text-[15px]">
+                                    <p style={{ color: '#000945', fontWeight: 500 }}>
+                                        Paradise Yatra acts solely as a travel service facilitator. All services are provided by third-party suppliers such as airlines, hotels, transport providers, and visa authorities. Refunds and cancellations are ultimately subject to supplier terms and conditions.
+                                    </p>
+                                </div>
+                            </motion.section>
+
+                        </motion.div>
+                    </div>
+                </div>
+            </div>
         </div>
     );
 }
