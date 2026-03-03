@@ -9,7 +9,7 @@ import Link from "next/link";
 import Image from "next/image";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
-import { getImageUrl } from "@/lib/utils";
+import { getImageUrl, getDestinationWebp } from "@/lib/utils";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 
@@ -102,7 +102,7 @@ export default function DestinationsPage() {
                     {/* Image Container */}
                     <div className="relative w-full h-[230.4px] md:absolute md:inset-0 md:h-auto flex-shrink-0">
                         <Image
-                            src="/hero/sikkim-hero-v3.png"
+                            src="/Destination%20Pages/Rajasthan.webp"
                             alt="Explore Destinations"
                             fill
                             className="object-cover"
@@ -202,7 +202,107 @@ export default function DestinationsPage() {
                                         <Card className="overflow-hidden border border-slate-100 bg-white rounded-[6px] shadow-sm hover:shadow-md transition-all duration-500 h-full flex flex-col">
                                             <div className="relative h-[320px] overflow-hidden">
                                                 <Image
-                                                    src={getImageUrl(dest.image) || FALLBACK_IMAGE}
+                                                    src={(dest.name?.toLowerCase().includes('sikkim') ||
+                                                        dest.name?.toLowerCase().includes('gangtok') ||
+                                                        dest.name?.toLowerCase().includes('kalimpong') ||
+                                                        dest.location?.toLowerCase().includes('sikkim') ||
+                                                        dest.location?.toLowerCase().includes('gangtok') ||
+                                                        dest.location?.toLowerCase().includes('kalimpong'))
+                                                        ? '/Destination%20Pages/Sikkim.webp'
+                                                        : (dest.name?.toLowerCase().includes('andaman') ||
+                                                            dest.location?.toLowerCase().includes('andaman'))
+                                                            ? '/Destination%20Pages/Andaman%20and%20Nicobar%20Island.webp'
+                                                            : (dest.name?.toLowerCase().includes('kashmir') ||
+                                                                dest.name?.toLowerCase().includes('jammu') ||
+                                                                dest.location?.toLowerCase().includes('kashmir') ||
+                                                                dest.location?.toLowerCase().includes('jammu'))
+                                                                ? '/Destination%20Pages/Jammu%20and%20Kashmir.webp'
+                                                                : (dest.name?.toLowerCase().includes('rajasthan') ||
+                                                                    dest.name?.toLowerCase().includes('jaipur') ||
+                                                                    dest.name?.toLowerCase().includes('udaipur') ||
+                                                                    dest.name?.toLowerCase().includes('jodhpur') ||
+                                                                    dest.name?.toLowerCase().includes('jaisalmer') ||
+                                                                    dest.location?.toLowerCase().includes('rajasthan') ||
+                                                                    dest.location?.toLowerCase().includes('jaipur') ||
+                                                                    dest.location?.toLowerCase().includes('udaipur') ||
+                                                                    dest.location?.toLowerCase().includes('jodhpur') ||
+                                                                    dest.location?.toLowerCase().includes('jaisalmer'))
+                                                                    ? '/Destination%20Pages/Rajasthan.webp'
+                                                                    : (dest.name?.toLowerCase().includes('uttarakhand') ||
+                                                                        dest.name?.toLowerCase().includes('nainital') ||
+                                                                        dest.name?.toLowerCase().includes('rishikesh') ||
+                                                                        dest.name?.toLowerCase().includes('mussoorie') ||
+                                                                        dest.name?.toLowerCase().includes('dehradun') ||
+                                                                        dest.name?.toLowerCase().includes('haridwar') ||
+                                                                        dest.location?.toLowerCase().includes('uttarakhand') ||
+                                                                        dest.location?.toLowerCase().includes('nainital') ||
+                                                                        dest.location?.toLowerCase().includes('rishikesh') ||
+                                                                        dest.location?.toLowerCase().includes('mussoorie') ||
+                                                                        dest.location?.toLowerCase().includes('dehradun') ||
+                                                                        dest.location?.toLowerCase().includes('haridwar'))
+                                                                        ? '/Destination%20Pages/Uttarakhand.webp'
+                                                                        : (dest.name?.toLowerCase().includes('goa') ||
+                                                                            dest.name?.toLowerCase().includes('panjim') ||
+                                                                            dest.location?.toLowerCase().includes('goa') ||
+                                                                            dest.location?.toLowerCase().includes('panjim'))
+                                                                            ? '/Destination%20Pages/Goa.webp'
+                                                                            : (dest.name?.toLowerCase().includes('kerala') ||
+                                                                                dest.name?.toLowerCase().includes('kochi') ||
+                                                                                dest.name?.toLowerCase().includes('munnar') ||
+                                                                                dest.name?.toLowerCase().includes('alleppey') ||
+                                                                                dest.location?.toLowerCase().includes('kerala') ||
+                                                                                dest.location?.toLowerCase().includes('kochi') ||
+                                                                                dest.location?.toLowerCase().includes('munnar') ||
+                                                                                dest.location?.toLowerCase().includes('alleppey'))
+                                                                                ? '/Destination%20Pages/Kerala.webp'
+                                                                                : (dest.name?.toLowerCase().includes('himachal') ||
+                                                                                    dest.name?.toLowerCase().includes('shimla') ||
+                                                                                    dest.name?.toLowerCase().includes('manali') ||
+                                                                                    dest.location?.toLowerCase().includes('himachal') ||
+                                                                                    dest.location?.toLowerCase().includes('shimla') ||
+                                                                                    dest.location?.toLowerCase().includes('manali'))
+                                                                                    ? '/Destination%20Pages/Himachal%20Pradesh.webp'
+                                                                                    : (dest.name?.toLowerCase().includes('ladakh') ||
+                                                                                        dest.name?.toLowerCase().includes('leh') ||
+                                                                                        dest.name?.toLowerCase().includes('nubra') ||
+                                                                                        dest.name?.toLowerCase().includes('zanskar') ||
+                                                                                        dest.location?.toLowerCase().includes('ladakh') ||
+                                                                                        dest.location?.toLowerCase().includes('leh') ||
+                                                                                        dest.location?.toLowerCase().includes('nubra') ||
+                                                                                        dest.location?.toLowerCase().includes('zanskar'))
+                                                                                        ? '/Destination%20Pages/Ladakh.webp'
+                                                                                        : (dest.name?.toLowerCase().includes('tamil nadu') ||
+                                                                                            dest.location?.toLowerCase().includes('tamil nadu'))
+                                                                                            ? '/Destination%20Pages/Tamil%20Nadu.webp'
+                                                                                            : (dest.name?.toLowerCase().includes('thailand') ||
+                                                                                                dest.location?.toLowerCase().includes('thailand'))
+                                                                                                ? '/Destination%20Pages/Thailand.webp'
+                                                                                                : (dest.name?.toLowerCase().includes('malaysia') ||
+                                                                                                    dest.location?.toLowerCase().includes('malaysia'))
+                                                                                                    ? '/Destination%20Pages/Malaysia.webp'
+                                                                                                    : (dest.name?.toLowerCase().includes('egypt') ||
+                                                                                                        dest.location?.toLowerCase().includes('egypt'))
+                                                                                                        ? '/Destination%20Pages/Egypt.webp'
+                                                                                                        : (dest.name?.toLowerCase().includes('indonesia') ||
+                                                                                                            dest.location?.toLowerCase().includes('indonesia'))
+                                                                                                            ? '/Destination%20Pages/Indonesia.webp'
+                                                                                                            : (dest.name?.toLowerCase().includes('kenya') ||
+                                                                                                                dest.location?.toLowerCase().includes('kenya'))
+                                                                                                                ? '/Destination%20Pages/Kenya.webp'
+                                                                                                                : (dest.name?.toLowerCase().includes('maldives') ||
+                                                                                                                    dest.location?.toLowerCase().includes('maldives'))
+                                                                                                                    ? '/Destination%20Pages/Maldives.webp'
+                                                                                                                    : (dest.name?.toLowerCase().includes('singapore') ||
+                                                                                                                        dest.location?.toLowerCase().includes('singapore'))
+                                                                                                                        ? '/Destination%20Pages/Singapore.webp'
+                                                                                                                        : (dest.name?.toLowerCase().includes('united arab emirates') ||
+                                                                                                                            dest.name?.toLowerCase().includes('dubai') ||
+                                                                                                                            dest.name?.toLowerCase().includes('uae') ||
+                                                                                                                            dest.location?.toLowerCase().includes('united arab emirates') ||
+                                                                                                                            dest.location?.toLowerCase().includes('dubai') ||
+                                                                                                                            dest.location?.toLowerCase().includes('uae'))
+                                                                                                                            ? '/Destination%20Pages/United%20Arab%20Emirates.webp'
+                                                                                                                            : getImageUrl(dest.image) || FALLBACK_IMAGE}
                                                     alt={dest.name}
                                                     fill
                                                     className="object-cover group-hover:scale-105 transition-transform duration-1000 ease-out"

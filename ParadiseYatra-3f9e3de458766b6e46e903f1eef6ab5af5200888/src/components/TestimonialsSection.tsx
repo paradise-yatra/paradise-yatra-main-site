@@ -1,7 +1,6 @@
 ﻿"use client";
 
 import { useEffect, useRef, useState } from "react";
-import Image from "next/image";
 import CarouselArrows from "./ui/CarouselArrows";
 
 interface Testimonial {
@@ -16,41 +15,45 @@ interface Testimonial {
 const TESTIMONIALS: Testimonial[] = [
     {
         id: 1,
-        destination: "Mussoorie",
-        video: "https://res.cloudinary.com/dwuwpxu0y/video/upload/q_auto:eco,f_auto,vc_auto,w_1280/v1767783817/Video_Testimonial_9_rjvcfy.mp4",
+        destination: "Goa",
+        video: "/Home/Memories by travellers/Video Testimonial 1.mp4",
         quote: '"Got back from Vietnam"',
     },
     {
         id: 2,
-        destination: "Kerala",
-        video: "https://res.cloudinary.com/dwuwpxu0y/video/upload/q_auto:eco,f_auto,vc_auto,w_1280/v1767782676/Video_Testimonial_5_cmw9wg.mp4",
+        destination: "Gujrat",
+        video: "/Home/Memories by travellers/Video Testimonial 2.mp4",
         isCouple: true,
         coupleName: "Roobal & Anjali",
     },
     {
         id: 3,
         destination: "Kerala",
-        video: "https://res.cloudinary.com/dwuwpxu0y/video/upload/q_auto:eco,f_auto,vc_auto,w_1280/v1767782300/Video_Testimonial_3_fisxcc.mp4",
+        video: "/Home/Memories by travellers/Video Testimonial 3.mp4",
         quote: "I'm here today in Bali.",
     },
     {
         id: 4,
-        destination: "Goa",
-        video: "https://res.cloudinary.com/dwuwpxu0y/video/upload/q_auto:eco,f_auto,vc_auto,w_1280/v1767763881/Sardar_Ji_Review_xjorqh.mp4",
+        destination: "Sikkim",
+        video: "/Home/Memories by travellers/Video Testimonial 4.mp4",
         isCouple: true,
         coupleName: "Pranav & Anjali",
     },
     {
         id: 5,
         destination: "Shimla",
-        video: "https://res.cloudinary.com/dwuwpxu0y/video/upload/q_auto:eco,f_auto,vc_auto,w_1280/v1767783726/Video_Testimonial_8_n20d0f.mp4",
+        video: "/Home/Memories by travellers/Video Testimonial 5.mp4",
     },
 ];
 
 const TestimonialsSection = () => {
+    const sectionRef = useRef<HTMLElement>(null);
     const carouselRef = useRef<HTMLDivElement>(null);
+    const videoRefs = useRef<(HTMLVideoElement | null)[]>([]);
     const [canScrollLeft, setCanScrollLeft] = useState(false);
     const [canScrollRight, setCanScrollRight] = useState(true);
+    const [isInView, setIsInView] = useState(false);
+    const [hasEnteredView, setHasEnteredView] = useState(false);
 
     const updateScrollState = () => {
         if (carouselRef.current) {
@@ -74,6 +77,41 @@ const TestimonialsSection = () => {
         }
     }, []);
 
+    useEffect(() => {
+        const section = sectionRef.current;
+        if (!section) return;
+
+        const observer = new IntersectionObserver(
+            ([entry]) => {
+                const visible = entry.isIntersecting;
+                setIsInView(visible);
+                if (visible) setHasEnteredView(true);
+            },
+            { threshold: 0.35, rootMargin: "150px 0px" }
+        );
+
+        observer.observe(section);
+        return () => observer.disconnect();
+    }, []);
+
+    useEffect(() => {
+        if (!hasEnteredView) return;
+
+        videoRefs.current.forEach((video) => {
+            if (!video) return;
+            if (isInView) {
+                const playPromise = video.play();
+                if (playPromise && typeof playPromise.catch === "function") {
+                    playPromise.catch(() => {
+                        // Playback may fail until browser confirms auto-play policy.
+                    });
+                }
+            } else {
+                video.pause();
+            }
+        });
+    }, [isInView, hasEnteredView]);
+
     const scrollByStep = (direction: number) => {
         if (carouselRef.current) {
             const card = carouselRef.current.querySelector(".flex-shrink-0");
@@ -90,10 +128,10 @@ const TestimonialsSection = () => {
 
     return (
         <section
+            ref={sectionRef}
             className="py-8 md:py-10 px-4 md:px-8 overflow-hidden relative"
             style={{
-                backgroundImage:
-                    "url('https://res.cloudinary.com/dwuwpxu0y/image/upload/f_auto,q_auto:good,w_auto,dpr_auto,c_limit/v1769064117/1329_qnfgyd.jpg')",
+                backgroundImage: "url('/Home/Hero/Pick Your Style Background.jpg')",
                 backgroundSize: "cover",
                 backgroundPosition: "center",
                 backgroundRepeat: "no-repeat",
@@ -150,11 +188,12 @@ const TestimonialsSection = () => {
                         >
                             <div className="relative h-[400px] md:h-[480px] w-full rounded-lg overflow-hidden shadow-xl cursor-pointer border-2 border-dashed border-white" style={{ isolation: 'isolate', WebkitMaskImage: '-webkit-radial-gradient(white, black)' }}>
                                 <video
-                                    src={testimonial.video}
-                                    autoPlay
+                                    ref={(el) => { videoRefs.current[testimonial.id - 1] = el; }}
+                                    src={hasEnteredView ? testimonial.video : undefined}
                                     muted
                                     loop
                                     playsInline
+                                    preload={hasEnteredView ? "metadata" : "none"}
                                     className="absolute inset-0 w-full h-full object-cover rounded-[inherit] z-0"
                                 />
                                 <div className="absolute inset-0 bg-gradient-to-b from-transparent via-transparent to-black/20 z-10"></div>

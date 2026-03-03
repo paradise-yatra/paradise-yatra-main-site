@@ -19,6 +19,7 @@ interface PackageCardProps {
     priceLabel: string; // e.g., "Per Couple" or "Per Person"
     isInWishlist: boolean;
     onWishlistToggle: (e: React.MouseEvent, pkgId: string) => void;
+    showDestination?: boolean;
 }
 
 const PackageCard: React.FC<PackageCardProps> = ({
@@ -33,7 +34,8 @@ const PackageCard: React.FC<PackageCardProps> = ({
     themeColor,
     priceLabel,
     isInWishlist,
-    onWishlistToggle
+    onWishlistToggle,
+    showDestination = true
 }) => {
     const optimizedImage =
         getImageUrl(image, {
@@ -47,7 +49,7 @@ const PackageCard: React.FC<PackageCardProps> = ({
     return (
         <Link href={`${hrefPrefix}/${slug}`} className="block flex-shrink-0">
             <article
-                className="group cursor-pointer bg-white rounded-lg overflow-hidden border border-gray-300 transition-all duration-300 relative w-[260px] min-w-[260px] md:w-[265px] md:min-w-[265px] max-w-[260px] md:max-w-[265px]"
+                className="group cursor-pointer bg-white rounded-[6px] overflow-hidden border border-gray-300 transition-all duration-300 relative w-[260px] min-w-[260px] md:w-[265px] md:min-w-[265px] max-w-[260px] md:max-w-[265px]"
                 style={{ "--theme-color": themeColor } as React.CSSProperties}
             >
                 {/* White hover overlay */}
@@ -79,10 +81,12 @@ const PackageCard: React.FC<PackageCardProps> = ({
 
                     {/* Content on Image */}
                     <div className="absolute bottom-4 left-4 right-4 text-white">
-                        <div className="flex items-center gap-1.5 mb-1.5 opacity-90">
-                            <MapPin className="h-3.5 w-3.5" style={{ color: 'white' }} />
-                            <span className="!text-xs !font-semibold tracking-wide uppercase">{destination}</span>
-                        </div>
+                        {showDestination && (
+                            <div className="flex items-center gap-1.5 mb-1.5 opacity-90">
+                                <MapPin className="h-3.5 w-3.5" style={{ color: 'white' }} />
+                                <span className="!text-xs !font-semibold tracking-wide uppercase">{destination}</span>
+                            </div>
+                        )}
                         <h4 className="text-md !font-bold leading-snug line-clamp-2 text-shadow-sm">
                             {title}
                         </h4>

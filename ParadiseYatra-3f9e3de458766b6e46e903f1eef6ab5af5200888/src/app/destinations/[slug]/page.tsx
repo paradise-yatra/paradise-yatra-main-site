@@ -230,11 +230,139 @@ export default function DestinationPage({ params }: DestinationPageProps) {
   const discount = getDiscount();
 
   // Get gallery images
-  const galleryImages = destination?.images && destination.images.length > 0
-    ? destination.images
-    : destination?.image
-      ? [destination.image]
-      : ["https://images.unsplash.com/photo-1488646953014-85cb44e25828?w=1920&q=80"];
+  const isSikkim = destination?.name?.toLowerCase().includes('sikkim') ||
+    destination?.slug?.toLowerCase().includes('sikkim') ||
+    destination?.name?.toLowerCase().includes('gangtok') ||
+    destination?.name?.toLowerCase().includes('kalimpong');
+
+  const isAndaman = destination?.name?.toLowerCase().includes('andaman') ||
+    destination?.slug?.toLowerCase().includes('andaman') ||
+    destination?.name?.toLowerCase().includes('nicobar') ||
+    destination?.name?.toLowerCase().includes('port blair') ||
+    destination?.name?.toLowerCase().includes('havelock') ||
+    destination?.name?.toLowerCase().includes('neil island');
+
+  const isKashmir = destination?.name?.toLowerCase().includes('kashmir') ||
+    destination?.slug?.toLowerCase().includes('kashmir') ||
+    destination?.name?.toLowerCase().includes('jammu') ||
+    destination?.name?.toLowerCase().includes('srinagar') ||
+    destination?.name?.toLowerCase().includes('gulmarg') ||
+    destination?.name?.toLowerCase().includes('pahalgam');
+
+  const isRajasthan = destination?.name?.toLowerCase().includes('rajasthan') ||
+    destination?.slug?.toLowerCase().includes('rajasthan') ||
+    destination?.name?.toLowerCase().includes('jaipur') ||
+    destination?.name?.toLowerCase().includes('udaipur') ||
+    destination?.name?.toLowerCase().includes('jodhpur') ||
+    destination?.name?.toLowerCase().includes('jaisalmer');
+
+  const isUttarakhand = destination?.name?.toLowerCase().includes('uttarakhand') ||
+    destination?.slug?.toLowerCase().includes('uttarakhand') ||
+    destination?.name?.toLowerCase().includes('nainital') ||
+    destination?.name?.toLowerCase().includes('rishikesh') ||
+    destination?.name?.toLowerCase().includes('mussoorie') ||
+    destination?.name?.toLowerCase().includes('haridwar');
+
+  const isGoa = destination?.name?.toLowerCase().includes('goa') ||
+    destination?.slug?.toLowerCase().includes('goa') ||
+    destination?.name?.toLowerCase().includes('panjim') ||
+    destination?.name?.toLowerCase().includes('calangute') ||
+    destination?.name?.toLowerCase().includes('baga');
+
+  const isKerala = destination?.name?.toLowerCase().includes('kerala') ||
+    destination?.slug?.toLowerCase().includes('kerala') ||
+    destination?.name?.toLowerCase().includes('kochi') ||
+    destination?.name?.toLowerCase().includes('munnar') ||
+    destination?.name?.toLowerCase().includes('alleppey');
+
+  const isHimachal = destination?.name?.toLowerCase().includes('himachal') ||
+    destination?.slug?.toLowerCase().includes('himachal') ||
+    destination?.name?.toLowerCase().includes('shimla') ||
+    destination?.name?.toLowerCase().includes('manali') ||
+    destination?.name?.toLowerCase().includes('dharamshala') ||
+    destination?.name?.toLowerCase().includes('dalhousie');
+
+  const isLadakh = destination?.name?.toLowerCase().includes('ladakh') ||
+    destination?.slug?.toLowerCase().includes('ladakh') ||
+    destination?.name?.toLowerCase().includes('leh') ||
+    destination?.name?.toLowerCase().includes('nubra');
+
+  const isTamilNadu = destination?.name?.toLowerCase().includes('tamil nadu') ||
+    destination?.slug?.toLowerCase().replace(/-/g, ' ').includes('tamil nadu') ||
+    destination?.name?.toLowerCase().includes('ooty') ||
+    destination?.name?.toLowerCase().includes('chennai') ||
+    destination?.name?.toLowerCase().includes('madurai') ||
+    destination?.name?.toLowerCase().includes('kanyakumari');
+
+  const isThailand = destination?.name?.toLowerCase().includes('thailand') ||
+    destination?.slug?.toLowerCase().replace(/-/g, ' ').includes('thailand');
+
+  const isMalaysia = destination?.name?.toLowerCase().includes('malaysia') ||
+    destination?.slug?.toLowerCase().replace(/-/g, ' ').includes('malaysia');
+
+  const isEgypt = destination?.name?.toLowerCase().includes('egypt') ||
+    destination?.slug?.toLowerCase().replace(/-/g, ' ').includes('egypt');
+
+  const isIndonesia = destination?.name?.toLowerCase().includes('indonesia') ||
+    destination?.slug?.toLowerCase().replace(/-/g, ' ').includes('indonesia');
+
+  const isKenya = destination?.name?.toLowerCase().includes('kenya') ||
+    destination?.slug?.toLowerCase().replace(/-/g, ' ').includes('kenya');
+
+  const isMaldives = destination?.name?.toLowerCase().includes('maldives') ||
+    destination?.slug?.toLowerCase().replace(/-/g, ' ').includes('maldives');
+
+  const isSingapore = destination?.name?.toLowerCase().includes('singapore') ||
+    destination?.slug?.toLowerCase().replace(/-/g, ' ').includes('singapore');
+
+  const isUAE = destination?.name?.toLowerCase().includes('united arab emirates') ||
+    destination?.name?.toLowerCase().includes('dubai') ||
+    destination?.name?.toLowerCase().includes('uae') ||
+    destination?.slug?.toLowerCase().replace(/-/g, ' ').includes('united arab emirates') ||
+    destination?.slug?.toLowerCase().replace(/-/g, ' ').includes('dubai') ||
+    destination?.slug?.toLowerCase().replace(/-/g, ' ').includes('uae');
+
+  const galleryImages = isSikkim
+    ? ['/Destination Pages/Sikkim.webp']
+    : isAndaman
+      ? ['/Destination Pages/Andaman and Nicobar Island.webp']
+      : isKashmir
+        ? ['/Destination Pages/Jammu and Kashmir.webp']
+        : isRajasthan
+          ? ['/Destination Pages/Rajasthan.webp']
+          : isUttarakhand
+            ? ['/Destination Pages/Uttarakhand.webp']
+            : isGoa
+              ? ['/Destination Pages/Goa.webp']
+              : isKerala
+                ? ['/Destination Pages/Kerala.webp']
+                : isHimachal
+                  ? ['/Destination Pages/Himachal Pradesh.webp']
+                  : isLadakh
+                    ? ['/Destination Pages/Ladakh.webp']
+                    : isTamilNadu
+                      ? ['/Destination Pages/Tamil Nadu.webp']
+                      : isThailand
+                        ? ['/Destination Pages/Thailand.webp']
+                        : isMalaysia
+                          ? ['/Destination Pages/Malaysia.webp']
+                          : isEgypt
+                            ? ['/Destination Pages/Egypt.webp']
+                            : isIndonesia
+                              ? ['/Destination Pages/Indonesia.webp']
+                              : isKenya
+                                ? ['/Destination Pages/Kenya.webp']
+                                : isMaldives
+                                  ? ['/Destination Pages/Maldives.webp']
+                                  : isSingapore
+                                    ? ['/Destination Pages/Singapore.webp']
+                                    : isUAE
+                                      ? ['/Destination Pages/United Arab Emirates.webp']
+                                      : (destination?.images && destination.images.length > 0
+                                        ? destination.images
+                                        : destination?.image
+                                          ? [destination.image]
+                                          : ["https://images.unsplash.com/photo-1488646953014-85cb44e25828?w=1920&q=80"]);
 
   // Ensure we're using the exact database values
   const inclusions = Array.isArray(destination?.inclusions) ? destination.inclusions : [];

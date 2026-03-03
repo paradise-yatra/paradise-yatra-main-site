@@ -354,7 +354,11 @@ export default function DedicatedPackagesPageClient({ tourType, state, country }
     }
 
     const locationLabel = state || country || 'Travel';
-    const formattedLocation = locationLabel.charAt(0).toUpperCase() + locationLabel.slice(1).replace(/-/g, ' ');
+    const formattedLocation = (locationLabel.charAt(0).toUpperCase() + locationLabel.slice(1))
+        .replace(/-/g, ' ')
+        .split(' ')
+        .map(word => word.charAt(0).toUpperCase() + word.slice(1))
+        .join(' ');
     const tourTypeLabel = 'Tour';
 
     return (
@@ -374,7 +378,115 @@ export default function DedicatedPackagesPageClient({ tourType, state, country }
                     {/* Image Container */}
                     <div className="relative w-full h-[230.4px] md:absolute md:inset-0 md:h-auto flex-shrink-0">
                         <Image
-                            src={formattedLocation.toLowerCase().includes('sikkim') || formattedLocation.toLowerCase().includes('gangtok') || formattedLocation.toLowerCase().includes('kalimpong') ? '/hero/sikkim-hero-v3.png' : "https://images.unsplash.com/photo-1544735716-a9ff2824d7c1?q=80&w=2070&auto=format&fit=crop"}
+                            src={(state?.toLowerCase().replace(/-/g, ' ').includes('sikkim') ||
+                                state?.toLowerCase().replace(/-/g, ' ').includes('gangtok') ||
+                                state?.toLowerCase().replace(/-/g, ' ').includes('kalimpong') ||
+                                formattedLocation.toLowerCase().includes('sikkim') ||
+                                formattedLocation.toLowerCase().includes('gangtok') ||
+                                formattedLocation.toLowerCase().includes('kalimpong'))
+                                ? '/Destination%20Pages/Sikkim.webp'
+                                : (state?.toLowerCase().replace(/-/g, ' ').includes('andaman') ||
+                                    formattedLocation.toLowerCase().includes('andaman'))
+                                    ? '/Destination%20Pages/Andaman%20and%20Nicobar%20Island.webp'
+                                    : (state?.toLowerCase().replace(/-/g, ' ').includes('kashmir') ||
+                                        state?.toLowerCase().replace(/-/g, ' ').includes('jammu') ||
+                                        formattedLocation.toLowerCase().includes('kashmir') ||
+                                        formattedLocation.toLowerCase().includes('jammu'))
+                                        ? '/Destination%20Pages/Jammu%20and%20Kashmir.webp'
+                                        : (state?.toLowerCase().replace(/-/g, ' ').includes('rajasthan') ||
+                                            state?.toLowerCase().replace(/-/g, ' ').includes('jaipur') ||
+                                            state?.toLowerCase().replace(/-/g, ' ').includes('udaipur') ||
+                                            state?.toLowerCase().replace(/-/g, ' ').includes('jodhpur') ||
+                                            state?.toLowerCase().replace(/-/g, ' ').includes('jaisalmer') ||
+                                            formattedLocation.toLowerCase().includes('rajasthan') ||
+                                            formattedLocation.toLowerCase().includes('jaipur') ||
+                                            formattedLocation.toLowerCase().includes('udaipur') ||
+                                            formattedLocation.toLowerCase().includes('jodhpur') ||
+                                            formattedLocation.toLowerCase().includes('jaisalmer'))
+                                            ? '/Destination%20Pages/Rajasthan.webp'
+                                            : (state?.toLowerCase().replace(/-/g, ' ').includes('uttarakhand') ||
+                                                state?.toLowerCase().replace(/-/g, ' ').includes('nainital') ||
+                                                state?.toLowerCase().replace(/-/g, ' ').includes('rishikesh') ||
+                                                state?.toLowerCase().replace(/-/g, ' ').includes('mussoorie') ||
+                                                state?.toLowerCase().replace(/-/g, ' ').includes('dehradun') ||
+                                                state?.toLowerCase().replace(/-/g, ' ').includes('haridwar') ||
+                                                formattedLocation.toLowerCase().includes('uttarakhand') ||
+                                                formattedLocation.toLowerCase().includes('nainital') ||
+                                                formattedLocation.toLowerCase().includes('rishikesh') ||
+                                                formattedLocation.toLowerCase().includes('mussoorie') ||
+                                                formattedLocation.toLowerCase().includes('dehradun') ||
+                                                formattedLocation.toLowerCase().includes('haridwar'))
+                                                ? '/Destination%20Pages/Uttarakhand.webp'
+                                                : (state?.toLowerCase().replace(/-/g, ' ').includes('goa') ||
+                                                    state?.toLowerCase().replace(/-/g, ' ').includes('panjim') ||
+                                                    formattedLocation.toLowerCase().includes('goa') ||
+                                                    formattedLocation.toLowerCase().includes('panjim'))
+                                                    ? '/Destination%20Pages/Goa.webp'
+                                                    : (state?.toLowerCase().replace(/-/g, ' ').includes('kerala') ||
+                                                        state?.toLowerCase().replace(/-/g, ' ').includes('kochi') ||
+                                                        state?.toLowerCase().replace(/-/g, ' ').includes('munnar') ||
+                                                        state?.toLowerCase().replace(/-/g, ' ').includes('alleppey') ||
+                                                        formattedLocation.toLowerCase().includes('kerala') ||
+                                                        formattedLocation.toLowerCase().includes('kochi') ||
+                                                        formattedLocation.toLowerCase().includes('munnar') ||
+                                                        formattedLocation.toLowerCase().includes('alleppey'))
+                                                        ? '/Destination%20Pages/Kerala.webp'
+                                                        : (state?.toLowerCase().replace(/-/g, ' ').includes('himachal') ||
+                                                            state?.toLowerCase().replace(/-/g, ' ').includes('shimla') ||
+                                                            state?.toLowerCase().replace(/-/g, ' ').includes('manali') ||
+                                                            formattedLocation.toLowerCase().includes('himachal') ||
+                                                            formattedLocation.toLowerCase().includes('shimla') ||
+                                                            formattedLocation.toLowerCase().includes('manali'))
+                                                            ? '/Destination%20Pages/Himachal%20Pradesh.webp'
+                                                            : (state?.toLowerCase().replace(/-/g, ' ').includes('ladakh') ||
+                                                                state?.toLowerCase().replace(/-/g, ' ').includes('leh') ||
+                                                                state?.toLowerCase().replace(/-/g, ' ').includes('nubra') ||
+                                                                state?.toLowerCase().replace(/-/g, ' ').includes('zanskar') ||
+                                                                formattedLocation.toLowerCase().includes('ladakh') ||
+                                                                formattedLocation.toLowerCase().includes('leh') ||
+                                                                formattedLocation.toLowerCase().includes('nubra') ||
+                                                                formattedLocation.toLowerCase().includes('zanskar'))
+                                                                ? '/Destination%20Pages/Ladakh.webp'
+                                                                : (state?.toLowerCase().replace(/-/g, ' ').includes('tamil nadu') ||
+                                                                    state?.toLowerCase().replace(/-/g, ' ').includes('ooty') ||
+                                                                    state?.toLowerCase().replace(/-/g, ' ').includes('chennai') ||
+                                                                    state?.toLowerCase().replace(/-/g, ' ').includes('madurai') ||
+                                                                    state?.toLowerCase().replace(/-/g, ' ').includes('kanyakumari') ||
+                                                                    formattedLocation.toLowerCase().includes('tamil nadu') ||
+                                                                    formattedLocation.toLowerCase().includes('ooty') ||
+                                                                    formattedLocation.toLowerCase().includes('chennai') ||
+                                                                    formattedLocation.toLowerCase().includes('madurai') ||
+                                                                    formattedLocation.toLowerCase().includes('kanyakumari'))
+                                                                    ? '/Destination Pages/Tamil Nadu.webp'
+                                                                    : (state?.toLowerCase().replace(/-/g, ' ').includes('thailand') ||
+                                                                        formattedLocation.toLowerCase().includes('thailand'))
+                                                                        ? '/Destination%20Pages/Thailand.webp'
+                                                                        : (state?.toLowerCase().replace(/-/g, ' ').includes('malaysia') ||
+                                                                            formattedLocation.toLowerCase().includes('malaysia'))
+                                                                            ? '/Destination%20Pages/Malaysia.webp'
+                                                                            : (state?.toLowerCase().replace(/-/g, ' ').includes('egypt') ||
+                                                                                formattedLocation.toLowerCase().includes('egypt'))
+                                                                                ? '/Destination%20Pages/Egypt.webp'
+                                                                                : (state?.toLowerCase().replace(/-/g, ' ').includes('indonesia') ||
+                                                                                    formattedLocation.toLowerCase().includes('indonesia'))
+                                                                                    ? '/Destination%20Pages/Indonesia.webp'
+                                                                                    : (state?.toLowerCase().replace(/-/g, ' ').includes('kenya') ||
+                                                                                        formattedLocation.toLowerCase().includes('kenya'))
+                                                                                        ? '/Destination%20Pages/Kenya.webp'
+                                                                                        : (state?.toLowerCase().replace(/-/g, ' ').includes('maldives') ||
+                                                                                            formattedLocation.toLowerCase().includes('maldives'))
+                                                                                            ? '/Destination%20Pages/Maldives.webp'
+                                                                                            : (state?.toLowerCase().replace(/-/g, ' ').includes('singapore') ||
+                                                                                                formattedLocation.toLowerCase().includes('singapore'))
+                                                                                                ? '/Destination%20Pages/Singapore.webp'
+                                                                                                : (state?.toLowerCase().replace(/-/g, ' ').includes('united arab emirates') ||
+                                                                                                    state?.toLowerCase().replace(/-/g, ' ').includes('dubai') ||
+                                                                                                    state?.toLowerCase().replace(/-/g, ' ').includes('uae') ||
+                                                                                                    formattedLocation.toLowerCase().includes('united arab emirates') ||
+                                                                                                    formattedLocation.toLowerCase().includes('dubai') ||
+                                                                                                    formattedLocation.toLowerCase().includes('uae'))
+                                                                                                    ? '/Destination%20Pages/United%20Arab%20Emirates.webp'
+                                                                                                    : "https://images.unsplash.com/photo-1544735716-a9ff2824d7c1?q=80&w=2070&auto=format&fit=crop"}
                             alt={`${formattedLocation} Tourism`}
                             fill
                             className="object-cover"
@@ -482,7 +594,7 @@ export default function DedicatedPackagesPageClient({ tourType, state, country }
                                             >
                                                 <SelectValue placeholder="Recommended" />
                                             </SelectTrigger>
-                                            <SelectContent className="rounded-xl border-slate-100 shadow-xl">
+                                            <SelectContent className="!rounded-[6px] border-slate-100 shadow-xl">
                                                 <SelectItem value="recommended">Recommended</SelectItem>
                                                 <SelectItem value="price-asc">Price: Low to High</SelectItem>
                                                 <SelectItem value="price-desc">Price: High to Low</SelectItem>
@@ -537,7 +649,7 @@ export default function DedicatedPackagesPageClient({ tourType, state, country }
                                                 setPriceFilter('all');
                                                 setSortBy('recommended');
                                             }}
-                                            className="!bg-white !text-[#155dfc] font-bold py-2 px-8 rounded-[6px] h-auto text-sm transition-all !border !border-[#dfe1df] !shadow-none hover:bg-slate-50"
+                                            className="!bg-white !text-[#155dfc] font-bold py-2 px-8 rounded-[6px] h-auto text-sm transition-all !border !border-[#dfe1df] !shadow-none hover:bg-slate-50 !cursor-pointer"
                                         >
                                             Clear All Filters
                                         </Button>

@@ -52,8 +52,40 @@ const IndiaTourPackagesSection = () => {
                             uniqueStatesMap.set(stateKey, {
                                 id: pkg._id, // Using the first package ID as key
                                 name: stateName,
-                                // Use the package image or a fallback
-                                image: pkg.image || `https://picsum.photos/400/600?random=${uniqueStatesMap.size}`,
+                                // Specific hero images for major destinations
+                                image: (stateName.toLowerCase().includes('sikkim') ||
+                                    stateName.toLowerCase().includes('gangtok') ||
+                                    stateName.toLowerCase().includes('kalimpong'))
+                                    ? '/Destination%20Pages/Sikkim.webp'
+                                    : (stateName.toLowerCase().includes('andaman'))
+                                        ? '/Destination%20Pages/Andaman%20and%20Nicobar%20Island.webp'
+                                        : (stateName.toLowerCase().includes('kashmir') ||
+                                            stateName.toLowerCase().includes('jammu'))
+                                            ? '/Destination%20Pages/Jammu%20and%20Kashmir.webp'
+                                            : (stateName.toLowerCase().includes('rajasthan'))
+                                                ? '/Destination%20Pages/Rajasthan.webp'
+                                                : (stateName.toLowerCase().includes('uttarakhand'))
+                                                    ? '/Destination%20Pages/Uttarakhand.webp'
+                                                    : (stateName.toLowerCase().includes('goa'))
+                                                        ? '/Destination%20Pages/Goa.webp'
+                                                        : (stateName.toLowerCase().includes('kerala'))
+                                                            ? '/Destination%20Pages/Kerala.webp'
+                                                            : (stateName.toLowerCase().includes('himachal'))
+                                                                ? '/Destination%20Pages/Himachal%20Pradesh.webp'
+                                                                : (stateName.toLowerCase().includes('ladakh'))
+                                                                    ? '/Destination%20Pages/Ladakh.webp'
+                                                                    : (stateName.toLowerCase().replace(/-/g, ' ').includes('tamil nadu') ||
+                                                                        stateName.toLowerCase().replace(/-/g, ' ').includes('ooty') ||
+                                                                        stateName.toLowerCase().replace(/-/g, ' ').includes('chennai') ||
+                                                                        stateName.toLowerCase().replace(/-/g, ' ').includes('madurai'))
+                                                                        ? '/Destination%20Pages/Tamil%20Nadu.webp'
+                                                                        : (stateName.toLowerCase().replace(/-/g, ' ').includes('thailand'))
+                                                                            ? '/Destination%20Pages/Thailand.webp'
+                                                                            : (stateName.toLowerCase().replace(/-/g, ' ').includes('malaysia'))
+                                                                                ? '/Destination%20Pages/Malaysia.webp'
+                                                                                : (stateName.toLowerCase().replace(/-/g, ' ').includes('egypt'))
+                                                                                    ? '/Destination%20Pages/Egypt.webp'
+                                                                                    : (pkg.image || `https://picsum.photos/400/600?random=${uniqueStatesMap.size}`),
                                 // Construct the link to /package/india/[state-slug]
                                 href: `/package/india/${stateName.toLowerCase().replace(/\s+/g, '-')}`
                             });

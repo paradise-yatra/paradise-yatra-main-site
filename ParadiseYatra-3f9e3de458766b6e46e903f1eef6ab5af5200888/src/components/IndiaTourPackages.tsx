@@ -115,7 +115,49 @@ const IndiaTourPackages = () => {
 
           return {
             name: state.name,
-            image: image,
+            image: (state.name.toLowerCase().includes('sikkim') ||
+              state.name.toLowerCase().includes('gangtok') ||
+              state.name.toLowerCase().includes('kalimpong'))
+              ? '/Destination%20Pages/Sikkim.webp'
+              : (state.name.toLowerCase().includes('andaman'))
+                ? '/Destination%20Pages/Andaman%20and%20Nicobar%20Island.webp'
+                : (state.name.toLowerCase().includes('kashmir') ||
+                  state.name.toLowerCase().includes('jammu'))
+                  ? '/Destination%20Pages/Jammu%20and%20Kashmir.webp'
+                  : (state.name.toLowerCase().includes('rajasthan'))
+                    ? '/Destination%20Pages/Rajasthan.webp'
+                    : (state.name.toLowerCase().includes('uttarakhand'))
+                      ? '/Destination%20Pages/Uttarakhand.webp'
+                      : (state.name.toLowerCase().includes('goa'))
+                        ? '/Destination%20Pages/Goa.webp'
+                        : (state.name.toLowerCase().includes('kerala'))
+                          ? '/Destination%20Pages/Kerala.webp'
+                          : (state.name.toLowerCase().includes('himachal'))
+                            ? '/Destination%20Pages/Himachal%20Pradesh.webp'
+                            : (state.name.toLowerCase().includes('ladakh'))
+                              ? '/Destination%20Pages/Ladakh.webp'
+                              : (state.name.toLowerCase().replace(/-/g, ' ').includes('tamil nadu') ||
+                                state.name.toLowerCase().includes('ooty') ||
+                                state.name.toLowerCase().includes('chennai') ||
+                                state.name.toLowerCase().includes('madurai'))
+                                ? '/Destination%20Pages/Tamil%20Nadu.webp'
+                                : (state.name.toLowerCase().replace(/-/g, ' ').includes('thailand'))
+                                  ? '/Destination%20Pages/Thailand.webp'
+                                  : (state.name.toLowerCase().replace(/-/g, ' ').includes('malaysia'))
+                                    ? '/Destination%20Pages/Malaysia.webp'
+                                    : (state.name.toLowerCase().replace(/-/g, ' ').includes('egypt'))
+                                      ? '/Destination%20Pages/Egypt.webp'
+                                      : (state.name.toLowerCase().replace(/-/g, ' ').includes('indonesia'))
+                                        ? '/Destination%20Pages/Indonesia.webp'
+                                        : (state.name.toLowerCase().replace(/-/g, ' ').includes('kenya'))
+                                          ? '/Destination%20Pages/Kenya.webp'
+                                          : (state.name.toLowerCase().replace(/-/g, ' ').includes('maldives'))
+                                            ? '/Destination%20Pages/Maldives.webp'
+                                            : (state.name.toLowerCase().replace(/-/g, ' ').includes('singapore'))
+                                              ? '/Destination%20Pages/Singapore.webp'
+                                              : (state.name.toLowerCase().replace(/-/g, ' ').includes('united arab emirates') || state.name.toLowerCase().includes('dubai') || state.name.toLowerCase().includes('uae'))
+                                                ? '/Destination%20Pages/United%20Arab%20Emirates.webp'
+                                                : image,
             price: minPrice,
             packagesCount: state.destinations?.length || 0
           };
@@ -234,8 +276,8 @@ const IndiaTourPackages = () => {
                 onClick={handlePrevious}
                 disabled={!canGoPrevious}
                 className={`absolute left-0 top-1/2 -translate-y-1/2 z-10 w-10 h-10 rounded-full bg-white shadow-lg flex items-center justify-center transition-all duration-300 ${!canGoPrevious
-                    ? "opacity-50 cursor-not-allowed"
-                    : "hover:scale-110 hover:shadow-xl cursor-pointer"
+                  ? "opacity-50 cursor-not-allowed"
+                  : "hover:scale-110 hover:shadow-xl cursor-pointer"
                   }`}
                 aria-label="Previous"
               >
@@ -245,8 +287,8 @@ const IndiaTourPackages = () => {
                 onClick={handleNext}
                 disabled={!canGoNext}
                 className={`absolute right-0 top-1/2 -translate-y-1/2 z-10 w-10 h-10 rounded-full bg-white shadow-lg flex items-center justify-center transition-all duration-300 ${!canGoNext
-                    ? "opacity-50 cursor-not-allowed"
-                    : "hover:scale-110 hover:shadow-xl cursor-pointer"
+                  ? "opacity-50 cursor-not-allowed"
+                  : "hover:scale-110 hover:shadow-xl cursor-pointer"
                   }`}
                 aria-label="Next"
               >

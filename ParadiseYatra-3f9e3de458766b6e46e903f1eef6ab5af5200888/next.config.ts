@@ -1,8 +1,11 @@
-import type { NextConfig } from "next";
+﻿import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
   /* config options here */
   // output: 'standalone',
+  devIndicators: {
+    position: "bottom-left",
+  },
   // Performance optimizations
   compress: true,
   poweredByHeader: false,
@@ -252,7 +255,7 @@ const nextConfig: NextConfig = {
   experimental: {
     optimizePackageImports: ['lucide-react', 'framer-motion', 'react-icons'],
     optimizeCss: true,
-    // ← Remove any 'turbo' here if still present!
+    // â† Remove any 'turbo' here if still present!
   },
 
 

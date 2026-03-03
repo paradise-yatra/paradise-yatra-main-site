@@ -329,7 +329,7 @@ export default function PackagePageClient() {
                     {/* Image Container */}
                     <div className="relative w-full h-[230.4px] md:absolute md:inset-0 md:h-auto flex-shrink-0">
                         <Image
-                            src="/hero/sikkim-hero-v3.png"
+                            src="/Destination%20Pages/Himachal%20Pradesh.webp"
                             alt="Paradise Yatra Packages"
                             fill
                             className="object-cover"

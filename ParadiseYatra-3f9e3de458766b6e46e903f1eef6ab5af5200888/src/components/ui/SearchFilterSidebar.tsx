@@ -96,7 +96,7 @@ const SearchFilterSidebar: React.FC<SearchFilterSidebarProps> = ({
             <div className="p-6 pt-4 flex-shrink-0 border-t border-slate-200 flex flex-col gap-3">
                 <Button
                     variant="outline"
-                    className="w-full !text-sm !text-[#155dfc] !font-bold !border !border-[#dfe1df] !shadow-none hover:!bg-slate-50 transition-colors"
+                    className="w-full !text-sm !text-[#155dfc] !font-bold !border !border-[#dfe1df] !shadow-none hover:!bg-slate-50 transition-colors !cursor-pointer"
                     onClick={onClearFilters}
                 >
                     Clear All Filters

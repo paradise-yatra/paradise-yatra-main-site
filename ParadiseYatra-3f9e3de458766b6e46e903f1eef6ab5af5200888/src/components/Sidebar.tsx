@@ -86,7 +86,10 @@ const Sidebar = ({ isOpen, onClose, navItems, onBookNow }: SidebarProps) => {
                         {/* Header - Fixed Greeting */}
                         <div className="flex items-center justify-between px-6 pt-8 pb-6 shrink-0 bg-white sticky top-0 z-10 border-b border-slate-50">
                             <div className="flex flex-col">
-                                <h3 className="text-lg font-black text-slate-900 tracking-tight">
+                                <h3
+                                    className="tracking-tight"
+                                    style={{ fontSize: "25px", fontWeight: 600, color: "#000945" }}
+                                >
                                     Hi {!isLoading && user ? getFirstName(user.name) : 'Guest'}!
                                 </h3>
                             </div>

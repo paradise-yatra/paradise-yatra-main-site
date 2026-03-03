@@ -8,7 +8,7 @@ import Link from 'next/link';
 import Image from 'next/image';
 import { getImageUrl, getPackagePriceLabel } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
-import { Card } from '@/components/ui/card';
+import { Card, CardContent } from '@/components/ui/card';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import Header from '@/components/Header';
@@ -20,6 +20,8 @@ import { useAuth } from '@/context/AuthContext';
 import LoginAlertModal from '@/components/LoginAlertModal';
 import Footer from '@/components/Footer';
 import CarouselArrows from '@/components/ui/CarouselArrows';
+import WhyParadiseDifference from '@/components/WhyParadiseDifference';
+import FAQSection from '@/components/FAQSection';
 
 // Pagination Component
 interface PaginationProps {
@@ -284,33 +286,94 @@ export default function ThemePackagesPageClient({ slug }: { slug: string }) {
         );
     }
 
+    const formattedLocation = capitalize(tagData.name);
+    const tourTypeLabel = 'Tour';
+    const heroHeading = (slug.includes('char-dham') || slug.includes('chardham'))
+        ? 'Char Dham Yatra 2026'
+        : slug.includes('honeymoon')
+            ? 'Honeymoon Tour Packages'
+            : slug.includes('luxury')
+                ? 'Luxury Tour Packages'
+            : slug.includes('trending')
+                ? 'Trending Tour Packages'
+            : `${tourTypeLabel} Packages in ${formattedLocation}`;
+
     return (
-        <div className="min-h-screen bg-slate-50 flex flex-col">
+        <div className="min-h-screen bg-slate-50 flex flex-col font-plus-jakarta-sans">
             <Header />
 
-            <main className="flex-grow">
-                <SearchHeader
-                    title={<>{capitalize(tagData.name)} <span className="text-blue-600">Packages</span></>}
-                    subtitle={tagData.description || `Discover our handpicked ${capitalize(tagData.name)} tour packages curated for an authentic and unforgettable experience.`}
-                />
+            <main className="flex-grow pt-0 bg-white">
+                {/* Hero Section */}
+                <section className="relative flex flex-col md:flex-row w-full md:h-[496px] md:overflow-hidden items-center justify-center bg-white md:bg-transparent">
+                    <div className="md:hidden w-full px-4 pt-6 pb-2 bg-white text-left z-10 flex-shrink-0">
+                        <h1 className="!text-[28px] !font-black text-slate-800 font-plus-jakarta-sans tracking-tight leading-tight">
+                            {heroHeading}
+                        </h1>
+                    </div>
 
-                <section className="py-8 px-4 md:px-8">
-                    <div className="max-w-6xl mx-auto">
-                        <div className="flex flex-col lg:flex-row gap-6">
-                            {/* Sidebar Filters */}
-                            <aside className="lg:w-80 flex-shrink-0">
-                                <div className="lg:sticky lg:top-32 lg:mt-0.5">
-                                    <div className="lg:hidden mb-4">
-                                        <Button
-                                            onClick={() => setIsFiltersOpen(true)}
-                                            variant="outline"
-                                            className="w-full border border-slate-300 text-slate-900 hover:bg-slate-50"
-                                        >
-                                            <Filter className="mr-2 h-4 w-4" /> Filters
-                                        </Button>
+                    {/* Image Container */}
+                    <div className="relative w-full h-[230.4px] md:absolute md:inset-0 md:h-auto flex-shrink-0">
+                        <Image
+                            src={(slug.includes('char-dham') || slug.includes('chardham'))
+                                ? '/Destination Pages/Char Dham.webp'
+                                : slug.includes('honeymoon')
+                                    ? '/Destination Pages/Honeymoon.webp'
+                                    : slug.includes('luxury')
+                                        ? '/Destination%20Pages/Luxury.webp'
+                                        : slug.includes('trending')
+                                            ? '/Destination%20Pages/Trending%20Packages.jpg'
+                                            : "https://images.unsplash.com/photo-1544735716-a9ff2824d7c1?q=80&w=2070&auto=format&fit=crop"
+                            }
+                            alt={`${formattedLocation} Tourism`}
+                            fill
+                            className="object-cover"
+                            priority
+                        />
+                        <div className="absolute inset-0 bg-black/20" />
+                    </div>
+
+                    {/* Centered Hub */}
+                    <div className="hidden md:block max-w-6xl w-full mx-auto px-4 md:px-8 relative z-30">
+                        <div className="flex flex-col items-center max-w-5xl mx-auto w-full">
+                            <Card className="bg-white rounded-[6px] shadow-none border border-slate-100 overflow-hidden w-full md:h-[150px] flex items-center">
+                                <CardContent className="p-0 md:p-6 w-full h-full flex flex-col justify-center items-center">
+                                    <h2 className="hidden md:block !text-xl md:!text-[44px] !font-black text-slate-800 mb-4 text-center font-plus-jakarta-sans tracking-tight leading-tight">
+                                        {heroHeading}
+                                    </h2>
+
+                                    <div className="hidden md:flex flex-nowrap items-center justify-center gap-x-6 lg:gap-x-12 w-full px-2 md:px-4 overflow-x-auto no-scrollbar">
+                                        {[
+                                            "Best pricing",
+                                            "Private cab included",
+                                            "Handpicked hotels",
+                                            "Local expert support"
+                                        ].map((highlight, idx) => (
+                                            <div key={idx} className="flex items-center gap-3 group flex-shrink-0">
+                                                <div className="flex items-center justify-center w-6 h-6 rounded-full bg-blue-50 text-blue-600 border border-blue-100 flex-shrink-0">
+                                                    <Check className="w-3.5 h-3.5 stroke-[2.5]" />
+                                                </div>
+                                                <span className="text-[#000945] font-medium text-[12px] md:text-[15px] tracking-tight whitespace-nowrap">{highlight}</span>
+                                            </div>
+                                        ))}
                                     </div>
+                                </CardContent>
+                            </Card>
+                        </div>
+                    </div>
+                </section>
 
-                                    <Card className="hidden lg:block border border-slate-200 shadow-sm overflow-hidden p-0 bg-white">
+                {/* Main Content Area */}
+                <section className="py-8 md:py-16 px-4 md:px-8 bg-white">
+                    <div className="max-w-6xl mx-auto">
+                        <div className="mb-6 text-left">
+                            <h2 className="!text-[24px] md:!text-[36px] !font-bold text-[#000945] mb-2">
+                                Handpicked Curated Journeys
+                            </h2>
+                        </div>
+                        <div className="flex flex-col lg:flex-row gap-0 lg:gap-8">
+                            <aside className="hidden lg:block lg:w-80 flex-shrink-0">
+                                <div className="lg:sticky lg:top-32 lg:mt-0.5">
+                                    <Card className="hidden lg:block border border-[#dfe1df] shadow-none overflow-hidden p-0 bg-white rounded-[24px]">
                                         <SearchFilterSidebar
                                             durationFilter={durationFilter}
                                             setDurationFilter={setDurationFilter}
@@ -326,33 +389,26 @@ export default function ThemePackagesPageClient({ slug }: { slug: string }) {
                                 </div>
                             </aside>
 
-                            {/* Package Content */}
                             <div className="flex-1">
-                                <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6">
-                                    <p className="!text-sm !font-bold !text-slate-600">
-                                        Showing {filteredItems.length > 0 ? (currentPage - 1) * itemsPerPage + 1 : 0}-{Math.min(currentPage * itemsPerPage, filteredItems.length)} of {filteredItems.length} {capitalize(tagData.name)} results
-                                    </p>
-                                    <div className="flex items-center gap-3">
-                                        <span className="text-sm font-bold text-slate-700">Sort By:</span>
-                                        <Select
-                                            value={
-                                                sortBy === 'recommended' ? 'Recommended' :
-                                                    sortBy === 'price-asc' ? 'Price: Low to High' :
-                                                        sortBy === 'price-desc' ? 'Price: High to Low' : 'Recommended'
-                                            }
-                                            onValueChange={(value) => {
-                                                if (value === 'Recommended') setSortBy('recommended');
-                                                else if (value === 'Price: Low to High') setSortBy('price-asc');
-                                                else if (value === 'Price: High to Low') setSortBy('price-desc');
-                                            }}
-                                        >
-                                            <SelectTrigger className="w-[200px] bg-white border-slate-200 font-medium text-slate-700 rounded-lg shadow-sm">
-                                                <SelectValue placeholder="Sort By" />
+                                <div className="flex items-center justify-between lg:justify-end gap-3 mb-6 md:mb-8">
+                                    <button
+                                        onClick={() => setIsFiltersOpen(true)}
+                                        className="lg:hidden flex items-center justify-center h-9 rounded-[6px] border border-slate-200 bg-white text-slate-900 font-medium text-xs px-6 shadow-none"
+                                    >
+                                        <Filter className="mr-2 h-3.5 w-3.5 text-slate-500" />
+                                        Filters
+                                    </button>
+
+                                    <div className="flex items-center gap-2 sm:gap-3">
+                                        <span className="hidden sm:inline text-sm font-medium text-slate-500">Sort by:</span>
+                                        <Select value={sortBy} onValueChange={setSortBy}>
+                                            <SelectTrigger className="w-[140px] bg-white border-slate-200 font-medium text-slate-900 rounded-[6px] h-9 text-xs px-4 shadow-none !shadow-none">
+                                                <SelectValue placeholder="Recommended" />
                                             </SelectTrigger>
-                                            <SelectContent className="rounded-xl">
-                                                <SelectItem value="Recommended">Recommended</SelectItem>
-                                                <SelectItem value="Price: Low to High">Price: Low to High</SelectItem>
-                                                <SelectItem value="Price: High to Low">Price: High to Low</SelectItem>
+                                            <SelectContent className="rounded-xl border-slate-100 shadow-xl">
+                                                <SelectItem value="recommended">Recommended</SelectItem>
+                                                <SelectItem value="price-asc">Price: Low to High</SelectItem>
+                                                <SelectItem value="price-desc">Price: High to Low</SelectItem>
                                             </SelectContent>
                                         </Select>
                                     </div>
@@ -382,7 +438,7 @@ export default function ThemePackagesPageClient({ slug }: { slug: string }) {
                                         ))}
 
                                         {totalPages > 1 && (
-                                            <div className="mt-10">
+                                            <div className="mt-12">
                                                 <Pagination
                                                     currentPage={currentPage}
                                                     totalPages={totalPages}
@@ -392,15 +448,17 @@ export default function ThemePackagesPageClient({ slug }: { slug: string }) {
                                         )}
                                     </div>
                                 ) : (
-                                    <div className="text-center py-16 bg-white rounded-[6px] border border-[#dfe1df] shadow-none mx-1">
-                                        <div className="inline-flex items-center justify-center w-16 h-16 bg-slate-50 rounded-full mb-5">
+                                    <div className="text-center py-16 bg-white rounded-[6px] border border-[#dfe1df] shadow-none">
+                                        <div className="w-16 h-16 bg-slate-50 rounded-full flex items-center justify-center mx-auto mb-5">
                                             <SearchX className="w-8 h-8 text-[#000945] opacity-20" />
                                         </div>
-                                        <h3 className="!text-xl !font-bold !text-[#000945] mb-2">No Packages Found</h3>
-                                        <p className="!text-[#000945]/70 !text-sm !font-medium max-w-sm mx-auto">We couldn't find any packages matching your current filters.</p>
+                                        <h3 className="!text-xl !font-bold text-[#000945] mb-2">No packages found</h3>
+                                        <p className="!text-[#000945]/70 !text-sm font-medium max-w-sm mx-auto mb-8">
+                                            We couldn't find any packages matching your current filters.
+                                        </p>
                                         <Button
-                                            onClick={() => { setDurationFilter('all'); setPriceFilter('all'); }}
-                                            className="mt-8 !bg-white !text-[#155dfc] !text-sm !font-bold py-2 px-8 rounded-[6px] h-auto !shadow-none transition-all !border !border-[#dfe1df] hover:bg-slate-50"
+                                            onClick={() => { setDurationFilter('all'); setPriceFilter('all'); setSortBy('recommended'); }}
+                                            className="!bg-white !text-[#155dfc] font-bold py-2 px-8 rounded-[6px] h-auto text-sm transition-all !border !border-[#dfe1df] !shadow-none hover:bg-slate-50"
                                         >
                                             Clear All Filters
                                         </Button>
@@ -411,16 +469,18 @@ export default function ThemePackagesPageClient({ slug }: { slug: string }) {
                     </div>
                 </section>
 
-                {/* Suggestions */}
+                <WhyParadiseDifference />
+                <FAQSection destination={tagData.name} tourType="india" />
+
                 {suggestions.length > 0 && (
-                    <section className="!bg-white px-4 py-16 text-gray-900 md:px-8 relative z-20 overflow-hidden border-t border-slate-100">
-                        <div className="mx-auto flex max-w-6xl flex-col gap-10 relative z-10">
+                    <section className="!bg-white px-4 py-8 text-gray-900 md:px-8 relative z-20">
+                        <div className="mx-auto flex max-w-6xl flex-col gap-6 relative z-10">
                             <div className="flex flex-col gap-2 md:flex-row md:items-end md:justify-between mb-2">
-                                <div className="flex flex-col gap-1 px-1">
-                                    <h3 className="!text-2xl md:!text-3xl !font-bold !text-[#000945] !leading-tight tracking-tight">
+                                <div className="flex flex-col gap-1">
+                                    <h3 className="!text-[24px] md:!text-[36px] !font-bold !text-[#000945] !leading-tight tracking-tight">
                                         You Might Also Like
                                     </h3>
-                                    <p className="!text-sm !text-slate-600 md:!text-base !max-w-2xl !font-semibold">
+                                    <p className="!text-sm !text-slate-500 md:!text-base !max-w-2xl !font-medium">
                                         Explore our popular packages and create unforgettable memories
                                     </p>
                                 </div>
@@ -470,13 +530,15 @@ export default function ThemePackagesPageClient({ slug }: { slug: string }) {
                 )}
             </main>
 
+            <Footer />
+
             <Dialog open={isFiltersOpen} onOpenChange={setIsFiltersOpen}>
                 <DialogContent className="max-w-md max-h-[90vh] flex flex-col p-0 overflow-hidden rounded-[6px]">
-                    <DialogHeader className="p-6 pb-0">
+                    <DialogHeader className="p-8 pb-4">
                         <DialogTitle className="!text-xl !font-bold !text-[#000945]">Filters</DialogTitle>
                     </DialogHeader>
                     <div className="flex-grow overflow-y-auto px-0">
-                        <div className="p-6 pt-2">
+                        <div className="p-8 pt-0">
                             <SearchFilterSidebar
                                 durationFilter={durationFilter}
                                 setDurationFilter={setDurationFilter}

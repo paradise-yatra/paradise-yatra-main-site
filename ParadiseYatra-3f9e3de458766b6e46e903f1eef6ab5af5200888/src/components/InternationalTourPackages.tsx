@@ -112,6 +112,17 @@ const InternationalTourPackages = () => {
             }
           }
 
+          // Override with premium webp images if available
+          const countryLower = country.name.toLowerCase();
+          if (countryLower.includes('thailand')) image = '/Destination%20Pages/Thailand.webp';
+          else if (countryLower.includes('malaysia')) image = '/Destination%20Pages/Malaysia.webp';
+          else if (countryLower.includes('egypt')) image = '/Destination%20Pages/Egypt.webp';
+          else if (countryLower.includes('indonesia')) image = '/Destination%20Pages/Indonesia.webp';
+          else if (countryLower.includes('kenya')) image = '/Destination%20Pages/Kenya.webp';
+          else if (countryLower.includes('maldives')) image = '/Destination%20Pages/Maldives.webp';
+          else if (countryLower.includes('singapore')) image = '/Destination%20Pages/Singapore.webp';
+          else if (countryLower.includes('united arab emirates') || countryLower.includes('dubai') || countryLower.includes('uae')) image = '/Destination%20Pages/United%20Arab%20Emirates.webp';
+
           // Get minimum price from packages for this country
           const countryPackages = packagesByCountry[country.name] || [];
           if (countryPackages.length > 0) {
@@ -248,8 +259,8 @@ const InternationalTourPackages = () => {
                 onClick={handlePrevious}
                 disabled={!canGoPrevious}
                 className={`absolute left-0 top-1/2 -translate-y-1/2 z-10 w-10 h-10 rounded-full bg-white shadow-lg flex items-center justify-center transition-all duration-300 ${!canGoPrevious
-                    ? "opacity-50 cursor-not-allowed"
-                    : "hover:scale-110 hover:shadow-xl cursor-pointer"
+                  ? "opacity-50 cursor-not-allowed"
+                  : "hover:scale-110 hover:shadow-xl cursor-pointer"
                   }`}
                 aria-label="Previous"
               >
@@ -259,8 +270,8 @@ const InternationalTourPackages = () => {
                 onClick={handleNext}
                 disabled={!canGoNext}
                 className={`absolute right-0 top-1/2 -translate-y-1/2 z-10 w-10 h-10 rounded-full bg-white shadow-lg flex items-center justify-center transition-all duration-300 ${!canGoNext
-                    ? "opacity-50 cursor-not-allowed"
-                    : "hover:scale-110 hover:shadow-xl cursor-pointer"
+                  ? "opacity-50 cursor-not-allowed"
+                  : "hover:scale-110 hover:shadow-xl cursor-pointer"
                   }`}
                 aria-label="Next"
               >

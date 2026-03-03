@@ -3,8 +3,8 @@
 import { useEffect, useRef, useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
-import { ArrowLeft, ArrowRight, MapPin, Heart } from "lucide-react";
-import { getImageUrl } from "@/lib/utils";
+import { ArrowLeft, ArrowRight, Heart } from "lucide-react";
+import { getImageUrl, getDestinationWebp } from "@/lib/utils";
 import { useAuth } from "@/context/AuthContext";
 import LoginAlertModal from "./LoginAlertModal";
 import CarouselArrows from "./ui/CarouselArrows";
@@ -65,16 +65,20 @@ const LuxuryPackagesSection = () => {
                 const packagesData = (json.success && json.data && json.data.packages) ? json.data.packages : [];
 
                 // Map to LuxuryPackage format with fallbacks
-                const mappedPackages: LuxuryPackage[] = packagesData.map((pkg: any) => ({
-                    _id: pkg._id,
-                    destination: pkg.location || pkg.destination || pkg.state || pkg.country || "India",
-                    duration: pkg.duration || "5N/6D",
-                    title: pkg.name || pkg.title || "Luxury Package",
-                    price: pkg.price || 0,
-                    images: pkg.image ? [pkg.image] : (pkg.images || []),
-                    slug: pkg.slug || pkg._id,
-                    shortDescription: pkg.shortDescription || "",
-                }));
+                const mappedPackages: LuxuryPackage[] = packagesData.map((pkg: any) => {
+                    const destination = pkg.location || pkg.destination || pkg.state || pkg.country || "India";
+                    const webpImage = getDestinationWebp(destination);
+                    return {
+                        _id: pkg._id,
+                        destination: destination,
+                        duration: pkg.duration || "5N/6D",
+                        title: pkg.name || pkg.title || "Luxury Package",
+                        price: pkg.price || 0,
+                        images: webpImage ? [webpImage] : (pkg.image ? [pkg.image] : (pkg.images || [])),
+                        slug: pkg.slug || pkg._id,
+                        shortDescription: pkg.shortDescription || "",
+                    };
+                });
 
                 setPackages(mappedPackages);
 
@@ -128,8 +132,7 @@ const LuxuryPackagesSection = () => {
             <section
                 className="px-4 py-14 text-gray-900 md:px-8 relative z-20 overflow-hidden min-h-[600px]"
                 style={{
-                    backgroundImage:
-                        "url('https://res.cloudinary.com/dwuwpxu0y/image/upload/f_auto,q_auto:good,w_auto,dpr_auto,c_limit/v1769086965/10491807_4443133_bi9gii.jpg')",
+                    backgroundImage: "url('/Home/Luxury/Background.jpg')",
                     backgroundSize: "cover",
                     backgroundPosition: "center",
                     backgroundRepeat: "no-repeat",
@@ -151,8 +154,7 @@ const LuxuryPackagesSection = () => {
             <section
                 className="px-4 py-14 text-gray-900 md:px-8 relative z-20 overflow-hidden min-h-[600px]"
                 style={{
-                    backgroundImage:
-                        "url('https://res.cloudinary.com/dwuwpxu0y/image/upload/f_auto,q_auto:good,w_auto,dpr_auto,c_limit/v1769086965/10491807_4443133_bi9gii.jpg')",
+                    backgroundImage: "url('/Home/Luxury/Background.jpg')",
                     backgroundSize: "cover",
                     backgroundPosition: "center",
                     backgroundRepeat: "no-repeat",
@@ -175,8 +177,7 @@ const LuxuryPackagesSection = () => {
         <section
             className="px-4 py-14 text-gray-900 md:px-8 relative z-20 overflow-hidden min-h-[600px]"
             style={{
-                backgroundImage:
-                    "url('https://res.cloudinary.com/dwuwpxu0y/image/upload/f_auto,q_auto:good,w_auto,dpr_auto,c_limit/v1769086965/10491807_4443133_bi9gii.jpg')",
+                backgroundImage: "url('/Home/Luxury/Background.jpg')",
                 backgroundSize: "cover",
                 backgroundPosition: "center",
                 backgroundRepeat: "no-repeat",
@@ -270,10 +271,6 @@ const LuxuryPackagesSection = () => {
 
                                         {/* Content on Image */}
                                         <div className="absolute bottom-4 left-4 right-4 text-white">
-                                            <div className="flex items-center gap-1.5 mb-1.5 opacity-90">
-                                                <MapPin className="h-3.5 w-3.5 text-amber-600" />
-                                                <span className="text-xs !font-medium text-white tracking-wide uppercase" style={{ fontFamily: "'Orange Avenue', serif" }}>{pkg.destination}</span>
-                                            </div>
                                             <h4 className="!text-lg !font-bold leading-snug line-clamp-2 text-shadow-sm" style={{ fontFamily: "'Orange Avenue', serif" }}>
                                                 {pkg.title}
                                             </h4>

@@ -10,6 +10,7 @@ import NewFooter from "@/components/NewFooter";
 import { ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import { ReduxProvider } from "@/redux/ReduxProvider";
+import TalkToAgentButton from "@/components/TalkToAgentButton";
 
 
 const plusJakartaSans = Plus_Jakarta_Sans({
@@ -132,6 +133,7 @@ export default function RootLayout({
             <AuthProvider>
               <BlogProvider>
                 {children}
+                <TalkToAgentButton />
                 <FooterWrapper />
                 <ToastContainer position="top-right" autoClose={3000} hideProgressBar={false} newestOnTop={false} closeOnClick rtl={false} pauseOnFocusLoss draggable pauseOnHover theme="light" />
                 {/* <NewFooter /> */}

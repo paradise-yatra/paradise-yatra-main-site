@@ -1220,6 +1220,15 @@ html {
   min-height: 1.2em;
 }
 
+/* Home page non-hero radius normalization */
+.home-nonhero-radius button:not(.rounded-full),
+.home-nonhero-radius article,
+.home-nonhero-radius [data-slot="card"],
+.home-nonhero-radius .card,
+.home-nonhero-radius .modern-card {
+  border-radius: 6px !important;
+}
+
 @layer base {
   * {
     @apply border-border outline-ring/50;

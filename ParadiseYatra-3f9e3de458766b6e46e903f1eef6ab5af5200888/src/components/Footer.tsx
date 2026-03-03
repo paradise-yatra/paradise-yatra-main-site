@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import {
   Facebook,
@@ -7,29 +7,12 @@ import {
   Linkedin,
   Phone,
   Mail,
-  MapPin,
-  Headset,
 } from "lucide-react";
-import { motion } from "framer-motion";
-import { useState, useEffect } from "react";
-import Image from "next/image";
+import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
-
-interface FooterLink {
-  name: string;
-  href: string;
-}
-
-interface SocialMedia {
-  platform: string;
-  url: string;
-  isActive: boolean;
-}
 
 interface CompanyInfo {
   name: string;
-  description: string;
-  address: string;
   phone: string;
   email: string;
   whatsapp: string;
@@ -37,52 +20,93 @@ interface CompanyInfo {
 
 interface FooterContent {
   companyInfo: CompanyInfo;
-  links: {
-    international: FooterLink[];
-    india: FooterLink[];
-    trekking: FooterLink[];
-    quickLinks: FooterLink[];
-  };
-  socialMedia: SocialMedia[];
 }
+
+interface FooterNavLink {
+  name: string;
+  href: string;
+}
+
+const XIcon = ({ className }: { className?: string }) => (
+  <svg viewBox="0 0 24 24" fill="currentColor" className={className}>
+    <path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z" />
+  </svg>
+);
+
+const fallbackInternationalCountries = [
+  "Australia",
+  "Bali",
+  "New Zealand",
+  "Sri Lanka",
+  "Saudi Arabia",
+  "UK",
+  "Dubai",
+  "Maldives",
+  "Japan",
+  "France",
+  "Italy",
+  "Greece",
+  "Singapore",
+  "Malaysia",
+];
+
+const fallbackIndiaStates = [
+  "Jammu and Kashmir",
+  "Himachal Pradesh",
+  "Uttarakhand",
+  "Rajasthan",
+  "Kerala",
+  "Goa",
+  "Sikkim",
+  "Andaman and Nicobar Island",
+  "Ladakh",
+  "Tamil Nadu",
+  "Karnataka",
+  "Meghalaya",
+  "West Bengal",
+  "Punjab",
+];
+
+const themedDestinations: FooterNavLink[][] = [
+  [
+    { name: "Trending Packages", href: "/package/theme/trending" },
+    { name: "Honeymoon Packages", href: "/package/theme/honeymoon" },
+    { name: "Char Dham Yatra", href: "/package/theme/char-dham-yatra" }
+  ],
+  [
+    { name: "Family Packages", href: "/package/theme/family" },
+    { name: "Luxury Packages", href: "/package/theme/luxury" },
+    { name: "Adventure Packages", href: "/package/theme/adventure" }
+  ],
+  [
+    { name: "Fixed Departure Packages", href: "/fixed-departures" },
+    { name: "Spiritual Packages", href: "/package/theme/spiritual" },
+    { name: "Weekend Getaways", href: "/package/theme/weekend-getaways" }
+  ],
+  [
+    { name: "Wildlife Packages", href: "/package/theme/wildlife" },
+    { name: "Summer Packages", href: "/package/theme/summer" },
+    { name: "Beach Packages", href: "/package/theme/beach" }
+  ]
+];
+
+const companyLinks: FooterNavLink[] = [
+  { name: "About Us", href: "/about" },
+  { name: "Blog", href: "/blog" },
+  { name: "Why Choose Us", href: "/why-choose-us" },
+  { name: "Contact Us", href: "/contact" }
+];
+
+const policyLinks: FooterNavLink[] = [
+  { name: "Terms & Conditions", href: "/terms-and-conditions" },
+  { name: "Privacy", href: "/privacy-policy" },
+  { name: "Refund Policy", href: "/refund-policy" }
+];
 
 const Footer = () => {
   const [footerData, setFooterData] = useState<FooterContent | null>(null);
-  const [isLoading, setIsLoading] = useState(true);
-
-  const normalizePlatform = (platform: string) => {
-    const normalized = (platform || "").trim().toLowerCase();
-    if (normalized === "x") return "twitter";
-    if (normalized === "ig" || normalized === "insta") return "instagram";
-    if (normalized === "yt") return "youtube";
-    if (normalized === "fb") return "facebook";
-    if (normalized === "in") return "linkedin";
-    return normalized;
-  };
-
-  const cleanUrl = (url: string): { href: string } => {
-    const rawUrl = (url || "").trim();
-    if (!rawUrl || rawUrl === "#") {
-      return { href: "#" };
-    }
-    const cleanedUrl = rawUrl.startsWith("#") ? rawUrl.substring(1).trim() : rawUrl;
-    if (!cleanedUrl || cleanedUrl === "#") {
-      return { href: "#" };
-    }
-    if (
-      cleanedUrl.startsWith("http://") ||
-      cleanedUrl.startsWith("https://") ||
-      cleanedUrl.startsWith("mailto:") ||
-      cleanedUrl.startsWith("tel:") ||
-      cleanedUrl.startsWith("/")
-    ) {
-      return { href: cleanedUrl };
-    }
-    if (/^[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}/.test(cleanedUrl)) {
-      return { href: `https://${cleanedUrl}` };
-    }
-    return { href: "#" };
-  };
+  const [indiaStates, setIndiaStates] = useState<string[]>([]);
+  const [internationalCountries, setInternationalCountries] = useState<string[]>([]);
 
   useEffect(() => {
     const fetchFooterData = async () => {
@@ -94,221 +118,272 @@ const Footer = () => {
         }
       } catch (error) {
         console.error("Error fetching footer data:", error);
-      } finally {
-        setIsLoading(false);
       }
     };
+
     fetchFooterData();
   }, []);
 
-  const staticQuickLinks: FooterLink[] = [
-    { name: "Home", href: "/" },
-    { name: "Tour Packages", href: "/packages" },
-    { name: "Travel Blog", href: "/blog" },
-    { name: "About Us", href: "/about" },
-    { name: "Contact", href: "/contact" },
-  ];
+  useEffect(() => {
+    const fetchLocations = async () => {
+      try {
+        const indiaResponse = await fetch("/api/all-packages?tourType=india&limit=200&isActive=true", { cache: "no-store" });
+        if (indiaResponse.ok) {
+          const indiaData = await indiaResponse.json();
+          const packages = indiaData.packages || [];
+          const uniqueStates = Array.from(
+            new Set(
+              packages
+                .map((pkg: any) => pkg.state)
+                .filter((state: string) => state && state.trim() !== "")
+                .map((state: string) => state.trim())
+            )
+          ).sort();
+          setIndiaStates(uniqueStates as string[]);
+        }
 
-  const footerLinks = {
-    international: footerData?.links?.international || [
-      { name: "Singapore", href: "/packages?location=singapore" },
-      { name: "Thailand", href: "/packages?location=thailand" },
-      { name: "Malaysia", href: "/packages?location=malaysia" },
-      { name: "Vietnam", href: "/packages?location=vietnam" },
-      { name: "Europe", href: "/packages?location=europe" },
-      { name: "Dubai", href: "/packages?location=dubai" },
-      { name: "Maldives", href: "/packages?location=maldives" },
-    ],
-    india: footerData?.links?.india || [
-      { name: "Rajasthan", href: "/packages?india=rajasthan" },
-      { name: "Kerala", href: "/packages?india=kerala" },
-      { name: "Himachal", href: "/packages?india=himachal" },
-      { name: "Uttarakhand", href: "/packages?india=uttarakhand" },
-      { name: "Goa", href: "/packages?india=goa" },
-      { name: "Kashmir", href: "/packages?india=kashmir" },
-    ],
-    quickLinks: staticQuickLinks,
+        const intlResponse = await fetch("/api/all-packages?tourType=international&limit=200&isActive=true", { cache: "no-store" });
+        if (intlResponse.ok) {
+          const intlData = await intlResponse.json();
+          const packages = intlData.packages || [];
+          const uniqueCountries = Array.from(
+            new Set(
+              packages
+                .map((pkg: any) => pkg.country)
+                .filter((country: string) => country && country.trim() !== "")
+                .map((country: string) => country.trim())
+            )
+          ).sort();
+          setInternationalCountries(uniqueCountries as string[]);
+        }
+      } catch (error) {
+        console.error("Error fetching footer destinations:", error);
+      }
+    };
+
+    fetchLocations();
+  }, []);
+
+  const slugify = (value: string) => value.toLowerCase().trim().replace(/\s+/g, "-");
+
+  const toColumns = (items: FooterNavLink[], columnCount = 3): FooterNavLink[][] => {
+    const cols: FooterNavLink[][] = Array.from({ length: columnCount }, () => []);
+    items.forEach((item, index) => {
+      cols[index % columnCount].push(item);
+    });
+    return cols.filter((col) => col.length > 0);
   };
 
-  const socialIcons: Record<string, any> = {
-    facebook: Facebook,
-    twitter: () => (
-      <svg width="20" height="20" fill="currentColor" viewBox="0 0 24 24">
-        <path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z" />
-      </svg>
-    ),
-    instagram: Instagram,
-    youtube: Youtube,
-    linkedin: Linkedin,
+  const internationalDestinations = useMemo(() => {
+    const countries = (internationalCountries.length > 0 ? internationalCountries : fallbackInternationalCountries).slice(0, 14);
+    const links = countries.map((country) => ({
+      name: `${country} Tour Packages`,
+      href: `/package/international/${slugify(country)}`,
+    }));
+    return toColumns(links, 3);
+  }, [internationalCountries]);
+
+  const domesticDestinations = useMemo(() => {
+    const states = (indiaStates.length > 0 ? indiaStates : fallbackIndiaStates).slice(0, 14);
+    const links = states.map((state) => ({
+      name: `${state} Tour Packages`,
+      href: `/package/india/${slugify(state)}`,
+    }));
+    return toColumns(links, 3);
+  }, [indiaStates]);
+
+  const companyInfo = {
+    name: footerData?.companyInfo?.name || "Paradise Yatra",
+    phone: footerData?.companyInfo?.phone || "+91 8031274154",
+    email: footerData?.companyInfo?.email || "planners@paradiseyatra.com",
+    whatsapp: footerData?.companyInfo?.whatsapp || "+91 6383822508",
   };
 
-  const adminSocialLinks = (footerData?.socialMedia || [])
-    .map((social) => ({
-      ...social,
-      platform: normalizePlatform(social.platform),
-    }))
-    .filter((social) => social.isActive && social.platform in socialIcons);
-
-  const fallbackSocialLinks = [
-    { platform: "facebook", url: "#", isActive: true },
-    { platform: "twitter", url: "#", isActive: true },
-    { platform: "instagram", url: "#", isActive: true },
-    { platform: "youtube", url: "#", isActive: true },
-    { platform: "linkedin", url: "#", isActive: true },
-  ];
-
-  const socialLinks = adminSocialLinks.length > 0 ? adminSocialLinks : fallbackSocialLinks;
-
-  if (isLoading) return null;
+  const phoneHref = `tel:${companyInfo.phone.replace(/[^+\d]/g, "")}`;
+  const whatsappCallHref = `tel:${companyInfo.whatsapp.replace(/[^+\d]/g, "")}`;
 
   return (
-    <footer className="footer bg-[#0f172a] text-white font-['Plus_Jakarta_Sans',sans-serif]">
-      <div className="footer-container max-w-7xl mx-auto py-12 px-4 sm:px-6 lg:px-8">
-        <div className="footer-columns flex flex-col gap-8 md:flex-row md:flex-wrap lg:flex-nowrap lg:gap-12 lg:justify-between">
+    <footer className="bg-black text-white font-['Plus_Jakarta_Sans',sans-serif] pt-10 pb-10 border-t border-white/10">
+      <div className="mx-auto max-w-6xl px-4 md:px-6">
 
-          {/* Company Info */}
-          <div className="col-company flex flex-col gap-4 md:w-[48%] lg:max-w-[350px] lg:w-auto">
-            <div className="company-header flex items-center gap-2">
-              <div className="company-icon-box bg-gradient-to-r from-blue-500 to-indigo-600 p-2 rounded-lg flex items-center justify-center">
-                <MapPin className="h-5 w-5 text-white" />
-              </div>
-              <div>
-                <h3 className="company-name text-xl font-bold text-white">Paradise Yatra</h3>
-                <p className="company-tagline text-sm text-slate-400">Yatra To Paradise</p>
-              </div>
-            </div>
-            <p className="company-desc text-sm leading-relaxed text-slate-300">
-              {footerData?.companyInfo?.description ||
-                "Creating unforgettable travel experiences since 2015. We specialize in crafting personalized journeys that connect you with the world's most beautiful destinations."}
-            </p>
-            <div className="social-icons flex gap-4">
-              {socialLinks.map((social, index) => {
-                const Icon = socialIcons[social.platform];
-                const { href } = cleanUrl(social.url);
-                return (
-                  <a
-                    key={index}
-                    href={href}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="text-slate-400 hover:text-blue-400 transition-colors"
-                  >
-                    {typeof Icon === 'function' ? <Icon /> : <Icon className="h-5 w-5" />}
-                  </a>
-                );
-              })}
-            </div>
-          </div>
-
-          {/* Quick Links */}
-          <div className="col-links flex flex-col gap-4 md:w-[48%] lg:w-auto">
-            <h4 className="text-lg font-semibold text-white">Quick Links</h4>
-            <nav className="flex flex-col gap-2">
-              {footerLinks.quickLinks.map((link, index) => (
-                <Link key={index} href={link.href} className="text-sm text-slate-300 hover:text-blue-400 transition-colors">
-                  {link.name}
-                </Link>
-              ))}
-            </nav>
-          </div>
-
-          {/* International Tours */}
-          <div className="col-links flex flex-col gap-4 md:w-[48%] lg:w-auto">
-            <h4 className="text-lg font-semibold text-white">International Tours</h4>
-            <nav className="flex flex-col gap-2">
-              {footerLinks.international.slice(0, 9).map((link, index) => (
-                <Link key={index} href={link.href} className="text-sm text-slate-300 hover:text-blue-400 transition-colors">
-                  {link.name}
-                </Link>
-              ))}
-            </nav>
-          </div>
-
-          {/* India Tours */}
-          <div className="col-links flex flex-col gap-4 md:w-[48%] lg:w-auto">
-            <h4 className="text-lg font-semibold text-white">India Tours</h4>
-            <nav className="flex flex-col gap-2">
-              {footerLinks.india.slice(0, 10).map((link, index) => (
-                <Link key={index} href={link.href} className="text-sm text-slate-300 hover:text-blue-400 transition-colors">
-                  {link.name}
-                </Link>
-              ))}
-            </nav>
-          </div>
-
-          {/* Contact Info */}
-          <div className="col-contact flex flex-col gap-4 md:w-[48%] lg:w-auto">
-            <h4 className="text-lg font-semibold text-white">Contact Info</h4>
-            <div className="contact-items flex flex-col gap-3">
-              <div className="contact-row flex items-start gap-3">
-                <MapPin className="h-5 w-5 text-blue-400 flex-shrink-0 mt-0.5" />
-                <div className="contact-text text-sm text-slate-300">
-                  <p>{footerData?.companyInfo?.address.split(',').slice(0, 2).join(',') || "123 Travel Street"}</p>
-                  <p>{footerData?.companyInfo?.address.split(',').slice(2).join(',') || "Adventure City, AC 12345"}</p>
-                </div>
-              </div>
-              <div className="contact-row-center flex items-center gap-3">
-                <Phone className="h-5 w-5 text-blue-400 flex-shrink-0" />
-                <a href={`tel:${footerData?.companyInfo?.phone || "+1 (555) 123-4567"}`} className="contact-text text-sm text-slate-300">
-                  {footerData?.companyInfo?.phone || "+1 (555) 123-4567"}
-                </a>
-              </div>
-              <div className="contact-row-center flex items-center gap-3">
-                <Mail className="h-5 w-5 text-blue-400 flex-shrink-0" />
-                <a href={`mailto:${footerData?.companyInfo?.email || "info@wanderlust.com"}`} className="contact-text text-sm text-slate-300">
-                  {footerData?.companyInfo?.email || "info@wanderlust.com"}
-                </a>
+        {/* Section 1 */}
+        <div className="mb-7">
+          <div className="space-y-7">
+            <div>
+              <h3 className="text-[#a1a1aa] !text-[25px] !font-semibold mb-3 tracking-wide" style={{ fontSize: "25px", fontWeight: 600 }}>International Destinations</h3>
+              <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-x-6 gap-y-6">
+                {internationalDestinations.map((col, idx) => (
+                  <div key={idx} className="flex flex-col space-y-[10px]">
+                    {col.map((link) => (
+                      <Link key={link.name} href={link.href} className="text-[14px] text-white hover:text-[#60a5fa] transition-colors">{link.name}</Link>
+                    ))}
+                  </div>
+                ))}
               </div>
             </div>
-            <div className="contact-note pt-4">
-              <p className="text-xs text-slate-400 leading-tight">Available 24/7 for your travel emergencies</p>
+
+            <div>
+              <h3 className="text-[#a1a1aa] !text-[25px] !font-semibold mb-3 tracking-wide" style={{ fontSize: "25px", fontWeight: 600 }}>Domestic Destinations</h3>
+              <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-x-6 gap-y-6">
+                {domesticDestinations.map((col, idx) => (
+                  <div key={idx} className="flex flex-col space-y-[10px]">
+                    {col.map((link) => (
+                      <Link key={link.name} href={link.href} className="text-[14px] text-white hover:text-[#60a5fa] transition-colors">{link.name}</Link>
+                    ))}
+                  </div>
+                ))}
+              </div>
             </div>
           </div>
         </div>
 
-        {/* Bottom Bar */}
-        <div className="footer-bottom border-t border-slate-700 mt-12 pt-8">
-          <div className="footer-bottom-inner flex flex-col md:flex-row justify-between items-center gap-4">
-            <p className="footer-copyright text-sm text-slate-400">© {new Date().getFullYear()} Paradise Yatra. All rights reserved.</p>
-            <div className="footer-legal-links flex gap-6 text-sm">
-              <Link href="/privacy-policy" className="text-slate-400 hover:text-blue-400 transition-colors">Privacy Policy</Link>
-              <Link href="/terms-and-conditions" className="text-slate-400 hover:text-blue-400 transition-colors">Terms of Service</Link>
-              <Link href="/refund-policy" className="text-slate-400 hover:text-blue-400 transition-colors">Refund Policy</Link>
+        <div className="border-t border-white/10 my-7"></div>
+
+        {/* Section 2 */}
+        <div className="mb-7">
+          <h3 className="text-[#a1a1aa] !text-[25px] !font-semibold mb-4 tracking-wide" style={{ fontSize: "25px", fontWeight: 600 }}>Themed Destinations</h3>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-x-6 gap-y-7">
+            {themedDestinations.map((col, idx) => (
+              <div key={idx} className="flex flex-col space-y-[10px]">
+                {col.map((link) => (
+                  <Link key={link.name} href={link.href} className="text-[14px] text-white hover:text-[#60a5fa] transition-colors">{link.name}</Link>
+                ))}
+              </div>
+            ))}
+          </div>
+        </div>
+
+        <div className="border-t border-white/10 my-7"></div>
+
+        {/* Section 3 */}
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-x-6 gap-y-8">
+
+          {/* Col 1 */}
+          <div>
+            <h3 className="text-[#a1a1aa] !text-[25px] !font-semibold mb-4 tracking-wide" style={{ fontSize: "25px", fontWeight: 600 }}>{companyInfo.name}</h3>
+            <div className="flex flex-col space-y-[10px]">
+              {companyLinks.map((link) => (
+                <Link key={link.name} href={link.href} className="text-[14px] text-white hover:text-[#60a5fa] transition-colors">{link.name}</Link>
+              ))}
             </div>
           </div>
+
+          {/* Col 2 */}
+          <div>
+            <h3 className="text-[#a1a1aa] !text-[25px] !font-semibold mb-4 tracking-wide" style={{ fontSize: "25px", fontWeight: 600 }}>Policy</h3>
+            <div className="flex flex-col space-y-[10px]">
+              {policyLinks.map((link) => (
+                <Link key={link.name} href={link.href} className="text-[14px] text-white hover:text-[#60a5fa] transition-colors">{link.name}</Link>
+              ))}
+            </div>
+          </div>
+
+          {/* Col 3 */}
+          <div>
+            <h3 className="text-[#a1a1aa] !text-[25px] !font-semibold mb-4 tracking-wide" style={{ fontSize: "25px", fontWeight: 600 }}>Talk to us</h3>
+            <div className="flex flex-col space-y-3">
+                <a href={`mailto:${companyInfo.email}`} className="flex items-center text-[14px] text-white hover:text-[#60a5fa] transition-colors group">
+                <Mail className="w-5 h-5 mr-3 text-white group-hover:text-[#60a5fa]" strokeWidth={1.5} /> {companyInfo.email}
+              </a>
+              <a href={phoneHref} className="flex items-center text-[14px] text-white hover:text-[#60a5fa] transition-colors group">
+                <Phone className="w-5 h-5 mr-3 text-white group-hover:text-[#60a5fa]" strokeWidth={1.5} />
+                <span>{companyInfo.phone}</span>
+                <span className="ml-2 text-[10px] px-2 py-0.5 rounded-full bg-white/5 text-[#cbd5e1] border border-white/15 uppercase tracking-[0.12em]">International</span>
+              </a>
+              <a href={whatsappCallHref} className="flex items-center text-[14px] text-white hover:text-[#60a5fa] transition-colors group">
+                <Phone className="w-5 h-5 mr-3 text-white group-hover:text-[#60a5fa]" strokeWidth={1.5} />
+                <span>{companyInfo.whatsapp}</span>
+                <span className="ml-2 text-[10px] px-2 py-0.5 rounded-full bg-white/5 text-[#cbd5e1] border border-white/15 uppercase tracking-[0.12em]">Domestic</span>
+              </a>
+              <a href={`mailto:sales@paradiseyatra.com`} className="flex items-center text-[14px] text-white hover:text-[#60a5fa] transition-colors group">
+                <Mail className="w-5 h-5 mr-3 text-white group-hover:text-[#60a5fa]" strokeWidth={1.5} /> sales@paradiseyatra.com
+              </a>
+            </div>
+          </div>
+
+          {/* Col 4 */}
+          <div className="flex flex-col h-full">
+            <div className="flex-1">
+              <h3 className="text-[#a1a1aa] !text-[25px] !font-semibold mb-4 tracking-wide" style={{ fontSize: "25px", fontWeight: 600 }}>Social</h3>
+              <div className="flex flex-col space-y-[10px]">
+                <a href="https://www.facebook.com/paradiseyatra/" target="_blank" rel="noopener noreferrer" className="flex items-center text-[14px] text-white hover:text-[#60a5fa] transition-colors group">
+                  <Facebook className="w-5 h-5 mr-3 text-white group-hover:text-[#60a5fa]" strokeWidth={1.5} /> Facebook
+                </a>
+                <a href="https://x.com/ParadiseYatra" target="_blank" rel="noopener noreferrer" className="flex items-center text-[14px] text-white hover:text-[#60a5fa] transition-colors group">
+                  <XIcon className="w-5 h-5 mr-3 text-white group-hover:text-[#60a5fa]" /> X
+                </a>
+                <a href="https://www.instagram.com/paradiseyatra/" target="_blank" rel="noopener noreferrer" className="flex items-center text-[14px] text-white hover:text-[#60a5fa] transition-colors group">
+                  <Instagram className="w-5 h-5 mr-3 text-white group-hover:text-[#60a5fa]" strokeWidth={1.5} /> Instagram
+                </a>
+                <a href="https://www.linkedin.com/company/paradise-yatra" target="_blank" rel="noopener noreferrer" className="flex items-center text-[14px] text-white hover:text-[#60a5fa] transition-colors group">
+                  <Linkedin className="w-5 h-5 mr-3 text-white group-hover:text-[#60a5fa]" strokeWidth={1.5} /> LinkedIn
+                </a>
+                <a href="https://www.youtube.com/@ParadiseYatra" target="_blank" rel="noopener noreferrer" className="flex items-center text-[14px] text-white hover:text-[#60a5fa] transition-colors group">
+                  <Youtube className="w-5 h-5 mr-3 text-white group-hover:text-[#60a5fa]" strokeWidth={1.5} /> Youtube
+                </a>
+              </div>
+            </div></div>
+
+        </div>
+
+        <div className="border-t border-white/10 my-7"></div>
+
+        {/* Section 4: Map & Address */}
+        <div className="grid grid-cols-1 lg:grid-cols-[1.1fr_0.9fr] gap-6 items-start">
+          <div>
+            <h3 className="text-[#a1a1aa] !text-[25px] !font-semibold mb-4 tracking-wide" style={{ fontSize: "25px", fontWeight: 600 }}>
+              Find Us
+            </h3>
+            <div className="rounded-[6px] overflow-hidden border border-white/15">
+              <iframe
+                title="Paradise Yatra Office Location"
+                src="https://www.google.com/maps?q=108,+Tagore+Villa,+Near+Natraj+Cinema,+Chakrata+Road,+Dehradun,+Uttarakhand+248001&output=embed"
+                className="w-full h-[250px]"
+                loading="lazy"
+                referrerPolicy="no-referrer-when-downgrade"
+              />
+            </div>
+          </div>
+
+          <div>
+            <h3 className="text-[#a1a1aa] !text-[25px] !font-semibold mb-4 tracking-wide" style={{ fontSize: "25px", fontWeight: 600 }}>
+              Address
+            </h3>
+            <p className="text-[14px] text-white leading-relaxed">
+              108, Tagore Villa, Near Natraj Cinema, Chakrata Road, Dehradun, Uttarakhand - 248001.
+            </p>
+            <a
+              href="https://maps.app.goo.gl/UKUXKaedF9Naf4i28"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="inline-block mt-3 text-[14px] text-white hover:text-[#60a5fa] transition-colors"
+            >
+              View on Google Maps
+            </a>
+
+            <div className="mt-5">
+              <h4 className="text-[14px] font-semibold text-[#a1a1aa] mb-2">Grievance Officer</h4>
+              <p className="text-[14px] text-white">Dikshant Sharma</p>
+              <a href="tel:+919873391733" className="block text-[14px] text-white hover:text-[#60a5fa] transition-colors">
+                +91 9873391733
+              </a>
+              <a href="mailto:dikshant@paradiseyatra.com" className="block text-[14px] text-white hover:text-[#60a5fa] transition-colors">
+                dikshant@paradiseyatra.com
+              </a>
+            </div>
+          </div>
+        </div>
+
+        <div className="mt-4 text-[13px] text-[#a1a1aa] leading-relaxed text-center">
+          Paradise Yatra Private Ltd. © 2026 all rights reserved.
         </div>
       </div>
-
-      {/* Floating Talk to Agent button - Keeping the functional feature (No Scaling on Hover) */}
-      <motion.div
-        initial={{ opacity: 0, x: 100 }}
-        animate={{ opacity: 1, x: 0 }}
-        transition={{ duration: 0.8 }}
-        className="fixed bottom-12 right-6 md:bottom-16 md:right-8 z-50 group"
-      >
-        <a
-          href="https://wa.me/919873391733?text=Hi, I'm interested in your tour packages. Can you help me?"
-          target="_blank"
-          rel="noopener noreferrer"
-          className="flex items-center bg-gradient-to-r from-blue-600 to-blue-500 hover:from-blue-700 hover:to-blue-600 text-white p-1 rounded-full shadow-2xl transition-all duration-300 active:scale-95 group border border-white/20"
-          aria-label="Talk to Agent"
-        >
-          <div className="relative flex items-center justify-center">
-            <div className="absolute inset-0 bg-white rounded-full animate-ping opacity-20 scale-75"></div>
-            <div className="relative w-8 h-8 md:w-10 md:h-10 bg-white rounded-full flex items-center justify-center text-blue-600 shadow-inner">
-              <Headset className="w-4 h-4 md:w-5 md:h-5 transition-transform duration-300" />
-              <div className="absolute top-0 right-0 w-2.5 h-2.5 bg-green-500 border-2 border-white rounded-full"></div>
-            </div>
-          </div>
-          <div className="hidden md:flex flex-col ml-2.5 pr-3">
-            <span className="text-[10px] md:text-xs font-black uppercase tracking-wider leading-none">
-              Talk to Agent
-            </span>
-          </div>
-        </a>
-      </motion.div>
     </footer>
   );
 };
 
 export default Footer;
+
+
+
+

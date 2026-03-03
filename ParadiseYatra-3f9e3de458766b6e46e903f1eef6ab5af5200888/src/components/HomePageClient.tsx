@@ -1,6 +1,6 @@
-"use client";
+﻿"use client";
 
-import { memo, useMemo, useState } from "react";
+import { memo, useEffect, useMemo, useState } from "react";
 import { motion, useReducedMotion, type Transition } from "framer-motion";
 import {
   LazyHeader,
@@ -31,11 +31,21 @@ import BlogSectionNew from "./BlogSectionNew";
 import RecentlyBookedItineraries from "./RecentlyBookedItineraries";
 import WildlifeTourPackagesSection from "./SeasonalPackagesSection";
 import SeasonalPackagesSection from "./SeasonalPackagesSection";
+import LeadCaptureForm from "./LeadCaptureForm";
 
 
 const HomePageClient = memo(() => {
   const prefersReducedMotion = useReducedMotion();
   const [showShutdownPopup, setShowShutdownPopup] = useState(false);
+  const [showLeadCaptureForm, setShowLeadCaptureForm] = useState(false);
+
+  useEffect(() => {
+    const timer = window.setTimeout(() => {
+      setShowLeadCaptureForm(true);
+    }, 5000);
+
+    return () => window.clearTimeout(timer);
+  }, []);
 
   // Optimize animations based on user preferences
   const pageVariants = useMemo(
@@ -65,24 +75,30 @@ const HomePageClient = memo(() => {
       {/* <div className="min-h-72 bg-gray-100 w-full"></div> */}
       <LazyHeroSection />
       {/* <LazyFixedDepartureCarousel /> */}
-      <HoneymoonPackages />
-      <TrendingPackagesSection />
-      <WhyChooseParadiseYatra />
-      <IndiaTourPackagesSection />
-      <InternationalTourPackagesSection />
-      <SpiritualJourneysSection />
-      <LuxuryPackagesSection />
+      <div className="home-nonhero-radius">
+        <HoneymoonPackages />
+        <TrendingPackagesSection />
+        <WhyChooseParadiseYatra />
+        <IndiaTourPackagesSection />
+        <InternationalTourPackagesSection />
+        <SpiritualJourneysSection />
+        <LuxuryPackagesSection />
 
-      <SeasonalPackagesSection />
-      <FestivalSection />
-      <TestimonialsSection />
-      <BlogSectionNew />
+        <SeasonalPackagesSection />
+        <FestivalSection />
+        <TestimonialsSection />
+        <BlogSectionNew />
 
-      {/* Performance monitoring - only visible in development */}
-      <PerformanceMonitor showInProduction={false} />
+        {/* Performance monitoring - only visible in development */}
+        <PerformanceMonitor showInProduction={false} />
+      </div>
 
       {/* Shutdown Popup - you can control this with state */}
       <ShutdownPopup isOpen={showShutdownPopup} />
+      <LeadCaptureForm
+        isOpen={showLeadCaptureForm}
+        onClose={() => setShowLeadCaptureForm(false)}
+      />
     </motion.div>
   );
 });
@@ -90,3 +106,4 @@ const HomePageClient = memo(() => {
 HomePageClient.displayName = "HomePageClient";
 
 export default HomePageClient;
+

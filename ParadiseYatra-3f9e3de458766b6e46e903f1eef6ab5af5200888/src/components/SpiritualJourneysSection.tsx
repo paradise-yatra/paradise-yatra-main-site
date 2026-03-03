@@ -79,6 +79,18 @@ const SpiritualJourneysSection = () => {
                             slug: pkg.slug
                         }));
 
+                        // Apply consistent image matching for spiritual journeys
+                        packageItems.forEach((item: any) => {
+                            const nameLower = item.name.toLowerCase();
+                            const slugLower = (item.slug || "").toLowerCase();
+                            if (nameLower.includes('char dham') || slugLower.includes('char-dham') || nameLower.includes('uttarakhand')) {
+                                item.image = '/Destination%20Pages/Uttarakhand.webp';
+                            } else if (nameLower.includes('kashi') || nameLower.includes('varanasi')) {
+                                // Varanasi doesn't have a specific .webp in Destination Pages yet? 
+                                // Let's check files again.
+                            }
+                        });
+
                         // Prevent duplicates if a package is also in a sub-tag (though unlikely to matter for display)
                         const existingIds = new Set(finalItems.map((item: any) => item.id));
                         packageItems.forEach((item: any) => {
@@ -87,6 +99,15 @@ const SpiritualJourneysSection = () => {
                             }
                         });
                     }
+
+                    // Also apply to sub-tags
+                    finalItems.forEach((item: any) => {
+                        const nameLower = item.name.toLowerCase();
+                        const slugLower = (item.slug || "").toLowerCase();
+                        if (nameLower.includes('char dham') || slugLower.includes('char-dham') || nameLower.includes('uttarakhand')) {
+                            item.image = '/Destination%20Pages/Uttarakhand.webp';
+                        }
+                    });
 
                     setDestinations(finalItems);
                 } else {

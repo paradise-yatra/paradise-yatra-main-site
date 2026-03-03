@@ -259,4 +259,38 @@ export function getCategoryColor(category: string): string {
     'holiday-type': 'bg-gradient-to-r from-teal-400 to-cyan-500'
   };
   return colors[category as keyof typeof colors] || 'bg-gray-400';
-} 
+}
+
+/**
+ * Get the standardized .webp image for a destination
+ * @param destinationName - The name of the destination/state/country
+ * @returns The path to the .webp image or null if not matched
+ */
+export function getDestinationWebp(destinationName: string | null | undefined): string | null {
+  if (!destinationName) return null;
+
+  const name = destinationName.toLowerCase().replace(/-/g, ' ');
+
+  if (name.includes('sikkim') || name.includes('gangtok') || name.includes('kalimpong')) return '/Destination%20Pages/Sikkim.webp';
+  if (name.includes('andaman')) return '/Destination%20Pages/Andaman%20and%20Nicobar%20Island.webp';
+  if (name.includes('kashmir') || name.includes('jammu') || name.includes('srinagar')) return '/Destination%20Pages/Jammu%20and%20Kashmir.webp';
+  if (name.includes('rajasthan') || name.includes('jaipur') || name.includes('udaipur') || name.includes('jodhpur') || name.includes('jaisalmer')) return '/Destination%20Pages/Rajasthan.webp';
+  if (name.includes('uttarakhand') || name.includes('char dham') || name.includes('nainital') || name.includes('rishikesh') || name.includes('mussoorie')) return '/Destination%20Pages/Uttarakhand.webp';
+  if (name.includes('goa')) return '/Destination%20Pages/Goa.webp';
+  if (name.includes('kerala') || name.includes('kochi') || name.includes('munnar') || name.includes('alleppey')) return '/Destination%20Pages/Kerala.webp';
+  if (name.includes('himachal') || name.includes('shimla') || name.includes('manali')) return '/Destination%20Pages/Himachal%20Pradesh.webp';
+  if (name.includes('ladakh') || name.includes('leh')) return '/Destination%20Pages/Ladakh.webp';
+  if (name.includes('tamil nadu') || name.includes('ooty') || name.includes('chennai') || name.includes('madurai') || name.includes('kanyakumari')) return '/Destination%20Pages/Tamil%20Nadu.webp';
+
+  // International
+  if (name.includes('thailand')) return '/Destination%20Pages/Thailand.webp';
+  if (name.includes('malaysia')) return '/Destination%20Pages/Malaysia.webp';
+  if (name.includes('egypt')) return '/Destination%20Pages/Egypt.webp';
+  if (name.includes('indonesia') || name.includes('bali')) return '/Destination%20Pages/Indonesia.webp';
+  if (name.includes('kenya')) return '/Destination%20Pages/Kenya.webp';
+  if (name.includes('maldives')) return '/Destination%20Pages/Maldives.webp';
+  if (name.includes('singapore')) return '/Destination%20Pages/Singapore.webp';
+  if (name.includes('united arab emirates') || name.includes('dubai') || name.includes('uae')) return '/Destination%20Pages/United%20Arab%20Emirates.webp';
+
+  return null;
+}

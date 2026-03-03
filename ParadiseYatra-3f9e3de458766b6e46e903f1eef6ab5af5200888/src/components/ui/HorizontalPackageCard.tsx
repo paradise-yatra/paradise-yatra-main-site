@@ -57,6 +57,7 @@ const HorizontalPackageCard: React.FC<HorizontalPackageCardProps> = ({
     onWishlistToggle,
 }) => {
     const plainDescription = stripHtmlTags(description);
+    const unitLabel = /couple/i.test(priceLabel) ? "per couple" : "per person";
     const optimizedImageUrl = getImageUrl(image, {
         width: "auto",
         height: 640,
@@ -103,7 +104,7 @@ const HorizontalPackageCard: React.FC<HorizontalPackageCardProps> = ({
             {/* Content Section */}
             <div className="flex-1 p-5 sm:pb-5 flex flex-col justify-between min-w-0">
                 <div className="block">
-                    <div className="inline-flex items-center bg-[#EFF6FF] text-[#314594] text-[10px] font-bold px-2.5 py-1 rounded-full uppercase tracking-wider mb-1.5">
+                    <div className="inline-flex items-center bg-[#EFF6FF] text-[#314594] text-[11px] font-bold px-2.5 py-1 rounded-full uppercase tracking-wider mb-1.5">
                         {formatDurationDisplay(duration)}
                     </div>
 
@@ -139,7 +140,7 @@ const HorizontalPackageCard: React.FC<HorizontalPackageCardProps> = ({
                         <p className="text-[12px] text-[#000945] mb-0.5">from</p>
                         <div className="flex items-baseline">
                             <span className="text-xl font-bold text-[#155dfc]">₹ {(price || 0).toLocaleString()}</span>
-                            <span className="text-[10px] text-[#000945] ml-1 font-medium italic">/ person</span>
+                            <span className="text-[10px] text-[#000945] ml-1 font-medium italic">{unitLabel}</span>
                         </div>
                     </div>
 

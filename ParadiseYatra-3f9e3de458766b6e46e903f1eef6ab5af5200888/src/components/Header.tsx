@@ -51,6 +51,7 @@ const Header = () => {
   const pathname = usePathname();
   const isHome = pathname === "/";
   const isTransparent = isHome && !isScrolled; // Transparent on home page only at top
+  const shouldShowPromoBar = isHome && showPromoBar;
 
   // Use the custom hook for dynamic navigation
   const { navItems, loading } = useNavigation();
@@ -274,7 +275,7 @@ const Header = () => {
 
         {/* PROMO STRIP START */}
         <AnimatePresence>
-          {showPromoBar && (
+          {shouldShowPromoBar && (
             <motion.div
               initial={{ height: 0, opacity: 0 }}
               animate={{ height: "auto", opacity: 1 }}
@@ -794,7 +795,7 @@ const Header = () => {
       {!isHome && (
         <div
           className="relative w-full transition-all duration-300 md:mb-[5px]"
-          style={{ height: showPromoBar ? 'calc(92px + 38px)' : '92px' }}
+          style={{ height: shouldShowPromoBar ? 'calc(92px + 38px)' : '92px' }}
         />
       )}
     </>

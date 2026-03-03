@@ -85,8 +85,53 @@ const ItineraryPageClient = ({ packageData, slug }: ItineraryPageClientProps) =>
   const [message, setMessage] = useState('');
   const [isSubmittingEnquiry, setIsSubmittingEnquiry] = useState(false);
   const [isHighlightsExpanded, setIsHighlightsExpanded] = useState(false);
+  const [actionMessage, setActionMessage] = useState<{ type: "success" | "error"; text: string } | null>(null);
   const router = useRouter();
   const { user, toggleWishlist, isInWishlist } = useAuth();
+  const isPackageSaved = isInWishlist(packageData._id);
+
+  const handleShare = async () => {
+    const shareUrl = typeof window !== "undefined" ? window.location.href : "";
+    if (!shareUrl) {
+      setActionMessage({ type: "error", text: "Unable to copy the link right now." });
+      return;
+    }
+
+    try {
+      if (navigator.clipboard?.writeText) {
+        await navigator.clipboard.writeText(shareUrl);
+      } else {
+        const tempInput = document.createElement("input");
+        tempInput.value = shareUrl;
+        document.body.appendChild(tempInput);
+        tempInput.select();
+        document.execCommand("copy");
+        document.body.removeChild(tempInput);
+      }
+      setActionMessage({ type: "success", text: "Link copied. You can now share this package with ease." });
+    } catch {
+      setActionMessage({ type: "error", text: "Could not copy the link right now. Please try again in a moment." });
+    }
+  };
+
+  const handleSave = () => {
+    if (!user) {
+      setIsLoginModalOpen(true);
+      return;
+    }
+
+    toggleWishlist(packageData._id);
+    setActionMessage({
+      type: "success",
+      text: isPackageSaved ? "Removed from your saved packages." : "Saved to your wishlist.",
+    });
+  };
+
+  useEffect(() => {
+    if (!actionMessage) return;
+    const timeout = window.setTimeout(() => setActionMessage(null), 2600);
+    return () => window.clearTimeout(timeout);
+  }, [actionMessage]);
 
   const handleSubmitEnquiry = async () => {
     if (!fullName || !email || !phoneNumber || !message) {
@@ -265,15 +310,35 @@ const ItineraryPageClient = ({ packageData, slug }: ItineraryPageClientProps) =>
                   {packageData.destination?.split(',')[0].trim()}
                 </span>
               </p>
-              <div className="flex items-center gap-3">
-                <Button variant="outline" className="flex items-center gap-2 !rounded-[6px] border !border-[#dfe1df] !shadow-none bg-white px-4 py-2 text-sm font-semibold text-[#000945] hover:bg-slate-50 hover:text-[#000945]">
-                  <ArrowRight className="h-5 w-5 rotate-45" />
-                  Share
-                </Button>
-                <Button variant="outline" className="flex items-center gap-2 !rounded-[6px] border !border-[#dfe1df] !shadow-none bg-white px-4 py-2 text-sm font-semibold text-[#000945] hover:bg-slate-50 hover:text-[#000945]">
-                  <Shield className="h-5 w-5" />
-                  Save
-                </Button>
+              <div className="flex flex-col items-start sm:items-end gap-1.5">
+                <div className="flex items-center gap-3">
+                  <Button
+                    onClick={handleShare}
+                    variant="outline"
+                    className="flex items-center gap-2 !rounded-[6px] border !border-[#dfe1df] !shadow-none bg-white px-4 py-2 text-sm font-semibold text-[#000945] hover:bg-slate-50 hover:text-[#000945]"
+                  >
+                    <ArrowRight className="h-5 w-5 rotate-45" />
+                    Share
+                  </Button>
+                  <Button
+                    onClick={handleSave}
+                    variant="outline"
+                    className="flex items-center gap-2 !rounded-[6px] border !border-[#dfe1df] !shadow-none bg-white px-4 py-2 text-sm font-semibold text-[#000945] hover:bg-slate-50 hover:text-[#000945]"
+                  >
+                    <Shield className="h-5 w-5" />
+                    {isPackageSaved ? "Saved" : "Save"}
+                  </Button>
+                </div>
+                <div
+                  className={`min-h-[18px] text-[12px] font-medium transition-all duration-300 ${
+                    actionMessage
+                      ? "opacity-100 translate-y-0"
+                      : "opacity-0 -translate-y-1 pointer-events-none"
+                  } text-[#16a34a]`}
+                  style={{ color: "#16a34a", fontWeight: 500 }}
+                >
+                  {actionMessage?.text || ""}
+                </div>
               </div>
             </div>
           </div>
@@ -503,7 +568,7 @@ const ItineraryPageClient = ({ packageData, slug }: ItineraryPageClientProps) =>
                   <div className="mb-6 flex flex-col items-center justify-center gap-1 border-b border-slate-100 pb-6">
                     <div className="flex items-baseline gap-1">
                       <span className="text-4xl font-semibold tracking-tight text-[#155dfc]">{formatPrice(packageData.price)}</span>
-                      <span className="text-sm font-medium text-slate-500">/{packageData.priceType === 'per_couple' ? 'couple' : 'person'}</span>
+                      <span className="text-sm font-medium text-slate-500">per {packageData.priceType === 'per_couple' ? 'couple' : 'person'}</span>
                     </div>
                     {discount > 0 && (
                       <span className="rounded-full bg-green-100 px-3 py-1 text-xs font-bold text-green-700">
@@ -763,7 +828,7 @@ const ItineraryPageClient = ({ packageData, slug }: ItineraryPageClientProps) =>
           <span className="text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-0.5">Starting From</span>
           <div className="flex items-baseline gap-1">
             <span className="text-[20px] font-bold text-[#155dfc] leading-none">{formatPrice(packageData.price)}</span>
-            <span className="text-[10px] text-slate-500 font-medium whitespace-nowrap">/{packageData.priceType === 'per_couple' ? 'couple' : 'person'}</span>
+            <span className="text-[10px] text-slate-500 font-medium whitespace-nowrap">per {packageData.priceType === 'per_couple' ? 'couple' : 'person'}</span>
           </div>
         </div>
         <div className="flex items-center gap-2 flex-1 justify-end max-w-[220px]">

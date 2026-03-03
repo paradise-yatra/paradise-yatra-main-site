@@ -1,13 +1,24 @@
 "use client";
 
-import { useState } from "react";
-import { motion, AnimatePresence } from "framer-motion";
-import { X, Loader2, CheckCircle, AlertCircle, Mail, Phone, User, MessageSquare, MapPin } from "lucide-react";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Textarea } from "@/components/ui/textarea";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { useEffect, useState } from "react";
+import { AnimatePresence, motion } from "framer-motion";
+import {
+  AlertCircle,
+  Calendar,
+  CheckCircle,
+  Loader2,
+  Mail,
+  MapPin,
+  MessageSquare,
+  Phone,
+  User,
+  X,
+} from "lucide-react";
 import Image from "next/image";
+import Link from "next/link";
+import { format } from "date-fns";
+import { Calendar as CalendarComponent } from "@/components/ui/calendar";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 
 interface LeadCaptureFormProps {
   isOpen: boolean;
@@ -21,7 +32,7 @@ interface FormData {
   email: string;
   phone: string;
   destination: string;
-  budget: string;
+  travelDate?: Date;
   message: string;
   newsletterConsent: boolean;
 }
@@ -31,130 +42,174 @@ interface FormErrors {
   email?: string;
   phone?: string;
   destination?: string;
-  budget?: string;
+  travelDate?: string;
   message?: string;
   newsletterConsent?: string;
 }
 
-export default function LeadCaptureForm({ isOpen, onClose, packageTitle, packagePrice }: LeadCaptureFormProps) {
+const inputClass =
+  "w-full rounded-[6px] border border-slate-300 bg-white py-3 pl-11 pr-3 text-sm text-[#000945] outline-none transition focus:border-[#000945] focus:ring-0 placeholder:text-slate-400";
+
+const textAreaClass =
+  "w-full min-h-[88px] rounded-[6px] border border-slate-300 bg-white py-3 pl-11 pr-3 text-sm text-[#000945] outline-none transition focus:border-[#000945] focus:ring-0 placeholder:text-slate-400 resize-none";
+
+function FieldError({ message }: { message?: string }) {
+  return (
+    <div className="relative z-20 mt-1 h-[16px] overflow-hidden">
+      <AnimatePresence initial={false} mode="wait">
+        {message ? (
+          <motion.p
+            key={message}
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.35, ease: "easeOut" }}
+            className="text-[11px] font-medium leading-none !text-red-500"
+            style={{ color: "#ef4444" }}
+          >
+            {message}
+          </motion.p>
+        ) : (
+          <motion.p
+            key="empty"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 0 }}
+            className="text-[11px]"
+          >
+            &nbsp;
+          </motion.p>
+        )}
+      </AnimatePresence>
+    </div>
+  );
+}
+
+export default function LeadCaptureForm({
+  isOpen,
+  onClose,
+  packageTitle,
+  packagePrice,
+}: LeadCaptureFormProps) {
   const [formData, setFormData] = useState<FormData>({
     fullName: "",
     email: "",
     phone: "",
     destination: "",
-    budget: "",
+    travelDate: undefined,
     message: "",
-    newsletterConsent: false,
+    newsletterConsent: true,
   });
   const [errors, setErrors] = useState<FormErrors>({});
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [submitStatus, setSubmitStatus] = useState<"idle" | "success" | "error">("idle");
+  const [calendarOpen, setCalendarOpen] = useState(false);
+  const [submitStatus, setSubmitStatus] = useState<"idle" | "success" | "error">(
+    "idle"
+  );
+
+  useEffect(() => {
+    if (!isOpen) return;
+
+    const handleEsc = (event: KeyboardEvent) => {
+      if (event.key === "Escape") {
+        onClose();
+      }
+    };
+
+    window.addEventListener("keydown", handleEsc);
+    return () => window.removeEventListener("keydown", handleEsc);
+  }, [isOpen, onClose]);
 
   const validateForm = (): boolean => {
     const newErrors: FormErrors = {};
 
-    // Full Name validation
-    if (!formData.fullName.trim()) {
-      newErrors.fullName = "Full name is required";
-    } else if (formData.fullName.trim().length < 2) {
-      newErrors.fullName = "Full name must be at least 2 characters";
+    const fullName = formData.fullName.trim();
+    if (!fullName) {
+      newErrors.fullName = "Please enter your full name.";
+    } else if (fullName.length < 3) {
+      newErrors.fullName = "Full name should be at least 3 characters.";
+    } else if (!/^[a-zA-Z.\s]+$/.test(fullName)) {
+      newErrors.fullName = "Name can contain only letters, spaces, and dots.";
     }
 
-    // Email validation
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    if (!formData.email.trim()) {
-      newErrors.email = "Email is required";
-    } else if (!emailRegex.test(formData.email)) {
-      newErrors.email = "Please enter a valid email address";
+    if (formData.email.trim() && !emailRegex.test(formData.email.trim())) {
+      newErrors.email = "Please enter a valid email address (example: name@email.com).";
     }
 
-    // Phone validation
-    const phoneRegex = /^[\+]?[1-9][\d]{0,15}$/;
+    const phoneDigits = formData.phone.replace(/\D/g, "");
     if (!formData.phone.trim()) {
-      newErrors.phone = "Phone number is required";
-    } else if (!phoneRegex.test(formData.phone.replace(/[\s\-\(\)]/g, ""))) {
-      newErrors.phone = "Please enter a valid phone number";
+      newErrors.phone = "Phone number is mandatory so we can reach you.";
+    } else if (phoneDigits.length < 10 || phoneDigits.length > 13) {
+      newErrors.phone = "Please enter a valid mobile number (10 to 13 digits).";
     }
 
-    // Destination validation
-    if (!formData.destination.trim()) {
-      newErrors.destination = "Destination is required";
-    } else if (formData.destination.trim().length < 2) {
-      newErrors.destination = "Destination must be at least 2 characters";
+    if (formData.destination.trim() && formData.destination.trim().length < 2) {
+      newErrors.destination = "Destination name looks too short.";
     }
 
-    // Budget validation
-    if (!formData.budget.trim()) {
-      newErrors.budget = "Budget is required";
-    } else {
-      const budgetValue = parseFloat(formData.budget.replace(/[^\d.]/g, ""));
-      if (isNaN(budgetValue) || budgetValue <= 0) {
-        newErrors.budget = "Please enter a valid budget amount";
-      }
-    }
-
-    // Message validation
-    if (!formData.message.trim()) {
-      newErrors.message = "Message is required";
-    } else if (formData.message.trim().length < 10) {
-      newErrors.message = "Message must be at least 10 characters";
+    if (formData.message.trim() && formData.message.trim().length < 10) {
+      newErrors.message = "Please add at least 10 characters in requirements.";
     }
 
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
   };
 
-  const handleInputChange = (field: keyof FormData, value: string | boolean) => {
-    setFormData(prev => ({ ...prev, [field]: value }));
-    // Clear error when user starts typing
+  const handleInputChange = (
+    field: keyof FormData,
+    value: string | boolean | Date | undefined
+  ) => {
+    setFormData((prev) => ({ ...prev, [field]: value }));
     if (errors[field]) {
-      setErrors(prev => ({ ...prev, [field]: undefined }));
+      setErrors((prev) => ({ ...prev, [field]: undefined }));
     }
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-
-    if (!validateForm()) {
-      return;
-    }
+    if (!validateForm()) return;
 
     setIsSubmitting(true);
     setSubmitStatus("idle");
 
+    const travelDateText = formData.travelDate
+      ? format(formData.travelDate, "MMM dd, yyyy")
+      : "Not specified";
+    const enhancedMessage = `Travel Date: ${travelDateText}\n\n${formData.message}`;
+
     try {
       const response = await fetch("/api/lead-capture", {
         method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           ...formData,
+          message: enhancedMessage,
+          travelDate: formData.travelDate?.toISOString(),
           packageTitle,
           packagePrice,
           timestamp: new Date().toISOString(),
         }),
       });
 
-      if (response.ok) {
-        setSubmitStatus("success");
-        setFormData({
-          fullName: "",
-          email: "",
-          phone: "",
-          destination: "",
-          budget: "",
-          message: "",
-          newsletterConsent: false,
-        });
-        // Close form after 3 seconds
-        setTimeout(() => {
-          onClose();
-          setSubmitStatus("idle");
-        }, 3000);
-      } else {
+      if (!response.ok) {
         throw new Error("Failed to submit form");
       }
+
+      setSubmitStatus("success");
+      setFormData({
+        fullName: "",
+        email: "",
+        phone: "",
+        destination: "",
+        travelDate: undefined,
+        message: "",
+        newsletterConsent: true,
+      });
+
+      setTimeout(() => {
+        setSubmitStatus("idle");
+        onClose();
+      }, 2200);
     } catch (error) {
       console.error("Error submitting form:", error);
       setSubmitStatus("error");
@@ -170,252 +225,255 @@ export default function LeadCaptureForm({ isOpen, onClose, packageTitle, package
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           exit={{ opacity: 0 }}
-          className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-6"
-          onClick={onClose}
+          className="fixed inset-0 z-[70] flex items-center justify-center bg-black/20 backdrop-blur-md p-4 sm:p-6"
+          onClick={(e) => {
+            if (e.target === e.currentTarget) {
+              onClose();
+            }
+          }}
         >
           <motion.div
-            initial={{ scale: 0.9, opacity: 0 }}
-            animate={{ scale: 1, opacity: 1 }}
-            exit={{ scale: 0.9, opacity: 0 }}
-            transition={{ type: "spring", damping: 25, stiffness: 300 }}
-            className="w-full max-w-md self-center -translate-y-4 max-h-[calc(100vh-6rem)] overflow-y-auto scrollbar-hide"
+            initial={{ opacity: 0, y: 18, scale: 0.97 }}
+            animate={{ opacity: 1, y: 0, scale: 1 }}
+            exit={{ opacity: 0, y: 18, scale: 0.97 }}
+            transition={{ duration: 0.28, ease: "easeOut" }}
+            className="relative w-full max-w-4xl overflow-hidden rounded-[6px] bg-white shadow-[0_24px_80px_rgba(0,0,0,0.35)]"
             onClick={(e) => e.stopPropagation()}
           >
-            <Card className="shadow-2xl border-0 !bg-white lead-capture-form">
-              <CardHeader className="relative pb-1">
-                <button
-                  onClick={onClose}
-                  className="absolute top-4 right-4 p-2 hover:bg-gray-100 rounded-full transition-colors"
+            <button
+              onClick={onClose}
+              className="absolute right-4 top-4 z-20 cursor-pointer rounded-full bg-white/90 p-2 text-slate-700 transition hover:bg-white"
+              aria-label="Close lead capture form"
+            >
+              <X className="h-5 w-5" />
+            </button>
+
+            <div className="grid max-h-[calc(100vh-2.5rem)] grid-cols-1 overflow-y-auto lg:grid-cols-[0.85fr_1.15fr]">
+              <div className="relative hidden min-h-[180px] lg:block lg:min-h-[520px]">
+                <Link
+                  href="https://paradiseyatra.com/package/royal-egypt-nile-heritage-journey"
+                  className="block h-full w-full"
+                  target="_blank"
+                  rel="noopener noreferrer"
                 >
-                  <X className="w-5 h-5 text-gray-500" />
-                </button>
-                <div className="flex justify-center">
-                  <Image src="/headerLogo.png" alt="Logo" width={50} height={50} />
-                </div>
-                <CardTitle className="text-base font-bold text-gray-900 text-center">
-                  Book Your Trip
-                </CardTitle>
-                {packageTitle && (
-                  <p className="text-gray-600 text-center text-sm">
-                    {packageTitle}
-                    {packagePrice && ` • ${packagePrice}`}
-                  </p>
-                )}
-              </CardHeader>
+                  <Image
+                    src="/Home/Pop Up Form/Image.jpg"
+                    alt="Travel planning"
+                    fill
+                    className="object-cover"
+                    priority
+                  />
+                  <div className="absolute inset-x-0 bottom-0 h-1/2 bg-gradient-to-t from-black/70 via-black/25 to-transparent" />
 
-              <CardContent className="p-6 pb-8">
+                  <div className="relative z-10 flex h-full flex-col justify-end p-6 sm:p-8">
+                    <div className="space-y-4">
+                      <h2
+                        className="max-w-md leading-tight text-white line-clamp-2"
+                        style={{ fontSize: "25px", fontWeight: 800 }}
+                      >
+                        Relax in Egypt with Nile sunsets, timeless beauty, and calm escapes.
+                      </h2>
+                    </div>
+                  </div>
+                </Link>
+              </div>
+
+              <div className="bg-white p-5 sm:p-8">
                 {submitStatus === "success" ? (
-                  <motion.div
-                    initial={{ opacity: 0, scale: 0.9 }}
-                    animate={{ opacity: 1, scale: 1 }}
-                    className="text-center py-6"
-                  >
-                    <CheckCircle className="w-12 h-12 text-green-500 mx-auto mb-3" />
-                    <h3 className="text-lg font-semibold text-gray-900 mb-2">
-                      Thank You!
-                    </h3>
-                    <p className="text-gray-600">
-                      We&apos;ve received your inquiry and will get back to you within 24 hours.
+                  <div className="flex h-full min-h-[360px] flex-col items-center justify-center text-center">
+                    <CheckCircle className="mb-4 h-14 w-14 text-green-500" />
+                    <h4 className="mb-2 text-2xl font-bold text-[#000945]">You are all set.</h4>
+                    <p className="max-w-sm text-sm text-slate-600">
+                      Thank you for sharing your details. Our travel expert will call
+                      you shortly with a personalized plan.
                     </p>
-                  </motion.div>
+                  </div>
                 ) : submitStatus === "error" ? (
-                  <motion.div
-                    initial={{ opacity: 0, scale: 0.9 }}
-                    animate={{ opacity: 1, scale: 1 }}
-                    className="text-center py-6"
-                  >
-                    <AlertCircle className="w-12 h-12 text-red-500 mx-auto mb-3" />
-                    <h3 className="text-lg font-semibold text-gray-900 mb-2">
-                      Something went wrong
-                    </h3>
-                    <p className="text-gray-600 mb-3">
-                      Please try again or contact us directly.
+                  <div className="flex h-full min-h-[360px] flex-col items-center justify-center text-center">
+                    <AlertCircle className="mb-4 h-14 w-14 text-red-500" />
+                    <h4 className="mb-2 text-2xl font-bold text-[#000945]">Submission Failed</h4>
+                    <p className="max-w-sm text-sm text-slate-600">
+                      Something went wrong. Please try again.
                     </p>
-                    <Button
+                    <button
                       onClick={() => setSubmitStatus("idle")}
-                      className="bg-blue-600 hover:bg-blue-700"
+                      className="mt-4 rounded-xl bg-[#155dfc] px-5 py-2 text-sm font-semibold text-white hover:bg-[#0f4bce]"
                     >
-                      Try Again
-                    </Button>
-                  </motion.div>
+                      Try again
+                    </button>
+                  </div>
                 ) : (
-                  <form onSubmit={handleSubmit} className="space-y-3">
-                    <div>
-                      <label className="block text-xs font-medium bg-white text-gray-700 mb-0.5">
-                        Full Name *
-                      </label>
-                      <div className="relative">
-                        <User className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" />
-                        <Input
-                          type="text"
-                          value={formData.fullName}
-                          onChange={(e) => handleInputChange("fullName", e.target.value)}
-                          className={`pl-10 ${errors.fullName ? "border-red-500" : ""} !bg-white !text-gray-700 focus:!text-gray-700`}
-                          placeholder="Enter your full name"
-                          disabled={isSubmitting}
-                        />
-                      </div>
-                      {errors.fullName && (
-                        <p className="text-red-500 text-sm mt-1">{errors.fullName}</p>
-                      )}
-                    </div>
-
-                    <div>
-                      <label className="block text-xs font-medium text-gray-700 mb-0.5">
-                        Email Address *
-                      </label>
-                      <div className="relative">
-                        <Mail className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" />
-                        <Input
-                          type="email"
-                          value={formData.email}
-                          onChange={(e) => handleInputChange("email", e.target.value)}
-                          className={`pl-10 ${errors.email ? "border-red-500" : ""} !bg-white !text-gray-700 focus:!bg-white focus:!text-gray-700`}
-                          placeholder="Enter your email address"
-                          disabled={isSubmitting}
-                        />
-                      </div>
-                      {errors.email && (
-                        <p className="text-red-500 text-sm mt-1">{errors.email}</p>
-                      )}
-                    </div>
-
-                    <div>
-                      <label className="block text-xs font-medium text-gray-700 mb-0.5">
-                        Phone Number *
-                      </label>
-                      <div className="relative">
-                        <Phone className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" />
-                        <Input
-                          type="tel"
-                          value={formData.phone}
-                          onChange={(e) => handleInputChange("phone", e.target.value)}
-                          className={`pl-10 ${errors.phone ? "border-red-500" : ""} !bg-white !text-gray-700 focus:!bg-white focus:!text-gray-700`}
-                          placeholder="Enter your phone number"
-                          disabled={isSubmitting}
-                        />
-                      </div>
-                      {errors.phone && (
-                        <p className="text-red-500 text-sm mt-1">{errors.phone}</p>
-                      )}
-                    </div>
-
-                    <div>
-                      <label className="block text-xs font-medium text-gray-700 mb-0.5">
-                        Destination *
-                      </label>
-                      <div className="relative">
-                        <MapPin className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" />
-                        <Input
-                          type="text"
-                          value={formData.destination}
-                          onChange={(e) => handleInputChange("destination", e.target.value)}
-                          className={`pl-10 ${errors.destination ? "border-red-500" : ""} !bg-white !text-gray-700 focus:!bg-white focus:!text-gray-700`}
-                          placeholder="Enter your desired destination"
-                          disabled={isSubmitting}
-                        />
-                      </div>
-                      {errors.destination && (
-                        <p className="text-red-500 text-sm mt-1">{errors.destination}</p>
-                      )}
-                    </div>
-
-                    <div>
-                      <label className="block text-xs font-medium text-gray-700 mb-0.5">
-                        Budget *
-                      </label>
-                      <div className="relative">
-                        <p className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400 !mb-2">₹</p>
-                        <Input
-                          type="text"
-                          value={formData.budget}
-                          onChange={(e) => handleInputChange("budget", e.target.value)}
-                          className={`pl-10 ${errors.budget ? "border-red-500" : ""} !bg-white !text-gray-700 focus:!bg-white focus:!text-gray-700`}
-                          placeholder="Enter your budget (e.g., ₹50,000)"
-                          disabled={isSubmitting}
-                        />
-                      </div>
-                      {errors.budget && (
-                        <p className="text-red-500 text-sm mt-1">{errors.budget}</p>
-                      )}
-                    </div>
-
-                    <div>
-                      <label className="block text-xs font-medium text-gray-700 mb-0.5">
-                        Message or Requirements *
-                      </label>
-                      <div className="relative">
-                        <MessageSquare className="absolute left-3 top-3 w-4 h-4 text-gray-400" />
-                        <Textarea
-                          value={formData.message}
-                          onChange={(e) => handleInputChange("message", e.target.value)}
-                          className={`pl-10 min-h-[50px] ${errors.message ? "border-red-500" : ""} !bg-white !text-gray-700 focus:!bg-white focus:!text-gray-700`}
-                          placeholder="Tell us about your travel requirements, preferred dates, number of travelers, etc."
-                          disabled={isSubmitting}
-                        />
-                      </div>
-                      {errors.message && (
-                        <p className="text-red-500 text-sm mt-1">{errors.message}</p>
-                      )}
-                    </div>
-
-                    <div className="flex items-start space-x-1.5">
-                      <input
-                        type="checkbox"
-                        id="newsletterConsent"
-                        checked={formData.newsletterConsent}
-                        onChange={(e) => handleInputChange("newsletterConsent", e.target.checked)}
-                        className="mt-0.5 h-3 w-3 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
-                        disabled={isSubmitting}
-                      />
-                      <label htmlFor="newsletterConsent" className="text-xs text-gray-700 leading-tight">
-                        I would like to receive newsletters and updates about travel deals and destinations
-                      </label>
-                    </div>
-
-                    <Button
-                      type="submit"
-                      disabled={isSubmitting}
-                      className="w-full bg-blue-600 hover:bg-blue-700 !text-white py-1.5 text-sm font-semibold rounded-xl transition-all duration-300 transform hover:scale-105 hover:cursor-pointer disabled:transform-none disabled:opacity-70"
+                  <>
+                    <h2
+                      className="leading-tight"
+                      style={{ fontSize: "30px", fontWeight: 700, color: "#000945" }}
                     >
-                      {isSubmitting ? (
-                        <>
-                          <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                          Sending...
-                        </>
-                      ) : (
-                        "Send Inquiry"
-                      )}
-                    </Button>
-
-                    <p className="text-xs text-gray-500 text-center mt-3">
-                      By submitting this form, you agree to our{" "}
-                      <a
-                        href="/privacy-policy"
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="!text-blue-600 hover:!text-blue-700 underline underline-offset-2"
-                      >
-                        privacy policy
-                      </a>
-                      {" "}and{" "}
-                      <a
-                        href="/terms-of-service"
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="!text-blue-600 hover:!text-blue-700 underline underline-offset-2"
-                      >
-                        terms of service
-                      </a>
-                      .
+                      Plan My Trip
+                    </h2>
+                    <p className="mt-2 text-sm text-[#000945]">
+                      Fill details and get a custom itinerary.
                     </p>
-                  </form>
+
+                    {(packageTitle || packagePrice) && (
+                      <div className="mt-4 rounded-xl border border-[#155dfc]/20 bg-[#155dfc]/5 px-3 py-2 text-sm text-[#000945]">
+                        <span className="font-semibold">{packageTitle || "Selected Package"}</span>
+                        {packagePrice && (
+                          <span className="ml-2 text-[#155dfc]">{packagePrice}</span>
+                        )}
+                      </div>
+                    )}
+
+                    <form onSubmit={handleSubmit} className="mt-4 space-y-2">
+                      <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+                        <div className="relative">
+                          <label className="mb-1 block text-xs font-semibold text-[#000945]">
+                            Full name
+                          </label>
+                          <div className="relative">
+                            <User className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-[#000945]" />
+                            <input
+                              type="text"
+                              value={formData.fullName}
+                              onChange={(e) => handleInputChange("fullName", e.target.value)}
+                              className={`${inputClass} ${errors.fullName ? "border-red-500" : ""}`}
+                              placeholder="Your name"
+                              disabled={isSubmitting}
+                            />
+                          </div>
+                          <FieldError message={errors.fullName} />
+                        </div>
+
+                        <div className="relative">
+                          <label className="mb-1 block text-xs font-semibold text-[#000945]">
+                            Phone
+                          </label>
+                          <div className="relative">
+                            <Phone className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-[#000945]" />
+                            <input
+                              type="tel"
+                              value={formData.phone}
+                              onChange={(e) => handleInputChange("phone", e.target.value)}
+                              className={`${inputClass} ${errors.phone ? "border-red-500" : ""}`}
+                              placeholder="Phone number"
+                              disabled={isSubmitting}
+                            />
+                          </div>
+                          <FieldError message={errors.phone} />
+                        </div>
+                      </div>
+
+                      <div className="relative">
+                        <label className="mb-1 block text-xs font-semibold text-[#000945]">
+                          Email
+                        </label>
+                        <div className="relative">
+                          <Mail className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-[#000945]" />
+                          <input
+                            type="email"
+                            value={formData.email}
+                            onChange={(e) => handleInputChange("email", e.target.value)}
+                            className={`${inputClass} ${errors.email ? "border-red-500" : ""}`}
+                            placeholder="you@example.com"
+                            disabled={isSubmitting}
+                          />
+                        </div>
+                        <FieldError message={errors.email} />
+                      </div>
+
+                      <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+                        <div className="relative">
+                          <label className="mb-1 block text-xs font-semibold text-[#000945]">
+                            Destination
+                          </label>
+                          <div className="relative">
+                            <MapPin className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-[#000945]" />
+                            <input
+                              type="text"
+                              value={formData.destination}
+                              onChange={(e) => handleInputChange("destination", e.target.value)}
+                              className={`${inputClass} ${errors.destination ? "border-red-500" : ""}`}
+                              placeholder="Where do you want to go?"
+                              disabled={isSubmitting}
+                            />
+                          </div>
+                          <FieldError message={errors.destination} />
+                        </div>
+
+                        <div className="relative">
+                          <label className="mb-1 block text-xs font-semibold text-[#000945]">
+                            Travel Date
+                          </label>
+                          <Popover open={calendarOpen} onOpenChange={setCalendarOpen}>
+                            <PopoverTrigger asChild>
+                              <button
+                                type="button"
+                                className="w-full rounded-[6px] border !border-[#dfe1df] bg-white px-3 py-3 text-left text-sm text-[#000945] outline-none transition focus:!border-[#dfe1df] active:!border-[#dfe1df] hover:!border-[#dfe1df] focus:ring-0 flex items-center gap-2 cursor-pointer"
+                                style={{ borderColor: "#dfe1df", borderWidth: "1px" }}
+                              >
+                                <Calendar className="h-4 w-4 text-[#000945]" />
+                                <span className={formData.travelDate ? "text-[#000945]" : "text-slate-400"}>
+                                  {formData.travelDate
+                                    ? format(formData.travelDate, "MMM dd, yyyy")
+                                    : "Pick a date"}
+                                </span>
+                              </button>
+                            </PopoverTrigger>
+                            <PopoverContent className="z-[9999] w-auto p-0 !rounded-[6px] !border-[#dfe1df]" align="start">
+                              <CalendarComponent
+                                mode="single"
+                                selected={formData.travelDate}
+                                classNames={{ day_button: "cursor-pointer" }}
+                                onSelect={(d) => {
+                                  handleInputChange("travelDate", d || undefined);
+                                  setTimeout(() => setCalendarOpen(false), 150);
+                                }}
+                                disabled={{ before: new Date() }}
+                              />
+                            </PopoverContent>
+                          </Popover>
+                          <FieldError message={errors.travelDate} />
+                        </div>
+                      </div>
+
+                      <div className="relative">
+                        <label className="mb-1 block text-xs font-semibold text-[#000945]">
+                          Travel requirements
+                        </label>
+                        <div className="relative">
+                          <MessageSquare className="pointer-events-none absolute left-3 top-3 h-4 w-4 text-[#000945]" />
+                          <textarea
+                            value={formData.message}
+                            onChange={(e) => handleInputChange("message", e.target.value)}
+                            className={`${textAreaClass} ${errors.message ? "border-red-500" : ""}`}
+                            placeholder="Dates, number of travelers, preferences, etc."
+                            disabled={isSubmitting}
+                          />
+                        </div>
+                        <FieldError message={errors.message} />
+                      </div>
+
+                      <button
+                        type="submit"
+                        disabled={isSubmitting}
+                        className="mt-2 inline-flex w-full cursor-pointer items-center justify-center gap-2 rounded-[6px] bg-[#155dfc] px-5 py-3 text-sm font-bold text-white transition hover:bg-[#0f4bce] disabled:cursor-not-allowed disabled:opacity-70"
+                      >
+                        {isSubmitting ? (
+                          <>
+                            <Loader2 className="h-4 w-4 animate-spin" />
+                            Submitting
+                          </>
+                        ) : (
+                          "Get Custom Plan"
+                        )}
+                      </button>
+                    </form>
+                  </>
                 )}
-              </CardContent>
-            </Card>
+              </div>
+            </div>
           </motion.div>
         </motion.div>
       )}
     </AnimatePresence>
   );
-} 
+}

@@ -4,7 +4,7 @@ import { useEffect, useRef, useState, useCallback } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { ArrowLeft, ArrowRight, MapPin, Heart } from "lucide-react";
-import { getImageUrl } from "@/lib/utils";
+import { getImageUrl, getDestinationWebp } from "@/lib/utils";
 import { useAuth } from "@/context/AuthContext";
 import LoginAlertModal from "./LoginAlertModal";
 import PackageCard from "./ui/PackageCard";
@@ -72,15 +72,18 @@ const TrendingPackagesSection = () => {
                 const packagesData = (json.success && json.data && json.data.packages) ? json.data.packages : [];
 
                 // Map to TrendingPackage format
-                const mappedPackages: TrendingPackage[] = packagesData.map((pkg: any) => ({
-                    id: pkg._id,
-                    destination: pkg.location || pkg.destination || "India",
-                    duration: pkg.duration || "5N/6D",
-                    title: pkg.name || pkg.title || "Trending Package",
-                    price: pkg.price || 0,
-                    image: getImageUrl(pkg.image),
-                    slug: pkg.slug || pkg._id,
-                }));
+                const mappedPackages: TrendingPackage[] = packagesData.map((pkg: any) => {
+                    const destination = pkg.location || pkg.destination || "India";
+                    return {
+                        id: pkg._id,
+                        destination: destination,
+                        duration: pkg.duration || "5N/6D",
+                        title: pkg.name || pkg.title || "Trending Package",
+                        price: pkg.price || 0,
+                        image: getDestinationWebp(destination) || getImageUrl(pkg.image),
+                        slug: pkg.slug || pkg._id,
+                    };
+                });
 
                 setPackages(mappedPackages);
             } catch (error) {
@@ -320,6 +323,7 @@ const TrendingPackagesSection = () => {
                                     priceLabel="Per Person"
                                     isInWishlist={isInWishlist(String(pkg.id))}
                                     onWishlistToggle={handleWishlistToggle}
+                                    showDestination={false}
                                 />
                             ))}
                         </div>
