@@ -337,8 +337,9 @@ const Footer = () => {
             <div className="rounded-[6px] overflow-hidden border border-white/15">
               <iframe
                 title="Paradise Yatra Office Location"
-                src="https://www.google.com/maps?q=108,+Tagore+Villa,+Near+Natraj+Cinema,+Chakrata+Road,+Dehradun,+Uttarakhand+248001&output=embed"
+                src="https://www.google.com/maps/embed?pb=!1m14!1m8!1m3!1d1388.6582464962262!2d78.03477118988253!3d30.327473883386677!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x39092a19318db8c3%3A0xd8c55020cab7d0c4!2sParadise%20Yatra!5e0!3m2!1sen!2sin!4v1772634410746!5m2!1sen!2sin"
                 className="w-full h-[250px]"
+                allowFullScreen
                 loading="lazy"
                 referrerPolicy="no-referrer-when-downgrade"
               />

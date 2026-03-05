@@ -67,14 +67,15 @@ const LuxuryPackagesSection = () => {
                 // Map to LuxuryPackage format with fallbacks
                 const mappedPackages: LuxuryPackage[] = packagesData.map((pkg: any) => {
                     const destination = pkg.location || pkg.destination || pkg.state || pkg.country || "India";
-                    const webpImage = getDestinationWebp(destination);
+                    const packageImage = getImageUrl(pkg.image) || getImageUrl(pkg.images?.[0]);
+                    const fallbackImage = getDestinationWebp(destination);
                     return {
                         _id: pkg._id,
                         destination: destination,
                         duration: pkg.duration || "5N/6D",
                         title: pkg.name || pkg.title || "Luxury Package",
                         price: pkg.price || 0,
-                        images: webpImage ? [webpImage] : (pkg.image ? [pkg.image] : (pkg.images || [])),
+                        images: packageImage ? [packageImage] : (fallbackImage ? [fallbackImage] : (pkg.images || [])),
                         slug: pkg.slug || pkg._id,
                         shortDescription: pkg.shortDescription || "",
                     };

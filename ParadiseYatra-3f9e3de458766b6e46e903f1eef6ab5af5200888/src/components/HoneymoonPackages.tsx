@@ -71,13 +71,18 @@ const HoneymoonPackages = () => {
                 // Map to HoneymoonPackage format
                 const mappedPackages: HoneymoonPackage[] = packagesData.map((pkg: any) => {
                     const destination = pkg.location || pkg.destination || "India";
+                    const packageImage =
+                        getImageUrl(pkg.image) ||
+                        getImageUrl(pkg.images?.[0]) ||
+                        getDestinationWebp(destination) ||
+                        "";
                     return {
                         id: pkg._id,
                         destination: destination,
                         duration: pkg.duration || "5N/6D",
                         title: pkg.name || pkg.title || "Honeymoon Package",
                         price: pkg.price || 0,
-                        image: getDestinationWebp(destination) || getImageUrl(pkg.image),
+                        image: packageImage,
                         slug: pkg.slug || pkg._id,
                     };
                 });

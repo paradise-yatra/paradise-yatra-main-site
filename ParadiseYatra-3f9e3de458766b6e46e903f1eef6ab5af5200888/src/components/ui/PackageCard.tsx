@@ -104,7 +104,7 @@ const PackageCard: React.FC<PackageCardProps> = ({
                         </div>
                         <div className="flex flex-col items-end">
                             <span className="text-xs text-slate-800 font-black uppercase tracking-wide">Price</span>
-                            <span className="!text-lg font-black" style={{ color: '#155dfc' }}>
+                            <span className="!text-lg font-black" style={{ color: themeColor }}>
                                 ₹{price.toLocaleString()}
                             </span>
                         </div>
@@ -123,3 +123,4 @@ const PackageCard: React.FC<PackageCardProps> = ({
 };
 
 export default PackageCard;
+

@@ -51,7 +51,7 @@ const inputClass =
   "w-full rounded-[6px] border border-slate-300 bg-white py-3 pl-11 pr-3 text-sm text-[#000945] outline-none transition focus:border-[#000945] focus:ring-0 placeholder:text-slate-400";
 
 const textAreaClass =
-  "w-full min-h-[88px] rounded-[6px] border border-slate-300 bg-white py-3 pl-11 pr-3 text-sm text-[#000945] outline-none transition focus:border-[#000945] focus:ring-0 placeholder:text-slate-400 resize-none";
+  "w-full min-h-[72px] rounded-[6px] border border-slate-300 bg-white py-3 pl-11 pr-3 text-sm text-[#000945] outline-none transition focus:border-[#000945] focus:ring-0 placeholder:text-slate-400 resize-none";
 
 function FieldError({ message }: { message?: string }) {
   return (
@@ -323,7 +323,7 @@ export default function LeadCaptureForm({
                       </div>
                     )}
 
-                    <form onSubmit={handleSubmit} className="mt-4 space-y-2">
+                    <form onSubmit={handleSubmit} className="mt-3 space-y-1.5">
                       <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
                         <div className="relative">
                           <label className="mb-1 block text-xs font-semibold text-[#000945]">
@@ -451,6 +451,24 @@ export default function LeadCaptureForm({
                         </div>
                         <FieldError message={errors.message} />
                       </div>
+
+                      <p className="mt-0.5 text-center text-[11px] font-medium leading-4 text-slate-500">
+                        By proceeding, you agree to our{" "}
+                        <Link
+                          href="/terms-and-conditions"
+                          className="font-semibold text-[#155dfc] underline underline-offset-2 hover:text-[#0f4bce]"
+                        >
+                          Terms of Use
+                        </Link>{" "}
+                        and confirm you have read our{" "}
+                        <Link
+                          href="/privacy-policy"
+                          className="font-semibold text-[#155dfc] underline underline-offset-2 hover:text-[#0f4bce]"
+                        >
+                          Privacy and Cookie Statement
+                        </Link>
+                        .
+                      </p>
 
                       <button
                         type="submit"

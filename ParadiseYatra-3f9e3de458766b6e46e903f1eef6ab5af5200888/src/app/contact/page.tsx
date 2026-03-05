@@ -1,10 +1,44 @@
 "use client";
 
-import { useState } from "react";
-import { Phone, Mail, MapPin, Clock, Send, CheckCircle } from "lucide-react";
+import { useEffect, useState } from "react";
+import { AnimatePresence, motion } from "framer-motion";
+import { Phone, Mail, MapPin, Send, CheckCircle, AlertCircle } from "lucide-react";
 import Header from "@/components/Header";
+import { Card, CardContent } from "@/components/ui/card";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import SocialJourneySection from "@/components/SocialJourneySection";
+
+function FieldError({ message }: { message?: string }) {
+  return (
+    <div className="relative z-20 mt-1 h-[14px] overflow-hidden">
+      <AnimatePresence initial={false} mode="wait">
+        {message ? (
+          <motion.p
+            key={message}
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.35, ease: "easeOut" }}
+            className="text-[11px] font-medium leading-none !text-red-500"
+            style={{ color: "#ef4444" }}
+          >
+            {message}
+          </motion.p>
+        ) : (
+          <motion.p key="empty" initial={{ opacity: 0 }} animate={{ opacity: 0 }} className="text-[11px]">
+            &nbsp;
+          </motion.p>
+        )}
+      </AnimatePresence>
+    </div>
+  );
+}
 
 export default function ContactPage() {
+  const [footerData, setFooterData] = useState<{
+    companyInfo?: { phone?: string; email?: string; whatsapp?: string };
+  } | null>(null);
+
   const [formData, setFormData] = useState({
     name: "",
     email: "",
@@ -13,28 +47,124 @@ export default function ContactPage() {
     message: ""
   });
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [isSubmitted, setIsSubmitted] = useState(false);
+  const [submitStatus, setSubmitStatus] = useState<"idle" | "success" | "error">("idle");
+  const [submitFeedback, setSubmitFeedback] = useState("");
+  const [errors, setErrors] = useState<{
+    name?: string;
+    email?: string;
+    phone?: string;
+    subject?: string;
+    message?: string;
+  }>({});
+
+  useEffect(() => {
+    const fetchFooterData = async () => {
+      try {
+        const response = await fetch("/api/footer");
+        if (response.ok) {
+          const data = await response.json();
+          setFooterData(data);
+        }
+      } catch (error) {
+        console.error("Error fetching footer data:", error);
+      }
+    };
+    fetchFooterData();
+  }, []);
+
+  const companyInfo = {
+    phone: footerData?.companyInfo?.phone || "+91 8031274154",
+    email: footerData?.companyInfo?.email || "planners@paradiseyatra.com",
+    whatsapp: footerData?.companyInfo?.whatsapp || "+91 6383822508",
+  };
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
     setFormData({
       ...formData,
       [e.target.name]: e.target.value
     });
+    if (errors[e.target.name as keyof typeof errors]) {
+      setErrors((prev) => ({ ...prev, [e.target.name]: undefined }));
+    }
+  };
+
+  const validateForm = () => {
+    const nextErrors: {
+      name?: string;
+      email?: string;
+      phone?: string;
+      subject?: string;
+      message?: string;
+    } = {};
+
+    const fullName = formData.name.trim();
+    if (!fullName) {
+      nextErrors.name = "Please enter your full name.";
+    } else if (fullName.length < 3) {
+      nextErrors.name = "Full name should be at least 3 characters.";
+    }
+
+    const phoneDigits = formData.phone.replace(/\D/g, "");
+    if (!formData.phone.trim()) {
+      nextErrors.phone = "Phone number is mandatory so we can reach you.";
+    } else if (phoneDigits.length < 10 || phoneDigits.length > 13) {
+      nextErrors.phone = "Please enter a valid mobile number (10 to 13 digits).";
+    }
+
+    if (formData.email.trim()) {
+      const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+      if (!emailRegex.test(formData.email.trim())) {
+        nextErrors.email = "Please enter a valid email address (example: name@email.com).";
+      }
+    } else {
+      nextErrors.email = "Please enter your email address.";
+    }
+
+    if (!formData.subject) {
+      nextErrors.subject = "Please select a query type.";
+    }
+
+    if (!formData.message.trim()) {
+      nextErrors.message = "Please enter your message.";
+    } else if (formData.message.trim().length < 10) {
+      nextErrors.message = "Please add at least 10 characters in your message.";
+    }
+
+    setErrors(nextErrors);
+    return Object.keys(nextErrors).length === 0;
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+
+    if (!validateForm()) {
+      return;
+    }
+
     setIsSubmitting(true);
-    
-    // Simulate form submission
-    await new Promise(resolve => setTimeout(resolve, 2000));
-    
-    setIsSubmitting(false);
-    setIsSubmitted(true);
-    
-    // Reset form after 3 seconds
-    setTimeout(() => {
-      setIsSubmitted(false);
+    setSubmitStatus("idle");
+    setSubmitFeedback("");
+
+    try {
+      const response = await fetch("/api/contact-form", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          ...formData,
+          source: "contact-page",
+        }),
+      });
+
+      const data = await response.json().catch(() => ({}));
+
+      if (!response.ok) {
+        throw new Error(data?.message || "Failed to submit form. Please try again.");
+      }
+
+      setSubmitStatus("success");
+      setSubmitFeedback("Thank you for reaching out. Our team will contact you shortly.");
       setFormData({
         name: "",
         email: "",
@@ -42,280 +172,279 @@ export default function ContactPage() {
         subject: "",
         message: ""
       });
-    }, 3000);
+
+      setTimeout(() => {
+        setSubmitStatus("idle");
+        setSubmitFeedback("");
+      }, 3000);
+    } catch (error) {
+      setSubmitStatus("error");
+      setSubmitFeedback(
+        error instanceof Error
+          ? error.message
+          : "Something went wrong while sending your message. Please try again."
+      );
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
-  const contactInfo = [
-    {
-      icon: Phone,
-      title: "Phone",
-      details: "+91 8979396413",
-      description: "Call us anytime"
-    },
-    {
-      icon: Mail,
-      title: "Email",
-      details: "info@paradiseyatra.com",
-      description: "Send us an email"
-    },
-    {
-      icon: MapPin,
-      title: "Address",
-      details: "48, General Mahadev Singh Rd, Dehradun, Uttarakhand 248001",
-      description: "Visit our office"
-    },
-    {
-      icon: Clock,
-      title: "Working Hours",
-      details: "Mon - Sat: 9:00 AM - 7:00 PM",
-      description: "Sunday: Closed"
-    }
-  ];
-
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-green-50 overflow-x-hidden">
+    <div className="min-h-screen bg-white overflow-x-hidden">
       <Header />
       
       {/* Hero Section */}
-      <section className="relative pt-24 pb-16 bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 overflow-hidden">
-        <div className="absolute inset-0 bg-black/20"></div>
-        
-        <div className="relative container mx-auto px-4 text-center">
-          <h1 className="text-4xl md:text-6xl font-bold text-white mt-5 mb-6">
-            Get in Touch
-          </h1>
-          <p className="text-xl md:text-2xl text-blue-100 max-w-3xl mx-auto">
-            Ready to start your next adventure? We'd love to hear from you and help plan your perfect journey.
-          </p>
+      <section className="relative flex flex-col md:flex-row w-full md:h-[496px] md:overflow-hidden items-center justify-center bg-white">
+        <div className="md:hidden w-full px-4 pt-6 pb-2 bg-white text-left z-10 flex-shrink-0">
+          <div className="!text-[28px] !font-black text-slate-800 font-plus-jakarta-sans tracking-tight leading-tight">
+            Contact <span className="text-[#000945]">Us</span>
+          </div>
+        </div>
+
+        {/* Image Container */}
+        <div className="relative w-full h-[230.4px] md:absolute md:inset-0 md:h-auto flex-shrink-0">
+          <img
+            src="/Contact/Hero/Hero%20Image.webp?v=20260304"
+            alt="Paradise Yatra Contact"
+            className="h-full w-full object-cover"
+            loading="eager"
+          />
+          <div className="absolute inset-0 bg-black/20" />
+        </div>
+
+        {/* Centered Hub (Hidden on mobile) */}
+        <div className="hidden md:block max-w-6xl w-full mx-auto px-4 md:px-8 relative z-30">
+          <div className="flex flex-col items-center max-w-5xl mx-auto w-full">
+            <Card className="bg-white rounded-[6px] shadow-none border border-slate-100 overflow-hidden w-full md:h-[150px] flex items-center">
+              <CardContent className="p-0 md:p-6 w-full h-full flex flex-col justify-center items-center">
+                <h1 className="hidden md:block !text-xl md:!text-[44px] !font-black text-slate-800 mb-4 text-center font-plus-jakarta-sans tracking-tight leading-tight">
+                  Contact <span className="text-[#000945]">Us</span>
+                </h1>
+
+                <div className="hidden md:flex flex-nowrap items-center justify-center w-full px-2 md:px-4">
+                  <span className="text-slate-500 font-medium text-[15px] tracking-tight">
+                    Got questions ? We are always here to help you.
+                  </span>
+                </div>
+              </CardContent>
+            </Card>
+          </div>
         </div>
       </section>
 
-      {/* Contact Form & Info Section */}
-      <section className="py-16 md:py-24 overflow-hidden">
-        <div className="container mx-auto px-4 max-w-5xl">
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 lg:gap-8 w-full max-w-full">
-            
-            {/* Contact Form */}
-            <div className="w-full">
-              <div className="bg-white rounded-2xl shadow-xl border border-gray-100 p-8">
-                <div className="mb-8">
-                  <h2 className="text-3xl md:text-4xl font-bold text-gray-900 mb-4">
-                    Send us a Message
-                  </h2>
-                  <p className="text-gray-600 text-lg">
-                    Fill out the form below and we'll get back to you within 24 hours.
+      <section className="bg-white py-10 md:py-14">
+        <div className="max-w-6xl mx-auto px-4 md:px-6">
+          <div className="grid grid-cols-1 gap-4 lg:grid-cols-[1.05fr_1fr] lg:items-stretch">
+            <div className="h-full rounded-[6px] border border-[#dfe1df] bg-white p-4 md:p-5 flex flex-col">
+              <h3 style={{ fontWeight: 700 }} className="mb-2 border-b border-slate-300 pb-2 text-[30px] text-[#000945]">Get in touch</h3>
+
+              {submitStatus === "success" ? (
+                <div className="flex h-full min-h-[280px] flex-col items-center justify-center text-center">
+                  <CheckCircle className="mb-4 h-14 w-14 text-green-500" />
+                  <h4 className="mb-2 text-2xl font-bold text-[#000945]">You are all set.</h4>
+                  <p className="max-w-sm text-sm text-slate-600">
+                    {submitFeedback || "Thank you for reaching out. Our team will contact you shortly."}
                   </p>
                 </div>
-
-                {isSubmitted ? (
-                  <div className="text-center py-12">
-                    <CheckCircle className="w-16 h-16 text-green-500 mx-auto mb-4" />
-                    <h3 className="text-2xl font-bold text-gray-900 mb-2">Message Sent!</h3>
-                    <p className="text-gray-600">Thank you for contacting us. We'll get back to you soon.</p>
-                  </div>
-                ) : (
-                  <form onSubmit={handleSubmit} className="space-y-6">
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                      <div>
-                        <label htmlFor="name" className="block text-sm font-medium text-gray-700 mb-2">
-                          Full Name *
-                        </label>
-                        <input
-                          type="text"
-                          id="name"
-                          name="name"
-                          value={formData.name}
-                          onChange={handleInputChange}
-                          required
-                          className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200"
-                          placeholder="Enter your full name"
-                        />
-                      </div>
-                      
-                      <div>
-                        <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-2">
-                          Email Address *
-                        </label>
-                        <input
-                          type="email"
-                          id="email"
-                          name="email"
-                          value={formData.email}
-                          onChange={handleInputChange}
-                          required
-                          className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200"
-                          placeholder="Enter your email"
-                        />
-                      </div>
-                    </div>
-
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                      <div>
-                        <label htmlFor="phone" className="block text-sm font-medium text-gray-700 mb-2">
-                          Phone Number
-                        </label>
-                        <input
-                          type="tel"
-                          id="phone"
-                          name="phone"
-                          value={formData.phone}
-                          onChange={handleInputChange}
-                          className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200"
-                          placeholder="Enter your phone number"
-                        />
-                      </div>
-                      
-                      <div>
-                        <label htmlFor="subject" className="block text-sm font-medium text-gray-700 mb-2">
-                          Subject *
-                        </label>
-                        <select
-                          id="subject"
-                          name="subject"
-                          value={formData.subject}
-                          onChange={handleInputChange}
-                          required
-                          className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200"
-                        >
-                          <option value="">Select a subject</option>
-                          <option value="general">General Inquiry</option>
-                          <option value="booking">Booking Information</option>
-                          <option value="custom-package">Custom Package Request</option>
-                          <option value="support">Customer Support</option>
-                          <option value="partnership">Partnership</option>
-                          <option value="other">Other</option>
-                        </select>
-                      </div>
-                    </div>
-
-                    <div>
-                      <label htmlFor="message" className="block text-sm font-medium text-gray-700 mb-2">
-                        Message *
-                      </label>
-                      <textarea
-                        id="message"
-                        name="message"
-                        value={formData.message}
-                        onChange={handleInputChange}
-                        required
-                        rows={5}
-                        className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 resize-none"
-                        placeholder="Tell us about your travel plans or inquiry..."
-                      />
-                    </div>
-
-                    <button
-                      type="submit"
-                      disabled={isSubmitting}
-                      className="w-full bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white font-semibold py-4 px-6 rounded-lg transition-all duration-300 transform hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none flex items-center justify-center space-x-2"
-                    >
-                      {isSubmitting ? (
-                        <>
-                          <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
-                          <span>Sending...</span>
-                        </>
-                      ) : (
-                        <>
-                          <Send className="w-5 h-5" />
-                          <span>Send Message</span>
-                        </>
-                      )}
-                    </button>
-                  </form>
-                )}
-              </div>
-            </div>
-
-            {/* Contact Information */}
-            <div className="space-y-8 w-full">
-              <div>
-                <h2 className="text-3xl md:text-4xl font-bold text-gray-900 mb-6">
-                  Contact Information
-                </h2>
-                <p className="text-gray-600 text-lg mb-8">
-                  Reach out to us through any of these channels. Our travel experts are here to help you plan the perfect adventure.
-                </p>
-              </div>
-
-              <div className="space-y-6">
-                {contactInfo.map((info, index) => (
-                  <div 
-                    key={index}
-                    className="flex items-start space-x-4 p-6 bg-white rounded-xl shadow-lg border border-gray-100 hover:shadow-xl transition-all duration-300"
+              ) : submitStatus === "error" ? (
+                <div className="flex h-full min-h-[280px] flex-col items-center justify-center text-center">
+                  <AlertCircle className="mb-4 h-14 w-14 text-red-500" />
+                  <h4 className="mb-2 text-2xl font-bold text-[#000945]">Submission Failed</h4>
+                  <p className="max-w-sm text-sm text-slate-600">
+                    {submitFeedback || "Something went wrong. Please try again."}
+                  </p>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setSubmitStatus("idle");
+                      setSubmitFeedback("");
+                    }}
+                    className="mt-4 rounded-[6px] bg-[#155dfc] px-5 py-2 text-sm font-semibold text-white transition hover:bg-[#0f4bce]"
                   >
-                    <div className="flex-shrink-0 w-12 h-12 bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 rounded-lg flex items-center justify-center transition-all duration-300">
-                      <info.icon className="w-6 h-6 text-white" />
+                    Try again
+                  </button>
+                </div>
+              ) : (
+                <form onSubmit={handleSubmit} className="space-y-2">
+                  <div className="grid grid-cols-1 gap-3 md:grid-cols-2">
+                    <div>
+                      <label htmlFor="name" className="mb-1 block text-[12px] font-bold text-[#121417]">
+                        Name
+                      </label>
+                      <input
+                        type="text"
+                        id="name"
+                        name="name"
+                        value={formData.name}
+                        onChange={handleInputChange}
+                        className="h-10 w-full rounded-[6px] border border-slate-300 bg-white px-3 text-[14px] text-[#121417] outline-none transition focus:border-[#000945]"
+                        placeholder="Enter your name*"
+                      />
+                      <FieldError message={errors.name} />
                     </div>
-                    <div className="min-w-0 flex-1">
-                      <h3 className="text-lg font-semibold text-gray-900 mb-1">
-                        {info.title}
-                      </h3>
-                      <p className="text-gray-800 font-medium mb-1 break-words">
-                        {info.details}
-                      </p>
-                      <p className="text-gray-600 text-sm">
-                        {info.description}
-                      </p>
+                    <div>
+                      <label htmlFor="phone" className="mb-1 block text-[12px] font-bold text-[#121417]">
+                        Phone Number
+                      </label>
+                      <input
+                        type="tel"
+                        id="phone"
+                        name="phone"
+                        value={formData.phone}
+                        onChange={handleInputChange}
+                        className="h-10 w-full rounded-[6px] border border-slate-300 bg-white px-3 text-[14px] text-[#121417] outline-none transition focus:border-[#000945]"
+                        placeholder="Enter your phone number*"
+                      />
+                      <FieldError message={errors.phone} />
                     </div>
                   </div>
-                ))}
+
+                  <div>
+                    <label htmlFor="email" className="mb-1 block text-[12px] font-bold text-[#121417]">
+                      Email
+                    </label>
+                    <input
+                      type="email"
+                      id="email"
+                      name="email"
+                      value={formData.email}
+                      onChange={handleInputChange}
+                      className="h-10 w-full rounded-[6px] border border-slate-300 bg-white px-3 text-[14px] text-[#121417] outline-none transition focus:border-[#000945]"
+                      placeholder="Enter your email*"
+                    />
+                    <FieldError message={errors.email} />
+                  </div>
+
+                  <div>
+                    <label htmlFor="subject" className="mb-1 block text-[12px] font-bold text-[#121417]">
+                      Query Type
+                    </label>
+                    <Select
+                      value={formData.subject}
+                      onValueChange={(value) => {
+                        setFormData((prev) => ({ ...prev, subject: value }));
+                        setErrors((prev) => ({ ...prev, subject: undefined }));
+                      }}
+                    >
+                      <SelectTrigger
+                        id="subject"
+                        className="h-10 w-full !rounded-[6px] !border !border-slate-300 !bg-white px-3 text-[14px] !text-[#121417] transition focus:!border-[#000945]"
+                      >
+                        <SelectValue placeholder="Select query type" />
+                      </SelectTrigger>
+                      <SelectContent className="!rounded-[6px] border-slate-200">
+                        <SelectItem value="package-booking">Package Booking</SelectItem>
+                        <SelectItem value="career-related">Career Related</SelectItem>
+                        <SelectItem value="payment-support">Payment Support</SelectItem>
+                        <SelectItem value="refund-cancellation">Refund / Cancellation</SelectItem>
+                        <SelectItem value="business-related">Business Related</SelectItem>
+                        <SelectItem value="other">Other</SelectItem>
+                      </SelectContent>
+                    </Select>
+                    <FieldError message={errors.subject} />
+                  </div>
+
+                  <div>
+                    <label htmlFor="message" className="mb-1 block text-[12px] font-bold text-[#121417]">
+                      Your Message
+                    </label>
+                    <textarea
+                      id="message"
+                      name="message"
+                      value={formData.message}
+                      onChange={handleInputChange}
+                      rows={3}
+                      className="w-full rounded-[6px] border border-slate-300 bg-white px-3 py-2 text-[14px] text-[#121417] outline-none transition focus:border-[#000945] resize-none"
+                    />
+                    <FieldError message={errors.message} />
+                  </div>
+
+                  <button
+                    type="submit"
+                    disabled={isSubmitting}
+                    className="inline-flex h-10 min-w-[220px] cursor-pointer items-center justify-center gap-2 rounded-[6px] bg-[#155dfc] px-5 text-sm font-bold text-white transition hover:bg-[#0f4bce] disabled:cursor-not-allowed disabled:opacity-70"
+                  >
+                    {isSubmitting ? "Sending..." : "Send Message"}
+                    {!isSubmitting && <Send className="h-4 w-4" />}
+                  </button>
+                </form>
+              )}
+            </div>
+
+            <div className="h-full flex flex-col gap-4">
+              <div className="flex-1 rounded-[6px] border border-[#dfe1df] bg-white p-4 md:p-5 text-[#000945] [&_p]:!text-[#000945] [&_span]:!text-[#000945] [&_svg]:!text-[#000945]">
+                <h3 style={{ fontWeight: 700 }} className="mb-3 border-b border-slate-300 pb-3 text-[30px] text-[#000945]">Contact Information</h3>
+                <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+                  <div className="space-y-1">
+                    <div className="flex items-center gap-2 text-[#000945]">
+                      <Phone className="h-4 w-4" />
+                      <span className="text-[12px] font-bold text-[#000945]">Phone</span>
+                    </div>
+                    <a href={`tel:${companyInfo.phone.replace(/\s+/g, "")}`} className="block text-[15px] text-[#000945] hover:underline">
+                      {companyInfo.phone}
+                    </a>
+                    <a href={`tel:${companyInfo.whatsapp.replace(/\s+/g, "")}`} className="block text-[13px] text-[#000945] hover:underline">
+                      {companyInfo.whatsapp}
+                    </a>
+                  </div>
+                  <div className="space-y-1">
+                    <div className="flex items-center gap-2 text-[#000945]">
+                      <MapPin className="h-4 w-4" />
+                      <span className="text-[12px] font-bold text-[#000945]">Address</span>
+                    </div>
+                    <p className="text-[15px] text-[#000945]">108, Tagore Villa, Chakrata Road, Dehradun, Uttarakhand - 248001</p>
+                  </div>
+                  <div className="space-y-1 md:col-span-2">
+                    <div className="flex items-center gap-2 text-[#000945]">
+                      <Mail className="h-4 w-4" />
+                      <span className="text-[12px] font-bold text-[#000945]">Email</span>
+                    </div>
+                    <a href={`mailto:${companyInfo.email}`} className="block text-[15px] text-[#000945] hover:underline">
+                      {companyInfo.email}
+                    </a>
+                  </div>
+                </div>
               </div>
 
-              {/* Additional Info */}
-              <div className="bg-gradient-to-r from-blue-50 to-green-50 rounded-xl p-6 border border-blue-100">
-                <h3 className="text-xl font-semibold text-gray-900 mb-3">
-                  Why Choose Paradise Yatra?
-                </h3>
-                <ul className="space-y-2 text-gray-700">
-                  <li className="flex items-center space-x-2">
-                    <div className="w-2 h-2 bg-blue-500 rounded-full"></div>
-                    <span>24/7 customer support</span>
-                  </li>
-                  <li className="flex items-center space-x-2">
-                    <div className="w-2 h-2 bg-blue-500 rounded-full"></div>
-                    <span>Expert travel consultants</span>
-                  </li>
-                  <li className="flex items-center space-x-2">
-                    <div className="w-2 h-2 bg-blue-500 rounded-full"></div>
-                    <span>Customized travel packages</span>
-                  </li>
-                  <li className="flex items-center space-x-2">
-                    <div className="w-2 h-2 bg-blue-500 rounded-full"></div>
-                    <span>Best price guarantee</span>
-                  </li>
-                </ul>
+              <div className="flex-1 rounded-[6px] border border-[#dfe1df] bg-white p-4 md:p-5 text-[#000945] [&_p]:!text-[#000945] [&_span]:!text-[#000945]">
+                <h3 style={{ fontWeight: 700 }} className="mb-3 border-b border-slate-300 pb-3 text-[30px] text-[#000945]">Grievance Officer</h3>
+                <div className="space-y-3">
+                  <div>
+                    <p style={{ color: "#000945" }} className="text-[12px] font-bold">Name</p>
+                    <p style={{ color: "#000945" }} className="text-[15px]">Dikshant Sharma</p>
+                  </div>
+                  <div>
+                    <p style={{ color: "#000945" }} className="text-[12px] font-bold">Phone</p>
+                    <a href="tel:+919873391733" style={{ color: "#000945" }} className="block text-[15px] hover:underline">
+                      +91 9873391733
+                    </a>
+                  </div>
+                  <div>
+                    <p style={{ color: "#000945" }} className="text-[12px] font-bold">Email</p>
+                    <a href="mailto:dikshant@paradiseyatra.com" style={{ color: "#000945" }} className="block text-[15px] hover:underline">
+                      dikshant@paradiseyatra.com
+                    </a>
+                  </div>
+                </div>
               </div>
             </div>
           </div>
-        </div>
-      </section>
 
-      {/* Map Section */}
-      <section className="py-16 bg-gray-50">
-        <div className="container mx-auto px-4 max-w-5xl">
-          <div className="text-center mb-12">
-            <h2 className="text-3xl md:text-4xl font-bold text-gray-900 mb-4">
-              Find Us
-            </h2>
-            <p className="text-gray-600 text-lg max-w-2xl mx-auto">
-              Visit our office in the heart of Dehradun, where our travel experts are ready to help you plan your next adventure.
-            </p>
-          </div>
-
-          <div className="bg-white rounded-2xl shadow-xl overflow-hidden w-full">
-            <iframe 
-              src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3443.9778110684483!2d78.01086157522484!3d30.323148974784417!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x39092a19318db8c3%3A0x4145eb2d8145d725!2s48%2C%20GMS%20Rd%2C%20near%20Balliwala%20chowk%2C%20Shakti%20Enclave%2C%20Mohit%20Nagar%2C%20Dehradun%2C%20Uttarakhand%20248001!5e0!3m2!1sen!2sin!4v1756551458987!5m2!1sen!2sin" 
-              width="100%" 
-              height="450" 
-              style={{border: 0}} 
-              allowFullScreen 
-              loading="lazy" 
+          <div className="mt-4 overflow-hidden rounded-[6px] border border-[#dfe1df] bg-white">
+            <iframe
+              src="https://www.google.com/maps/embed?pb=!1m14!1m8!1m3!1d1388.6582464962262!2d78.03477118988253!3d30.327473883386677!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x39092a19318db8c3%3A0xd8c55020cab7d0c4!2sParadise%20Yatra!5e0!3m2!1sen!2sin!4v1772634410746!5m2!1sen!2sin"
+              width="100%"
+              height="320"
+              style={{ border: 0 }}
+              allowFullScreen
+              loading="lazy"
               referrerPolicy="no-referrer-when-downgrade"
               className="w-full"
             ></iframe>
           </div>
         </div>
       </section>
+      <SocialJourneySection />
 
     </div>
   );
