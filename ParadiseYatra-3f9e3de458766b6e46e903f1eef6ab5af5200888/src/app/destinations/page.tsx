@@ -8,7 +8,6 @@ import { Button } from "@/components/ui/button";
 import Link from "next/link";
 import Image from "next/image";
 import Header from "@/components/Header";
-import Footer from "@/components/Footer";
 import { getImageUrl, getDestinationWebp } from "@/lib/utils";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
@@ -356,7 +355,6 @@ export default function DestinationsPage() {
                     )}
                 </div>
             </main>
-            <Footer />
         </div>
     );
 }

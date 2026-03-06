@@ -23,7 +23,7 @@ export default function CancellationRefundContent() {
     };
 
     return (
-        <div className="min-h-screen bg-white font-plus-jakarta-sans pb-20 policy-content">
+        <div className="min-h-screen bg-white font-plus-jakarta-sans pb-6 policy-content">
             {/* Hero Section */}
             <section className="relative flex flex-col md:flex-row w-full md:h-[496px] md:overflow-hidden items-center justify-center bg-white md:bg-transparent">
                 <div className="md:hidden w-full px-4 pt-6 pb-2 bg-white text-left z-10 flex-shrink-0">
@@ -64,7 +64,7 @@ export default function CancellationRefundContent() {
             </section>
 
             {/* Main Content Area */}
-            <div className="max-w-4xl mx-auto px-4 md:px-8 py-12">
+            <div className="max-w-4xl mx-auto px-4 md:px-8 pt-12 pb-4">
                 <div className="relative items-start">
                     <div className="w-full">
                         <motion.div
@@ -76,7 +76,7 @@ export default function CancellationRefundContent() {
                             {/* Section 1: Booking Confirmation */}
                             <motion.section variants={itemVariants} id="confirmation" className="scroll-mt-28">
                                 <div className="mb-6">
-                                    <h2 style={{ fontWeight: 700, color: '#000945' }} className="text-[24px] md:text-[36px] tracking-tight">Booking Confirmation</h2>
+                                    <h2 style={{ fontWeight: 700, color: '#000945' }} className="!text-[24px] md:!text-[36px] tracking-tight">Booking Confirmation</h2>
                                 </div>
                                 <div className="space-y-4 leading-relaxed text-[15px]">
                                     <ul className="list-disc pl-6 space-y-2" style={{ color: '#000945', fontWeight: 500 }}>
@@ -90,7 +90,7 @@ export default function CancellationRefundContent() {
                             {/* Section 2: Cancellation by Customer */}
                             <motion.section variants={itemVariants} id="cancellation" className="scroll-mt-28">
                                 <div className="mb-6">
-                                    <h2 style={{ fontWeight: 700, color: '#000945' }} className="text-[24px] md:text-[36px] tracking-tight">Cancellation by Customer</h2>
+                                    <h2 style={{ fontWeight: 700, color: '#000945' }} className="!text-[24px] md:!text-[36px] tracking-tight">Cancellation by Customer</h2>
                                 </div>
                                 <div className="space-y-4 leading-relaxed text-[15px]">
                                     <p style={{ color: '#000945', fontWeight: 500 }}>
@@ -111,7 +111,7 @@ export default function CancellationRefundContent() {
                             {/* Section 3: Flight Tickets */}
                             <motion.section variants={itemVariants} id="flights" className="scroll-mt-28">
                                 <div className="mb-6">
-                                    <h2 style={{ fontWeight: 700, color: '#000945' }} className="text-[24px] md:text-[36px] tracking-tight">Flight Tickets</h2>
+                                    <h2 style={{ fontWeight: 700, color: '#000945' }} className="!text-[24px] md:!text-[36px] tracking-tight">Flight Tickets</h2>
                                 </div>
                                 <div className="space-y-4 leading-relaxed text-[15px]">
                                     <ul className="list-disc pl-6 space-y-2" style={{ color: '#000945', fontWeight: 500 }}>
@@ -124,7 +124,7 @@ export default function CancellationRefundContent() {
                             {/* Section 4: Hotel Bookings */}
                             <motion.section variants={itemVariants} id="hotels" className="scroll-mt-28">
                                 <div className="mb-6">
-                                    <h2 style={{ fontWeight: 700, color: '#000945' }} className="text-[24px] md:text-[36px] tracking-tight">Hotel Bookings</h2>
+                                    <h2 style={{ fontWeight: 700, color: '#000945' }} className="!text-[24px] md:!text-[36px] tracking-tight">Hotel Bookings</h2>
                                 </div>
                                 <div className="space-y-4 leading-relaxed text-[15px]">
                                     <ul className="list-disc pl-6 space-y-2" style={{ color: '#000945', fontWeight: 500 }}>
@@ -137,7 +137,7 @@ export default function CancellationRefundContent() {
                             {/* Section 5: Visa, Insurance & Processing Charges */}
                             <motion.section variants={itemVariants} id="visa" className="scroll-mt-28">
                                 <div className="mb-6">
-                                    <h2 style={{ fontWeight: 700, color: '#000945' }} className="text-[24px] md:text-[36px] tracking-tight">Visa, Insurance & Processing Charges</h2>
+                                    <h2 style={{ fontWeight: 700, color: '#000945' }} className="!text-[24px] md:!text-[36px] tracking-tight">Visa, Insurance & Processing Charges</h2>
                                 </div>
                                 <div className="space-y-4 leading-relaxed text-[15px]">
                                     <p style={{ color: '#000945', fontWeight: 500 }}>
@@ -149,7 +149,7 @@ export default function CancellationRefundContent() {
                             {/* Section 6: No Show Policy */}
                             <motion.section variants={itemVariants} id="no-show" className="scroll-mt-28">
                                 <div className="mb-6">
-                                    <h2 style={{ fontWeight: 700, color: '#000945' }} className="text-[24px] md:text-[36px] tracking-tight">No Show Policy</h2>
+                                    <h2 style={{ fontWeight: 700, color: '#000945' }} className="!text-[24px] md:!text-[36px] tracking-tight">No Show Policy</h2>
                                 </div>
                                 <div className="space-y-4 leading-relaxed text-[15px]">
                                     <p style={{ color: '#000945', fontWeight: 500 }}>
@@ -161,7 +161,7 @@ export default function CancellationRefundContent() {
                             {/* Section 7: Refund Processing Timeline */}
                             <motion.section variants={itemVariants} id="timeline" className="scroll-mt-28">
                                 <div className="mb-6">
-                                    <h2 style={{ fontWeight: 700, color: '#000945' }} className="text-[24px] md:text-[36px] tracking-tight">Refund Processing Timeline</h2>
+                                    <h2 style={{ fontWeight: 700, color: '#000945' }} className="!text-[24px] md:!text-[36px] tracking-tight">Refund Processing Timeline</h2>
                                 </div>
                                 <div className="space-y-4 leading-relaxed text-[15px]">
                                     <ul className="list-disc pl-6 space-y-2" style={{ color: '#000945', fontWeight: 500 }}>
@@ -175,7 +175,7 @@ export default function CancellationRefundContent() {
                             {/* Section 8: Cancellation by Paradise Yatra */}
                             <motion.section variants={itemVariants} id="cancellation-paradiseyatra" className="scroll-mt-28">
                                 <div className="mb-6">
-                                    <h2 style={{ fontWeight: 700, color: '#000945' }} className="text-[24px] md:text-[36px] tracking-tight">Cancellation by Paradise Yatra</h2>
+                                    <h2 style={{ fontWeight: 700, color: '#000945' }} className="!text-[24px] md:!text-[36px] tracking-tight">Cancellation by Paradise Yatra</h2>
                                 </div>
                                 <div className="space-y-4 leading-relaxed text-[15px]">
                                     <p style={{ color: '#000945', fontWeight: 500 }}>
@@ -195,7 +195,7 @@ export default function CancellationRefundContent() {
                             {/* Section 9: Amendments / Date Changes */}
                             <motion.section variants={itemVariants} id="amendments" className="scroll-mt-28">
                                 <div className="mb-6">
-                                    <h2 style={{ fontWeight: 700, color: '#000945' }} className="text-[24px] md:text-[36px] tracking-tight">Amendments / Date Changes</h2>
+                                    <h2 style={{ fontWeight: 700, color: '#000945' }} className="!text-[24px] md:!text-[36px] tracking-tight">Amendments / Date Changes</h2>
                                 </div>
                                 <div className="space-y-4 leading-relaxed text-[15px]">
                                     <ul className="list-disc pl-6 space-y-2" style={{ color: '#000945', fontWeight: 500 }}>
@@ -208,7 +208,7 @@ export default function CancellationRefundContent() {
                             {/* Section 10: Force Majeure */}
                             <motion.section variants={itemVariants} id="force-majeure" className="scroll-mt-28">
                                 <div className="mb-6">
-                                    <h2 style={{ fontWeight: 700, color: '#000945' }} className="text-[24px] md:text-[36px] tracking-tight">Force Majeure</h2>
+                                    <h2 style={{ fontWeight: 700, color: '#000945' }} className="!text-[24px] md:!text-[36px] tracking-tight">Force Majeure</h2>
                                 </div>
                                 <div className="space-y-4 leading-relaxed text-[15px]">
                                     <p style={{ color: '#000945', fontWeight: 500 }}>
@@ -220,7 +220,7 @@ export default function CancellationRefundContent() {
                             {/* Disclaimer */}
                             <motion.section variants={itemVariants} id="disclaimer" className="scroll-mt-28">
                                 <div className="mb-6">
-                                    <h2 style={{ fontWeight: 700, color: '#000945' }} className="text-[24px] md:text-[36px] tracking-tight">Disclaimer</h2>
+                                    <h2 style={{ fontWeight: 700, color: '#000945' }} className="!text-[24px] md:!text-[36px] tracking-tight">Disclaimer</h2>
                                 </div>
                                 <div className="space-y-4 leading-relaxed text-[15px]">
                                     <p style={{ color: '#000945', fontWeight: 500 }}>
@@ -236,3 +236,5 @@ export default function CancellationRefundContent() {
         </div>
     );
 }
+
+

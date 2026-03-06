@@ -31,6 +31,12 @@ export async function GET() {
       lastmod: new Date().toISOString()
     },
     {
+      url: '/cookie-policy',
+      priority: '0.3',
+      changefreq: 'yearly',
+      lastmod: new Date().toISOString()
+    },
+    {
       url: '/terms-and-conditions',
       priority: '0.3',
       changefreq: 'yearly',

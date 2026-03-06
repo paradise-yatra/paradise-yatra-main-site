@@ -84,7 +84,7 @@ export default function LoginPage() {
 
 
                     <div className="mb-4 text-center lg:text-left">
-                        <h2 className="text-2xl font-extrabold mb-1.5 font-sans whitespace-nowrap" style={{ fontWeight: 800 }}>Welcome back</h2>
+                        <h2 className="text-2xl font-extrabold mb-1.5 font-sans whitespace-nowrap text-[#000945]" style={{ fontWeight: 800 }}>Welcome back</h2>
                         <p className="text-slate-400 text-xs font-medium">Please enter your details to sign in.</p>
                     </div>
 
@@ -98,7 +98,7 @@ export default function LoginPage() {
 
                         {/* Email Input */}
                         <div>
-                            <label className="block text-xs font-semibold text-slate-900 mb-1">Email Address</label>
+                            <label className="block text-xs font-semibold text-[#000945] mb-1">Email Address</label>
                             <div className="relative">
                                 <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
                                     <Mail className="h-4 w-4 text-slate-400" />
@@ -116,7 +116,7 @@ export default function LoginPage() {
 
                         {/* Password Input */}
                         <div>
-                            <label className="block text-xs font-semibold text-slate-900 mb-1">Password</label>
+                            <label className="block text-xs font-semibold text-[#000945] mb-1">Password</label>
                             <div className="relative">
                                 <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
                                     <Lock className="h-4 w-4 text-slate-400" />

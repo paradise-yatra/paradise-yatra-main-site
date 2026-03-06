@@ -62,8 +62,8 @@ const SocialJourneySection = () => {
         <header className="mb-10 lg:mb-12">
           <div className="max-w-2xl">
             <h2
-              className="mb-4 leading-[1.1] tracking-tight !text-[#000945]"
-              style={{ fontSize: "36px", fontWeight: 700, color: "#000945" }}
+              className="mb-4 text-[24px] md:text-[36px] leading-[1.1] tracking-tight !text-[#000945]"
+              style={{ fontWeight: 700, color: "#000945" }}
             >
               Follow Our <span className="!text-[#000945]">Global</span> Journey
             </h2>

@@ -11,6 +11,7 @@ import { ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import { ReduxProvider } from "@/redux/ReduxProvider";
 import TalkToAgentButton from "@/components/TalkToAgentButton";
+import CookieConsentManager from "@/components/CookieConsentManager";
 
 
 const plusJakartaSans = Plus_Jakarta_Sans({
@@ -76,18 +77,6 @@ export default function RootLayout({
   return (
     <html lang="en" className={`${plusJakartaSans.variable} ${playfairDisplay.variable} ${nunito.variable} ${unbounded.variable}`}>
       <head>
-        <Script
-          src="https://www.googletagmanager.com/gtag/js?id=G-99JYJS0FSF"
-          strategy="afterInteractive"
-        />
-        <Script id="google-analytics" strategy="afterInteractive">
-          {` 
-            window.dataLayer = window.dataLayer || [];
-            function gtag(){dataLayer.push(arguments);}
-            gtag('js', new Date());
-            gtag('config', 'G-99JYJS0FSF');
-          `}
-        </Script>
         <Script id="smooth-scroll" strategy="afterInteractive">
           {`
             // Enhanced smooth scrolling for better cross-browser compatibility
@@ -133,6 +122,7 @@ export default function RootLayout({
             <AuthProvider>
               <BlogProvider>
                 {children}
+                <CookieConsentManager />
                 <TalkToAgentButton />
                 <FooterWrapper />
                 <ToastContainer position="top-right" autoClose={3000} hideProgressBar={false} newestOnTop={false} closeOnClick rtl={false} pauseOnFocusLoss draggable pauseOnHover theme="light" />

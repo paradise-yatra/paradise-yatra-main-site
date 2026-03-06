@@ -48,37 +48,28 @@ interface FormErrors {
 }
 
 const inputClass =
-  "w-full rounded-[6px] border border-slate-300 bg-white py-3 pl-11 pr-3 text-sm text-[#000945] outline-none transition focus:border-[#000945] focus:ring-0 placeholder:text-slate-400";
+  "w-full rounded-[6px] border border-slate-300 bg-white py-2.5 sm:py-3 pl-10 sm:pl-11 pr-3 text-[13px] sm:text-sm text-[#000945] outline-none transition focus:border-[#000945] focus:ring-0 placeholder:text-slate-400";
 
 const textAreaClass =
-  "w-full min-h-[72px] rounded-[6px] border border-slate-300 bg-white py-3 pl-11 pr-3 text-sm text-[#000945] outline-none transition focus:border-[#000945] focus:ring-0 placeholder:text-slate-400 resize-none";
+  "w-full min-h-[60px] sm:min-h-[72px] rounded-[6px] border border-slate-300 bg-white py-2.5 sm:py-3 pl-10 sm:pl-11 pr-3 text-[13px] sm:text-sm text-[#000945] outline-none transition focus:border-[#000945] focus:ring-0 placeholder:text-slate-400 resize-none";
 
 function FieldError({ message }: { message?: string }) {
+  if (!message) return null;
+
   return (
-    <div className="relative z-20 mt-1 h-[16px] overflow-hidden">
+    <div className="relative z-20 mt-0.5 overflow-hidden">
       <AnimatePresence initial={false} mode="wait">
-        {message ? (
-          <motion.p
-            key={message}
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            transition={{ duration: 0.35, ease: "easeOut" }}
-            className="text-[11px] font-medium leading-none !text-red-500"
-            style={{ color: "#ef4444" }}
-          >
-            {message}
-          </motion.p>
-        ) : (
-          <motion.p
-            key="empty"
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 0 }}
-            className="text-[11px]"
-          >
-            &nbsp;
-          </motion.p>
-        )}
+        <motion.p
+          key={message}
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          exit={{ opacity: 0 }}
+          transition={{ duration: 0.35, ease: "easeOut" }}
+          className="text-[11px] font-medium leading-none !text-red-500"
+          style={{ color: "#ef4444" }}
+        >
+          {message}
+        </motion.p>
       </AnimatePresence>
     </div>
   );
@@ -225,7 +216,7 @@ export default function LeadCaptureForm({
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           exit={{ opacity: 0 }}
-          className="fixed inset-0 z-[70] flex items-center justify-center bg-black/20 backdrop-blur-md p-4 sm:p-6"
+          className="fixed inset-0 z-[70] flex items-center justify-center bg-black/20 backdrop-blur-md p-1.5 sm:p-6"
           onClick={(e) => {
             if (e.target === e.currentTarget) {
               onClose();
@@ -237,18 +228,18 @@ export default function LeadCaptureForm({
             animate={{ opacity: 1, y: 0, scale: 1 }}
             exit={{ opacity: 0, y: 18, scale: 0.97 }}
             transition={{ duration: 0.28, ease: "easeOut" }}
-            className="relative w-full max-w-4xl overflow-hidden rounded-[6px] bg-white shadow-[0_24px_80px_rgba(0,0,0,0.35)]"
+            className="relative w-full max-w-4xl max-h-[84dvh] overflow-hidden rounded-[6px] bg-white shadow-[0_24px_80px_rgba(0,0,0,0.35)] sm:max-h-[calc(100vh-2.5rem)]"
             onClick={(e) => e.stopPropagation()}
           >
             <button
               onClick={onClose}
-              className="absolute right-4 top-4 z-20 cursor-pointer rounded-full bg-white/90 p-2 text-slate-700 transition hover:bg-white"
+              className="absolute right-2 top-2 sm:right-4 sm:top-4 z-20 cursor-pointer rounded-full bg-white/90 p-1.5 sm:p-2 text-slate-700 transition hover:bg-white"
               aria-label="Close lead capture form"
             >
               <X className="h-5 w-5" />
             </button>
 
-            <div className="grid max-h-[calc(100vh-2.5rem)] grid-cols-1 overflow-y-auto lg:grid-cols-[0.85fr_1.15fr]">
+            <div className="grid max-h-[84dvh] min-h-0 grid-cols-1 overflow-hidden sm:max-h-[calc(100vh-2.5rem)] lg:grid-cols-[0.85fr_1.15fr]">
               <div className="relative hidden min-h-[180px] lg:block lg:min-h-[520px]">
                 <Link
                   href="https://paradiseyatra.com/package/royal-egypt-nile-heritage-journey"
@@ -278,9 +269,12 @@ export default function LeadCaptureForm({
                 </Link>
               </div>
 
-              <div className="bg-white p-5 sm:p-8">
+              <div
+                className="min-h-0 max-h-[84dvh] overflow-y-auto overscroll-contain bg-white p-3 sm:max-h-none sm:p-8"
+                style={{ WebkitOverflowScrolling: "touch" }}
+              >
                 {submitStatus === "success" ? (
-                  <div className="flex h-full min-h-[360px] flex-col items-center justify-center text-center">
+                  <div className="flex h-full min-h-[280px] sm:min-h-[360px] flex-col items-center justify-center text-center">
                     <CheckCircle className="mb-4 h-14 w-14 text-green-500" />
                     <h4 className="mb-2 text-2xl font-bold text-[#000945]">You are all set.</h4>
                     <p className="max-w-sm text-sm text-slate-600">
@@ -289,7 +283,7 @@ export default function LeadCaptureForm({
                     </p>
                   </div>
                 ) : submitStatus === "error" ? (
-                  <div className="flex h-full min-h-[360px] flex-col items-center justify-center text-center">
+                  <div className="flex h-full min-h-[280px] sm:min-h-[360px] flex-col items-center justify-center text-center">
                     <AlertCircle className="mb-4 h-14 w-14 text-red-500" />
                     <h4 className="mb-2 text-2xl font-bold text-[#000945]">Submission Failed</h4>
                     <p className="max-w-sm text-sm text-slate-600">
@@ -305,8 +299,8 @@ export default function LeadCaptureForm({
                 ) : (
                   <>
                     <h2
-                      className="leading-tight"
-                      style={{ fontSize: "30px", fontWeight: 700, color: "#000945" }}
+                      className="leading-tight text-[24px] sm:text-[30px]"
+                      style={{ fontWeight: 700, color: "#000945" }}
                     >
                       Plan My Trip
                     </h2>
@@ -323,8 +317,8 @@ export default function LeadCaptureForm({
                       </div>
                     )}
 
-                    <form onSubmit={handleSubmit} className="mt-3 space-y-1.5">
-                      <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+                    <form onSubmit={handleSubmit} className="mt-1.5 sm:mt-3 space-y-0.5 sm:space-y-1.5">
+                      <div className="grid grid-cols-1 gap-2 sm:gap-3 sm:grid-cols-2">
                         <div className="relative">
                           <label className="mb-1 block text-xs font-semibold text-[#000945]">
                             Full name
@@ -380,7 +374,7 @@ export default function LeadCaptureForm({
                         <FieldError message={errors.email} />
                       </div>
 
-                      <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+                      <div className="grid grid-cols-1 gap-2 sm:gap-3 sm:grid-cols-2">
                         <div className="relative">
                           <label className="mb-1 block text-xs font-semibold text-[#000945]">
                             Destination
@@ -407,7 +401,7 @@ export default function LeadCaptureForm({
                             <PopoverTrigger asChild>
                               <button
                                 type="button"
-                                className="w-full rounded-[6px] border !border-[#dfe1df] bg-white px-3 py-3 text-left text-sm text-[#000945] outline-none transition focus:!border-[#dfe1df] active:!border-[#dfe1df] hover:!border-[#dfe1df] focus:ring-0 flex items-center gap-2 cursor-pointer"
+                                className="w-full rounded-[6px] border !border-[#dfe1df] bg-white px-3 py-2.5 sm:py-3 text-left text-[13px] sm:text-sm text-[#000945] outline-none transition focus:!border-[#dfe1df] active:!border-[#dfe1df] hover:!border-[#dfe1df] focus:ring-0 flex items-center gap-2 cursor-pointer"
                                 style={{ borderColor: "#dfe1df", borderWidth: "1px" }}
                               >
                                 <Calendar className="h-4 w-4 text-[#000945]" />
@@ -473,7 +467,7 @@ export default function LeadCaptureForm({
                       <button
                         type="submit"
                         disabled={isSubmitting}
-                        className="mt-2 inline-flex w-full cursor-pointer items-center justify-center gap-2 rounded-[6px] bg-[#155dfc] px-5 py-3 text-sm font-bold text-white transition hover:bg-[#0f4bce] disabled:cursor-not-allowed disabled:opacity-70"
+                        className="mt-2 inline-flex w-full cursor-pointer items-center justify-center gap-2 rounded-[6px] bg-[#155dfc] px-5 py-2.5 sm:py-3 text-sm font-bold text-white transition hover:bg-[#0f4bce] disabled:cursor-not-allowed disabled:opacity-70"
                       >
                         {isSubmitting ? (
                           <>

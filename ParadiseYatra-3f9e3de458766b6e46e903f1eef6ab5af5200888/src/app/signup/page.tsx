@@ -121,7 +121,7 @@ export default function SignupPage() {
           {!showOtpStep ? (
             <>
               <div className="mb-4 text-center lg:text-left">
-                <h2 className="text-2xl font-extrabold mb-1.5 font-sans whitespace-nowrap" style={{ fontWeight: 800 }}>Create an account</h2>
+                <h2 className="text-2xl font-extrabold mb-1.5 font-sans whitespace-nowrap text-[#000945]" style={{ fontWeight: 800 }}>Create an account</h2>
                 <p className="text-xs text-slate-400">
                   Already have an account?{" "}
                   <Link href="/login" className="font-semibold text-blue-600 hover:underline transition-all cursor-pointer">Log in</Link>
@@ -137,7 +137,7 @@ export default function SignupPage() {
               <form onSubmit={handleSendOtp} className="space-y-2.5" noValidate>
                 <div className="grid grid-cols-2 gap-3">
                   <div>
-                    <label className="block text-xs font-semibold text-slate-900 mb-1">
+                    <label className="block text-xs font-semibold text-[#000945] mb-1">
                       First Name <span className="text-red-500">*</span>
                     </label>
                     <div className="relative">
@@ -155,7 +155,7 @@ export default function SignupPage() {
                     </div>
                   </div>
                   <div>
-                    <label className="block text-xs font-semibold text-slate-900 mb-1">Last Name</label>
+                    <label className="block text-xs font-semibold text-[#000945] mb-1">Last Name</label>
                     <div className="relative">
                       <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
                         <User className="h-4 w-4 text-slate-400" />
@@ -171,7 +171,7 @@ export default function SignupPage() {
                 </div>
 
                 <div>
-                  <label className="block text-xs font-semibold text-slate-900 mb-1">
+                  <label className="block text-xs font-semibold text-[#000945] mb-1">
                     Email Address <span className="text-red-500">*</span>
                   </label>
                   <div className="relative">
@@ -191,7 +191,7 @@ export default function SignupPage() {
                 </div>
 
                 <div>
-                  <label className="block text-xs font-semibold text-slate-900 mb-1">Phone Number</label>
+                  <label className="block text-xs font-semibold text-[#000945] mb-1">Phone Number</label>
                   <div className="relative">
                     <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
                       <Phone className="h-4 w-4 text-slate-400" />
@@ -209,7 +209,7 @@ export default function SignupPage() {
                 </div>
 
                 <div>
-                  <label className="block text-xs font-semibold text-slate-900 mb-1">
+                  <label className="block text-xs font-semibold text-[#000945] mb-1">
                     Password <span className="text-red-500">*</span>
                   </label>
                   <div className="relative">
@@ -311,7 +311,7 @@ export default function SignupPage() {
               <div className="inline-flex items-center justify-center h-20 w-20 rounded-full bg-blue-50 text-blue-600 mb-6">
                 <Mail className="h-10 w-10 animate-pulse" />
               </div>
-              <h2 className="text-2xl font-bold mb-3 !font-unbounded">Check your email</h2>
+              <h2 className="text-2xl font-bold mb-3 !font-unbounded text-[#000945]">Check your email</h2>
               <p className="text-slate-400 mb-8">
                 We've sent a 6-digit verification code to <br />
                 <span className="text-slate-900 font-semibold">{formData.email}</span>

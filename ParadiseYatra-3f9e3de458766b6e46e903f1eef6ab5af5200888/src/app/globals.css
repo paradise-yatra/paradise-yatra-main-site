@@ -15,6 +15,18 @@
   font-weight: 700 !important;
 }
 
+.about-section-heading {
+  font-size: 24px !important;
+  font-weight: 700 !important;
+  line-height: 1.1 !important;
+}
+
+@media (min-width: 768px) {
+  .about-section-heading {
+    font-size: 36px !important;
+  }
+}
+
 /* Accordion animations */
 @keyframes accordion-down {
   from {

@@ -13,7 +13,7 @@ export const metadata: Metadata = {
 
 export default function PrivacyPolicyPage() {
   return (
-    <main className="min-h-screen bg-white font-plus-jakarta-sans pb-20 policy-content">
+    <main className="min-h-screen bg-white font-plus-jakarta-sans pb-6 policy-content">
       <LazyHeader />
 
       {/* Hero Section */}
@@ -58,14 +58,14 @@ export default function PrivacyPolicyPage() {
       </section>
 
       {/* Main Content Area */}
-      <div className="max-w-4xl mx-auto px-4 md:px-8 py-12">
+      <div className="max-w-4xl mx-auto px-4 md:px-8 pt-12 pb-4">
         <div className="relative items-start">
           <div className="w-full">
             <div className="space-y-8">
 
               <section id="scope" className="scroll-mt-28">
                 <div className="mb-6">
-                  <h2 style={{ fontWeight: 700, color: '#000945' }} className="text-[24px] md:text-[36px] tracking-tight">Scope</h2>
+                  <h2 style={{ fontWeight: 700, color: '#000945' }} className="!text-[24px] md:!text-[36px] tracking-tight">Scope</h2>
                 </div>
                 <div className="space-y-4 leading-relaxed text-[15px]">
                   <p style={{ color: '#000945', fontWeight: 500 }}>
@@ -76,7 +76,7 @@ export default function PrivacyPolicyPage() {
 
               <section id="definitions" className="scroll-mt-28">
                 <div className="mb-6">
-                  <h2 style={{ fontWeight: 700, color: '#000945' }} className="text-[24px] md:text-[36px] tracking-tight">Key Definitions</h2>
+                  <h2 style={{ fontWeight: 700, color: '#000945' }} className="!text-[24px] md:!text-[36px] tracking-tight">Key Definitions</h2>
                 </div>
                 <div className="space-y-4 leading-relaxed text-[15px]">
                   <p style={{ color: '#000945', fontWeight: 500 }}>
@@ -87,7 +87,7 @@ export default function PrivacyPolicyPage() {
 
               <section id="collection" className="scroll-mt-28">
                 <div className="mb-6">
-                  <h2 style={{ fontWeight: 700, color: '#000945' }} className="text-[24px] md:text-[36px] tracking-tight">Information We Collect</h2>
+                  <h2 style={{ fontWeight: 700, color: '#000945' }} className="!text-[24px] md:!text-[36px] tracking-tight">Information We Collect</h2>
                 </div>
                 <div className="space-y-4 leading-relaxed text-[15px]">
                   <ul className="list-disc pl-6 space-y-2" style={{ color: '#000945', fontWeight: 500 }}>
@@ -107,7 +107,7 @@ export default function PrivacyPolicyPage() {
 
               <section id="use" className="scroll-mt-28">
                 <div className="mb-6">
-                  <h2 style={{ fontWeight: 700, color: '#000945' }} className="text-[24px] md:text-[36px] tracking-tight">How we use your information</h2>
+                  <h2 style={{ fontWeight: 700, color: '#000945' }} className="!text-[24px] md:!text-[36px] tracking-tight">How we use your information</h2>
                 </div>
                 <div className="space-y-4 leading-relaxed text-[15px]">
                   <ul className="list-disc pl-6 space-y-2" style={{ color: '#000945', fontWeight: 500 }}>
@@ -126,7 +126,7 @@ export default function PrivacyPolicyPage() {
 
               <section id="cookies" className="scroll-mt-28">
                 <div className="mb-6">
-                  <h2 style={{ fontWeight: 700, color: '#000945' }} className="text-[24px] md:text-[36px] tracking-tight">Cookies and Tracking</h2>
+                  <h2 style={{ fontWeight: 700, color: '#000945' }} className="!text-[24px] md:!text-[36px] tracking-tight">Cookies and Tracking</h2>
                 </div>
                 <div className="space-y-4 leading-relaxed text-[15px]">
                   <p style={{ color: '#000945', fontWeight: 500 }}>
@@ -137,7 +137,7 @@ export default function PrivacyPolicyPage() {
 
               <section id="sharing" className="scroll-mt-28">
                 <div className="mb-6">
-                  <h2 style={{ fontWeight: 700, color: '#000945' }} className="text-[24px] md:text-[36px] tracking-tight">Sharing and Disclosure</h2>
+                  <h2 style={{ fontWeight: 700, color: '#000945' }} className="!text-[24px] md:!text-[36px] tracking-tight">Sharing and Disclosure</h2>
                 </div>
                 <div className="space-y-4 leading-relaxed text-[15px]">
                   <ul className="list-disc pl-6 space-y-2" style={{ color: '#000945', fontWeight: 500 }}>
@@ -153,7 +153,7 @@ export default function PrivacyPolicyPage() {
 
               <section id="transfer" className="scroll-mt-28">
                 <div className="mb-6">
-                  <h2 style={{ fontWeight: 700, color: '#000945' }} className="text-[24px] md:text-[36px] tracking-tight">International Transfers</h2>
+                  <h2 style={{ fontWeight: 700, color: '#000945' }} className="!text-[24px] md:!text-[36px] tracking-tight">International Transfers</h2>
                 </div>
                 <div className="space-y-4 leading-relaxed text-[15px]">
                   <p style={{ color: '#000945', fontWeight: 500 }}>
@@ -164,7 +164,7 @@ export default function PrivacyPolicyPage() {
 
               <section id="security" className="scroll-mt-28">
                 <div className="mb-6">
-                  <h2 style={{ fontWeight: 700, color: '#000945' }} className="text-[24px] md:text-[36px] tracking-tight">Security Practices</h2>
+                  <h2 style={{ fontWeight: 700, color: '#000945' }} className="!text-[24px] md:!text-[36px] tracking-tight">Security Practices</h2>
                 </div>
                 <div className="space-y-4 leading-relaxed text-[15px]">
                   <p style={{ color: '#000945', fontWeight: 500 }}>
@@ -175,7 +175,7 @@ export default function PrivacyPolicyPage() {
 
               <section id="retention" className="scroll-mt-28">
                 <div className="mb-6">
-                  <h2 style={{ fontWeight: 700, color: '#000945' }} className="text-[24px] md:text-[36px] tracking-tight">Data Retention</h2>
+                  <h2 style={{ fontWeight: 700, color: '#000945' }} className="!text-[24px] md:!text-[36px] tracking-tight">Data Retention</h2>
                 </div>
                 <div className="space-y-4 leading-relaxed text-[15px]">
                   <p style={{ color: '#000945', fontWeight: 500 }}>
@@ -186,7 +186,7 @@ export default function PrivacyPolicyPage() {
 
               <section id="rights" className="scroll-mt-28">
                 <div className="mb-6">
-                  <h2 style={{ fontWeight: 700, color: '#000945' }} className="text-[24px] md:text-[36px] tracking-tight">Your Rights & Choices</h2>
+                  <h2 style={{ fontWeight: 700, color: '#000945' }} className="!text-[24px] md:!text-[36px] tracking-tight">Your Rights & Choices</h2>
                 </div>
                 <div className="space-y-4 leading-relaxed text-[15px]">
                   <p style={{ color: '#000945', fontWeight: 500 }}>
@@ -197,7 +197,7 @@ export default function PrivacyPolicyPage() {
 
               <section id="children" className="scroll-mt-28">
                 <div className="mb-6">
-                  <h2 style={{ fontWeight: 700, color: '#000945' }} className="text-[24px] md:text-[36px] tracking-tight">Children&apos;s Privacy</h2>
+                  <h2 style={{ fontWeight: 700, color: '#000945' }} className="!text-[24px] md:!text-[36px] tracking-tight">Children&apos;s Privacy</h2>
                 </div>
                 <div className="space-y-4 leading-relaxed text-[15px]">
                   <p style={{ color: '#000945', fontWeight: 500 }}>
@@ -208,7 +208,7 @@ export default function PrivacyPolicyPage() {
 
               <section id="grievance" className="scroll-mt-28">
                 <div className="mb-6">
-                  <h2 style={{ fontWeight: 700, color: '#000945' }} className="text-[24px] md:text-[36px] tracking-tight">Grievance Redressal</h2>
+                  <h2 style={{ fontWeight: 700, color: '#000945' }} className="!text-[24px] md:!text-[36px] tracking-tight">Grievance Redressal</h2>
                 </div>
                 <div className="space-y-4 leading-relaxed text-[15px]">
                   <p style={{ color: '#000945', fontWeight: 500 }}>
@@ -226,7 +226,7 @@ export default function PrivacyPolicyPage() {
 
               <section id="changes" className="scroll-mt-28">
                 <div className="mb-6">
-                  <h2 style={{ fontWeight: 700, color: '#000945' }} className="text-[24px] md:text-[36px] tracking-tight">Changes to this Policy</h2>
+                  <h2 style={{ fontWeight: 700, color: '#000945' }} className="!text-[24px] md:!text-[36px] tracking-tight">Changes to this Policy</h2>
                 </div>
                 <div className="space-y-4 leading-relaxed text-[15px]">
                   <p style={{ color: '#000945', fontWeight: 500 }}>
@@ -235,9 +235,9 @@ export default function PrivacyPolicyPage() {
                 </div>
               </section>
 
-              <section id="contact" className="scroll-mt-28 pb-10">
+              <section id="contact" className="scroll-mt-28">
                 <div className="mb-6">
-                  <h2 style={{ fontWeight: 700, color: '#000945' }} className="text-[24px] md:text-[36px] tracking-tight">Contact Us</h2>
+                  <h2 style={{ fontWeight: 700, color: '#000945' }} className="!text-[24px] md:!text-[36px] tracking-tight">Contact Us</h2>
                 </div>
                 <div className="space-y-4 leading-relaxed text-[15px]">
                   <p style={{ color: '#000945', fontWeight: 500 }}>
@@ -255,5 +255,8 @@ export default function PrivacyPolicyPage() {
     </main>
   );
 }
+
+
+
 
 

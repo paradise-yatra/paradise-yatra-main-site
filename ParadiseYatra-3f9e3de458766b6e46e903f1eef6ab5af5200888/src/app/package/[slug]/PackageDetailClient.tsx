@@ -52,6 +52,20 @@ interface Package {
   reviews: unknown[];
   isActive: boolean;
   isFeatured: boolean;
+  holidayType?: string | {
+    _id?: string;
+    title?: string;
+    slug?: string;
+  };
+  tags?: Array<string | {
+    _id?: string;
+    name?: string;
+    slug?: string;
+  }>;
+  tourType?: "international" | "india";
+  country?: string;
+  state?: string;
+  location?: string;
 }
 
 interface ItineraryPageClientProps {
@@ -67,6 +81,50 @@ const stripHtmlTags = (value: string = "") =>
     .trim();
 
 const containsHtml = (value: string = ""): boolean => /<\/?[a-z][\s\S]*>/i.test(value);
+
+interface BreadcrumbSource {
+  label: string;
+  href: string;
+}
+
+const toSlug = (value: string = "") =>
+  value
+    .trim()
+    .toLowerCase()
+    .replace(/[^a-z0-9\s-]/g, "")
+    .replace(/\s+/g, "-")
+    .replace(/-+/g, "-");
+
+const getDestinationBreadcrumb = (pkg: Package): BreadcrumbSource => {
+  const locationValue = pkg.destination || pkg.location || pkg.state || pkg.country || "";
+  const primaryLocation = locationValue.split(",")[0].trim();
+
+  if (!primaryLocation) {
+    return {
+      label: "Packages",
+      href: "/package",
+    };
+  }
+
+  const areaSlug = toSlug(primaryLocation);
+  const areaType = pkg.tourType === "international" ? "international" : "india";
+
+  return {
+    label: primaryLocation,
+    href: `/package/${areaType}/${areaSlug}`,
+  };
+};
+
+const getFallbackBreadcrumb = (pkg: Package): BreadcrumbSource => {
+  if (pkg.category) {
+    return {
+      label: pkg.category,
+      href: "/package",
+    };
+  }
+
+  return getDestinationBreadcrumb(pkg);
+};
 
 const ItineraryPageClient = ({ packageData, slug }: ItineraryPageClientProps) => {
   const [selectedImage, setSelectedImage] = useState(0);
@@ -86,6 +144,7 @@ const ItineraryPageClient = ({ packageData, slug }: ItineraryPageClientProps) =>
   const [isSubmittingEnquiry, setIsSubmittingEnquiry] = useState(false);
   const [isHighlightsExpanded, setIsHighlightsExpanded] = useState(false);
   const [actionMessage, setActionMessage] = useState<{ type: "success" | "error"; text: string } | null>(null);
+  const [breadcrumbSource, setBreadcrumbSource] = useState<BreadcrumbSource>(() => getFallbackBreadcrumb(packageData));
   const router = useRouter();
   const { user, toggleWishlist, isInWishlist } = useAuth();
   const isPackageSaved = isInWishlist(packageData._id);
@@ -200,6 +259,87 @@ const ItineraryPageClient = ({ packageData, slug }: ItineraryPageClientProps) =>
   }, []);
 
   useEffect(() => {
+    let isMounted = true;
+
+    const resolveBreadcrumbSource = async () => {
+      const fallback = getFallbackBreadcrumb(packageData);
+
+      const firstTag = Array.isArray(packageData.tags) ? packageData.tags[0] : null;
+      if (firstTag) {
+        if (typeof firstTag === "object" && firstTag.name && firstTag.slug) {
+          if (isMounted) {
+            setBreadcrumbSource({
+              label: firstTag.name,
+              href: `/package/theme/${firstTag.slug}`,
+            });
+          }
+          return;
+        }
+
+        if (typeof firstTag === "string") {
+          try {
+            const response = await fetch(`/api/tags/${firstTag}`, { cache: "no-store" });
+            if (response.ok) {
+              const data = await response.json();
+              const tag = data?.data;
+              if (tag?.name && tag?.slug && isMounted) {
+                setBreadcrumbSource({
+                  label: tag.name,
+                  href: `/package/theme/${tag.slug}`,
+                });
+                return;
+              }
+            }
+          } catch (error) {
+            console.error("Error fetching tag for breadcrumb:", error);
+          }
+        }
+      }
+
+      const holidayType = packageData.holidayType;
+      if (holidayType) {
+        if (typeof holidayType === "object" && holidayType.title && holidayType.slug) {
+          if (isMounted) {
+            setBreadcrumbSource({
+              label: holidayType.title,
+              href: `/holiday-types/${holidayType.slug}`,
+            });
+          }
+          return;
+        }
+
+        if (typeof holidayType === "string") {
+          try {
+            const response = await fetch(`/api/holiday-types/${holidayType}`, { cache: "no-store" });
+            if (response.ok) {
+              const data = await response.json();
+              if (data?.title && data?.slug && isMounted) {
+                setBreadcrumbSource({
+                  label: data.title,
+                  href: `/holiday-types/${data.slug}`,
+                });
+                return;
+              }
+            }
+          } catch (error) {
+            console.error("Error fetching holiday type for breadcrumb:", error);
+          }
+        }
+      }
+
+      if (isMounted) {
+        setBreadcrumbSource(fallback);
+      }
+    };
+
+    resolveBreadcrumbSource();
+
+    return () => {
+      isMounted = false;
+    };
+  }, [packageData]);
+
+  useEffect(() => {
     const fetchOtherPackages = async () => {
       try {
         setPackagesLoading(true);
@@ -279,23 +419,23 @@ const ItineraryPageClient = ({ packageData, slug }: ItineraryPageClientProps) =>
     >
       <Header />
 
-      <main className="mx-auto w-full max-w-6xl flex-1 px-4 md:px-6 pt-6 lg:pt-10 pb-28 lg:pb-10">
+      <main className="mx-auto w-full max-w-6xl flex-1 px-4 md:px-6 pt-4 md:pt-6 lg:pt-10 pb-28 lg:pb-10">
         {/* Breadcrumbs */}
         <div className="mb-4 flex flex-wrap items-center gap-1.5 text-[12px] text-[#000945]">
           <Link href="/" className="hover:underline transition-all">Home</Link>
           <ChevronDown className="h-3 w-3 -rotate-90" />
           <Link
-            href={packageData.destination ? `/package/${packageData.category?.toLowerCase() === 'international' ? 'international' : 'india'}/${packageData.destination.split(',')[0].trim().toLowerCase().replace(/\s+/g, '-')}` : "/packages"}
+            href={breadcrumbSource.href}
             className="hover:underline transition-all"
           >
-            {packageData.destination?.split(',')[0].trim()}
+            {breadcrumbSource.label}
           </Link>
           <ChevronDown className="h-3 w-3 -rotate-90" />
           <span className="truncate max-w-[200px] md:max-w-none">{packageData.title}</span>
         </div>
 
         {/* Header Section */}
-        <div className="mb-8">
+        <div className="mb-4 md:mb-8">
           <div className="flex flex-col gap-4">
             <h1 style={{ fontWeight: 800 }} className="text-3xl tracking-tight text-[#000945] md:text-4xl lg:!text-[44px] leading-tight">
               {packageData.title}
@@ -304,7 +444,7 @@ const ItineraryPageClient = ({ packageData, slug }: ItineraryPageClientProps) =>
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
               <p className="text-base font-medium flex flex-wrap items-center gap-1.5">
                 <span className="text-[#000945]">{packageData.duration}</span>
-                <span className="text-slate-400 font-normal">|</span>
+                <span className="text-[#000945] font-normal">|</span>
                 <span className="flex items-center gap-1 text-[#000945]">
                   <MapPin className="h-[18px] w-[18px] text-[#000945]" />
                   {packageData.destination?.split(',')[0].trim()}
@@ -345,7 +485,7 @@ const ItineraryPageClient = ({ packageData, slug }: ItineraryPageClientProps) =>
         </div>
 
         {/* Grid Layout */}
-        <div className="grid grid-cols-1 gap-8 lg:grid-cols-12">
+        <div className="grid grid-cols-1 gap-4 md:gap-8 lg:grid-cols-12">
           {/* Left Column (Content) */}
           <div className="flex flex-col gap-10 lg:col-span-8">
             {/* Hero Image Gallery */}

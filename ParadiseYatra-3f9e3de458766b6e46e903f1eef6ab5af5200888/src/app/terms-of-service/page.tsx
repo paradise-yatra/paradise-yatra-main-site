@@ -114,7 +114,7 @@ export default function TermsOfServicePage() {
             aria-labelledby="acceptance-heading"
             className="space-y-3"
           >
-            <h2 id="acceptance-heading" className="text-2xl font-bold">
+            <h2 id="acceptance-heading" className="text-[24px] md:text-[36px] font-bold">
               Acceptance of Terms
             </h2>
             <p>
@@ -129,7 +129,7 @@ export default function TermsOfServicePage() {
             aria-labelledby="services-heading"
             className="space-y-3"
           >
-            <h2 id="services-heading" className="text-2xl font-bold">
+            <h2 id="services-heading" className="text-[24px] md:text-[36px] font-bold">
               Our Services
             </h2>
             <p>
@@ -151,7 +151,7 @@ export default function TermsOfServicePage() {
             aria-labelledby="booking-heading"
             className="space-y-3"
           >
-            <h2 id="booking-heading" className="text-2xl font-bold">
+            <h2 id="booking-heading" className="text-[24px] md:text-[36px] font-bold">
               Booking and Payment
             </h2>
             <ul className="list-disc pl-6 space-y-2">
@@ -183,7 +183,7 @@ export default function TermsOfServicePage() {
             aria-labelledby="cancellation-heading"
             className="space-y-3"
           >
-            <h2 id="cancellation-heading" className="text-2xl font-bold">
+            <h2 id="cancellation-heading" className="text-[24px] md:text-[36px] font-bold">
               Cancellation and Refunds
             </h2>
             <ul className="list-disc pl-6 space-y-2">
@@ -214,7 +214,7 @@ export default function TermsOfServicePage() {
             aria-labelledby="responsibilities-heading"
             className="space-y-3"
           >
-            <h2 id="responsibilities-heading" className="text-2xl font-bold">
+            <h2 id="responsibilities-heading" className="text-[24px] md:text-[36px] font-bold">
               User Responsibilities
             </h2>
             <ul className="list-disc pl-6 space-y-2">
@@ -236,7 +236,7 @@ export default function TermsOfServicePage() {
             aria-labelledby="liability-heading"
             className="space-y-3"
           >
-            <h2 id="liability-heading" className="text-2xl font-bold">
+            <h2 id="liability-heading" className="text-[24px] md:text-[36px] font-bold">
               Limitation of Liability
             </h2>
             <p>
@@ -258,7 +258,7 @@ export default function TermsOfServicePage() {
             aria-labelledby="intellectual-heading"
             className="space-y-3"
           >
-            <h2 id="intellectual-heading" className="text-2xl font-bold">
+            <h2 id="intellectual-heading" className="text-[24px] md:text-[36px] font-bold">
               Intellectual Property
             </h2>
             <p>
@@ -273,7 +273,7 @@ export default function TermsOfServicePage() {
             aria-labelledby="prohibited-heading"
             className="space-y-3"
           >
-            <h2 id="prohibited-heading" className="text-2xl font-bold">
+            <h2 id="prohibited-heading" className="text-[24px] md:text-[36px] font-bold">
               Prohibited Activities
             </h2>
             <p>Users are prohibited from:</p>
@@ -291,7 +291,7 @@ export default function TermsOfServicePage() {
             aria-labelledby="termination-heading"
             className="space-y-3"
           >
-            <h2 id="termination-heading" className="text-2xl font-bold">
+            <h2 id="termination-heading" className="text-[24px] md:text-[36px] font-bold">
               Termination
             </h2>
             <p>
@@ -307,7 +307,7 @@ export default function TermsOfServicePage() {
             aria-labelledby="governing-heading"
             className="space-y-3"
           >
-            <h2 id="governing-heading" className="text-2xl font-bold">
+            <h2 id="governing-heading" className="text-[24px] md:text-[36px] font-bold">
               Governing Law
             </h2>
             <p>
@@ -323,7 +323,7 @@ export default function TermsOfServicePage() {
             aria-labelledby="changes-heading"
             className="space-y-3"
           >
-            <h2 id="changes-heading" className="text-2xl font-bold">
+            <h2 id="changes-heading" className="text-[24px] md:text-[36px] font-bold">
               Changes to Terms
             </h2>
             <p>
@@ -338,7 +338,7 @@ export default function TermsOfServicePage() {
             aria-labelledby="contact-heading"
             className="space-y-3 pb-10"
           >
-            <h2 id="contact-heading" className="text-2xl font-bold">
+            <h2 id="contact-heading" className="text-[24px] md:text-[36px] font-bold">
               Contact Information
             </h2>
             <p>
@@ -374,3 +374,4 @@ export default function TermsOfServicePage() {
     </main>
   );
 }
+

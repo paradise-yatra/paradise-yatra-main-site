@@ -28,7 +28,7 @@ export default function TermsContent() {
     };
 
     return (
-        <div className="min-h-screen bg-white font-plus-jakarta-sans pb-20 policy-content">
+        <div className="min-h-screen bg-white font-plus-jakarta-sans pb-6 policy-content">
             {/* Hero Section */}
             <section className="relative flex flex-col md:flex-row w-full md:h-[496px] md:overflow-hidden items-center justify-center bg-white md:bg-transparent">
                 <div className="md:hidden w-full px-4 pt-6 pb-2 bg-white text-left z-10 flex-shrink-0">
@@ -69,7 +69,7 @@ export default function TermsContent() {
             </section>
 
             {/* Main Content Area */}
-            <div className="max-w-4xl mx-auto px-4 md:px-8 py-12">
+            <div className="max-w-4xl mx-auto px-4 md:px-8 pt-12 pb-4">
                 <div className="relative items-start">
 
                     {/* Content Sections */}
@@ -83,7 +83,7 @@ export default function TermsContent() {
                             {/* Section 1: Introduction */}
                             <motion.section variants={itemVariants} id="introduction" className="scroll-mt-28">
                                 <div className="mb-6">
-                                    <h2 style={{ fontWeight: 700, color: '#000945' }} className="text-[24px] md:text-[36px] tracking-tight">Introduction</h2>
+                                    <h2 style={{ fontWeight: 700, color: '#000945' }} className="!text-[24px] md:!text-[36px] tracking-tight">Introduction</h2>
                                 </div>
                                 <div className="space-y-4 leading-relaxed text-[15px]">
                                     <p style={{ color: '#000945', fontWeight: 500 }}>
@@ -102,7 +102,7 @@ export default function TermsContent() {
                             {/* Section 2: Registration */}
                             <motion.section variants={itemVariants} id="registration" className="scroll-mt-28">
                                 <div className="mb-6">
-                                    <h2 style={{ fontWeight: 700, color: '#000945' }} className="text-[24px] md:text-[36px] tracking-tight">Registration & Account Use</h2>
+                                    <h2 style={{ fontWeight: 700, color: '#000945' }} className="!text-[24px] md:!text-[36px] tracking-tight">Registration & Account Use</h2>
                                 </div>
                                 <div className="space-y-4 leading-relaxed text-[15px]">
                                     <p style={{ color: '#000945', fontWeight: 500 }}>
@@ -117,7 +117,7 @@ export default function TermsContent() {
                             {/* Section 3: Warranties */}
                             <motion.section variants={itemVariants} id="warranties" className="scroll-mt-28">
                                 <div className="mb-6">
-                                    <h2 style={{ fontWeight: 700, color: '#000945' }} className="text-[24px] md:text-[36px] tracking-tight">Warranties & Accuracy</h2>
+                                    <h2 style={{ fontWeight: 700, color: '#000945' }} className="!text-[24px] md:!text-[36px] tracking-tight">Warranties & Accuracy</h2>
                                 </div>
                                 <div className="space-y-6 leading-relaxed text-[15px]">
                                     <p style={{ color: '#000945', fontWeight: 500 }}>
@@ -129,7 +129,7 @@ export default function TermsContent() {
 
                                     <div className="flex flex-col gap-6 mt-6">
                                         <div>
-                                            <h2 style={{ color: '#000945', fontWeight: 700 }} className="mb-2 flex items-center gap-2">
+                                            <h2 style={{ color: '#000945', fontWeight: 700 }} className="mb-2 flex items-center gap-2 !text-[24px] md:!text-[36px]">
                                                 Intellectual Property
                                             </h2>
                                             <p className="text-[15px]" style={{ color: '#000945', fontWeight: 500 }}>
@@ -137,7 +137,7 @@ export default function TermsContent() {
                                             </p>
                                         </div>
                                         <div>
-                                            <h2 style={{ color: '#000945', fontWeight: 700 }} className="mb-2 flex items-center gap-2">
+                                            <h2 style={{ color: '#000945', fontWeight: 700 }} className="mb-2 flex items-center gap-2 !text-[24px] md:!text-[36px]">
                                                 Unauthorized Use
                                             </h2>
                                             <p className="text-[15px]" style={{ color: '#000945', fontWeight: 500 }}>
@@ -153,29 +153,29 @@ export default function TermsContent() {
                             {/* Section 4: Legal */}
                             <motion.section variants={itemVariants} id="legal" className="scroll-mt-28">
                                 <div className="mb-6">
-                                    <h2 style={{ fontWeight: 700, color: '#000945' }} className="text-[24px] md:text-[36px] tracking-tight">Legal & Jurisdiction</h2>
+                                    <h2 style={{ fontWeight: 700, color: '#000945' }} className="!text-[24px] md:!text-[36px] tracking-tight">Legal & Jurisdiction</h2>
                                 </div>
                                 <div className="space-y-6">
                                     <div>
-                                        <h3 style={{ fontWeight: 600, color: '#000945' }} className="mb-2">Force Majeure</h3>
+                                        <h3 style={{ fontWeight: 600, color: '#000945' }} className="mb-2 !text-[20px]">Force Majeure</h3>
                                         <p className="text-[15px] leading-relaxed" style={{ color: '#000945', fontWeight: 500 }}>
                                             Notwithstanding anything contained in these Terms, the parties shall not be liable for any failure to perform an obligation if execution is prevented or delayed by a force majeure event.
                                         </p>
                                     </div>
                                     <div>
-                                        <h3 style={{ fontWeight: 600, color: '#000945' }} className="mb-2">Governing Law</h3>
+                                        <h3 style={{ fontWeight: 600, color: '#000945' }} className="mb-2 !text-[20px]">Governing Law</h3>
                                         <p className="text-[15px] leading-relaxed" style={{ color: '#000945', fontWeight: 500 }}>
                                             These Terms and any dispute or claim relating to it, or its enforceability, shall be governed by and construed strictly in accordance with the laws of India.
                                         </p>
                                     </div>
                                     <div>
-                                        <h3 style={{ fontWeight: 600, color: '#000945' }} className="mb-2">Jurisdiction</h3>
+                                        <h3 style={{ fontWeight: 600, color: '#000945' }} className="mb-2 !text-[20px]">Jurisdiction</h3>
                                         <p className="text-[15px] leading-relaxed" style={{ color: '#000945', fontWeight: 500 }}>
                                             All disputes arising out of or in connection with these Terms shall be subject to the exclusive jurisdiction of the competent courts located in DEHRADUN, UTTARAKHAND.
                                         </p>
                                     </div>
                                     <div>
-                                        <h2 style={{ fontWeight: 700, color: '#000945' }} className="mb-2 text-[24px] md:text-[36px] tracking-tight">Contact Us</h2>
+                                        <h2 style={{ fontWeight: 700, color: '#000945' }} className="mb-2 !text-[24px] md:!text-[36px] tracking-tight">Contact Us</h2>
                                         <p className="text-[15px] leading-relaxed" style={{ color: '#000945', fontWeight: 500 }}>
                                             All concerns or communications relating to these Terms must be communicated to our primary office using the contact information provided on this website.
                                         </p>
@@ -189,3 +189,5 @@ export default function TermsContent() {
         </div>
     );
 }
+
+

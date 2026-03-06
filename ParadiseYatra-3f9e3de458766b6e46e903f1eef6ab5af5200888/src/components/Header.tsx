@@ -660,7 +660,7 @@ const Header = () => {
                   )}
 
                   <button
-                    className={`p-2 rounded-full cursor-pointer transition-colors ${isTransparent ? "text-white hover:bg-white/10" : "text-gray-700 hover:bg-gray-100"
+                    className={`p-2 rounded-[6px] cursor-pointer transition-colors ${isTransparent ? "text-white hover:bg-white/10" : "text-gray-700 hover:bg-gray-100"
                       }`}
                     onClick={() => setIsSidebarOpen(true)}
                     aria-label="Menu"
@@ -699,7 +699,7 @@ const Header = () => {
                   )}
 
                   <button
-                    className={`flex h-10 w-10 items-center justify-center rounded-xl border transition-all duration-300 cursor-pointer ${isTransparent
+                    className={`flex h-10 w-10 items-center justify-center rounded-[6px] border transition-all duration-300 cursor-pointer ${isTransparent
                       ? "border-white/40 bg-white/10 text-white active:bg-white/20"
                       : "border-gray-200 bg-gray-50 text-gray-700 active:bg-gray-100"
                       }`}

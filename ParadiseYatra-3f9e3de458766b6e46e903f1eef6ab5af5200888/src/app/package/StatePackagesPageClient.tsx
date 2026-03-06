@@ -18,7 +18,6 @@ import SearchFilterSidebar from '@/components/ui/SearchFilterSidebar';
 import SearchHeader from '@/components/ui/SearchHeader';
 import { useAuth } from '@/context/AuthContext';
 import LoginAlertModal from '@/components/LoginAlertModal';
-import Footer from '@/components/Footer';
 import CarouselArrows from '@/components/ui/CarouselArrows';
 import WhyParadiseDifference from '@/components/WhyParadiseDifference';
 import FAQSection from '@/components/FAQSection';
@@ -721,8 +720,6 @@ export default function DedicatedPackagesPageClient({ tourType, state, country }
                     </motion.section>
                 )}
             </main>
-
-            <Footer />
 
             {/* Mobile Filter Dialog */}
             <Dialog open={isFiltersOpen} onOpenChange={setIsFiltersOpen}>

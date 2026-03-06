@@ -100,6 +100,7 @@ const companyLinks: FooterNavLink[] = [
 const policyLinks: FooterNavLink[] = [
   { name: "Terms & Conditions", href: "/terms-and-conditions" },
   { name: "Privacy", href: "/privacy-policy" },
+  { name: "Cookie Policy", href: "/cookie-policy" },
   { name: "Refund Policy", href: "/refund-policy" }
 ];
 

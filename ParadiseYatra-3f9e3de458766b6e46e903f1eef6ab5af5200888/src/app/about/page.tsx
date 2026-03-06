@@ -1,31 +1,105 @@
 "use client";
 
-import { memo, useMemo } from "react";
+import { memo, useEffect, useMemo, useRef, useState } from "react";
 import { motion, useReducedMotion, type Transition } from "framer-motion";
-import { LazyHeader, LazyFooter } from "@/components/lazy-components";
-import {
-  Award,
-  Users,
-  Globe,
-  Heart,
-  Shield,
-  Star,
-  MapPin,
-  Phone,
-  Mail,
-  Calendar,
-  CheckCircle,
-  ArrowRight,
-  ChevronRight,
-} from "lucide-react";
+import { LazyHeader } from "@/components/lazy-components";
+import { ChevronRight, Phone, Mail } from "lucide-react";
 import Image from "next/image";
-import Link from "next/link";
 import PerformanceMonitor from "@/components/ui/PerformanceMonitor";
+
+const missionStates = [
+  {
+    label: "Personalized Itineraries",
+    subtitle: "Every trip is designed around your pace, interests, and budget.",
+    intro:
+      "At Paradise Yatra, we do not believe in one-size-fits-all travel. We begin by understanding your travel style, priorities, and budget before designing the journey.",
+    detail:
+      "From honeymoons and family holidays to group adventures and spiritual tours, each itinerary is crafted to feel truly personal.",
+    points: [
+      { title: "Built Around You", text: "We design routes around your interests, not generic templates." },
+      { title: "Flexible Plans", text: "Duration, pace, and activities are tailored to your comfort." },
+      { title: "Curated Stays", text: "Handpicked hotels and transport for smoother travel." },
+      { title: "Meaningful Days", text: "Each day is planned to create memorable experiences." },
+    ],
+  },
+  {
+    label: "Transparent Planning",
+    subtitle: "Clear packages, clear timelines, clear expectations.",
+    intro:
+      "Holiday planning should feel exciting, not overwhelming. We keep every step clear, structured, and easy to understand from day one.",
+    detail:
+      "Before you book, you know exactly what is included, what is optional, and how your trip days are organized.",
+    points: [
+      {
+        title: "No Hidden Surprises",
+        text: "Clear inclusions and exclusions shared upfront.",
+      },
+      {
+        title: "Day-wise Visibility",
+        text: "Practical itineraries so you can visualize the journey before travel.",
+      },
+      {
+        title: "Budget Clarity",
+        text: "Recommendations that balance quality experiences with your budget goals.",
+      },
+      {
+        title: "Confident Decisions",
+        text: "Straight answers and clear communication at every stage.",
+      },
+    ],
+  },
+  {
+    label: "Reliable Support",
+    subtitle: "Strong assistance before, during, and after your trip.",
+    intro:
+      "Great journeys depend on dependable support. Our team stays connected from your first inquiry to your safe return home.",
+    detail:
+      "From booking support to on-ground coordination, we are available when it matters most.",
+    points: [
+      { title: "Responsive Team", text: "Quick help through calls, chat, and updates." },
+      { title: "Local Coordination", text: "Trusted ground teams for smooth day-to-day execution." },
+      { title: "Reliable Vendors", text: "Verified hotels, vehicles, and activity partners." },
+      { title: "Travel Peace", text: "Confidence that support is always within reach." },
+    ],
+  },
+  {
+    label: "Authentic Experiences",
+    subtitle: "Travel deeper with culture, food, and local stories.",
+    intro:
+      "We believe travel is more than ticking places off a list. It is about local life, regional culture, and moments that feel real.",
+    detail:
+      "Our itineraries blend popular highlights with authentic experiences that connect you to the destination.",
+    points: [
+      { title: "Local Culture", text: "Experiences rooted in local heritage and traditions." },
+      { title: "Regional Flavors", text: "Food recommendations that showcase authentic local cuisine." },
+      { title: "Hidden Gems", text: "Less crowded spots beyond the standard tourist route." },
+      { title: "Responsible Choices", text: "Travel that respects places, people, and communities." },
+    ],
+  },
+  {
+    label: "Built on Trust",
+    subtitle: "Long-term traveler relationships are at the heart of our brand.",
+    intro:
+      "Trust is earned through consistency. At Paradise Yatra, we focus on honest guidance, dependable execution, and genuine care in every interaction.",
+    detail:
+      "Our strongest growth comes from repeat travelers and referrals who trust how we plan, support, and deliver.",
+    points: [
+      { title: "Honest Advice", text: "Recommendations made for traveler benefit, not upselling." },
+      { title: "Consistent Quality", text: "A dependable service standard across trips and destinations." },
+      { title: "Clear Communication", text: "Regular updates before, during, and after travel." },
+      { title: "Long-term Relationships", text: "We aim to be your trusted travel partner, trip after trip." },
+    ],
+  },
+];
 
 const AboutPage = memo(() => {
   const prefersReducedMotion = useReducedMotion();
+  const [activeMissionIndex, setActiveMissionIndex] = useState(1);
+  const activeMission = missionStates[activeMissionIndex];
+  const lifeSectionRef = useRef<HTMLElement | null>(null);
+  const [playLifeVideos, setPlayLifeVideos] = useState(false);
+  const [loadLifeVideos, setLoadLifeVideos] = useState(false);
 
-  // Optimize animations based on user preferences
   const pageVariants = useMemo(
     () => ({
       initial: { opacity: prefersReducedMotion ? 1 : 0 },
@@ -38,84 +112,36 @@ const AboutPage = memo(() => {
     [prefersReducedMotion]
   );
 
-  const stats = [
-    {
-      icon: Users,
-      value: "5000+",
-      label: "Happy Travelers",
-      color: "from-blue-500 to-blue-600",
-    },
-    {
-      icon: Globe,
-      value: "25+",
-      label: "Countries Covered",
-      color: "from-green-500 to-green-600",
-    },
-    {
-      icon: Calendar,
-      value: "5+",
-      label: "Years Experience",
-      color: "from-purple-500 to-purple-600",
-    },
-    {
-      icon: Star,
-      value: "4.9",
-      label: "Customer Rating",
-      color: "from-yellow-500 to-yellow-600",
-    },
-  ];
+  useEffect(() => {
+    const section = lifeSectionRef.current;
+    if (!section) return;
 
-  const values = [
-    {
-      icon: Heart,
-      title: "Passion for Travel",
-      description:
-        "Our love for exploration drives us to curate journeys that connect people with cultures and landscapes in the most authentic way.",
-      color: "from-red-500 to-pink-500",
-    },
-    {
-      icon: Shield,
-      title: "Trust & Reliability",
-      description:
-        "Your safety and satisfaction are our top priorities. Every journey is planned with care to make it secure, seamless, and memorable.",
-      color: "from-blue-500 to-indigo-500",
-    },
-    {
-      icon: Star,
-      title: "Excellence",
-      description:
-        "From itineraries to execution, we maintain the highest standards, ensuring every detail of your trip reflects premium quality.",
-      color: "from-yellow-500 to-orange-500",
-    },
-    {
-      icon: Users,
-      title: "Personal Touch",
-      description:
-        "No two travelers are the same. That's why every itinerary we craft is personalized to suit your style, preferences, and dreams.",
-      color: "from-green-500 to-teal-500",
-    },
-  ];
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        if (entry.isIntersecting) {
+          setLoadLifeVideos(true);
+        }
+        setPlayLifeVideos(entry.isIntersecting);
+      },
+      { threshold: 0.35, rootMargin: "250px 0px" }
+    );
 
-  const teamHighlights = [
-    {
-      name: "Expert Travel Planners",
-      description:
-        "Our team of seasoned travel professionals brings years of expertise, firsthand experiences, and insider knowledge to design journeys that go beyond the ordinary making us the best travel agency in Dehradun.",
-      image: "/capella-lodge.webp",
-    },
-    {
-      name: "Local Connections",
-      description:
-        "With strong relationships with local guides, hotels, and partners, we ensure that every experience feels authentic and truly connected to the destination.",
-      image: "/trust-business-main.jpg",
-    },
-    {
-      name: "24/7 Support",
-      description:
-        "Travel comes with surprises, but with Paradise Yatra, you're never alone. Our team is available round-the-clock, ensuring assistance no matter where in the world you are.",
-      image: "/247.jpg",
-    },
-  ];
+    observer.observe(section);
+    return () => observer.disconnect();
+  }, []);
+
+  useEffect(() => {
+    const section = lifeSectionRef.current;
+    if (!section) return;
+    const videos = Array.from(section.querySelectorAll("video[data-life-reel='true']"));
+    videos.forEach((video) => {
+      if (playLifeVideos) {
+        void video.play().catch(() => {});
+      } else {
+        video.pause();
+      }
+    });
+  }, [playLifeVideos]);
 
   return (
     <motion.div
@@ -128,136 +154,436 @@ const AboutPage = memo(() => {
     >
       <LazyHeader />
 
-      {/* Hero Section */}
-      <section className="relative min-h-[50vh] flex items-center justify-center overflow-hidden">
-        {/* Background Image */}
-        <div className="absolute inset-0 z-0">
-          <Image
-            src="/cover.png"
-            alt="Travel background"
-            fill
-            className=""
-            priority
-          />
-          <div className="absolute inset-0 bg-black/50"></div>
+      <section className="bg-white pt-8 md:pt-10">
+        <div className="mx-auto max-w-[1220px] px-4 md:px-8">
+          <div className="grid grid-cols-1 gap-6 md:grid-cols-2 md:gap-12">
+            <motion.h1
+              initial={{ opacity: 0, y: 24 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.6 }}
+              className="font-unbounded flex flex-col gap-0 text-[42px] leading-[0.88] font-extrabold tracking-tight text-[#000945] sm:text-[48px] md:text-[72px]"
+            >
+              <span className="block whitespace-nowrap">Crafted For</span>
+              <span className="block whitespace-nowrap">Curious Travelers</span>
+            </motion.h1>
+
+            <motion.div
+              initial={{ opacity: 0, y: 24 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.6, delay: 0.15 }}
+              className="md:justify-self-end md:max-w-[440px]"
+            >
+              <p className="!text-[15px] leading-[1.45] !text-[#000945] md:!text-[17px]">
+                Paradise Yatra is a modern travel company that helps explorers discover extraordinary destinations with
+                curated itineraries, expert planning, and reliable on-ground support from start to finish.
+              </p>
+              <button
+                type="button"
+                className="mt-6 inline-flex cursor-pointer items-center gap-2 rounded-[6px] bg-[#155dfc] px-6 py-2 text-sm font-semibold text-white transition-colors hover:bg-[#0f4de0]"
+              >
+                Start Planning Your Journey
+                <ChevronRight className="h-4 w-4" />
+              </button>
+            </motion.div>
+          </div>
         </div>
 
-        {/* Hero Content */}
         <motion.div
-          initial={{ opacity: 0, y: 30 }}
+          initial={{ opacity: 0, y: 22 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.8 }}
-          className="relative z-10 text-center text-white px-4 max-w-4xl mx-auto"
+          transition={{ duration: 0.6, delay: 0.25 }}
+          className="mt-8 md:mt-10 w-full overflow-hidden"
         >
-          <motion.h1
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.8, delay: 0.2 }}
-            className="text-4xl md:text-6xl font-bold mb-6 font-playfair-display mt-10"
-          >
-            About Paradise Yatra
-          </motion.h1>
-          <motion.p
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.8, delay: 0.4 }}
-            className="text-xl md:text-2xl text-gray-200 mb-8 leading-relaxed"
-          >
-            Crafting unforgettable journeys since 2019
-          </motion.p>
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.8, delay: 0.6 }}
-            className="flex flex-col sm:flex-row gap-4 justify-center items-center"
-          >
-            <div className="flex items-center space-x-2 bg-white/20 backdrop-blur-sm rounded-full px-6 py-3">
-              <MapPin className="w-5 h-5 text-blue-300" />
-              <span className="text-sm">Dehradun, Uttarakhand</span>
-            </div>
-            <div className="flex items-center space-x-2 bg-white/20 backdrop-blur-sm rounded-full px-6 py-3">
-              <Phone className="w-5 h-5 text-blue-300" />
-              <span className="text-sm">+91 8979396413</span>
-            </div>
-          </motion.div>
+          <Image
+            src="/About/Hero/Untitled design.png"
+            alt="Paradise Yatra hero"
+            width={1920}
+            height={900}
+            sizes="100vw"
+            className="h-[220px] w-full object-cover object-center sm:h-[280px] md:h-[640px]"
+            priority
+          />
         </motion.div>
       </section>
 
-      {/* Company Story Section */}
-      <section className="py-16 md:py-24 bg-white">
-        <div className="container mx-auto px-4">
-          <motion.div
-            initial={{ opacity: 0, y: 30 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
-            transition={{ duration: 0.8 }}
-            className="max-w-4xl mx-auto text-center mb-16"
-          >
-            <h2 className="text-3xl md:text-4xl font-bold text-gray-900 mb-6 font-playfair-display">
-              Our Story
-            </h2>
-            <p className="text-lg text-gray-600 leading-relaxed">
-              At Paradise Yatra, we believe that travel is not just about
-              visiting new places—it's about creating moments that stay with you
-              forever. Founded in the heart of the Himalayas, our journey
-              started in Dehradun with a simple vision: to make travel
-              accessible, enjoyable, and meaningful for every traveler.
-            </p>
-            <p className="text-lg text-gray-600 leading-relaxed mt-4">
-              From a small team of passionate explorers to becoming recognized
-              as one of the Best Travel Agencies in Dehradun, we've grown into a
-              trusted travel partner for thousands of adventurers, families, and
-              businesses worldwide.
-            </p>
-          </motion.div>
-
-          <div className="grid md:grid-cols-2 gap-12 items-center">
+      <section className="bg-white py-10 md:py-14">
+        <div className="mx-auto max-w-[1220px] px-4 md:px-8">
+          <div className="grid grid-cols-1 gap-8 md:grid-cols-[190px_1fr] md:gap-14">
             <motion.div
-              initial={{ opacity: 0, x: -30 }}
+              initial={{ opacity: 0, x: -12 }}
               whileInView={{ opacity: 1, x: 0 }}
               viewport={{ once: true }}
-              transition={{ duration: 0.8 }}
+              transition={{ duration: 0.45 }}
+              className="grid grid-cols-2 gap-2 md:flex md:flex-col md:gap-3 md:pt-1"
             >
-              <Image
-                src="/hero.jpg"
-                alt="Paradise Yatra team"
-                width={600}
-                height={400}
-                className="rounded-lg shadow-xl"
-              />
+              {missionStates.map((state, index) => {
+                const isActive = activeMissionIndex === index;
+                return (
+                  <button
+                    key={state.label}
+                    type="button"
+                    onClick={() => setActiveMissionIndex(index)}
+                    className={`w-full cursor-pointer rounded-[6px] px-4 py-2.5 text-left text-[15px] font-semibold leading-none transition-colors md:w-fit md:text-[16px] ${
+                      isActive
+                        ? "bg-[#155dfc] text-white"
+                        : "bg-white text-[#000945]"
+                    }`}
+                  >
+                    {state.label}
+                  </button>
+                );
+              })}
             </motion.div>
 
             <motion.div
-              initial={{ opacity: 0, x: 30 }}
+              key={activeMission.label}
+              initial={{ opacity: 0, y: 10 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true }}
+              transition={{ duration: 0.45 }}
+              className="max-w-[780px] !text-[#000945]"
+            >
+              <h2 className="about-section-heading tracking-tight text-[#000945]" style={{ fontWeight: 700 }}>
+                {activeMission.label}
+              </h2>
+              <p className="mt-3 text-[18px] !text-[#000945] md:text-[20px]">{activeMission.subtitle}</p>
+
+              <p className="mt-8 text-[15px] leading-7 !text-[#000945]">{activeMission.intro}</p>
+              <p className="mt-8 text-[15px] leading-7 !text-[#000945]">{activeMission.detail}</p>
+
+              <div className="mt-8 space-y-5">
+                {activeMission.points.map((point) => (
+                  <p key={point.title} className="text-[15px] leading-7 !text-[#000945]">
+                    <span className="font-bold">{point.title}:</span> {point.text}
+                  </p>
+                ))}
+              </div>
+            </motion.div>
+          </div>
+        </div>
+      </section>
+
+      <section ref={lifeSectionRef} className="bg-white py-12 md:py-16">
+        <div className="mx-auto max-w-[1220px] px-4 md:px-8">
+          <div className="mb-8 md:mb-10">
+            <h2
+              className="about-section-heading mt-2 tracking-tight text-[#000945]"
+              style={{ fontWeight: 700 }}
+            >
+              Life At Paradise Yatra
+            </h2>
+          </div>
+
+          <div className="grid grid-cols-1 gap-5 lg:grid-cols-12">
+            <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:col-span-7">
+              <div className="h-[250px] w-full overflow-hidden rounded-[6px] sm:col-span-2 md:h-[360px]">
+                <Image
+                  src="/About/Life At Paradise Yatra/Image 1.jpeg"
+                  alt="Paradise Yatra team collaborating"
+                  width={1200}
+                  height={800}
+                  loading="lazy"
+                  className="block h-full w-full object-cover"
+                />
+              </div>
+
+              <div className="grid grid-cols-2 gap-5 md:hidden sm:col-span-2">
+                <div className="aspect-[9/16] w-full overflow-hidden rounded-[6px]">
+                  <video
+                    data-life-reel="true"
+                    className="h-full w-full object-cover"
+                    muted
+                    loop
+                    playsInline
+                    preload={loadLifeVideos ? "metadata" : "none"}
+                  >
+                    {loadLifeVideos ? (
+                      <source src="/About/Life At Paradise Yatra/Reel 1.mp4" type="video/mp4" />
+                    ) : null}
+                  </video>
+                </div>
+
+                <div className="aspect-[9/16] w-full overflow-hidden rounded-[6px]">
+                  <video
+                    data-life-reel="true"
+                    className="h-full w-full object-cover"
+                    muted
+                    loop
+                    playsInline
+                    preload={loadLifeVideos ? "metadata" : "none"}
+                  >
+                    {loadLifeVideos ? (
+                      <source src="/About/Life At Paradise Yatra/Reel 2.mp4" type="video/mp4" />
+                    ) : null}
+                  </video>
+                </div>
+              </div>
+
+              <div className="h-[260px] w-full overflow-hidden rounded-[6px]">
+                <Image
+                  src="/About/Life At Paradise Yatra/Image 2.jpg"
+                  alt="Paradise Yatra field experience"
+                  width={700}
+                  height={900}
+                  loading="lazy"
+                  className="block h-full w-full object-cover"
+                />
+              </div>
+
+              <div className="h-[260px] w-full overflow-hidden rounded-[6px]">
+                <Image
+                  src="/About/Life At Paradise Yatra/Image 3.jpg"
+                  alt="Paradise Yatra travel moments"
+                  width={700}
+                  height={900}
+                  loading="lazy"
+                  className="block h-full w-full object-cover"
+                />
+              </div>
+            </div>
+
+            <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:col-span-5">
+              <div className="hidden h-[250px] w-full overflow-hidden rounded-[6px] md:block md:h-[360px]">
+                <video
+                  data-life-reel="true"
+                  className="h-full w-full object-cover"
+                  muted
+                  loop
+                  playsInline
+                  preload={loadLifeVideos ? "metadata" : "none"}
+                >
+                  {loadLifeVideos ? (
+                    <source src="/About/Life At Paradise Yatra/Reel 1.mp4" type="video/mp4" />
+                  ) : null}
+                </video>
+              </div>
+
+              <div className="hidden h-[250px] w-full overflow-hidden rounded-[6px] md:block md:h-[360px]">
+                <video
+                  data-life-reel="true"
+                  className="h-full w-full object-cover"
+                  muted
+                  loop
+                  playsInline
+                  preload={loadLifeVideos ? "metadata" : "none"}
+                >
+                  {loadLifeVideos ? (
+                    <source src="/About/Life At Paradise Yatra/Reel 2.mp4" type="video/mp4" />
+                  ) : null}
+                </video>
+              </div>
+
+              <div className="relative h-[260px] sm:col-span-2 overflow-hidden rounded-[6px] border border-[#1b2f5f] bg-black p-5 md:p-7">
+                <motion.div
+                  aria-hidden="true"
+                  className="pointer-events-none absolute -left-20 -top-24 h-64 w-64 rounded-full blur-2xl"
+                  style={{
+                    background:
+                      "radial-gradient(circle at 35% 35%, rgba(56,189,248,0.95), rgba(56,189,248,0) 65%)",
+                  }}
+                  animate={{ x: [0, 120, -70, 0], y: [0, 65, -35, 0], scale: [1, 1.35, 0.82, 1], rotate: [0, 12, -8, 0] }}
+                  transition={{ duration: 6.2, repeat: Infinity, ease: "easeInOut" }}
+                />
+                <motion.div
+                  aria-hidden="true"
+                  className="pointer-events-none absolute -right-24 top-8 h-72 w-72 rounded-full blur-2xl"
+                  style={{
+                    background:
+                      "radial-gradient(circle at 60% 40%, rgba(59,130,246,0.95), rgba(59,130,246,0) 65%)",
+                  }}
+                  animate={{ x: [0, -95, 45, 0], y: [0, 70, -25, 0], scale: [1, 0.85, 1.25, 1], rotate: [0, -10, 7, 0] }}
+                  transition={{ duration: 7.1, repeat: Infinity, ease: "easeInOut" }}
+                />
+                <motion.div
+                  aria-hidden="true"
+                  className="pointer-events-none absolute -bottom-28 left-1/3 h-72 w-72 rounded-full blur-2xl"
+                  style={{
+                    background:
+                      "radial-gradient(circle at 45% 45%, rgba(21,93,252,0.9), rgba(21,93,252,0) 65%)",
+                  }}
+                  animate={{ x: [0, -70, 60, 0], y: [0, -55, 30, 0], scale: [1, 1.2, 0.88, 1], rotate: [0, 8, -6, 0] }}
+                  transition={{ duration: 5.8, repeat: Infinity, ease: "easeInOut" }}
+                />
+                <motion.div
+                  aria-hidden="true"
+                  className="pointer-events-none absolute inset-0 blur-2xl"
+                  style={{
+                    background:
+                      "linear-gradient(120deg, rgba(6,182,212,0.22) 0%, rgba(14,165,233,0.3) 30%, rgba(21,93,252,0.26) 56%, rgba(59,130,246,0.28) 78%, rgba(125,211,252,0.24) 100%)",
+                    backgroundSize: "220% 220%",
+                    backgroundPosition: "0% 50%",
+                  }}
+                  animate={{ backgroundPosition: ["0% 50%", "100% 50%", "0% 50%"], x: [-24, 18, -12], y: [0, 10, -8] }}
+                  transition={{ duration: 8.5, repeat: Infinity, ease: "easeInOut" }}
+                />
+                <motion.div
+                  aria-hidden="true"
+                  className="pointer-events-none absolute inset-0 opacity-55 mix-blend-soft-light"
+                  style={{
+                    backgroundImage:
+                      'url("data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 width=%27160%27 height=%27160%27 viewBox=%270 0 160 160%27%3E%3Cfilter id=%27n%27%3E%3CfeTurbulence type=%27fractalNoise%27 baseFrequency=%271.15%27 numOctaves=%274%27 stitchTiles=%27stitch%27/%3E%3C/filter%3E%3Crect width=%27160%27 height=%27160%27 filter=%27url(%23n)%27 opacity=%270.95%27/%3E%3C/svg%3E")',
+                    backgroundSize: "220px 220px",
+                    backgroundPosition: "0 0",
+                  }}
+                  animate={{ backgroundPosition: ["0 0", "220px 220px", "0 0"] }}
+                  transition={{ duration: 4.2, repeat: Infinity, ease: "linear" }}
+                />
+                <div className="relative z-10 flex h-full items-center">
+                  <p className="font-unbounded text-[20px] leading-[1.28] !text-white md:text-[28px]" style={{ color: "#ffffff" }}>
+                    Every frame here is a glimpse of the energy, creativity, and teamwork behind Paradise Yatra.
+                  </p>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section className="relative overflow-hidden bg-white py-14 md:py-20">
+        <div className="relative mx-auto max-w-[1220px] px-4 md:px-8">
+          <div className="mb-10 max-w-[760px]">
+            <h2 className="about-section-heading mt-2 tracking-tight text-[#000945]" style={{ fontWeight: 700 }}>
+              The Vision Behind Paradise Yatra
+            </h2>
+          </div>
+
+          <div className="grid grid-cols-1 gap-8 md:grid-cols-12 md:gap-10">
+            <motion.div
+              initial={{ opacity: 0, x: -18 }}
               whileInView={{ opacity: 1, x: 0 }}
               viewport={{ once: true }}
-              transition={{ duration: 0.8, delay: 0.2 }}
-              className="space-y-6"
+              transition={{ duration: 0.5 }}
+              className="md:col-span-5"
             >
-              <h3 className="text-2xl md:text-3xl font-bold text-gray-900 font-playfair-display">
-                From Local Roots to Global Dreams
-              </h3>
-              <p className="text-gray-600 leading-relaxed">
-                Our roots lie in Dehradun, where we first discovered the magic
-                of the mountains and the warmth of Himalayan hospitality. That
-                inspiration continues to guide us in designing experiences that
-                blend adventure with cultural authenticity.
-              </p>
-              <p className="text-gray-600 leading-relaxed">
-                Today, Paradise Yatra which is the best travel agency in
-                Dehradun has proudly helped over 5,000 travelers explore 25+
-                countries, from the snowy peaks of Himachal to the tropical
-                islands of Maldives. Yet, our personal touch and attention to
-                detail ensure that every trip feels tailor-made—just for you.
-              </p>
-              <div className="flex items-center space-x-4 pt-4">
-                <div className="flex items-center space-x-2 text-blue-600">
-                  <CheckCircle className="w-5 h-5" />
-                  <span className="font-semibold">Licensed & Insured</span>
+              <div className="relative overflow-hidden rounded-[6px] border border-[#dfe1df] bg-white">
+                <div className="relative overflow-hidden">
+                  <Image
+                    src="/Male Profile (1).png"
+                    alt="Dikshant Sharma - Founder, Paradise Yatra"
+                    width={680}
+                    height={820}
+                    className="h-[420px] w-full object-cover object-top md:h-[560px]"
+                  />
+                  <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/75 to-transparent px-5 pb-5 pt-12">
+                    <p className="text-[13px] font-semibold uppercase tracking-[0.16em] !text-white" style={{ color: "#ffffff" }}>
+                      Founder & CEO
+                    </p>
+                    <p className="mt-1 text-[30px] font-extrabold tracking-tight !text-white md:text-[38px]" style={{ color: "#ffffff" }}>
+                      Dikshant Sharma
+                    </p>
+                  </div>
                 </div>
-                <div className="flex items-center space-x-2 text-green-600">
-                  <CheckCircle className="w-5 h-5" />
-                  <span className="font-semibold">24/7 Support</span>
+
+              </div>
+            </motion.div>
+
+            <motion.div
+              initial={{ opacity: 0, x: 18 }}
+              whileInView={{ opacity: 1, x: 0 }}
+              viewport={{ once: true }}
+              transition={{ duration: 0.5, delay: 0.08 }}
+              className="md:col-span-7"
+            >
+              <div className="p-0 md:pl-2">
+                <p className="text-[17px] leading-8 !text-[#000945] md:text-[19px]" style={{ color: "#000945" }}>
+                  Dikshant Sharma built Paradise Yatra with one clear promise: travel should feel personal, seamless,
+                  and unforgettable. From early route planning to scaling a trusted travel brand, his leadership combines
+                  local insight with world-class service standards.
+                </p>
+
+                <div className="relative mt-6 overflow-hidden rounded-[6px] bg-black p-5 md:p-6">
+                  <motion.div
+                    aria-hidden="true"
+                    className="pointer-events-none absolute -left-20 -top-24 h-64 w-64 rounded-full blur-2xl"
+                    style={{
+                      background:
+                        "radial-gradient(circle at 35% 35%, rgba(56,189,248,0.95), rgba(56,189,248,0) 65%)",
+                    }}
+                    animate={{ x: [0, 120, -70, 0], y: [0, 65, -35, 0], scale: [1, 1.35, 0.82, 1], rotate: [0, 12, -8, 0] }}
+                    transition={{ duration: 6.2, repeat: Infinity, ease: "easeInOut" }}
+                  />
+                  <motion.div
+                    aria-hidden="true"
+                    className="pointer-events-none absolute -right-24 top-8 h-72 w-72 rounded-full blur-2xl"
+                    style={{
+                      background:
+                        "radial-gradient(circle at 60% 40%, rgba(59,130,246,0.95), rgba(59,130,246,0) 65%)",
+                    }}
+                    animate={{ x: [0, -95, 45, 0], y: [0, 70, -25, 0], scale: [1, 0.85, 1.25, 1], rotate: [0, -10, 7, 0] }}
+                    transition={{ duration: 7.1, repeat: Infinity, ease: "easeInOut" }}
+                  />
+                  <motion.div
+                    aria-hidden="true"
+                    className="pointer-events-none absolute -bottom-28 left-1/3 h-72 w-72 rounded-full blur-2xl"
+                    style={{
+                      background:
+                        "radial-gradient(circle at 45% 45%, rgba(21,93,252,0.9), rgba(21,93,252,0) 65%)",
+                    }}
+                    animate={{ x: [0, -70, 60, 0], y: [0, -55, 30, 0], scale: [1, 1.2, 0.88, 1], rotate: [0, 8, -6, 0] }}
+                    transition={{ duration: 5.8, repeat: Infinity, ease: "easeInOut" }}
+                  />
+                  <motion.div
+                    aria-hidden="true"
+                    className="pointer-events-none absolute inset-0 blur-2xl"
+                    style={{
+                      background:
+                        "linear-gradient(120deg, rgba(6,182,212,0.22) 0%, rgba(14,165,233,0.3) 30%, rgba(21,93,252,0.26) 56%, rgba(59,130,246,0.28) 78%, rgba(125,211,252,0.24) 100%)",
+                      backgroundSize: "220% 220%",
+                      backgroundPosition: "0% 50%",
+                    }}
+                    animate={{ backgroundPosition: ["0% 50%", "100% 50%", "0% 50%"], x: [-24, 18, -12], y: [0, 10, -8] }}
+                    transition={{ duration: 8.5, repeat: Infinity, ease: "easeInOut" }}
+                  />
+                  <motion.div
+                    aria-hidden="true"
+                    className="pointer-events-none absolute inset-0 opacity-55 mix-blend-soft-light"
+                    style={{
+                      backgroundImage:
+                        'url("data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 width=%27160%27 height=%27160%27 viewBox=%270 0 160 160%27%3E%3Cfilter id=%27n%27%3E%3CfeTurbulence type=%27fractalNoise%27 baseFrequency=%271.15%27 numOctaves=%274%27 stitchTiles=%27stitch%27/%3E%3C/filter%3E%3Crect width=%27160%27 height=%27160%27 filter=%27url(%23n)%27 opacity=%270.95%27/%3E%3C/svg%3E")',
+                      backgroundSize: "220px 220px",
+                      backgroundPosition: "0 0",
+                    }}
+                    animate={{ backgroundPosition: ["0 0", "220px 220px", "0 0"] }}
+                    transition={{ duration: 4.2, repeat: Infinity, ease: "linear" }}
+                  />
+                  <div className="relative z-10">
+                    <p className="text-[18px] font-semibold leading-8 !text-white md:text-[20px]" style={{ color: "#ffffff" }}>
+                      "Our goal is simple: make every journey meaningful, and every traveler feel taken care of from
+                      the first call to the final memory."
+                    </p>
+                    <p className="mt-3 text-sm font-medium !text-white/90" style={{ color: "rgba(255,255,255,0.9)" }}>
+                      Dikshant Sharma, Founder - Paradise Yatra
+                    </p>
+                  </div>
+                </div>
+
+                <div className="mt-6 grid grid-cols-1 gap-3 sm:grid-cols-3">
+                  <div className="p-1">
+                    <p className="text-[11px] font-bold uppercase tracking-[0.14em] !text-[#000945]" style={{ color: "#000945" }}>Experience</p>
+                    <p className="mt-1 text-[28px] font-extrabold !text-[#000945]" style={{ color: "#000945" }}>10+</p>
+                    <p className="text-sm !text-[#000945]" style={{ color: "#000945" }}>Years in Travel</p>
+                  </div>
+                  <div className="p-1">
+                    <p className="text-[11px] font-bold uppercase tracking-[0.14em] !text-[#000945]" style={{ color: "#000945" }}>Coverage</p>
+                    <p className="mt-1 text-[28px] font-extrabold !text-[#000945]" style={{ color: "#000945" }}>25+</p>
+                    <p className="text-sm !text-[#000945]" style={{ color: "#000945" }}>Destinations</p>
+                  </div>
+                  <div className="p-1">
+                    <p className="text-[11px] font-bold uppercase tracking-[0.14em] !text-[#000945]" style={{ color: "#000945" }}>Trust</p>
+                    <p className="mt-1 text-[28px] font-extrabold !text-[#000945]" style={{ color: "#000945" }}>1000+</p>
+                    <p className="text-sm !text-[#000945]" style={{ color: "#000945" }}>Happy Travelers</p>
+                  </div>
+                </div>
+
+                <div className="mt-7">
+                  <a
+                    href="mailto:dikshant@paradiseyatra.com"
+                    className="inline-flex items-center gap-2 rounded-[6px] border border-[#dfe1df] bg-white px-6 py-2.5 text-sm font-semibold !text-[#000945] transition-colors hover:bg-[#ecf3ff]"
+                    style={{ color: "#000945" }}
+                  >
+                    Connect with the Founder
+                    <ChevronRight className="h-4 w-4" />
+                  </a>
                 </div>
               </div>
             </motion.div>
@@ -265,341 +591,87 @@ const AboutPage = memo(() => {
         </div>
       </section>
 
-      {/* Company Owner Section */}
-      <section className="py-16 md:py-24 bg-gray-50">
-        <div className="container mx-auto px-4">
-          <motion.div
-            initial={{ opacity: 0, y: 30 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
-            transition={{ duration: 0.8 }}
-            className="text-center mb-16"
-          >
-            <h2 className="text-3xl md:text-4xl font-bold text-gray-900 mb-6 font-playfair-display">
-              Meet Our Founder
+      <section className="bg-white py-14 md:py-20">
+        <div className="mx-auto max-w-[1220px] px-4 md:px-8">
+          <div className="mb-9 md:mb-12">
+            <h2 className="about-section-heading mt-2 tracking-tight text-[#000945]" style={{ fontWeight: 700 }}>
+              Meet Us At
             </h2>
-            <p className="text-lg text-gray-600 max-w-2xl mx-auto">
-              The visionary behind Paradise Yatra's success story
-            </p>
-          </motion.div>
+          </div>
 
-          <div className="max-w-5xl mx-auto">
-            <div className="grid md:grid-cols-2 gap-12 items-center">
-              {/* Founder Image */}
-              <motion.div
-                initial={{ opacity: 0, x: -30 }}
-                whileInView={{ opacity: 1, x: 0 }}
-                viewport={{ once: true }}
-                transition={{ duration: 0.8 }}
-                className="flex justify-center md:justify-end"
-              >
-                <div className="relative w-[280px] md:w-[320px]">
-                  <Image
-                    src="/Male Profile (1).png"
-                    alt="Dikshant Sharma - Founder"
-                    width={400}
-                    height={380}
-                    className="rounded-lg shadow-xl object-cover"
-                  />
-                  <div className="absolute -bottom-3 -right-3 bg-blue-600 text-white px-4 py-2 rounded-lg shadow-md text-center">
-                    <div className="text-lg font-bold">5+</div>
-                    <div className="text-xs">Years of Excellence</div>
+          <div className="grid grid-cols-1 gap-6 md:grid-cols-12 md:gap-8">
+            <motion.div
+              initial={{ opacity: 0, y: 18 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true }}
+              transition={{ duration: 0.45 }}
+              className="md:col-span-4"
+            >
+              <div className="space-y-4">
+                <div className="rounded-[6px] border border-[#dfe1df] bg-white p-5 md:p-6">
+                  <h3 className="text-[30px] !font-[600] tracking-tight text-[#000945]" style={{ fontWeight: 600 }}>Our Office</h3>
+                  <p className="mt-2 text-[15px] leading-7 !text-[#000945]" style={{ color: "#000945" }}>
+                    108, Tagore Villa, Chakrata Road, Dehradun, Uttarakhand - 248001
+                  </p>
+
+                  <div className="mt-4 space-y-2.5">
+                    <a
+                      href="tel:+918979396413"
+                      className="inline-flex items-center gap-2 text-[#000945] transition-colors hover:text-[#155dfc]"
+                    >
+                      <Phone className="h-4 w-4 text-[#155dfc]" />
+                      <span className="text-sm font-semibold">+91 8979396413</span>
+                    </a>
+                    <br />
+                    <a
+                      href="mailto:info@paradiseyatra.com"
+                      className="inline-flex items-center gap-2 text-[#000945] transition-colors hover:text-[#155dfc]"
+                    >
+                      <Mail className="h-4 w-4 text-[#155dfc]" />
+                      <span className="text-sm font-semibold">info@paradiseyatra.com</span>
+                    </a>
                   </div>
                 </div>
-              </motion.div>
 
-              {/* Founder Info */}
-              <motion.div
-                initial={{ opacity: 0, x: 30 }}
-                whileInView={{ opacity: 1, x: 0 }}
-                viewport={{ once: true }}
-                transition={{ duration: 0.8, delay: 0.2 }}
-                className="space-y-6"
-              >
-                <div>
-                  <h3 className="text-2xl md:text-3xl font-bold text-gray-900 mb-2 font-playfair-display">
-                    Dikshant Sharma
-                  </h3>
-                  <p className="text-blue-600 font-semibold text-lg">
-                    Founder & CEO
+                <div className="rounded-[6px] border border-[#dfe1df] bg-white p-5 md:p-6">
+                  <h4 className="text-[30px] !font-[600] tracking-tight text-[#000945]" style={{ fontWeight: 600 }}>
+                    Business Hours
+                  </h4>
+                  <p className="mt-3 text-[15px] leading-7 !text-[#000945]" style={{ color: "#000945" }}>
+                    Mon - Sat: 10:00 AM - 6:30 PM
+                  </p>
+                  <p className="text-[15px] leading-7 !text-[#000945]" style={{ color: "#000945" }}>
+                    Sun: Closed
                   </p>
                 </div>
+              </div>
+            </motion.div>
 
-                <p className="text-gray-600 leading-relaxed">
-                  Dikshant Sharma, the visionary behind Paradise Yatra, has
-                  redefined travel experiences in India. With a passion for
-                  exploring hidden gems and crafting unforgettable journeys,
-                  Dikshant has positioned Paradise Yatra as the best travel
-                  agency in Dehradun.
-                </p>
-
-                <p className="text-gray-600 leading-relaxed">
-                  Under his leadership, the company combines personalized
-                  service, expert guidance, and seamless travel planning to
-                  ensure every trip is extraordinary. His commitment to
-                  excellence and innovation drives the team to create memorable
-                  adventures for every traveler.
-                </p>
-
-                <div className="pt-4 space-y-3">
-                  <div className="flex items-center space-x-3">
-                    <Award className="w-5 h-5 text-blue-600" />
-                    <span className="text-gray-700">
-                      Travel Industry Expert
-                    </span>
-                  </div>
-                  <div className="flex items-center space-x-3">
-                    <Globe className="w-5 h-5 text-blue-600" />
-                    <span className="text-gray-700">
-                      25+ Countries Explored
-                    </span>
-                  </div>
-                  <div className="flex items-center space-x-3">
-                    <Heart className="w-5 h-5 text-blue-600" />
-                    <span className="text-gray-700">
-                      Passionate About Customer Satisfaction
-                    </span>
-                  </div>
-                </div>
-
-                <div className="pt-6">
-                  <blockquote className="border-l-4 border-blue-600 pl-6 italic text-gray-700">
-                    "Our mission is to transform ordinary trips into
-                    extraordinary adventures, creating memories that last a
-                    lifetime while ensuring every traveler feels like family."
-                  </blockquote>
-                </div>
-              </motion.div>
-            </div>
+            <motion.div
+              initial={{ opacity: 0, y: 18 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true }}
+              transition={{ duration: 0.45, delay: 0.08 }}
+              className="md:col-span-8"
+            >
+              <div className="h-full overflow-hidden rounded-[6px] border border-[#dfe1df] bg-white">
+                <iframe
+                  src="https://www.google.com/maps/embed?pb=!1m14!1m8!1m3!1d1388.6582464962262!2d78.03477118988253!3d30.327473883386677!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x39092a19318db8c3%3A0xd8c55020cab7d0c4!2sParadise%20Yatra!5e0!3m2!1sen!2sin!4v1772634410746!5m2!1sen!2sin"
+                  width="100%"
+                  height="100%"
+                  style={{ border: 0 }}
+                  allowFullScreen
+                  loading="lazy"
+                  referrerPolicy="no-referrer-when-downgrade"
+                  className="h-full w-full"
+                  title="Paradise Yatra Office Location"
+                />
+              </div>
+            </motion.div>
           </div>
         </div>
       </section>
 
-      {/* Statistics Section */}
-      <section className="py-16 md:py-24 bg-gradient-to-br from-blue-50 to-indigo-100">
-        <div className="container mx-auto px-4">
-          <motion.div
-            initial={{ opacity: 0, y: 30 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
-            transition={{ duration: 0.8 }}
-            className="text-center mb-16"
-          >
-            <h2 className="text-3xl md:text-4xl font-bold text-gray-900 mb-6 font-playfair-display">
-              Our Achievements
-            </h2>
-            <p className="text-lg text-gray-600 max-w-2xl mx-auto">
-              Numbers that reflect our dedication to excellence and guest
-              satisfaction
-            </p>
-          </motion.div>
-
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-8">
-            {stats.map((stat, index) => (
-              <motion.div
-                key={stat.label}
-                initial={{ opacity: 0, y: 30 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ once: true }}
-                transition={{ duration: 0.8, delay: index * 0.1 }}
-                className="text-center group"
-              >
-                <div
-                  className={`w-20 h-20 mx-auto mb-4 rounded-full bg-gradient-to-r ${stat.color} flex items-center justify-center group-hover:scale-110 transition-transform duration-300`}
-                >
-                  <stat.icon className="w-10 h-10 text-white" />
-                </div>
-                <div className="text-3xl md:text-4xl font-bold text-gray-900 mb-2 font-playfair-display">
-                  {stat.value}
-                </div>
-                <div className="text-gray-600 font-medium">{stat.label}</div>
-              </motion.div>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      {/* Values Section */}
-      <section className="py-16 md:py-24 bg-white">
-        <div className="container mx-auto px-4">
-          <motion.div
-            initial={{ opacity: 0, y: 30 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
-            transition={{ duration: 0.8 }}
-            className="text-center mb-16"
-          >
-            <h2 className="text-3xl md:text-4xl font-bold text-gray-900 mb-6 font-playfair-display">
-              Our Core Values
-            </h2>
-            <p className="text-lg text-gray-600 max-w-2xl mx-auto">
-              The values that make Paradise Yatra the Best Travel Agency in
-              Dehradun are deeply rooted in everything we do
-            </p>
-          </motion.div>
-
-          <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-8">
-            {values.map((value, index) => (
-              <motion.div
-                key={value.title}
-                initial={{ opacity: 0, y: 30 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ once: true }}
-                transition={{ duration: 0.8, delay: index * 0.1 }}
-                className="text-center group"
-              >
-                <div
-                  className={`w-16 h-16 mx-auto mb-6 rounded-full bg-gradient-to-r ${value.color} flex items-center justify-center group-hover:scale-110 transition-transform duration-300`}
-                >
-                  <value.icon className="w-8 h-8 text-white" />
-                </div>
-                <h3 className="text-xl font-bold text-gray-900 mb-4 font-playfair-display">
-                  {value.title}
-                </h3>
-                <p className="text-gray-600 leading-relaxed">
-                  {value.description}
-                </p>
-              </motion.div>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      {/* Team Highlights Section */}
-      <section className="py-16 md:py-24 bg-gray-50">
-        <div className="container mx-auto px-4">
-          <motion.div
-            initial={{ opacity: 0, y: 30 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
-            transition={{ duration: 0.8 }}
-            className="text-center mb-16"
-          >
-            <h2 className="text-3xl md:text-4xl font-bold text-gray-900 mb-6 font-playfair-display">
-              What Makes Us Special
-            </h2>
-            <p className="text-lg text-gray-600 max-w-2xl mx-auto">
-              Our team's expertise and dedication set us apart in the travel
-              industry
-            </p>
-          </motion.div>
-
-          <div className="grid md:grid-cols-3 gap-8">
-            {teamHighlights.map((highlight, index) => (
-              <motion.div
-                key={highlight.name}
-                initial={{ opacity: 0, y: 30 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ once: true }}
-                transition={{ duration: 0.8, delay: index * 0.2 }}
-                className="bg-white rounded-lg shadow-lg overflow-hidden group hover:shadow-xl transition-shadow duration-300"
-              >
-                <div className="relative h-48 overflow-hidden">
-                  <Image
-                    src={highlight.image}
-                    alt={highlight.name}
-                    fill
-                    className="object-cover group-hover:scale-105 transition-transform duration-300"
-                  />
-                </div>
-                <div className="p-6">
-                  <h3 className="text-xl font-bold text-gray-900 mb-3 font-playfair-display">
-                    {highlight.name}
-                  </h3>
-                  <p className="text-gray-600 leading-relaxed">
-                    {highlight.description}
-                  </p>
-                </div>
-              </motion.div>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      {/* Map Section */}
-      <section className="py-16 bg-gray-50">
-        <div className="container mx-auto px-4 max-w-5xl">
-          <motion.div
-            initial={{ opacity: 0, y: 30 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
-            transition={{ duration: 0.8 }}
-            className="text-center mb-12"
-          >
-            <h2 className="text-3xl md:text-4xl font-bold text-gray-900 mb-4 font-playfair-display">
-              Find Us
-            </h2>
-            <p className="text-gray-600 text-lg max-w-2xl mx-auto">
-              Visit our office in the heart of Dehradun, where our travel
-              experts are ready to help you plan your next adventure.
-            </p>
-          </motion.div>
-
-          <motion.div
-            initial={{ opacity: 0, y: 30 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
-            transition={{ duration: 0.8, delay: 0.2 }}
-            className="bg-white rounded-2xl shadow-xl overflow-hidden w-full"
-          >
-            <iframe
-              src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3443.9778110684483!2d78.01086157522484!3d30.323148974784417!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x39092a19318db8c3%3A0x4145eb2d8145d725!2s48%2C%20GMS%20Rd%2C%20near%20Balliwala%20chowk%2C%20Shakti%20Enclave%2C%20Mohit%20Nagar%2C%20Dehradun%2C%20Uttarakhand%20248001!5e0!3m2!1sen!2sin!4v1756551458987!5m2!1sen!2sin"
-              width="100%"
-              height="450"
-              style={{ border: 0 }}
-              allowFullScreen
-              loading="lazy"
-              referrerPolicy="no-referrer-when-downgrade"
-              className="w-full"
-            ></iframe>
-          </motion.div>
-        </div>
-      </section>
-
-      {/* CTA Section */}
-      <section className="py-16 md:py-24 bg-gradient-to-r from-blue-600 to-indigo-700 text-white">
-        <div className="container mx-auto px-4 text-center">
-          <motion.div
-            initial={{ opacity: 0, y: 30 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
-            transition={{ duration: 0.8 }}
-            className="max-w-3xl mx-auto"
-          >
-            <h2 className="text-3xl md:text-4xl font-bold mb-6 font-playfair-display">
-              Ready to Start Your Journey?
-            </h2>
-            <p className="text-xl text-blue-100 mb-8 leading-relaxed">
-              Let the best travel agency in Dehradun help you create memories
-              that last a lifetime. Whether it's a family trip, a honeymoon, or
-              an international adventure, our dedicated team is here to plan
-              every detail for you.
-            </p>
-            <div className="flex flex-col sm:flex-row gap-4 justify-center items-center">
-              <a
-                href="tel:+918979396413"
-                className="flex items-center space-x-2 bg-white text-blue-600 px-8 py-4 rounded-lg font-semibold hover:bg-gray-100 transition-colors duration-300 group"
-              >
-                <Phone className="w-5 h-5" />
-                <span>Call Now</span>
-                <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform duration-300" />
-              </a>
-              <a
-                href="mailto:info@paradiseyatra.com"
-                className="flex items-center space-x-2 bg-transparent border-2 border-white text-white px-8 py-4 rounded-lg font-semibold hover:bg-white hover:text-blue-600 transition-colors duration-300 group"
-              >
-                <Mail className="w-5 h-5" />
-                <span>Email Us</span>
-                <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform duration-300" />
-              </a>
-            </div>
-          </motion.div>
-        </div>
-      </section>
-
-      <LazyFooter />
-
-      {/* Performance monitoring - only visible in development */}
       <PerformanceMonitor showInProduction={false} />
     </motion.div>
   );
