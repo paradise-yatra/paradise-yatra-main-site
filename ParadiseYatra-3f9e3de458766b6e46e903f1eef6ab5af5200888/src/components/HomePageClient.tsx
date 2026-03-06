@@ -42,7 +42,7 @@ const HomePageClient = memo(() => {
   useEffect(() => {
     const timer = window.setTimeout(() => {
       setShowLeadCaptureForm(true);
-    }, 5000);
+    }, 10000);
 
     return () => window.clearTimeout(timer);
   }, []);

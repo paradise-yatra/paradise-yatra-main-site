@@ -87,9 +87,9 @@ const BlogSectionNew = () => {
                     clearTimeout(timeoutId);
                 } catch (fetchError) {
                     clearTimeout(timeoutId);
-                    if (fetchError instanceof Error && fetchError.name === 'AbortError') {
+                    if (fetchError instanceof Error && fetchError.name === "AbortError") {
                         if (isMounted) {
-                            console.warn('Blog fetch timed out');
+                            console.warn("Blog fetch timed out");
                             setLoading(false);
                         }
                         return;
@@ -114,7 +114,6 @@ const BlogSectionNew = () => {
                     setAllPosts(posts);
                     setBlogPosts(posts.slice(0, 6));
 
-                    // Extract unique categories
                     const categories = Array.from(new Set(posts.map((post) => post.category).filter(Boolean)));
                     const newFilters = [
                         { id: "all", label: "All Posts" },
@@ -140,7 +139,6 @@ const BlogSectionNew = () => {
         };
     }, []);
 
-    // Handle filtering
     useEffect(() => {
         if (activeFilter === "all") {
             setBlogPosts(allPosts.slice(0, 6));
@@ -153,7 +151,7 @@ const BlogSectionNew = () => {
     const scrollByStep = (direction: number) => {
         if (carouselRef.current) {
             const card = carouselRef.current.firstElementChild;
-            const gap = 8; // gap-2 = 8px
+            const gap = 8;
             const cardWidth = card ? card.getBoundingClientRect().width : 340;
             const step = cardWidth + gap;
 
@@ -169,10 +167,10 @@ const BlogSectionNew = () => {
             <section className="bg-white px-4 py-14 md:px-8">
                 <div className="mx-auto max-w-6xl">
                     <div className="animate-pulse space-y-8">
-                        <div className="h-10 w-64 bg-slate-200 rounded"></div>
+                        <div className="h-10 w-64 rounded bg-slate-200"></div>
                         <div className="flex gap-6 overflow-hidden">
                             {[1, 2, 3].map((i) => (
-                                <div key={i} className="w-[480px] flex-shrink-0 h-[400px] bg-slate-100 rounded-lg"></div>
+                                <div key={i} className="h-[400px] w-[480px] flex-shrink-0 rounded-lg bg-slate-100"></div>
                             ))}
                         </div>
                     </div>
@@ -186,29 +184,26 @@ const BlogSectionNew = () => {
     return (
         <section className="bg-white px-4 py-14 text-gray-900 md:px-8">
             <div className="mx-auto max-w-6xl">
-                {/* Header */}
-                <div className="flex flex-col md:flex-row md:items-end justify-between mb-8 gap-6">
+                <div className="mb-8 flex flex-col justify-between gap-6 md:flex-row md:items-end">
                     <div className="space-y-4">
-                        <span className="text-[#005beb] !font-black uppercase tracking-wider text-xs flex items-center gap-2">
+                        <span className="flex items-center gap-2 text-xs uppercase tracking-wider text-[#005beb] !font-black">
                             <span className="h-px w-8 bg-[#005beb]"></span>
                             Updates & Insights
                         </span>
-                        <h3 className="text-2xl md:text-3xl !font-bold text-slate-900 leading-tight">
+                        <h3 className="text-2xl !font-bold leading-tight text-slate-900 md:text-3xl">
                             Journeys, Stories & Tips
                         </h3>
                     </div>
 
                     <Link
                         href="/blog"
-                        className="group flex items-center gap-2 text-[#005beb] font-bold text-[14px] hover:opacity-80 transition-all"
+                        className="group flex items-center gap-2 text-[14px] font-bold text-[#005beb] transition-all hover:opacity-80"
                     >
                         View All Articles
-                        <ArrowRight className="w-4 h-4 transition-transform group-hover:translate-x-1" />
+                        <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-1" />
                     </Link>
                 </div>
 
-                {/* Carousel */}
-                {/* Content Area */}
                 <div className="relative group/carousel">
                     <CarouselArrows
                         onPrevious={() => scrollByStep(-1)}
@@ -219,53 +214,42 @@ const BlogSectionNew = () => {
 
                     <div
                         ref={carouselRef}
-                        className="flex gap-2 overflow-x-auto scroll-smooth scrollbar-hide pb-8 snap-x snap-mandatory px-1"
+                        className="flex snap-x snap-mandatory gap-2 overflow-x-auto scroll-smooth px-1 pb-8 scrollbar-hide"
                         style={{ scrollbarWidth: "none", msOverflowStyle: "none" }}
                     >
                         {blogPosts.map((post) => (
                             <div
                                 key={post._id}
-                                className="w-[280px] md:w-[calc(50%-4px)] lg:w-[calc(25%-6px)] flex-shrink-0 snap-start"
+                                className="w-[280px] flex-shrink-0 snap-start md:w-[calc(50%-4px)] lg:w-[calc(25%-6px)]"
                             >
-                                <Link href={`/blog/${getPostSlug(post)}`} className="block group/card h-full bg-white rounded-lg overflow-hidden border border-gray-300 transition-all duration-300 hover:border-blue-200 hover:shadow-md">
-                                    <div className="relative h-[180px] w-full overflow-hidden">
-                                        {/* White hover overlay */}
-                                        <div className="absolute inset-0 bg-white/10 opacity-10 group-hover/card:opacity-100 transition-opacity duration-300 z-30 pointer-events-none"></div>
-
+                                <Link href={`/blog/${getPostSlug(post)}`} className="block h-full">
+                                    <div className="relative mb-4 aspect-[1/0.82] overflow-hidden rounded-[6px] bg-[#e5e5e5]">
                                         {post.image ? (
                                             <Image
                                                 src={getImageUrl(post.image) || ""}
                                                 alt={post.title}
                                                 fill
-                                                className="object-cover transition-transform duration-700"
+                                                className="object-cover"
                                             />
                                         ) : (
-                                            <div className="w-full h-full bg-slate-200 flex items-center justify-center text-4xl">
-                                                📝
+                                            <div className="flex h-full w-full items-center justify-center bg-slate-200 text-4xl">
+                                                ?
                                             </div>
                                         )}
-                                        {/* Gradient Overlay */}
-                                        <div className="absolute inset-x-0 bottom-0 h-1/2 bg-gradient-to-t from-black/60 via-transparent to-transparent opacity-0 group-hover/card:opacity-100 transition-opacity duration-500"></div>
                                     </div>
-                                    <div className="p-4 space-y-3">
-                                        <div className="flex items-center gap-2 text-[10px] text-slate-500 font-bold uppercase tracking-wider">
-                                            <span className="text-blue-600 px-2 py-0.5 bg-blue-50 rounded-full">{post.category || "Travel"}</span>
-                                            <span className="w-1 h-1 bg-slate-300 rounded-full"></span>
-                                            <span>{new Date(post.createdAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}</span>
-                                        </div>
-                                        <h4 className="text-base !font-bold leading-snug line-clamp-2 text-slate-900 group-hover/card:text-blue-600 transition-colors min-h-[44px]">
-                                            {post.title}
-                                        </h4>
-                                        <p className="!text-slate-700 text-xs line-clamp-2 leading-relaxed">
-                                            {post.excerpt || post.content.substring(0, 80).replace(/<[^>]*>?/gm, '') + '...'}
-                                        </p>
-                                        <div className="pt-3 flex items-center justify-between border-t border-dashed border-gray-300">
-                                            <span className="text-[11px] font-bold text-slate-600 truncate max-w-[100px]">{post.author}</span>
-                                            <span className="inline-flex items-center gap-1.5 text-xs font-black uppercase text-slate-900 group-hover/card:text-blue-600 transition-colors">
-                                                Read
-                                                <ArrowRight className="h-3 w-3 transition-transform group-hover/card:translate-x-1" />
-                                            </span>
-                                        </div>
+
+                                    <h4 className="line-clamp-2 !text-[18px] !font-semibold !leading-[1.16] tracking-[-0.03em] !text-[#000945] md:!text-[22px]">
+                                        {post.title}
+                                    </h4>
+
+                                    <div className="mt-3">
+                                        <span className="inline-flex rounded-full border border-[#d6d6d6] bg-white px-3 py-1 text-[11px] font-medium text-[#000945]">
+                                            {new Date(post.createdAt).toLocaleDateString("en-US", {
+                                                month: "short",
+                                                day: "numeric",
+                                                year: "numeric",
+                                            })}
+                                        </span>
                                     </div>
                                 </Link>
                             </div>

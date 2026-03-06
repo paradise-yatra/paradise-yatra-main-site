@@ -207,6 +207,20 @@ const Footer = () => {
     <footer className="bg-black text-white font-['Plus_Jakarta_Sans',sans-serif] pt-10 pb-10 border-t border-white/10">
       <div className="mx-auto max-w-6xl px-4 md:px-6">
 
+        {/* Partner Logos */}
+        <div className="mb-10 flex items-center justify-center gap-8">
+          <img
+            src="/Footer/Make%20My%20Trip%20Logo.svg"
+            alt="Make My Trip"
+            className="h-12 w-auto grayscale opacity-70 hover:grayscale-0 hover:opacity-100 transition-all duration-300"
+          />
+          <img
+            src="/Footer/Uttarakhand%20Tourism%20Logo.png"
+            alt="Uttarakhand Tourism"
+            className="h-20 w-auto grayscale opacity-70 hover:grayscale-0 hover:opacity-100 transition-all duration-300"
+          />
+        </div>
+
         {/* Section 1 */}
         <div className="mb-7">
           <div className="space-y-7">
@@ -283,7 +297,7 @@ const Footer = () => {
           <div>
             <h3 className="text-[#a1a1aa] !text-[25px] !font-semibold mb-4 tracking-wide" style={{ fontSize: "25px", fontWeight: 600 }}>Talk to us</h3>
             <div className="flex flex-col space-y-3">
-                <a href={`mailto:${companyInfo.email}`} className="flex items-center text-[14px] text-white hover:text-[#60a5fa] transition-colors group">
+              <a href={`mailto:${companyInfo.email}`} className="flex items-center text-[14px] text-white hover:text-[#60a5fa] transition-colors group">
                 <Mail className="w-5 h-5 mr-3 text-white group-hover:text-[#60a5fa]" strokeWidth={1.5} /> {companyInfo.email}
               </a>
               <a href={phoneHref} className="flex items-center text-[14px] text-white hover:text-[#60a5fa] transition-colors group">

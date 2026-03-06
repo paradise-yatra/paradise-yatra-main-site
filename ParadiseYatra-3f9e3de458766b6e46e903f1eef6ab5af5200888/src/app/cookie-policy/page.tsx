@@ -6,7 +6,7 @@ import { Card, CardContent } from "@/components/ui/card";
 export const metadata: Metadata = {
   title: "Cookie Policy | Paradise Yatra",
   description:
-    "Read Paradise Yatra's Cookie Policy to understand what cookies we use, why we use them, and how you can manage your preferences.",
+    "Read Paradise Yatra's Cookie Policy to understand what cookies we use, why we use them, and how your continued use of the site applies to cookie usage.",
   robots: { index: true, follow: true },
   alternates: { canonical: "/cookie-policy" },
 };
@@ -27,7 +27,7 @@ export default function CookiePolicyPage() {
         {/* Image Container */}
         <div className="relative w-full h-[230.4px] md:absolute md:inset-0 md:h-auto flex-shrink-0">
           <Image
-            src="/Legal/Privacy%20Policy/Hero%20Image.jpg"
+            src="/Legal/Cookie%20Policy/Image.webp"
             alt="Paradise Yatra Cookie Policy"
             fill
             className="object-cover"
@@ -101,12 +101,12 @@ export default function CookiePolicyPage() {
                   <ul className="list-disc pl-6 space-y-2" style={{ color: "#000945", fontWeight: 500 }}>
                     <li>
                       <p style={{ color: "#000945", fontWeight: 500 }}>
-                        <span style={{ fontWeight: 700 }}>Essential cookies:</span> Needed for security and core site functionality.
+                        <span style={{ fontWeight: 700 }}>Essential cookies:</span> Needed for security, navigation, and core site functionality.
                       </p>
                     </li>
                     <li>
                       <p style={{ color: "#000945", fontWeight: 500 }}>
-                        <span style={{ fontWeight: 700 }}>Analytics cookies (optional):</span> Help us measure traffic and improve user experience.
+                        <span style={{ fontWeight: 700 }}>Analytics cookies:</span> Help us measure traffic, understand usage patterns, and improve user experience.
                       </p>
                     </li>
                     <li>
@@ -126,9 +126,9 @@ export default function CookiePolicyPage() {
                 </div>
                 <div className="space-y-4 leading-relaxed text-[15px]">
                   <p style={{ color: "#000945", fontWeight: 500 }}>
-                    We request your consent before enabling optional analytics cookies. You can accept or reject optional
-                    cookies from our cookie banner. Essential cookies remain active because they are necessary for the
-                    website to function properly.
+                    By continuing to use our website, you acknowledge and accept the use of cookies as described in this
+                    policy. Our cookie notice is informational and reminds users that browsing the site means accepting
+                    these cookie terms.
                   </p>
                 </div>
               </section>
@@ -141,9 +141,9 @@ export default function CookiePolicyPage() {
                 </div>
                 <div className="space-y-4 leading-relaxed text-[15px]">
                   <ul className="list-disc pl-6 space-y-2" style={{ color: "#000945", fontWeight: 500 }}>
-                    <li><p style={{ color: "#000945", fontWeight: 500 }}>You can reject optional cookies from our banner.</p></li>
-                    <li><p style={{ color: "#000945", fontWeight: 500 }}>You can remove cookies from your browser settings at any time.</p></li>
-                    <li><p style={{ color: "#000945", fontWeight: 500 }}>Disabling cookies may impact some features and embedded services.</p></li>
+                    <li><p style={{ color: "#000945", fontWeight: 500 }}>You can clear or block cookies from your browser settings at any time.</p></li>
+                    <li><p style={{ color: "#000945", fontWeight: 500 }}>Some site features, analytics, or embedded services may not function properly if cookies are blocked.</p></li>
+                    <li><p style={{ color: "#000945", fontWeight: 500 }}>Continued use of this website indicates acceptance of the cookie practices outlined here.</p></li>
                   </ul>
                 </div>
               </section>

@@ -22,16 +22,6 @@ interface BlogPost {
   updatedAt: string;
 }
 
-// Function to generate slug from title
-const generateSlug = (title: string): string => {
-  return title
-    .toLowerCase()
-    .replace(/[^a-z0-9\s-]/g, "")
-    .replace(/\s+/g, "-")
-    .replace(/-+/g, "-")
-    .trim();
-};
-
 // Function to strip HTML tags for meta description
 const stripHtml = (html: string): string => {
   return html

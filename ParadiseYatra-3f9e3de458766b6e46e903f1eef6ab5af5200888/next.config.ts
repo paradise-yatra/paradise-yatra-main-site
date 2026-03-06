@@ -85,6 +85,12 @@ const nextConfig: NextConfig = {
       },
       {
         protocol: 'https',
+        hostname: 'badges.razorpay.com',
+        port: '',
+        pathname: '/**',
+      },
+      {
+        protocol: 'https',
         hostname: 'dummyimage.com',
         port: '',
         pathname: '/**',

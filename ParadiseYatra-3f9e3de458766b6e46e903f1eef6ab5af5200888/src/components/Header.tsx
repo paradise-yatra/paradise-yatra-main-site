@@ -38,7 +38,15 @@ import { useNavigation } from "@/hooks/useNavigation";
 import Image from "next/image";
 import { HiOutlineMenuAlt3 } from "react-icons/hi";
 
-const Header = () => {
+interface HeaderProps {
+  transparentOnTop?: boolean;
+  disableOffset?: boolean;
+}
+
+const Header = ({
+  transparentOnTop = false,
+  disableOffset = false,
+}: HeaderProps) => {
   const { user, logout } = useAuth();
   const [isScrolled, setIsScrolled] = useState(false);
   const [activeDropdown, setActiveDropdown] = useState<number | null>(null);
@@ -50,7 +58,7 @@ const Header = () => {
 
   const pathname = usePathname();
   const isHome = pathname === "/";
-  const isTransparent = isHome && !isScrolled; // Transparent on home page only at top
+  const isTransparent = (isHome || transparentOnTop) && !isScrolled;
   const shouldShowPromoBar = isHome && showPromoBar;
 
   // Use the custom hook for dynamic navigation
@@ -792,7 +800,7 @@ const Header = () => {
         />
 
       </header >
-      {!isHome && (
+      {!isHome && !disableOffset && (
         <div
           className="relative w-full transition-all duration-300 md:mb-[5px]"
           style={{ height: shouldShowPromoBar ? 'calc(92px + 38px)' : '92px' }}

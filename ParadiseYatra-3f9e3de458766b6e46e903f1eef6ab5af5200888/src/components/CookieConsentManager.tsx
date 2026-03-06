@@ -3,9 +3,9 @@
 import Link from "next/link";
 import { useEffect, useState } from "react";
 
-type CookieConsent = "accepted" | "rejected" | null;
+type CookieNoticeState = "acknowledged" | null;
 
-const CONSENT_STORAGE_KEY = "paradise_cookie_consent";
+const NOTICE_STORAGE_KEY = "paradise_cookie_notice";
 const GA_MEASUREMENT_ID = "G-99JYJS0FSF";
 
 declare global {
@@ -15,28 +15,6 @@ declare global {
     [key: string]: unknown;
   }
 }
-
-const clearAnalyticsCookies = () => {
-  if (typeof document === "undefined") return;
-
-  const cookies = document.cookie.split(";").map((cookie) => cookie.trim());
-  const analyticsCookieNames = ["_ga", "_gid", "_gat", "_ga_" ];
-  const hostname = window.location.hostname;
-
-  cookies.forEach((cookie) => {
-    const [name] = cookie.split("=");
-    if (!name) return;
-
-    const isAnalyticsCookie =
-      analyticsCookieNames.some((prefix) => name === prefix || name.startsWith(prefix));
-
-    if (!isAnalyticsCookie) return;
-
-    document.cookie = `${name}=; expires=Thu, 01 Jan 1970 00:00:00 GMT; path=/;`;
-    document.cookie = `${name}=; expires=Thu, 01 Jan 1970 00:00:00 GMT; path=/; domain=${hostname};`;
-    document.cookie = `${name}=; expires=Thu, 01 Jan 1970 00:00:00 GMT; path=/; domain=.${hostname};`;
-  });
-};
 
 const loadGoogleAnalytics = () => {
   if (typeof window === "undefined") return;
@@ -75,44 +53,29 @@ const loadGoogleAnalytics = () => {
   document.head.appendChild(script);
 };
 
-const rejectAnalytics = () => {
-  if (typeof window === "undefined") return;
-  const disableKey = `ga-disable-${GA_MEASUREMENT_ID}`;
-  window[disableKey] = true;
-  clearAnalyticsCookies();
-};
-
 export default function CookieConsentManager() {
-  const [consent, setConsent] = useState<CookieConsent>(null);
+  const [noticeState, setNoticeState] = useState<CookieNoticeState>(null);
   const [isReady, setIsReady] = useState(false);
 
   useEffect(() => {
-    const storedConsent = localStorage.getItem(CONSENT_STORAGE_KEY) as CookieConsent;
-    if (storedConsent === "accepted") {
-      setConsent("accepted");
-      loadGoogleAnalytics();
-    } else if (storedConsent === "rejected") {
-      setConsent("rejected");
-      rejectAnalytics();
+    loadGoogleAnalytics();
+
+    const storedNotice = localStorage.getItem(NOTICE_STORAGE_KEY) as CookieNoticeState;
+    if (storedNotice === "acknowledged") {
+      setNoticeState("acknowledged");
     } else {
-      setConsent(null);
+      setNoticeState(null);
     }
+
     setIsReady(true);
   }, []);
 
-  const handleConsent = (value: Exclude<CookieConsent, null>) => {
-    localStorage.setItem(CONSENT_STORAGE_KEY, value);
-    setConsent(value);
-
-    if (value === "accepted") {
-      loadGoogleAnalytics();
-      return;
-    }
-
-    rejectAnalytics();
+  const dismissNotice = () => {
+    localStorage.setItem(NOTICE_STORAGE_KEY, "acknowledged");
+    setNoticeState("acknowledged");
   };
 
-  if (!isReady || consent !== null) return null;
+  if (!isReady || noticeState === "acknowledged") return null;
 
   return (
     <div className="fixed inset-x-3 bottom-3 z-[120] md:inset-x-6 md:bottom-6">
@@ -121,9 +84,8 @@ export default function CookieConsentManager() {
           <div className="space-y-1">
             <p className="text-[16px] font-bold text-[#000945]">We use cookies</p>
             <p className="text-[13px] leading-relaxed text-[#000945] md:text-[14px]">
-              We use essential cookies for core functionality and optional analytics cookies to improve your experience.
-              You can accept or reject optional cookies.
-              {" "}
+              By using this site, you accept our cookie terms and the use of cookies to support core functionality,
+              analytics, and site improvements.{" "}
               <Link href="/cookie-policy" className="font-semibold underline hover:text-[#155dfc]">
                 Read Cookie Policy
               </Link>
@@ -133,17 +95,10 @@ export default function CookieConsentManager() {
           <div className="flex flex-wrap items-center gap-2 md:justify-end">
             <button
               type="button"
-              onClick={() => handleConsent("rejected")}
-              className="min-w-[130px] rounded-[6px] border border-[#dfe1df] bg-white px-4 py-2 text-[13px] font-semibold text-[#000945] transition-colors hover:bg-slate-50 cursor-pointer"
+              onClick={dismissNotice}
+              className="min-w-[130px] cursor-pointer rounded-[6px] border border-[#155dfc] bg-[#155dfc] px-4 py-2 text-[13px] font-semibold text-white transition-colors hover:bg-[#0f4de0]"
             >
-              Reject Optional
-            </button>
-            <button
-              type="button"
-              onClick={() => handleConsent("accepted")}
-              className="min-w-[130px] rounded-[6px] border border-[#155dfc] bg-[#155dfc] px-4 py-2 text-[13px] font-semibold text-white transition-colors hover:bg-[#0f4de0] cursor-pointer"
-            >
-              Accept All
+              Okay
             </button>
           </div>
         </div>

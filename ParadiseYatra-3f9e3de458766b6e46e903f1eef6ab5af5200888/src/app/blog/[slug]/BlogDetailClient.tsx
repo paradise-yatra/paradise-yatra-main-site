@@ -1,14 +1,11 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useEffect, useRef, useState } from "react";
 import { motion } from "framer-motion";
-import { Clock, User, Tag, Eye, Heart, Share2, Calendar, ArrowLeft } from "lucide-react";
-import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
+import { CalendarDays, Clock3 } from "lucide-react";
 import Header from "@/components/Header";
-import Link from "next/link";
 import Image from "next/image";
-import Loading from "@/components/ui/loading";
+import Link from "next/link";
 import { getImageUrl as getOptimizedImageUrl } from "@/lib/utils";
 
 interface BlogPost {
@@ -28,7 +25,11 @@ interface BlogPost {
   createdAt: string;
 }
 
-// Function to generate slug from title
+interface BlogDetailClientProps {
+  post: BlogPost;
+  slug: string;
+}
+
 const generateSlug = (title: string): string => {
   return title
     .toLowerCase()
@@ -42,86 +43,72 @@ const getPostSlug = (post: BlogPost): string => {
   return post.slug || generateSlug(post.title);
 };
 
-const getImageUrl = (image: string | undefined): string => getOptimizedImageUrl(image || null) || "/fallback.jpg";
+const getImageUrl = (image: string | undefined): string =>
+  getOptimizedImageUrl(image || null) || "/images/placeholder-travel.jpg";
 
-interface BlogDetailClientProps {
-  post: BlogPost;
-  slug: string;
-}
+const formatDate = (value: string): string =>
+  new Date(value).toLocaleDateString("en-US", {
+    month: "long",
+    day: "numeric",
+    year: "numeric",
+  });
 
 const BlogDetailClient = ({ post, slug }: BlogDetailClientProps) => {
-  const [relatedPosts, setRelatedPosts] = useState<BlogPost[]>([]);
-  const [loadingRelated, setLoadingRelated] = useState(false); // Changed to false - don't block page
-  const [error, setError] = useState<string | null>(null);
   const [imageErrors, setImageErrors] = useState<Set<string>>(new Set());
+  const [relatedPosts, setRelatedPosts] = useState<BlogPost[]>([]);
+  const [readingProgress, setReadingProgress] = useState(0);
+  const articleContentRef = useRef<HTMLDivElement | null>(null);
 
-  const handleImageError = (postId: string, e: React.SyntheticEvent<HTMLImageElement, Event>) => {
-    const target = e.target as HTMLImageElement;
-    target.src = "/fallback.jpg";
+  const handleImageError = (
+    postId: string,
+    event: React.SyntheticEvent<HTMLImageElement, Event>
+  ) => {
+    const target = event.target as HTMLImageElement;
+    target.src = "/images/placeholder-travel.jpg";
     setImageErrors((prev) => new Set(prev).add(postId));
   };
 
   const getSafeImageUrl = (image: string, postId: string): string => {
     if (imageErrors.has(postId)) {
-      return "/fallback.jpg";
+      return "/images/placeholder-travel.jpg";
     }
+
     return getImageUrl(image);
   };
 
   useEffect(() => {
     let isMounted = true;
     const controller = new AbortController();
-    const timeoutId = setTimeout(() => controller.abort(), 8000); // 8 second timeout (reduced since it's not blocking)
 
     const fetchRelatedPosts = async () => {
       try {
-        if (!isMounted) return;
-        setLoadingRelated(true); // Only show loading for related posts section
-
-        let allBlogsResponse;
-        try {
-          // Fetch a few blogs from the same category to get related posts (reduced limit for faster load)
-          allBlogsResponse = await fetch(`/api/blogs?published=true&limit=6&category=${post.category}`, {
+        const response = await fetch(
+          `/api/blogs?published=true&limit=4&category=${encodeURIComponent(post.category)}`,
+          {
             signal: controller.signal,
-            cache: 'default', // Use cache to reduce requests
-          });
-          clearTimeout(timeoutId);
-        } catch (fetchError) {
-          clearTimeout(timeoutId);
-          if (fetchError instanceof Error && fetchError.name === 'AbortError') {
-            if (isMounted) {
-              console.warn('Related posts fetch timed out');
-              setLoadingRelated(false);
-            }
-            return;
+            cache: "default",
           }
-          throw fetchError;
+        );
+
+        if (!response.ok) {
+          throw new Error("Failed to fetch similar articles");
         }
 
-        if (!allBlogsResponse.ok) {
-          throw new Error("Failed to fetch blogs");
-        }
-
-        const allBlogsData = await allBlogsResponse.json();
-        const allBlogs = Array.isArray(allBlogsData)
-          ? allBlogsData
-          : allBlogsData.blogs || [];
-
-        // Get related posts (excluding current post)
+        const data = await response.json();
+        const allBlogs = Array.isArray(data) ? data : data.blogs || [];
         const related = allBlogs
           .filter((blog: BlogPost) => blog._id !== post._id)
           .slice(0, 3);
 
         if (isMounted) {
           setRelatedPosts(related);
-          setError(null);
-          setLoadingRelated(false);
         }
-      } catch (err) {
-        if (isMounted) {
-          console.error("Error fetching related posts:", err);
-          setLoadingRelated(false);
-          // Don't set error - just don't show related posts
+      } catch (error) {
+        if (
+          isMounted &&
+          !(error instanceof Error && error.name === "AbortError")
+        ) {
+          console.error("Error fetching similar articles:", error);
         }
       }
     };
@@ -130,15 +117,43 @@ const BlogDetailClient = ({ post, slug }: BlogDetailClientProps) => {
 
     return () => {
       isMounted = false;
-      clearTimeout(timeoutId);
       controller.abort();
     };
   }, [post._id, post.category]);
 
-  // Don't block page render - show content immediately
+  useEffect(() => {
+    const updateReadingProgress = () => {
+      const articleElement = articleContentRef.current;
+
+      if (!articleElement) {
+        return;
+      }
+
+      const rect = articleElement.getBoundingClientRect();
+      const scrollTop = window.scrollY || window.pageYOffset;
+      const articleTop = scrollTop + rect.top;
+      const articleHeight = articleElement.offsetHeight;
+      const viewportHeight = window.innerHeight;
+      const scrollableDistance = Math.max(articleHeight - viewportHeight, 1);
+      const rawProgress = (scrollTop - articleTop) / scrollableDistance;
+      const clampedProgress = Math.min(Math.max(rawProgress, 0), 1);
+
+      setReadingProgress(Math.round(clampedProgress * 100));
+    };
+
+    updateReadingProgress();
+
+    window.addEventListener("scroll", updateReadingProgress, { passive: true });
+    window.addEventListener("resize", updateReadingProgress);
+
+    return () => {
+      window.removeEventListener("scroll", updateReadingProgress);
+      window.removeEventListener("resize", updateReadingProgress);
+    };
+  }, []);
+
   return (
     <>
-      {/* JSON-LD Structured Data for SEO */}
       <script
         type="application/ld+json"
         dangerouslySetInnerHTML={{
@@ -177,286 +192,137 @@ const BlogDetailClient = ({ post, slug }: BlogDetailClientProps) => {
 
       <div className="min-h-screen bg-white">
         <Header />
+        <div className="pointer-events-none fixed left-0 right-0 top-[84px] z-[59] h-[3px] bg-transparent">
+          <div
+            className="h-full bg-[#155dfc] transition-[width] duration-150 ease-out"
+            style={{ width: `${readingProgress}%` }}
+          />
+        </div>
 
-        <div className="max-w-6xl mx-auto px-4 md:px-6 py-8 md:py-12">
-          {/* Back Button */}
-          <Link href="/blog">
-            <motion.button
-              initial={{ opacity: 0, x: -20 }}
-              animate={{ opacity: 1, x: 0 }}
-              className="flex items-center gap-2 text-slate-600 hover:text-blue-600 transition-colors mb-6 md:mb-8"
-            >
-              <ArrowLeft className="w-4 h-4" />
-              <span className="text-sm font-medium">Back to Blog</span>
-            </motion.button>
-          </Link>
+        <main className="bg-white px-5 pb-14 pt-6 md:px-8 md:pb-20 md:pt-8">
+          <motion.article
+            initial={{ opacity: 0, y: 18 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.45, ease: "easeOut" }}
+            className="mx-auto max-w-[980px]"
+          >
+            <div ref={articleContentRef}>
+              <header className="mx-auto max-w-[860px]">
+                <h1 className="w-full !text-[28px] !font-bold !leading-[1.02] tracking-[-0.05em] text-[#000945] md:!text-[52px]">
+                  {post.title}
+                </h1>
 
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 md:gap-12">
-            {/* Main Content */}
-            <div className="lg:col-span-2">
-              {/* Article Header */}
-              <motion.article
-                initial={{ opacity: 0, y: 30 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.6 }}
-                className="bg-white rounded-lg overflow-hidden mb-8 md:mb-12"
-              >
-                {/* Hero Image */}
-                <div className="relative w-full h-[250px] md:h-[400px] lg:h-[450px] overflow-hidden rounded-lg">
+                <p className="mt-5 w-full !text-[14px] !leading-[1.7] !text-[#000945] md:!text-[15px]">
+                  {post.excerpt}
+                </p>
+
+                <div className="mt-8 flex flex-col gap-4 pb-2 md:flex-row md:items-center md:justify-between">
+                  <div className="flex items-center gap-3">
+                    <div className="flex h-11 w-11 items-center justify-center rounded-full bg-[#efe7df] text-sm font-semibold text-[#000945]">
+                      {post.author?.charAt(0) || "P"}
+                    </div>
+                    <div>
+                      <p className="!text-[14px] !font-semibold !leading-none !text-[#000945]">
+                        {post.author || "Paradise Yatra"}
+                      </p>
+                      <p className="mt-1.5 !text-[12px] !leading-none !text-[#000945]">
+                        Editorial Contributor
+                      </p>
+                    </div>
+                  </div>
+
+                  <div className="flex flex-wrap items-center gap-4 text-[#000945] md:gap-6">
+                    <div className="flex items-center gap-2">
+                      <CalendarDays className="h-4 w-4" />
+                      <span className="text-[12px] font-medium md:text-[13px]">
+                        {formatDate(post.createdAt)}
+                      </span>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <Clock3 className="h-4 w-4" />
+                      <span className="text-[12px] font-medium md:text-[13px]">
+                        {post.readTime || 5} min read
+                      </span>
+                    </div>
+                  </div>
+                </div>
+              </header>
+
+              <div className="mt-2 overflow-hidden rounded-[6px]">
+                <div className="relative h-[260px] md:h-[520px]">
                   <Image
                     src={getSafeImageUrl(post.image, post._id)}
                     alt={post.title}
                     fill
-                    className="object-cover rounded-lg"
                     priority
-                    sizes="(max-width: 768px) 100vw, (max-width: 1200px) 66vw, 800px"
-                    onError={(e) => handleImageError(post._id, e)}
+                    className="object-cover"
+                    sizes="(max-width: 1024px) 100vw, 980px"
+                    onError={(event) => handleImageError(post._id, event)}
                   />
-                  <div className="absolute inset-0 bg-gradient-to-t from-black/30 via-transparent to-transparent" />
-
-                  {/* Category Badge */}
-                  <div className="absolute top-6 left-6">
-                    <span className="bg-blue-600 text-white px-3 py-1.5 rounded-full text-xs font-semibold uppercase tracking-wider">
-                      {post.category}
-                    </span>
-                  </div>
                 </div>
+              </div>
 
-                {/* Article Content */}
-                <div className="p-5 md:p-8">
-                  {/* Title */}
-                  <h1 className="!text-2xl md:!text-3xl lg:!text-4xl !font-black !text-slate-900 mb-4 md:mb-6 leading-tight tracking-tight">
-                    {post.title}
-                  </h1>
+              <div className="mx-auto mt-10 max-w-[860px]">
+                <div
+                  className="overflow-x-auto !text-[#000945] [&_h1]:!mb-5 [&_h1]:!mt-12 [&_h1]:!text-[34px] [&_h1]:!font-semibold [&_h1]:!leading-[1.08] [&_h1]:tracking-[-0.04em] [&_h1]:!text-[#000945] [&_h2]:!mb-5 [&_h2]:!mt-12 [&_h2]:!text-[30px] [&_h2]:!font-semibold [&_h2]:!leading-[1.1] [&_h2]:tracking-[-0.04em] [&_h2]:!text-[#000945] [&_h3]:!mb-4 [&_h3]:!mt-10 [&_h3]:!text-[24px] [&_h3]:!font-semibold [&_h3]:!leading-[1.16] [&_h3]:!text-[#000945] [&_h4]:!mb-3 [&_h4]:!mt-8 [&_h4]:!text-[20px] [&_h4]:!font-semibold [&_h4]:!text-[#000945] [&_p]:!mb-6 [&_p]:!text-[15px] [&_p]:!leading-[1.9] [&_p]:!text-[#000945] [&_ul]:!mb-6 [&_ul]:!list-disc [&_ul]:!space-y-2 [&_ul]:!pl-6 [&_ol]:!mb-6 [&_ol]:!list-decimal [&_ol]:!space-y-2 [&_ol]:!pl-6 [&_li]:!text-[15px] [&_li]:!leading-[1.85] [&_li]:!text-[#000945] [&_strong]:!text-[#000945] [&_em]:!text-[#000945] [&_span]:!text-[#000945] [&_blockquote]:!my-10 [&_blockquote]:!border-l-[3px] [&_blockquote]:!border-[#000945] [&_blockquote]:!pl-6 [&_blockquote]:!text-[24px] [&_blockquote]:!font-medium [&_blockquote]:!italic [&_blockquote]:!leading-[1.5] [&_blockquote]:!text-[#000945] [&_a]:!text-[#000945] [&_a]:!underline [&_img]:!my-8 [&_img]:!rounded-[18px] [&_table]:!my-8 [&_table]:!w-full [&_table]:!border-collapse [&_th]:!border-b [&_th]:!border-[#dfdfdf] [&_th]:!px-4 [&_th]:!py-3 [&_th]:!text-left [&_th]:!text-sm [&_th]:!font-semibold [&_th]:!text-[#000945] [&_td]:!border-b [&_td]:!border-[#ececec] [&_td]:!px-4 [&_td]:!py-3 [&_td]:!text-sm [&_td]:!text-[#000945]"
+                  dangerouslySetInnerHTML={{ __html: post.content }}
+                />
+              </div>
+            </div>
 
-                  {/* Meta Information */}
-                  <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 pb-6 mb-6 border-b border-slate-200">
-                    <div className="flex flex-wrap items-center gap-x-6 gap-y-2 !text-xs md:!text-sm !text-slate-600">
-                      <div className="flex items-center gap-2">
-                        <div className="w-7 h-7 rounded-full bg-gradient-to-br from-blue-100 to-indigo-100 text-blue-700 flex items-center justify-center !font-bold text-[10px]">
-                          {post.author?.charAt(0) || "P"}
-                        </div>
-                        <span className="!font-bold !text-slate-700">{post.author || "Paradise Yatra"}</span>
-                      </div>
-                      <div className="flex items-center gap-2">
-                        <Calendar className="w-3.5 h-3.5 text-slate-400" />
-                        <span className="!font-medium">
-                          {new Date(post.createdAt).toLocaleDateString("en-US", {
-                            month: "short",
-                            day: "numeric",
-                            year: "numeric",
-                          })}
-                        </span>
-                      </div>
-                      <div className="flex items-center gap-2">
-                        <Clock className="w-3.5 h-3.5 text-slate-400" />
-                        <span className="!font-medium">{post.readTime || 5} min read</span>
-                      </div>
-                    </div>
-                    <div className="flex items-center gap-4">
-                      <button className="flex items-center gap-2 text-slate-600 hover:text-blue-600 transition-colors">
-                        <Eye className="w-4 h-4" />
-                        <span className="text-sm">{post.views || 0}</span>
-                      </button>
-                      <button className="flex items-center gap-2 text-slate-600 hover:text-blue-600 transition-colors">
-                        <Heart className="w-4 h-4" />
-                        <span className="text-sm">{post.likes || 0}</span>
-                      </button>
-                      <button className="flex items-center gap-2 text-slate-600 hover:text-blue-600 transition-colors">
-                        <Share2 className="w-4 h-4" />
-                      </button>
-                    </div>
-                  </div>
+            {relatedPosts.length > 0 && (
+              <section className="mx-auto mt-16 max-w-[980px] border-t border-[#e6e6e6] pt-10">
+                <h2 className="!text-[28px] !font-bold !leading-none text-[#111111] md:!text-[36px]">
+                  Similar Articles
+                </h2>
 
-                  {/* Article Body */}
-                  <div className="max-w-none">
-                    <div
-                      className="!text-slate-800 !leading-relaxed space-y-6 overflow-x-auto [&_h1]:!text-xl md:[&_h1]:!text-2xl [&_h1]:!font-extrabold [&_h1]:!text-slate-900 [&_h1]:!mt-8 [&_h1]:!mb-4 [&_h2]:!text-lg md:[&_h2]:!text-xl [&_h2]:!font-bold [&_h2]:!text-slate-900 [&_h2]:!mt-8 [&_h2]:!mb-4 [&_h3]:!text-base md:[&_h3]:!text-lg [&_h3]:!font-bold [&_h3]:!text-slate-900 [&_h3]:!mt-6 [&_h3]:!mb-3 [&_h4]:!text-sm md:[&_h4]:!text-base [&_h4]:!font-semibold [&_h4]:!text-slate-900 [&_h4]:!mt-5 [&_h4]:!mb-2 [&_p]:!mb-4 [&_p]:!leading-relaxed [&_p]:!text-sm md:[&_p]:!text-base [&_p]:!text-slate-600 [&_ul]:!list-disc [&_ul]:!pl-6 [&_ul]:!space-y-2 [&_ol]:!list-decimal [&_ol]:!pl-6 [&_ol]:!space-y-2 [&_li]:!mb-2 [&_li]:!text-sm md:[&_li]:!text-base [&_li]:!text-slate-600 [&_a]:!text-blue-600 [&_a]:!underline [&_a]:!hover:text-blue-700 [&_img]:!rounded-lg [&_img]:!my-6 [&_blockquote]:!border-l-4 [&_blockquote]:!border-blue-600 [&_blockquote]:!pl-4 [&_blockquote]:!italic [&_blockquote]:!text-slate-600 [&_blockquote]:!my-6 [&_table]:!w-full [&_table]:!my-6 [&_table]:!border [&_table]:!border-slate-200 [&_table]:!border-separate [&_table]:!border-spacing-0 [&_table]:!rounded-lg [&_table]:!overflow-hidden [&_th]:!bg-slate-100 [&_th]:!text-slate-900 [&_th]:!font-semibold [&_th]:!text-sm [&_th]:!px-4 [&_th]:!py-3 [&_th]:!text-left [&_th]:!border-b [&_th]:!border-r [&_th]:!border-slate-200 [&_td]:!text-slate-700 [&_td]:!text-sm [&_td]:!px-4 [&_td]:!py-3 [&_td]:!align-top [&_td]:!border-b [&_td]:!border-r [&_td]:!border-slate-200 [&_tr:last-child_td]:!border-b-0 [&_tr_th:last-child]:!border-r-0 [&_tr_td:last-child]:!border-r-0"
-                      dangerouslySetInnerHTML={{ __html: post.content }}
-                    />
-                  </div>
-                </div>
-              </motion.article>
-
-              {/* Related Articles */}
-              {loadingRelated && (
-                <motion.section
-                  initial={{ opacity: 0, y: 30 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ duration: 0.6, delay: 0.2 }}
-                  className="mb-8"
-                >
-                  <h2 className="text-2xl md:text-3xl !font-extrabold text-slate-900 mb-6 md:mb-8 tracking-tight">
-                    Related Articles
-                  </h2>
-                  <div className="flex items-center justify-center py-8">
-                    <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
-                  </div>
-                </motion.section>
-              )}
-              {!loadingRelated && relatedPosts.length > 0 && (
-                <motion.section
-                  initial={{ opacity: 0, y: 30 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ duration: 0.6, delay: 0.2 }}
-                  className="mb-8"
-                >
-                  <h2 className="text-2xl md:text-3xl !font-extrabold text-slate-900 mb-6 md:mb-8 tracking-tight">
-                    Related Articles
-                  </h2>
-                  <div className="grid grid-cols-1 md:grid-cols-3 gap-6 md:gap-8">
-                    {relatedPosts.map((relatedPost, index) => (
-                      <Link
-                        key={relatedPost._id}
-                        href={`/blog/${getPostSlug(relatedPost)}`}
-                        prefetch={true}
-                      >
-                        <motion.article
-                          initial={{ opacity: 0, y: 20 }}
-                          animate={{ opacity: 1, y: 0 }}
-                          transition={{ duration: 0.4, delay: index * 0.1 }}
-                          className="group cursor-pointer"
-                        >
-                          {/* Image */}
-                          <div className="overflow-hidden rounded-lg mb-4 aspect-[4/3] relative">
+                <div className="mt-6 grid gap-5 md:grid-cols-3">
+                  {relatedPosts.map((relatedPost, index) => (
+                    <motion.article
+                      key={relatedPost._id}
+                      initial={{ opacity: 0, y: 14 }}
+                      whileInView={{ opacity: 1, y: 0 }}
+                      viewport={{ once: true, amount: 0.2 }}
+                      transition={{ duration: 0.35, delay: index * 0.06 }}
+                    >
+                      <Link href={`/blog/${getPostSlug(relatedPost)}`} prefetch>
+                        <div className="overflow-hidden rounded-[6px] bg-[#ececec]">
+                          <div className="relative aspect-[1.24/1]">
                             <Image
-                              src={getSafeImageUrl(relatedPost.image, relatedPost._id)}
+                              src={getSafeImageUrl(
+                                relatedPost.image,
+                                relatedPost._id
+                              )}
                               alt={relatedPost.title}
                               fill
-                              className="object-cover group-hover:scale-105 transition-transform duration-500 rounded-lg"
-                              sizes="(max-width: 768px) 100vw, (max-width: 1200px) 33vw, 400px"
-                              onError={(e) => handleImageError(relatedPost._id, e)}
+                              className="object-cover"
+                              sizes="(max-width: 768px) 100vw, 33vw"
+                              onError={(event) =>
+                                handleImageError(relatedPost._id, event)
+                              }
                             />
                           </div>
+                        </div>
 
-                          {/* Content */}
-                          <div className="space-y-2 p-2">
-                            <span className="text-blue-600 text-[9px] font-black uppercase tracking-widest bg-blue-50 px-2 py-0.5 rounded-full">
-                              {relatedPost.category}
-                            </span>
-                            <h3 className="!text-base text-slate-900 !font-bold group-hover:text-blue-600 transition-colors line-clamp-2 leading-snug">
-                              {relatedPost.title}
-                            </h3>
-                            <p className="!text-xs !text-slate-600 line-clamp-2 leading-relaxed opacity-90">
-                              {relatedPost.excerpt}
-                            </p>
-                            <div className="flex items-center justify-between pt-2 border-t border-dashed border-slate-200">
-                              <div className="flex items-center gap-2">
-                                <div className="w-5 h-5 rounded-full bg-gradient-to-br from-blue-100 to-indigo-100 text-blue-700 flex items-center justify-center !font-bold text-[9px]">
-                                  {relatedPost.author?.charAt(0) || "A"}
-                                </div>
-                                <span className="text-[10px] !font-bold text-slate-600">
-                                  {relatedPost.author || "Paradise Yatra"}
-                                </span>
-                              </div>
-                              <span className="text-[9px] text-slate-400 !font-bold uppercase tracking-tighter">
-                                {relatedPost.readTime || 5} min
-                              </span>
-                            </div>
-                          </div>
-                        </motion.article>
+                        <div className="mt-3 flex flex-wrap items-center gap-2 text-[11px] text-[#7a7a7a]">
+                          <span>{relatedPost.category}</span>
+                          <span>.</span>
+                          <span>{formatDate(relatedPost.createdAt)}</span>
+                          <span>.</span>
+                          <span>{relatedPost.readTime || 5} min read</span>
+                        </div>
+
+                        <h3 className="mt-2 max-w-[260px] !text-[18px] !font-semibold !leading-[1.2] text-[#111111]">
+                          {relatedPost.title}
+                        </h3>
                       </Link>
-                    ))}
-                  </div>
-                </motion.section>
-              )}
-            </div>
-
-            {/* Sidebar */}
-            <div className="lg:col-span-1">
-              <motion.div
-                initial={{ opacity: 0, x: 30 }}
-                animate={{ opacity: 1, x: 0 }}
-                transition={{ duration: 0.6, delay: 0.3 }}
-                className="space-y-6 sticky top-24"
-              >
-                {/* Author Info */}
-                <div className="bg-white rounded-lg p-6 border border-slate-200">
-                  <h3 className="!text-lg !font-bold text-slate-900 mb-4">
-                    About the Author
-                  </h3>
-                  <div className="flex items-center gap-3 mb-4">
-                    <div className="w-12 h-12 rounded-full bg-gradient-to-br from-blue-100 to-indigo-100 text-blue-700 flex items-center justify-center font-semibold text-lg">
-                      {post.author?.charAt(0) || "P"}
-                    </div>
-                    <div>
-                      <h4 className="font-semibold text-slate-900">
-                        {post.author || "Paradise Yatra"}
-                      </h4>
-                      <p className="text-sm !text-slate-500">Travel Expert</p>
-                    </div>
-                  </div>
-                  <p className="!text-slate-600 text-sm leading-relaxed">
-                    Passionate travel writer with years of experience exploring
-                    the world&apos;s most beautiful destinations.
-                  </p>
+                    </motion.article>
+                  ))}
                 </div>
-
-                {/* Popular Posts */}
-                <div className="bg-white rounded-lg p-6 border border-slate-200">
-                  <h3 className="!text-lg !font-bold text-slate-900 mb-4">
-                    Popular Posts
-                  </h3>
-                  {loadingRelated ? (
-                    <div className="flex items-center justify-center py-8">
-                      <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-blue-600"></div>
-                    </div>
-                  ) : (
-                    <div className="space-y-4">
-                      {relatedPosts.slice(0, 3).map((popularPost) => (
-                        <Link
-                          key={popularPost._id}
-                          href={`/blog/${getPostSlug(popularPost)}`}
-                          prefetch={true}
-                        >
-                          <div className="flex items-center gap-3 group cursor-pointer">
-                            <div className="relative w-14 h-14 rounded-lg overflow-hidden flex-shrink-0">
-                              <Image
-                                src={getSafeImageUrl(popularPost.image, popularPost._id)}
-                                alt={popularPost.title}
-                                fill
-                                className="object-cover transition-transform duration-300 group-hover:scale-110"
-                                sizes="56px"
-                                onError={(e) => handleImageError(popularPost._id, e)}
-                              />
-                            </div>
-                            <div className="flex-1 min-w-0">
-                              <h4 className="font-semibold text-slate-900 group-hover:text-blue-600 transition-colors line-clamp-2 text-sm leading-tight">
-                                {popularPost.title}
-                              </h4>
-                              <p className="text-xs text-slate-500 mt-1">
-                                {popularPost.readTime || 5} min read
-                              </p>
-                            </div>
-                          </div>
-                        </Link>
-                      ))}
-                    </div>
-                  )}
-                </div>
-
-                {/* Newsletter Signup */}
-                <div className="bg-gradient-to-r from-blue-600 to-indigo-600 rounded-lg p-6 text-white">
-                  <h3 className="!text-lg !font-bold mb-2">Stay Updated</h3>
-                  <p className="!text-blue-100 !text-sm mb-4">
-                    Get the latest travel tips and destination guides delivered
-                    to your inbox.
-                  </p>
-                  <div className="space-y-3">
-                    <input
-                      type="email"
-                      placeholder="Enter your email"
-                      className="bg-white/10 backdrop-blur-sm border border-white/20 w-full px-4 py-2.5 rounded-lg text-white placeholder:text-white text-sm focus:outline-none focus:ring-2 focus:ring-white/50"
-                    />
-                    <Button className="w-full !bg-white !text-blue-600 !font-semibold rounded-lg hover:bg-white/90 hover:scale-105 transition-all duration-300 text-sm">
-                      Subscribe
-                    </Button>
-                  </div>
-                </div>
-              </motion.div>
-            </div>
-          </div>
-        </div>
+              </section>
+            )}
+          </motion.article>
+        </main>
       </div>
     </>
   );
