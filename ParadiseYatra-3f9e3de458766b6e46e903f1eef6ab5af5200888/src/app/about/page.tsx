@@ -133,7 +133,7 @@ const AboutPage = memo(() => {
   useEffect(() => {
     const section = lifeSectionRef.current;
     if (!section) return;
-    const videos = Array.from(section.querySelectorAll("video[data-life-reel='true']"));
+    const videos = Array.from(section.querySelectorAll<HTMLVideoElement>("video[data-life-reel='true']"));
     videos.forEach((video) => {
       if (playLifeVideos) {
         void video.play().catch(() => {});
