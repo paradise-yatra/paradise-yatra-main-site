@@ -427,6 +427,7 @@ export default function ThemePackagesPageClient({ slug }: { slug: string }) {
                                                 price={pkg.price}
                                                 priceLabel={getPackagePriceLabel(pkg.priceType)}
                                                 image={pkg.image}
+                                                imageAlt={pkg.imageAlt || pkg.name}
                                                 detailUrl={`/package/${pkg.slug || pkg._id}`}
                                                 isInWishlist={isInWishlist(pkg._id)}
                                                 onWishlistToggle={(e) => {
@@ -509,6 +510,7 @@ export default function ThemePackagesPageClient({ slug }: { slug: string }) {
                                             title={pkg.name}
                                             destination={pkg.location}
                                             image={getImageUrl(pkg.image) || pkg.image || ''}
+                                            imageAlt={pkg.imageAlt || pkg.name}
                                             duration={pkg.duration}
                                             price={pkg.price || 0}
                                             slug={pkg.slug || pkg._id}

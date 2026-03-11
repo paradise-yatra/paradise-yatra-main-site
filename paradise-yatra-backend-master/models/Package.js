@@ -96,6 +96,11 @@ const packageSchema = new mongoose.Schema(
         required: true,
       },
     ],
+    imageAlt: {
+      type: String,
+      trim: true,
+      default: "",
+    },
     highlights: [
       {
         type: String,

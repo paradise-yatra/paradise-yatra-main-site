@@ -76,6 +76,8 @@ export default function NewsletterSubscribe() {
                         <img
                             src="https://images.unsplash.com/photo-1533105079780-92b9be482077?q=80&w=1974&auto=format&fit=crop"
                             alt="Escape to Paradise"
+                            loading="lazy"
+                            decoding="async"
                             className="absolute inset-0 w-full h-full object-cover"
                         />
                         {/* Darker overlay to blend with blue better */}

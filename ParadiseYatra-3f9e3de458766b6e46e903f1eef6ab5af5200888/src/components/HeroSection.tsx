@@ -1,10 +1,14 @@
 ﻿"use client";
 
-import { Search, Mountain, Sparkles } from "lucide-react";
+import { Search, Mountain, Sparkles, Compass } from "lucide-react";
 import React, { useState, useEffect } from "react";
-import { SkeletonHero } from "@/components/ui/skeleton";
+import Image from "next/image";
+import dynamic from "next/dynamic";
 import { useRouter } from "next/navigation";
-import SearchSuggestions from "./SearchSuggestions";
+
+const SearchSuggestions = dynamic(() => import("./SearchSuggestions"), {
+  ssr: false,
+});
 
 const HeroSection = () => {
   const [searchQuery, setSearchQuery] = useState("");
@@ -12,6 +16,9 @@ const HeroSection = () => {
   const [typingText, setTypingText] = useState("");
   const [currentTextIndex, setCurrentTextIndex] = useState(0);
   const [isDeleting, setIsDeleting] = useState(false);
+  const [shouldShowVideo, setShouldShowVideo] = useState(false);
+  const [videoSrc, setVideoSrc] = useState<string | null>(null);
+  const [animatePlaceholder, setAnimatePlaceholder] = useState(true);
   const router = useRouter();
 
   const placeholderTexts = [
@@ -31,6 +38,13 @@ const HeroSection = () => {
 
   // Typing animation effect
   useEffect(() => {
+    if (!animatePlaceholder) {
+      if (typingText !== placeholderTexts[0]) {
+        setTypingText(placeholderTexts[0]);
+      }
+      return;
+    }
+
     const currentText = placeholderTexts[currentTextIndex];
     const typingSpeed = isDeleting ? 50 : 100;
     const pauseTime = isDeleting ? 500 : 2000;
@@ -53,7 +67,74 @@ const HeroSection = () => {
     }, typingSpeed);
 
     return () => clearTimeout(timer);
-  }, [typingText, currentTextIndex, isDeleting, placeholderTexts]);
+  }, [typingText, currentTextIndex, isDeleting, placeholderTexts, animatePlaceholder]);
+
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    const motionQuery = window.matchMedia("(prefers-reduced-motion: reduce)");
+    const connection = (navigator as Navigator & { connection?: { saveData?: boolean } })
+      .connection;
+
+    const update = () => {
+      const allowVideo = !motionQuery.matches && !connection?.saveData;
+      const allowTyping = !motionQuery.matches && !connection?.saveData;
+      setShouldShowVideo(allowVideo);
+      setAnimatePlaceholder(allowTyping);
+    };
+
+    update();
+    const addListener = (query: MediaQueryList, handler: () => void) => {
+      if (query.addEventListener) {
+        query.addEventListener("change", handler);
+      } else {
+        query.addListener(handler);
+      }
+    };
+    const removeListener = (query: MediaQueryList, handler: () => void) => {
+      if (query.removeEventListener) {
+        query.removeEventListener("change", handler);
+      } else {
+        query.removeListener(handler);
+      }
+    };
+
+    addListener(motionQuery, update);
+
+    return () => {
+      removeListener(motionQuery, update);
+    };
+  }, []);
+
+  useEffect(() => {
+    if (!shouldShowVideo) {
+      setVideoSrc(null);
+      return;
+    }
+
+    let cancelled = false;
+    const loadVideo = () => {
+      if (!cancelled) {
+        setVideoSrc("/Home/Hero/Hero%20Background.mp4");
+      }
+    };
+
+    if ("requestIdleCallback" in window) {
+      const id = (window as Window & { requestIdleCallback: Function }).requestIdleCallback(
+        loadVideo,
+        { timeout: 2000 }
+      );
+      return () => {
+        cancelled = true;
+        (window as Window & { cancelIdleCallback: Function }).cancelIdleCallback(id);
+      };
+    }
+
+    const timeoutId = window.setTimeout(loadVideo, 1200);
+    return () => {
+      cancelled = true;
+      window.clearTimeout(timeoutId);
+    };
+  }, [shouldShowVideo]);
 
   const handleSearchSelect = (suggestion: {
     slug: string;
@@ -89,15 +170,19 @@ const HeroSection = () => {
     <div className="relative min-h-[100dvh] flex flex-col font-plus-jakarta-sans">
       {/* Hero background with video or image fallback */}
       <div className="absolute inset-0">
-        <video
-          className="h-full w-full bg-black object-cover object-center md:object-[center_20%]"
-          src="/Home/Hero/Hero%20Background.mp4?v=1.1"
-          autoPlay
-          loop
-          muted
-          playsInline
-          preload="auto"
-        />
+        {shouldShowVideo && (
+          <video
+            className="absolute inset-0 h-full w-full bg-transparent object-cover object-center md:object-[center_20%]"
+            autoPlay
+            loop
+            muted
+            playsInline
+            preload="none"
+            aria-hidden="true"
+          >
+            {videoSrc && <source src={videoSrc} type="video/mp4" />}
+          </video>
+        )}
         <div className="absolute inset-0 bg-gradient-to-b from-black/10 via-black/40 to-black/20"></div>
       </div>
 
@@ -129,28 +214,32 @@ const HeroSection = () => {
               </div>
             </button>
 
-            <SearchSuggestions
-              query={searchQuery}
-              onQueryChange={setSearchQuery}
-              onSelect={handleSearchSelect}
-              isOpen={isSearchOpen}
-              onClose={handleSearchClose}
-              variant="hero"
-            />
+            {isSearchOpen && (
+              <SearchSuggestions
+                query={searchQuery}
+                onQueryChange={setSearchQuery}
+                onSelect={handleSearchSelect}
+                isOpen={isSearchOpen}
+                onClose={handleSearchClose}
+                variant="hero"
+              />
+            )}
           </div>
 
           {/* Integrated hero lower panel */}
           <div
-            className="-mt-8 w-full rounded-none border-white px-4 pb-24 pt-20 shadow-2xl border-2 border-dashed border-b-0 backdrop-blur-sm md:px-8 md:pb-32 md:pt-24 sm:rounded-t-[80px] sm:rounded-b-none rounded-t-2xl"
-            style={{
-              backgroundImage: "url('/Home/Hero/Pick%20Your%20Style%20Background.jpg?v=1.1')",
-              backgroundSize: 'cover',
-              backgroundPosition: 'center',
-              backgroundBlendMode: 'overlay',
-              boxShadow: '0 -20px 50px 0px rgba(0, 0, 0, 0.65)'
-            }}
+            className="-mt-8 w-full rounded-none border-white px-4 pb-24 pt-20 shadow-2xl border-2 border-dashed border-b-0 backdrop-blur-sm md:px-8 md:pb-32 md:pt-24 sm:rounded-t-[80px] sm:rounded-b-none rounded-t-2xl relative overflow-hidden"
+            style={{ boxShadow: "0 -20px 50px 0px rgba(0, 0, 0, 0.65)" }}
           >
-            <div className="mx-auto max-w-6xl">
+            <Image
+              src="/Home/Hero/Pick%20Your%20Style%20Background.jpg"
+              alt=""
+              fill
+              sizes="100vw"
+              quality={70}
+              className="object-cover object-center"
+            />
+            <div className="relative z-10 mx-auto max-w-6xl">
               <h2 className="text-center !font-bold text-xl md:!text-3xl text-white mb-2">
                 Pick your travel style
               </h2>
@@ -226,11 +315,7 @@ const HeroSection = () => {
                   onClick={() => router.push("/coming-soon")}
                 >
                   <div className="w-16 h-16 md:w-24 md:h-24 flex items-center justify-center rounded-full bg-blue-600 p-3 md:p-4">
-                    <img
-                      src="https://res.cloudinary.com/dwuwpxu0y/image/upload/f_auto,q_auto:good,w_auto,dpr_auto,c_limit/v1769084210/Trekking_Icon_c3g7uw.png"
-                      alt="Adventure"
-                      className="w-full h-full object-contain filter brightness-0 invert"
-                    />
+                    <Compass className="w-full h-full text-white" strokeWidth={1.5} />
                   </div>
                   <div className="flex flex-col items-center">
                     <span className="text-lg md:text-xl font-bold !text-white tracking-wide relative group-hover:text-blue-200 transition-colors duration-300">

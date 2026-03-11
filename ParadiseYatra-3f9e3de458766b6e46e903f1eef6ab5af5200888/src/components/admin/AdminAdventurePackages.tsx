@@ -23,6 +23,7 @@ interface AdventurePackage {
   originalPrice?: number;
   rating: number;
   images: string[];
+  imageAlt?: string;
   category: string;
   description: string;
   shortDescription: string;
@@ -43,6 +44,7 @@ interface PackageData {
   originalPrice?: number; 
   rating: number;
   images: string[];
+  imageAlt?: string;
   category: string;
   description: string;
   shortDescription: string;
@@ -78,6 +80,7 @@ const AdminAdventurePackages = () => {
     originalPrice: "",
     rating: "",
     images: "",
+    imageAlt: "",
     category: "Adventure Tours",
     description: "",
     shortDescription: "",
@@ -238,6 +241,7 @@ const AdminAdventurePackages = () => {
         originalPrice: originalPrice,
         rating: rating,
         images: formData.images.split(',').map(img => img.trim()).filter(img => img),
+        imageAlt: formData.imageAlt.trim(),
         category: formData.category,
         description: formData.description.trim(),
         shortDescription: formData.shortDescription.trim(),
@@ -352,6 +356,7 @@ const AdminAdventurePackages = () => {
       originalPrice: pkg.originalPrice?.toString() || "",
       rating: pkg.rating.toString(),
       images: pkg.images.join(', '),
+      imageAlt: pkg.imageAlt || "",
       category: pkg.category,
       description: pkg.description,
       shortDescription: pkg.shortDescription,
@@ -450,6 +455,7 @@ const AdminAdventurePackages = () => {
         originalPrice: originalPrice,
         rating: rating,
         images: formData.images.split(',').map((img: string) => img.trim()).filter(img => img),
+        imageAlt: formData.imageAlt.trim(),
         category: formData.category,
         description: formData.description.trim(),
         shortDescription: formData.shortDescription.trim(),
@@ -627,6 +633,7 @@ const AdminAdventurePackages = () => {
       originalPrice: "",
       rating: "",
       images: "",
+      imageAlt: "",
       category: "Adventure Tours",
       description: "",
       shortDescription: "",
@@ -868,6 +875,17 @@ const AdminAdventurePackages = () => {
               />
             </div>
             <div className="md:col-span-2">
+              <label className="block text-sm font-medium text-gray-700 mb-2">Image Alt Text</label>
+              <input
+                type="text"
+                value={formData.imageAlt}
+                onChange={(e) => setFormData({ ...formData, imageAlt: e.target.value })}
+                className="w-full text-gray-900 px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500"
+                placeholder="Describe the package cover image"
+              />
+              <p className="text-xs text-gray-500 mt-1">Used for accessibility and SEO.</p>
+            </div>
+            <div className="md:col-span-2">
               <label className="block text-sm font-medium text-gray-700 mb-2">Description</label>
               <textarea
                 value={formData.description}
@@ -992,7 +1010,7 @@ const AdminAdventurePackages = () => {
                       <div className="w-12 h-12 rounded overflow-hidden relative">
                         <Image 
                           src={getImageUrl(pkg.images?.[0]) || "https://images.unsplash.com/photo-1551632811-561732d1e306?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80"} 
-                          alt={pkg.title}
+                          alt={pkg.imageAlt || pkg.title}
                           fill
                           className="object-cover rounded"
                         />
@@ -1165,7 +1183,7 @@ const AdminAdventurePackages = () => {
               <div className="w-full h-48 rounded-lg overflow-hidden relative">
                 <Image 
                   src={getImageUrl(selectedPackage.images?.[0]) || "https://images.unsplash.com/photo-1551632811-561732d1e306?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80"} 
-                  alt={selectedPackage.title}
+                  alt={selectedPackage.imageAlt || selectedPackage.title}
                   fill
                   className="object-cover rounded-lg"
                 />

@@ -1,12 +1,10 @@
 import type { Metadata, Viewport } from "next";
 import { Playfair_Display, Nunito, Plus_Jakarta_Sans, Unbounded } from "next/font/google";
+import { SITE_URL } from "@/lib/seo";
 import "./globals.css";
 import FooterWrapper from "@/components/FooterWrapper";
-import { BlogProvider } from "@/context/BlogContext";
 import { AuthProvider } from "@/context/AuthContext";
-import { GoogleOAuthProvider } from "@react-oauth/google";
 import Script from "next/script";
-import NewFooter from "@/components/NewFooter";
 import { ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import { ReduxProvider } from "@/redux/ReduxProvider";
@@ -47,8 +45,12 @@ export const viewport: Viewport = {
   initialScale: 1,
 };
 
+const DEFAULT_DESCRIPTION =
+  "Discover the world with Paradise Yatra, the best travel agency in Dehradun. We offer customized international and domestic tour packages, trekking adventures, and unforgettable travel experiences.";
+
 export const metadata: Metadata = {
-  metadataBase: new URL(process.env.NEXT_PUBLIC_SITE_URL || 'https://paradiseyatra.com'),
+  metadataBase: new URL(SITE_URL),
+  description: DEFAULT_DESCRIPTION,
   // Only include global metadata that should apply to all pages
   icons: {
     icon: "/favicon.png",
@@ -117,20 +119,16 @@ export default function RootLayout({
         </Script>
       </head>
       <body className={`${plusJakartaSans.className} antialiased`}>
-        <GoogleOAuthProvider clientId={process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID || ""}>
-          <ReduxProvider>
-            <AuthProvider>
-              <BlogProvider>
-                {children}
-                <CookieConsentManager />
-                <TalkToAgentButton />
-                <FooterWrapper />
-                <ToastContainer position="top-right" autoClose={3000} hideProgressBar={false} newestOnTop={false} closeOnClick rtl={false} pauseOnFocusLoss draggable pauseOnHover theme="light" />
-                {/* <NewFooter /> */}
-              </BlogProvider>
-            </AuthProvider>
-          </ReduxProvider>
-        </GoogleOAuthProvider>
+        <ReduxProvider>
+          <AuthProvider>
+            {children}
+            <CookieConsentManager />
+            <TalkToAgentButton />
+            <FooterWrapper />
+            <ToastContainer position="top-right" autoClose={3000} hideProgressBar={false} newestOnTop={false} closeOnClick rtl={false} pauseOnFocusLoss draggable pauseOnHover theme="light" />
+            {/* <NewFooter /> */}
+          </AuthProvider>
+        </ReduxProvider>
       </body>
     </html>
   );

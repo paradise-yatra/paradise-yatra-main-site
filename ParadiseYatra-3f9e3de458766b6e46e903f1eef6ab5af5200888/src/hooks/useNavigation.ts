@@ -90,7 +90,20 @@ export const useNavigation = () => {
   useEffect(() => {
     let isMounted = true;
     const controller = new AbortController();
-    const timeoutId = setTimeout(() => controller.abort(), 8000); // Reduced to 8 seconds for faster fallback
+    let abortTimeoutId: ReturnType<typeof setTimeout> | null = null;
+    let idleCleanup: (() => void) | null = null;
+
+    const startAbortTimer = () => {
+      if (abortTimeoutId) clearTimeout(abortTimeoutId);
+      abortTimeoutId = setTimeout(() => controller.abort(), 8000);
+    };
+
+    const clearAbortTimer = () => {
+      if (abortTimeoutId) {
+        clearTimeout(abortTimeoutId);
+        abortTimeoutId = null;
+      }
+    };
 
     const fetchNavigationData = async () => {
       try {
@@ -102,6 +115,7 @@ export const useNavigation = () => {
 
         let tourTypesResponse;
         try {
+          startAbortTimer();
           tourTypesResponse = await fetch('/api/tour-types', {
             cache: 'force-cache', // Use cache for better performance
             headers: {
@@ -109,9 +123,9 @@ export const useNavigation = () => {
             },
             signal: controller.signal,
           });
-          clearTimeout(timeoutId);
+          clearAbortTimer();
         } catch (fetchError) {
-          clearTimeout(timeoutId);
+          clearAbortTimer();
           if (fetchError instanceof Error && fetchError.name === 'AbortError') {
             console.warn('Navigation API request timed out - using fallback navigation');
             // Don't throw, just use fallback
@@ -232,12 +246,43 @@ export const useNavigation = () => {
       }
     };
 
-    fetchNavigationData();
+    const scheduleFetch = () => {
+      if (typeof window === 'undefined') {
+        fetchNavigationData();
+        return null;
+      }
+
+      const runAfterIdle = () => {
+        if ('requestIdleCallback' in window) {
+          const id = (window as Window & { requestIdleCallback: Function }).requestIdleCallback(
+            () => fetchNavigationData(),
+            { timeout: 4000 }
+          );
+          return () => (window as Window & { cancelIdleCallback: Function }).cancelIdleCallback(id);
+        }
+
+        const timeoutId = setTimeout(() => fetchNavigationData(), 2500);
+        return () => clearTimeout(timeoutId);
+      };
+
+      if (document.readyState === 'complete') {
+        return runAfterIdle();
+      }
+
+      const handleLoad = () => {
+        idleCleanup = runAfterIdle();
+      };
+      window.addEventListener('load', handleLoad, { once: true });
+      return () => window.removeEventListener('load', handleLoad);
+    };
+
+    idleCleanup = scheduleFetch();
 
     return () => {
       isMounted = false;
-      clearTimeout(timeoutId);
+      clearAbortTimer();
       controller.abort();
+      if (idleCleanup) idleCleanup();
     };
   }, []);
 

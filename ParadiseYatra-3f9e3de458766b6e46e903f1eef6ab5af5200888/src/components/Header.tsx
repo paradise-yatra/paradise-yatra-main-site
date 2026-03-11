@@ -28,15 +28,21 @@ import {
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useState, useEffect, useRef } from "react";
-import LeadCaptureForm from "./LeadCaptureForm";
-import Sidebar from "./Sidebar";
+import dynamic from "next/dynamic";
 import { usePathname, useRouter } from "next/navigation";
 import { useAuth } from "@/context/AuthContext";
 import Link from "next/link";
 
 import { useNavigation } from "@/hooks/useNavigation";
 import Image from "next/image";
-import { HiOutlineMenuAlt3 } from "react-icons/hi";
+
+const LeadCaptureForm = dynamic(() => import("./LeadCaptureForm"), {
+  ssr: false,
+});
+
+const Sidebar = dynamic(() => import("./Sidebar"), {
+  ssr: false,
+});
 
 interface HeaderProps {
   transparentOnTop?: boolean;
@@ -52,9 +58,12 @@ const Header = ({
   const [activeDropdown, setActiveDropdown] = useState<number | null>(null);
   const [showUserMenu, setShowUserMenu] = useState(false);
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
+  const [shouldRenderSidebar, setShouldRenderSidebar] = useState(false);
   const [isLeadFormOpen, setIsLeadFormOpen] = useState(false);
   const [isNavigating, setIsNavigating] = useState(false);
   const [showPromoBar, setShowPromoBar] = useState(true);
+  const [shouldFetchLocations, setShouldFetchLocations] = useState(false);
+  const [hasFetchedLocations, setHasFetchedLocations] = useState(false);
 
   const pathname = usePathname();
   const isHome = pathname === "/";
@@ -66,9 +75,15 @@ const Header = ({
   const router = useRouter();
   const timeoutRef = useRef<NodeJS.Timeout | null>(null);
 
-  const handleMouseEnter = (index: number) => {
+  const handleMouseEnter = (index: number, itemName: string) => {
     if (timeoutRef.current) clearTimeout(timeoutRef.current);
     setActiveDropdown(index);
+    if (
+      itemName === "International Tour" ||
+      itemName === "India Tour Package"
+    ) {
+      setShouldFetchLocations(true);
+    }
   };
 
   const handleMouseLeave = () => {
@@ -80,49 +95,129 @@ const Header = ({
   // Fetch India states and International countries from all-packages API
   const [indiaStates, setIndiaStates] = useState<string[]>([]);
   const [internationalCountries, setInternationalCountries] = useState<string[]>([]);
-  const [locationsLoading, setLocationsLoading] = useState(true);
+  const [locationsLoading, setLocationsLoading] = useState(false);
 
   useEffect(() => {
+    if (!shouldFetchLocations || hasFetchedLocations) return;
+
+    let isMounted = true;
+    const cacheKey = "paradise_location_cache_v1";
+    const cacheTtl = 1000 * 60 * 60 * 6; // 6 hours
+
+    const loadCachedLocations = () => {
+      if (typeof window === "undefined") return null;
+      try {
+        const raw = sessionStorage.getItem(cacheKey);
+        if (!raw) return null;
+        const parsed = JSON.parse(raw) as {
+          timestamp: number;
+          indiaStates: string[];
+          internationalCountries: string[];
+        };
+        if (!parsed.timestamp || Date.now() - parsed.timestamp > cacheTtl) {
+          return null;
+        }
+        return parsed;
+      } catch (error) {
+        console.warn("Failed to read location cache:", error);
+        return null;
+      }
+    };
+
+    const saveCachedLocations = (
+      india: string[],
+      international: string[]
+    ) => {
+      if (typeof window === "undefined") return;
+      try {
+        sessionStorage.setItem(
+          cacheKey,
+          JSON.stringify({
+            timestamp: Date.now(),
+            indiaStates: india,
+            internationalCountries: international,
+          })
+        );
+      } catch (error) {
+        console.warn("Failed to cache locations:", error);
+      }
+    };
+
+    const cached = loadCachedLocations();
+    if (cached) {
+      setIndiaStates(cached.indiaStates);
+      setInternationalCountries(cached.internationalCountries);
+      setLocationsLoading(false);
+      setHasFetchedLocations(true);
+      return;
+    }
+
     const fetchLocations = async () => {
       try {
         setLocationsLoading(true);
 
-        // Fetch India states
-        const indiaResponse = await fetch("/api/all-packages?tourType=india&limit=200&isActive=true", { cache: 'no-store' });
+        let nextIndiaStates: string[] = [];
+        let nextInternationalCountries: string[] = [];
+
+        const [indiaResponse, intlResponse] = await Promise.all([
+          fetch("/api/all-packages?tourType=india&limit=200&isActive=true", { cache: "no-store" }),
+          fetch("/api/all-packages?tourType=international&limit=200&isActive=true", { cache: "no-store" }),
+        ]);
+
         if (indiaResponse.ok) {
           const indiaData = await indiaResponse.json();
           const packages = indiaData.packages || [];
           const uniqueStates = Array.from(new Set(
             packages
               .map((pkg: any) => pkg.state)
-              .filter((state: string) => state && state.trim() !== '')
+              .filter((state: string) => state && state.trim() !== "")
               .map((state: string) => state.trim())
           )).sort();
-          setIndiaStates(uniqueStates as string[]);
+          nextIndiaStates = uniqueStates as string[];
         }
 
-        // Fetch International countries
-        const intlResponse = await fetch("/api/all-packages?tourType=international&limit=200&isActive=true", { cache: 'no-store' });
         if (intlResponse.ok) {
           const intlData = await intlResponse.json();
           const packages = intlData.packages || [];
           const uniqueCountries = Array.from(new Set(
             packages
               .map((pkg: any) => pkg.country)
-              .filter((country: string) => country && country.trim() !== '')
+              .filter((country: string) => country && country.trim() !== "")
               .map((country: string) => country.trim())
           )).sort();
-          setInternationalCountries(uniqueCountries as string[]);
+          nextInternationalCountries = uniqueCountries as string[];
+        }
+
+        if (isMounted) {
+          if (nextIndiaStates.length) {
+            setIndiaStates(nextIndiaStates);
+          }
+          if (nextInternationalCountries.length) {
+            setInternationalCountries(nextInternationalCountries);
+          }
+          if (nextIndiaStates.length || nextInternationalCountries.length) {
+            saveCachedLocations(nextIndiaStates, nextInternationalCountries);
+          }
+          setHasFetchedLocations(true);
         }
       } catch (error) {
         console.error("Error fetching locations:", error);
+        if (isMounted) {
+          setHasFetchedLocations(true);
+        }
       } finally {
-        setLocationsLoading(false);
+        if (isMounted) {
+          setLocationsLoading(false);
+        }
       }
     };
 
     fetchLocations();
-  }, []);
+
+    return () => {
+      isMounted = false;
+    };
+  }, [shouldFetchLocations, hasFetchedLocations]);
 
   // Filter out Fixed Departure items from navigation
   const filteredNavItems = navItems.filter(item => item.name !== "Fixed Departure");
@@ -262,6 +357,12 @@ const Header = ({
     };
   }, [isSidebarOpen]);
 
+  useEffect(() => {
+    if (isSidebarOpen) {
+      setShouldRenderSidebar(true);
+    }
+  }, [isSidebarOpen]);
+
   // Helper to get badges for destinations (matching the requirement image)
   const getBadgeForLocation = (location: string) => {
     const loc = location.toLowerCase();
@@ -372,7 +473,7 @@ const Header = ({
                     <div
                       key={index}
                       className="relative"
-                      onMouseEnter={() => handleMouseEnter(index)}
+                      onMouseEnter={() => handleMouseEnter(index, item.name)}
                       onMouseLeave={handleMouseLeave}
                     >
                       <motion.button
@@ -414,7 +515,7 @@ const Header = ({
                                 if (subIndex === 0) {
                                   return (
                                     <div key="india-states-grid">
-                                      {locationsLoading ? (
+                                      {locationsLoading || !hasFetchedLocations ? (
                                         <div className="flex flex-col items-center justify-center py-8 space-y-3">
                                           <div className="w-6 h-6 border-2 border-blue-600 border-t-transparent rounded-full animate-spin"></div>
                                           <p className="text-xs font-semibold text-slate-400 uppercase tracking-widest">Loading Regions</p>
@@ -457,7 +558,7 @@ const Header = ({
                                 if (subIndex === 0) {
                                   return (
                                     <div key="international-countries-grid">
-                                      {locationsLoading ? (
+                                      {locationsLoading || !hasFetchedLocations ? (
                                         <div className="flex flex-col items-center justify-center py-8 space-y-3">
                                           <div className="w-6 h-6 border-2 border-blue-600 border-t-transparent rounded-full animate-spin"></div>
                                           <p className="text-xs font-semibold text-slate-400 uppercase tracking-widest">Loading Destinations</p>
@@ -673,7 +774,7 @@ const Header = ({
                     onClick={() => setIsSidebarOpen(true)}
                     aria-label="Menu"
                   >
-                    <HiOutlineMenuAlt3 className="w-6 h-6" />
+                    <Menu className="w-6 h-6" />
                   </button>
                 </div>
 
@@ -755,10 +856,12 @@ const Header = ({
         </div>
 
         {/* Lead Capture Form */}
-        < LeadCaptureForm
-          isOpen={isLeadFormOpen}
-          onClose={() => setIsLeadFormOpen(false)}
-        />
+        {isLeadFormOpen && (
+          <LeadCaptureForm
+            isOpen={isLeadFormOpen}
+            onClose={() => setIsLeadFormOpen(false)}
+          />
+        )}
 
         {/* Navigation Loading Overlay */}
         {
@@ -792,12 +895,14 @@ const Header = ({
           )
         }
         {/* Sidebar */}
-        <Sidebar
-          isOpen={isSidebarOpen}
-          onClose={() => setIsSidebarOpen(false)}
-          navItems={filteredNavItems}
-          onBookNow={() => setIsLeadFormOpen(true)}
-        />
+        {shouldRenderSidebar && (
+          <Sidebar
+            isOpen={isSidebarOpen}
+            onClose={() => setIsSidebarOpen(false)}
+            navItems={filteredNavItems}
+            onBookNow={() => setIsLeadFormOpen(true)}
+          />
+        )}
 
       </header >
       {!isHome && !disableOffset && (

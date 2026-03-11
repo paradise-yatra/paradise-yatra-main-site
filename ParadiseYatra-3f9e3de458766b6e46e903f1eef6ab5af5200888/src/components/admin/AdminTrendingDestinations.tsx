@@ -15,6 +15,7 @@ interface TrendingDestination {
   description: string;
   shortDescription: string;
   images: string[];
+  imageAlt?: string;
   destination: string;
   country: string;
   state?: string;
@@ -79,6 +80,7 @@ const AdminTrendingDestinations = () => {
     description: "",
     shortDescription: "",
     image: "",
+    imageAlt: "",
     destination: "",
     country: "",
     state: "",
@@ -239,6 +241,7 @@ const AdminTrendingDestinations = () => {
           description: formData.description,
           shortDescription: formData.shortDescription,
           destination: formData.destination,
+          imageAlt: formData.imageAlt.trim(),
           country: formData.country,
           state: formData.state || '',
           tourType: formData.tourType,
@@ -285,6 +288,7 @@ const AdminTrendingDestinations = () => {
       uploadFormData.append('slug', formData.slug);
       uploadFormData.append('description', formData.description);
       uploadFormData.append('shortDescription', formData.shortDescription);
+      uploadFormData.append('imageAlt', formData.imageAlt.trim());
       uploadFormData.append('destination', formData.destination);
       uploadFormData.append('country', formData.country);
       uploadFormData.append('state', formData.state || '');
@@ -359,6 +363,7 @@ const AdminTrendingDestinations = () => {
       description: dest.description,
       shortDescription: dest.shortDescription,
       image: existingImage,
+      imageAlt: dest.imageAlt || "",
       destination: dest.destination,
       country: dest.country,
       state: dest.state || '',
@@ -396,6 +401,7 @@ const AdminTrendingDestinations = () => {
           description: formData.description,
           shortDescription: formData.shortDescription,
           destination: formData.destination,
+          imageAlt: formData.imageAlt.trim(),
           country: formData.country,
           state: formData.state || '',
           tourType: formData.tourType,
@@ -443,6 +449,7 @@ const AdminTrendingDestinations = () => {
       uploadFormData.append('slug', formData.slug);
       uploadFormData.append('description', formData.description);
       uploadFormData.append('shortDescription', formData.shortDescription);
+      uploadFormData.append('imageAlt', formData.imageAlt.trim());
       uploadFormData.append('destination', formData.destination);
       uploadFormData.append('country', formData.country);
       uploadFormData.append('state', formData.state || '');
@@ -572,6 +579,7 @@ const AdminTrendingDestinations = () => {
       description: "",
       shortDescription: "",
       image: "",
+      imageAlt: "",
       destination: "",
       country: "",
       state: "",
@@ -869,7 +877,7 @@ const AdminTrendingDestinations = () => {
                 <div className="mb-4 relative w-full h-48 rounded-lg overflow-hidden border border-gray-300">
                   <img
                     src={imagePreview}
-                    alt="Preview"
+                    alt={formData.imageAlt || "Preview"}
                     className="w-full h-full object-cover"
                   />
                   <button
@@ -921,6 +929,18 @@ const AdminTrendingDestinations = () => {
                   />
                 </div>
               )}
+            </div>
+
+            <div className="md:col-span-2">
+              <label className="block text-sm font-medium text-gray-700 mb-2">Image Alt Text</label>
+              <input
+                type="text"
+                value={formData.imageAlt}
+                onChange={(e) => setFormData({ ...formData, imageAlt: e.target.value })}
+                className="w-full text-gray-900 px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500"
+                placeholder="Describe the package cover image"
+              />
+              <p className="text-xs text-gray-500 mt-1">Used for accessibility and SEO.</p>
             </div>
 
             <div className="md:col-span-2">
@@ -1073,7 +1093,7 @@ const AdminTrendingDestinations = () => {
                         <div className="w-12 h-12 rounded overflow-hidden relative flex-shrink-0">
                           <img
                             src={dest.images?.[0] || "https://via.placeholder.com/48"}
-                            alt={dest.title}
+                            alt={dest.imageAlt || dest.title}
                             className="w-full h-full object-cover"
                           />
                         </div>
@@ -1216,7 +1236,7 @@ const AdminTrendingDestinations = () => {
               <div className="w-full h-48 rounded-lg overflow-hidden">
                 <img
                   src={selectedDestination.images?.[0] || "https://via.placeholder.com/400x200"}
-                  alt={selectedDestination.title}
+                  alt={selectedDestination.imageAlt || selectedDestination.title}
                   className="w-full h-full object-cover"
                 />
               </div>

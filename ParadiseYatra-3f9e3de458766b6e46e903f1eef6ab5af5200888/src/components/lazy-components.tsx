@@ -19,6 +19,83 @@ export const LazyHeroSection = createLazyComponent(
   { threshold: 0.1, rootMargin: "200px" }
 );
 
+const SectionPlaceholder = ({ minHeight = "420px" }: { minHeight?: string }) => (
+  <div className="section-padding bg-white px-4 sm:px-6">
+    <div className="container mx-auto">
+      <div
+        className="w-full rounded-[6px] bg-slate-100/70"
+        style={{ minHeight }}
+      />
+    </div>
+  </div>
+);
+
+export const LazyHoneymoonPackages = createLazyComponent(
+  () => import("./HoneymoonPackages"),
+  <SectionPlaceholder minHeight="420px" />,
+  { threshold: 0.1, rootMargin: "200px" }
+);
+
+export const LazyTrendingPackagesSection = createLazyComponent(
+  () => import("./TrendingPackagesSection"),
+  <SectionPlaceholder minHeight="520px" />,
+  { threshold: 0.1, rootMargin: "200px" }
+);
+
+export const LazyWhyChooseParadiseYatra = createLazyComponent(
+  () => import("./WhyChooseParadiseYatra"),
+  <SectionPlaceholder minHeight="520px" />,
+  { threshold: 0.1, rootMargin: "200px" }
+);
+
+export const LazyIndiaTourPackagesSection = createLazyComponent(
+  () => import("./IndiaTourPackagesSection"),
+  <SectionPlaceholder minHeight="520px" />,
+  { threshold: 0.1, rootMargin: "200px" }
+);
+
+export const LazyInternationalTourPackagesSection = createLazyComponent(
+  () => import("./InternationalTourPackagesSection"),
+  <SectionPlaceholder minHeight="520px" />,
+  { threshold: 0.1, rootMargin: "200px" }
+);
+
+export const LazySpiritualJourneysSection = createLazyComponent(
+  () => import("./SpiritualJourneysSection"),
+  <SectionPlaceholder minHeight="520px" />,
+  { threshold: 0.1, rootMargin: "200px" }
+);
+
+export const LazyLuxuryPackagesSection = createLazyComponent(
+  () => import("./LuxuryPackagesSection"),
+  <SectionPlaceholder minHeight="520px" />,
+  { threshold: 0.1, rootMargin: "200px" }
+);
+
+export const LazySeasonalPackagesSection = createLazyComponent(
+  () => import("./SeasonalPackagesSection"),
+  <SectionPlaceholder minHeight="520px" />,
+  { threshold: 0.1, rootMargin: "200px" }
+);
+
+export const LazyFestivalSection = createLazyComponent(
+  () => import("./FestivalSection"),
+  <SectionPlaceholder minHeight="620px" />,
+  { threshold: 0.1, rootMargin: "200px" }
+);
+
+export const LazyTestimonialsSection = createLazyComponent(
+  () => import("./TestimonialsSection"),
+  <SectionPlaceholder minHeight="520px" />,
+  { threshold: 0.1, rootMargin: "200px" }
+);
+
+export const LazyBlogSectionNew = createLazyComponent(
+  () => import("./BlogSectionNew"),
+  <SectionPlaceholder minHeight="520px" />,
+  { threshold: 0.1, rootMargin: "200px" }
+);
+
 export const LazyTrendingDestinations = createLazyComponent(
   () => import("./TrendingDestinations"),
   <div className="section-padding bg-white px-4 sm:px-6">
@@ -220,4 +297,10 @@ export const LazyFooter = createLazyComponent(
     <Skeleton height="40px" width="200px" className="bg-white/20" />
   </div>,
   { threshold: 0.1, rootMargin: "100px" }
+);
+
+export const LazyNewsletterSubscribe = createLazyComponent(
+  () => import("./NewsLetter"),
+  <SectionPlaceholder minHeight="260px" />,
+  { threshold: 0.1, rootMargin: "150px" }
 );

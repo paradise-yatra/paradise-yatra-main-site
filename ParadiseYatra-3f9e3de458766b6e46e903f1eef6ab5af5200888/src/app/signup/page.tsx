@@ -7,6 +7,7 @@ import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { GoogleLogin, CredentialResponse } from "@react-oauth/google";
 import { API_CONFIG } from "@/config/api";
+import GoogleOAuthClientProvider from "@/components/GoogleOAuthClientProvider";
 
 export default function SignupPage() {
   const [formData, setFormData] = useState({
@@ -24,6 +25,7 @@ export default function SignupPage() {
 
   const { login } = useAuth();
   const router = useRouter();
+  const hasGoogleClientId = Boolean(process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID);
 
   const bgImage = "/Login/Image.jpg";
 
@@ -92,7 +94,8 @@ export default function SignupPage() {
   };
 
   return (
-    <div className="h-screen flex bg-slate-50 font-sans text-slate-900 overflow-hidden relative">
+    <GoogleOAuthClientProvider>
+      <div className="h-screen flex bg-slate-50 font-sans text-slate-900 overflow-hidden relative">
       {/* Back to Website Button */}
       <Link
         href="/"
@@ -268,40 +271,42 @@ export default function SignupPage() {
 
                 <div className="flex justify-center">
                   <div className="w-full cursor-pointer">
-                    <GoogleLogin
-                      onSuccess={async (credentialResponse: CredentialResponse) => {
-                        if (!credentialResponse.credential) return;
-                        setLoading(true);
-                        try {
-                          const response = await fetch(API_CONFIG.getApiUrl(API_CONFIG.ENDPOINTS.AUTH.GOOGLE_LOGIN), {
-                            method: "POST",
-                            headers: { "Content-Type": "application/json" },
-                            body: JSON.stringify({
-                              idToken: credentialResponse.credential,
-                              phone: formData.phone
-                            }),
-                          });
-                          const data = await response.json();
-                          if (response.ok) {
-                            login(data.token, data.user);
-                            router.push("/");
-                          } else {
-                            setError(data.message || "Google registration failed.");
+                    {hasGoogleClientId ? (
+                      <GoogleLogin
+                        onSuccess={async (credentialResponse: CredentialResponse) => {
+                          if (!credentialResponse.credential) return;
+                          setLoading(true);
+                          try {
+                            const response = await fetch(API_CONFIG.getApiUrl(API_CONFIG.ENDPOINTS.AUTH.GOOGLE_LOGIN), {
+                              method: "POST",
+                              headers: { "Content-Type": "application/json" },
+                              body: JSON.stringify({
+                                idToken: credentialResponse.credential,
+                                phone: formData.phone
+                              }),
+                            });
+                            const data = await response.json();
+                            if (response.ok) {
+                              login(data.token, data.user);
+                              router.push("/");
+                            } else {
+                              setError(data.message || "Google registration failed.");
+                            }
+                          } catch (err) {
+                            setError("Connection error. Please try again.");
+                          } finally {
+                            setLoading(false);
                           }
-                        } catch (err) {
-                          setError("Connection error. Please try again.");
-                        } finally {
-                          setLoading(false);
-                        }
-                      }}
-                      onError={() => setError("Google registration failed.")}
-                      useOneTap={false}
-                      theme="outline"
-                      shape="rectangular"
-                      text="signup_with"
-                      width="100%"
-                      logo_alignment="center"
-                    />
+                        }}
+                        onError={() => setError("Google registration failed.")}
+                        useOneTap={false}
+                        theme="outline"
+                        shape="rectangular"
+                        text="signup_with"
+                        width="100%"
+                        logo_alignment="center"
+                      />
+                    ) : null}
                   </div>
                 </div>
               </form>
@@ -351,6 +356,7 @@ export default function SignupPage() {
           )}
         </div>
       </div>
-    </div>
+      </div>
+    </GoogleOAuthClientProvider>
   );
 }

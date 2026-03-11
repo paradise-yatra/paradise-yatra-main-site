@@ -1,6 +1,6 @@
-import type { Metadata } from "next";
-import { LazyHeader, LazyFooter } from "@/components/lazy-components";
+import { LazyFooter, LazyHeader } from "@/components/lazy-components";
 import { Roboto } from "next/font/google";
+import { buildStaticMetadata } from "@/lib/seo";
 
 const roboto = Roboto({
   subsets: ["latin"],
@@ -8,13 +8,7 @@ const roboto = Roboto({
   display: "swap",
 });
 
-export const metadata: Metadata = {
-  title: "Terms of Service | Paradise Yatra",
-  description:
-    "Read Paradise Yatra's Terms of Service. Understand the terms and conditions that govern your use of our travel services and website.",
-  robots: { index: true, follow: true },
-  alternates: { canonical: "/terms-of-service" },
-};
+export const metadata = buildStaticMetadata("/terms-of-service");
 
 export default function TermsOfServicePage() {
   return (

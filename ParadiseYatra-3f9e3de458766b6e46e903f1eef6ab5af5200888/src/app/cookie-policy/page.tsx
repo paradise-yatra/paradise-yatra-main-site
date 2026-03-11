@@ -1,15 +1,9 @@
-import type { Metadata } from "next";
 import { LazyHeader } from "@/components/lazy-components";
 import Image from "next/image";
 import { Card, CardContent } from "@/components/ui/card";
+import { buildStaticMetadata } from "@/lib/seo";
 
-export const metadata: Metadata = {
-  title: "Cookie Policy | Paradise Yatra",
-  description:
-    "Read Paradise Yatra's Cookie Policy to understand what cookies we use, why we use them, and how your continued use of the site applies to cookie usage.",
-  robots: { index: true, follow: true },
-  alternates: { canonical: "/cookie-policy" },
-};
+export const metadata = buildStaticMetadata("/cookie-policy");
 
 export default function CookiePolicyPage() {
   return (

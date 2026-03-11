@@ -17,6 +17,7 @@ interface HoneymoonPackage {
     title: string;
     price: number;
     image: string;
+    imageAlt?: string;
     slug: string;
 }
 
@@ -215,6 +216,7 @@ const HoneymoonPackages = () => {
                                 title={pkg.title}
                                 price={pkg.price}
                                 image={pkg.image}
+                                imageAlt={pkg.imageAlt || pkg.title}
                                 slug={pkg.slug}
                                 hrefPrefix="/package"
                                 themeColor="#ff1493"

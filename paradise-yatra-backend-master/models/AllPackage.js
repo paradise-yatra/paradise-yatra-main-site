@@ -25,6 +25,11 @@ const allPackageSchema = new mongoose.Schema({
         type: String,
         required: true
     },
+    imageAlt: {
+        type: String,
+        trim: true,
+        default: ""
+    },
     location: {
         type: String,
         required: true

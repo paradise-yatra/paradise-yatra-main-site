@@ -9,8 +9,8 @@ import { GoogleLogin, CredentialResponse } from "@react-oauth/google";
 import { useAuth } from "@/context/AuthContext";
 import { useState } from "react";
 import { toast } from "react-toastify";
-import { FcGoogle } from "react-icons/fc";
 import { API_CONFIG } from "@/config/api";
+import GoogleOAuthClientProvider from "@/components/GoogleOAuthClientProvider";
 
 interface LoginAlertModalProps {
     isOpen: boolean;
@@ -18,10 +18,38 @@ interface LoginAlertModalProps {
     theme?: "pink" | "blue";
 }
 
+const GoogleIcon = ({ className }: { className?: string }) => (
+    <svg
+        viewBox="0 0 533.5 544.3"
+        className={className}
+        aria-hidden="true"
+        focusable="false"
+    >
+        <path
+            fill="#4285F4"
+            d="M533.5 278.4c0-17.4-1.6-34.1-4.6-50.4H272v95.3h146.9c-6.3 34-25 62.8-53.4 82l86.4 67.2c50.5-46.6 81.6-115.4 81.6-194.1z"
+        />
+        <path
+            fill="#34A853"
+            d="M272 544.3c72.6 0 133.6-24 178.1-65.2l-86.4-67.2c-24 16.1-54.7 25.6-91.7 25.6-70.4 0-130.1-47.6-151.5-111.5H32.8v69.9c44.6 88.2 136.4 148.4 239.2 148.4z"
+        />
+        <path
+            fill="#FBBC04"
+            d="M120.5 326.1c-10.3-30.9-10.3-64.2 0-95.1v-69.9H32.8c-43.6 87.3-43.6 190.4 0 277.7l87.7-69.9z"
+        />
+        <path
+            fill="#EA4335"
+            d="M272 107.7c39.5-.6 77.5 14.1 106.6 41.1l79.7-79.7C409.2 24.7 342.2-0.4 272 0 169.2 0 77.4 60.2 32.8 148.4l87.7 69.9C141.9 155.3 201.6 107.7 272 107.7z"
+        />
+    </svg>
+);
+
 const LoginAlertModal = ({ isOpen, onClose, theme = "blue" }: LoginAlertModalProps) => {
     const router = useRouter();
     const { login } = useAuth();
     const [loading, setLoading] = useState(false);
+    const hasGoogleClientId = Boolean(process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID);
+    const showGoogleLogin = isOpen && hasGoogleClientId;
 
     const handleLoginRedirect = () => {
         router.push("/login");
@@ -89,7 +117,7 @@ const LoginAlertModal = ({ isOpen, onClose, theme = "blue" }: LoginAlertModalPro
                                 {loading ? (
                                     <Loader2 className="h-5 w-5 animate-spin text-blue-600" />
                                 ) : (
-                                    <FcGoogle className="h-5 w-5" />
+                                    <GoogleIcon className="h-5 w-5" />
                                 )}
                                 <span className="text-sm font-bold">
                                     {loading ? "Processing..." : "Continue with Google"}
@@ -99,14 +127,18 @@ const LoginAlertModal = ({ isOpen, onClose, theme = "blue" }: LoginAlertModalPro
                             {/* The hidden real Google button - scaled to cover the entire container */}
                             <div className="absolute inset-0 opacity-0 overflow-hidden cursor-pointer flex justify-center items-center">
                                 <div className="scale-[5] origin-center">
-                                    <GoogleLogin
-                                        onSuccess={handleGoogleSuccess}
-                                        onError={() => toast.error("Google Login failed")}
-                                        useOneTap={false}
-                                        theme="outline"
-                                        shape="rectangular"
-                                        width="320px"
-                                    />
+                                    {showGoogleLogin ? (
+                                        <GoogleOAuthClientProvider>
+                                            <GoogleLogin
+                                                onSuccess={handleGoogleSuccess}
+                                                onError={() => toast.error("Google Login failed")}
+                                                useOneTap={false}
+                                                theme="outline"
+                                                shape="rectangular"
+                                                width="320px"
+                                            />
+                                        </GoogleOAuthClientProvider>
+                                    ) : null}
                                 </div>
                             </div>
                         </div>

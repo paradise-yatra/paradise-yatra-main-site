@@ -3,6 +3,7 @@
 const nextConfig: NextConfig = {
   /* config options here */
   // output: 'standalone',
+  productionBrowserSourceMaps: true,
   devIndicators: {
     position: "bottom-left",
   },
@@ -20,6 +21,10 @@ const nextConfig: NextConfig = {
     imageSizes: [16, 32, 48, 64, 96, 128, 256, 384],
     // Disable image optimization for external domains to prevent 404s
     unoptimized: false,
+    // Allow all local images (with or without query strings)
+    localPatterns: [
+      { pathname: "/**" },
+    ],
     // Add proper caching
     minimumCacheTTL: 60 * 60 * 24 * 30, // 30 days
     remotePatterns: [
@@ -259,7 +264,7 @@ const nextConfig: NextConfig = {
 
   // Experimental features for better performance
   experimental: {
-    optimizePackageImports: ['lucide-react', 'framer-motion', 'react-icons'],
+    optimizePackageImports: ['lucide-react', 'framer-motion'],
     optimizeCss: true,
     // â† Remove any 'turbo' here if still present!
   },
@@ -267,37 +272,56 @@ const nextConfig: NextConfig = {
 
   // Headers for better caching and security
   async headers() {
+    const securityHeaders = [
+      {
+        key: 'X-Content-Type-Options',
+        value: 'nosniff',
+      },
+      {
+        key: 'X-Frame-Options',
+        value: 'DENY',
+      },
+      {
+        key: 'X-XSS-Protection',
+        value: '1; mode=block',
+      },
+      {
+        key: 'Referrer-Policy',
+        value: 'strict-origin-when-cross-origin',
+      },
+      {
+        key: 'Accept-CH',
+        value: 'DPR, Width, Viewport-Width',
+      },
+      {
+        key: 'Critical-CH',
+        value: 'DPR, Width, Viewport-Width',
+      },
+      {
+        key: 'Vary',
+        value: 'DPR, Width, Viewport-Width',
+      },
+      ...(process.env.NODE_ENV === 'production'
+        ? [
+            {
+              key: 'Strict-Transport-Security',
+              value: 'max-age=63072000; includeSubDomains; preload',
+            },
+          ]
+        : []),
+    ];
+
     return [
       {
         source: '/(.*)',
+        headers: securityHeaders,
+      },
+      {
+        source: '/_next/static/(.*)',
         headers: [
           {
-            key: 'X-Content-Type-Options',
-            value: 'nosniff',
-          },
-          {
-            key: 'X-Frame-Options',
-            value: 'DENY',
-          },
-          {
-            key: 'X-XSS-Protection',
-            value: '1; mode=block',
-          },
-          {
-            key: 'Referrer-Policy',
-            value: 'strict-origin-when-cross-origin',
-          },
-          {
-            key: 'Accept-CH',
-            value: 'DPR, Width, Viewport-Width',
-          },
-          {
-            key: 'Critical-CH',
-            value: 'DPR, Width, Viewport-Width',
-          },
-          {
-            key: 'Vary',
-            value: 'DPR, Width, Viewport-Width',
+            key: 'Cache-Control',
+            value: 'public, max-age=31536000, immutable',
           },
         ],
       },

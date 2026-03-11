@@ -247,12 +247,12 @@ export default function LeadCaptureForm({
                   target="_blank"
                   rel="noopener noreferrer"
                 >
-                  <Image
+                    <Image
                     src="/Home/Pop Up Form/Image.jpg"
                     alt="Travel planning"
                     fill
                     className="object-cover"
-                    priority
+                    sizes="(min-width: 1024px) 40vw, 100vw"
                   />
                   <div className="absolute inset-x-0 bottom-0 h-1/2 bg-gradient-to-t from-black/70 via-black/25 to-transparent" />
 

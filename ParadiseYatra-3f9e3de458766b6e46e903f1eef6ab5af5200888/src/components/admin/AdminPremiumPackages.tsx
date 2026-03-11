@@ -23,6 +23,7 @@ interface PremiumPackage {
   originalPrice?: number;
   rating: number;
   images: string[];
+  imageAlt?: string;
   category: string;
   description: string;
   shortDescription: string;
@@ -61,6 +62,7 @@ const AdminPremiumPackages = () => {
     originalPrice: "",
     rating: "",
     images: "",
+    imageAlt: "",
     category: "Premium Packages",
     description: "",
     shortDescription: "",
@@ -192,6 +194,7 @@ const AdminPremiumPackages = () => {
         originalPrice: formData.originalPrice ? parseFloat(formData.originalPrice) : undefined,
         rating: formData.rating ? parseFloat(formData.rating) : 0,
         images: formData.images ? [formData.images] : [],
+        imageAlt: formData.imageAlt.trim(),
         highlights: formData.highlights ? formData.highlights.split(',').map(h => h.trim()) : [],
         inclusions: formData.inclusions ? formData.inclusions.split(',').map(i => i.trim()) : []
       };
@@ -295,6 +298,7 @@ const AdminPremiumPackages = () => {
       originalPrice: pkg.originalPrice?.toString() || "",
       rating: pkg.rating.toString(),
       images: pkg.images[0] || "",
+      imageAlt: pkg.imageAlt || "",
       category: pkg.category,
       description: pkg.description,
       shortDescription: pkg.shortDescription,
@@ -348,6 +352,7 @@ const AdminPremiumPackages = () => {
         originalPrice: formData.originalPrice ? parseFloat(formData.originalPrice) : undefined,
         rating: formData.rating ? parseFloat(formData.rating) : 0,
         images: formData.images ? [formData.images] : [],
+        imageAlt: formData.imageAlt.trim(),
         highlights: formData.highlights ? formData.highlights.split(',').map(h => h.trim()) : [],
         inclusions: formData.inclusions ? formData.inclusions.split(',').map(i => i.trim()) : []
       };
@@ -503,6 +508,7 @@ const AdminPremiumPackages = () => {
       originalPrice: "",
       rating: "",
       images: "",
+      imageAlt: "",
       category: "Premium Packages",
       description: "",
       shortDescription: "",
@@ -752,6 +758,17 @@ const AdminPremiumPackages = () => {
               />
             </div>
             <div className="md:col-span-2">
+              <label className="block text-sm font-medium text-gray-700 mb-2">Image Alt Text</label>
+              <input
+                type="text"
+                value={formData.imageAlt}
+                onChange={(e) => setFormData({ ...formData, imageAlt: e.target.value })}
+                className="w-full text-gray-900 px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500"
+                placeholder="Describe the package cover image"
+              />
+              <p className="text-xs text-gray-500 mt-1">Used for accessibility and SEO.</p>
+            </div>
+            <div className="md:col-span-2">
               <label className="block text-sm font-medium text-gray-700 mb-2">Short Description *</label>
               <input
                 type="text"
@@ -917,7 +934,7 @@ const AdminPremiumPackages = () => {
                         <div className="w-12 h-12 rounded overflow-hidden relative">
                           <Image 
                             src={getImageUrl(pkg.images[0]) || "https://via.placeholder.com/48x48?text=No+Image"} 
-                            alt={pkg.title}
+                            alt={pkg.imageAlt || pkg.title}
                             fill
                             className="object-cover rounded"
                           />
@@ -1091,7 +1108,7 @@ const AdminPremiumPackages = () => {
               <div className="w-full h-48 rounded-lg overflow-hidden relative">
                 <Image 
                   src={getImageUrl(selectedPackage.images[0]) || "https://via.placeholder.com/400x200?text=No+Image"} 
-                  alt={selectedPackage.title}
+                  alt={selectedPackage.imageAlt || selectedPackage.title}
                   fill
                   className="object-cover rounded-lg"
                 />

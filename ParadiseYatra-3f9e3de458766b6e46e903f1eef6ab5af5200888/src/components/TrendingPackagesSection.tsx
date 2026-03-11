@@ -17,6 +17,7 @@ interface TrendingPackage {
     title: string;
     price: number;
     image: string;
+    imageAlt?: string;
     slug: string;
 }
 
@@ -322,6 +323,7 @@ const TrendingPackagesSection = () => {
                                     title={pkg.title}
                                     price={pkg.price}
                                     image={pkg.image}
+                                    imageAlt={pkg.imageAlt || pkg.title}
                                     slug={pkg.slug}
                                     hrefPrefix="/package"
                                     themeColor="#005beb"

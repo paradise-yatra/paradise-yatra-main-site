@@ -330,6 +330,7 @@ router.post("/", adminAuth, uploadSingleImage, handleUploadError, async (req, re
       slug,
       highlights,
       holidayType,    // 🆕 NEW - Premium type / Holiday type
+      imageAlt,
       isActive,
       isFeatured
     } = req.body;
@@ -439,6 +440,11 @@ router.post("/", adminAuth, uploadSingleImage, handleUploadError, async (req, re
     if (holidayType) {
       packageData.holidayType = holidayType;
     }
+    // 🆕 Add image alt text if provided
+    if (imageAlt !== undefined) {
+      const normalizedImageAlt = imageAlt === null ? "" : String(imageAlt);
+      packageData.imageAlt = normalizedImageAlt.trim();
+    }
 
     const newPackage = await Package.create(packageData);
 
@@ -477,6 +483,7 @@ router.put("/:id", adminAuth, uploadSingleImage, handleUploadError, async (req, 
       inclusions,      // ✅ NEW - Inclusions array
       exclusions,      // ✅ NEW - Exclusions array
       holidayType,    // 🆕 NEW - Premium type / Holiday type
+      imageAlt,
       isActive,
       isFeatured
     } = req.body;
@@ -501,6 +508,10 @@ router.put("/:id", adminAuth, uploadSingleImage, handleUploadError, async (req, 
     // 🆕 Handle holidayType
     if (holidayType !== undefined) {
       pkg.holidayType = holidayType || null;
+    }
+    if (imageAlt !== undefined) {
+      const normalizedImageAlt = imageAlt === null ? "" : String(imageAlt);
+      pkg.imageAlt = normalizedImageAlt.trim();
     }
     
     if (rating !== undefined) pkg.rating = parseFloat(rating);

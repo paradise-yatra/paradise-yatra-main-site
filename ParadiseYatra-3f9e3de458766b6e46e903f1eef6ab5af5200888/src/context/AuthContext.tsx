@@ -38,7 +38,31 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     const dispatch = useDispatch<AppDispatch>();
     const { items: wishlist } = useSelector((state: RootState) => state.wishlist);
 
+    const scheduleWishlistFetch = (authToken: string, userId: string) => {
+        const runFetch = () => {
+            dispatch(fetchWishlist({ token: authToken, userId }));
+        };
+
+        if (typeof window === "undefined") {
+            runFetch();
+            return () => undefined;
+        }
+
+        if ("requestIdleCallback" in window) {
+            const idleId = (window as Window & { requestIdleCallback: Function }).requestIdleCallback(
+                runFetch,
+                { timeout: 2000 }
+            );
+            return () =>
+                (window as Window & { cancelIdleCallback: Function }).cancelIdleCallback(idleId);
+        }
+
+        const timeoutId = window.setTimeout(runFetch, 1200);
+        return () => window.clearTimeout(timeoutId);
+    };
+
     useEffect(() => {
+        let cleanupIdle: (() => void) | null = null;
         const savedToken = localStorage.getItem("auth_token");
         const savedUser = localStorage.getItem("auth_user");
 
@@ -49,7 +73,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
                 setUser(parsedUser);
 
                 // Fetch wishlist from Redux
-                dispatch(fetchWishlist({ token: savedToken, userId: parsedUser.id || parsedUser._id }));
+                cleanupIdle = scheduleWishlistFetch(savedToken, parsedUser.id || parsedUser._id);
             } catch (error) {
                 console.error("Error parsing saved user:", error);
                 localStorage.removeItem("auth_token");
@@ -57,6 +81,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
             }
         }
         setIsLoading(false);
+        return () => {
+            if (cleanupIdle) cleanupIdle();
+        };
     }, [dispatch]);
 
     const login = (newToken: string, userData: User) => {
@@ -66,7 +93,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         localStorage.setItem("auth_user", JSON.stringify(userData));
 
         // Fetch wishlist
-        dispatch(fetchWishlist({ token: newToken, userId: userData.id || (userData as any)._id }));
+        scheduleWishlistFetch(newToken, userData.id || (userData as any)._id);
 
         router.push("/");
     };

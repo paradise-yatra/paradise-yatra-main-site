@@ -1,8 +1,7 @@
 "use client";
 
 import { usePathname } from "next/navigation";
-import Footer from "./Footer";
-import NewsletterSubscribe from "./NewsLetter";
+import { LazyFooter, LazyNewsletterSubscribe } from "./lazy-components";
 
 export default function FooterWrapper() {
     const pathname = usePathname();
@@ -20,8 +19,8 @@ export default function FooterWrapper() {
 
     return (
         <>
-            <NewsletterSubscribe />
-            <Footer />
+            <LazyNewsletterSubscribe />
+            <LazyFooter />
         </>
     );
 }

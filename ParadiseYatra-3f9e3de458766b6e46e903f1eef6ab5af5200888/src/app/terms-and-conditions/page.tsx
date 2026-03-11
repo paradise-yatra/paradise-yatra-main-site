@@ -333,73 +333,11 @@
 // }
 
 
-import { Metadata } from 'next';
 import TermsContent from '@/components/TermsContent';
 import { LazyHeader } from '@/components/lazy-components';
+import { buildStaticMetadata } from "@/lib/seo";
 
-export const metadata: Metadata = {
-  title: 'Terms & Conditions - Paradise Yatra | Travel Booking Terms',
-  description: 'Read Paradise Yatra\'s comprehensive terms and conditions. Learn about our booking policies, payment terms, refund policy, warranties, and legal information for travel services.',
-  keywords: [
-    'Paradise Yatra terms',
-    'travel terms and conditions',
-    'booking policy',
-    'refund policy',
-    'travel service terms',
-    'Paradise Yatra policies',
-    'travel booking terms',
-    'tourist service terms',
-    'India travel terms',
-    'Uttarakhand tourism terms'
-  ],
-  authors: [{ name: 'Paradise Yatra' }],
-  creator: 'Paradise Yatra',
-  publisher: 'Paradise Yatra',
-  robots: {
-    index: true,
-    follow: true,
-    googleBot: {
-      index: true,
-      follow: true,
-      'max-video-preview': -1,
-      'max-image-preview': 'large',
-      'max-snippet': -1,
-    },
-  },
-  openGraph: {
-    title: 'Terms & Conditions - Paradise Yatra',
-    description: 'Comprehensive terms and conditions for Paradise Yatra travel services. Learn about our policies, warranties, and legal information.',
-    url: 'https://paradiseyatra.com/terms',
-    siteName: 'Paradise Yatra',
-    locale: 'en_IN',
-    type: 'website',
-    images: [
-      {
-        url: '/og-image-terms.jpg',
-        width: 1200,
-        height: 630,
-        alt: 'Paradise Yatra Terms & Conditions',
-      },
-    ],
-  },
-  twitter: {
-    card: 'summary_large_image',
-    title: 'Terms & Conditions - Paradise Yatra',
-    description: 'Read our comprehensive terms and conditions for travel services, booking policies, and legal information.',
-    images: ['/og-image-terms.jpg'],
-    creator: '@paradiseyatra',
-  },
-  alternates: {
-    canonical: 'https://paradiseyatra.com/terms',
-  },
-  other: {
-    'last-modified': '2026-01-08',
-    'contact-email': 'support@paradiseyatra.com',
-    'contact-phone': '+91-8979269388',
-    'jurisdiction': 'Dehradun, Uttarakhand, India',
-    'governing-law': 'Laws of India',
-  },
-};
+export const metadata = buildStaticMetadata("/terms-and-conditions");
 
 export default function TermsPage() {
   return (

@@ -9,7 +9,9 @@ import { StatsDashboard } from "@/components/why-choose-use/StatsDashboard";
 import SupportAndFAQ from "@/components/why-choose-use/SupportAndFAQ";
 import { TestimonialsGrid } from "@/components/why-choose-use/TestimonialsGrid";
 import YouTubeSection from "@/components/why-choose-use/YouTubeSection";
+import { buildStaticMetadata } from "@/lib/seo";
 
+export const metadata = buildStaticMetadata("/why-choose-us");
 
 
 export default function WhyChooseUs() {

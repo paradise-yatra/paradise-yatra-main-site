@@ -16,6 +16,7 @@ interface Package {
     description: string;
     shortDescription: string;
     image: string;
+    imageAlt?: string;
     location: string;
     country: string;
     state?: string;
@@ -74,6 +75,7 @@ const AdminPackages = () => {
         slug: "",
         description: "",
         shortDescription: "",
+        imageAlt: "",
         location: "",
         country: "",
         state: "",
@@ -499,6 +501,7 @@ const AdminPackages = () => {
                     description: formData.description.trim(),
                     shortDescription: formData.shortDescription.trim(),
                     image: imageUrl,
+                    imageAlt: formData.imageAlt.trim(),
                     location: formData.location.trim(),
                     country: formData.country.trim(),
                     state: formData.state?.trim() || '',
@@ -553,6 +556,7 @@ const AdminPackages = () => {
                 if (formData.slug.trim()) uploadFormData.append('slug', formData.slug.trim());
                 uploadFormData.append('description', formData.description.trim());
                 uploadFormData.append('shortDescription', formData.shortDescription.trim());
+                uploadFormData.append('imageAlt', formData.imageAlt.trim());
                 uploadFormData.append('location', formData.location.trim());
                 uploadFormData.append('country', formData.country.trim());
                 if (formData.state?.trim()) uploadFormData.append('state', formData.state.trim());
@@ -628,6 +632,7 @@ const AdminPackages = () => {
                     description: formData.description.trim(),
                     shortDescription: formData.shortDescription.trim(),
                     image: imageUrl,
+                    imageAlt: formData.imageAlt.trim(),
                     location: formData.location.trim(),
                     country: formData.country.trim(),
                     state: formData.state?.trim() || '',
@@ -677,6 +682,7 @@ const AdminPackages = () => {
             if (formData.slug.trim()) uploadFormData.append('slug', formData.slug.trim());
             uploadFormData.append('description', formData.description.trim());
             uploadFormData.append('shortDescription', formData.shortDescription.trim());
+            uploadFormData.append('imageAlt', formData.imageAlt.trim());
             uploadFormData.append('location', formData.location.trim());
             uploadFormData.append('country', formData.country.trim());
             if (formData.state?.trim()) uploadFormData.append('state', formData.state.trim());
@@ -752,6 +758,7 @@ const AdminPackages = () => {
             slug: pkg.slug,
             description: pkg.description,
             shortDescription: pkg.shortDescription,
+            imageAlt: pkg.imageAlt || "",
             location: pkg.location,
             country: pkg.country,
             state: pkg.state || "",
@@ -855,6 +862,7 @@ const AdminPackages = () => {
             slug: "",
             description: "",
             shortDescription: "",
+            imageAlt: "",
             location: "",
             country: "",
             state: "",
@@ -1617,7 +1625,7 @@ const AdminPackages = () => {
                                         <div className="mt-4 relative h-40 w-full rounded-lg overflow-hidden border border-gray-200 group">
                                             <img
                                                 src={imagePreview}
-                                                alt="Preview"
+                                                alt={formData.imageAlt || "Preview"}
                                                 className="w-full h-full object-cover"
                                                 onError={(e) => {
                                                     // Handle broken images
@@ -1637,6 +1645,18 @@ const AdminPackages = () => {
                                         </div>
                                     );
                                 })()}
+                            </div>
+
+                            <div className="md:col-span-2">
+                                <label className="block text-sm font-medium text-gray-700 mb-1">Image Alt Text</label>
+                                <input
+                                    type="text"
+                                    value={formData.imageAlt}
+                                    onChange={(e) => setFormData({ ...formData, imageAlt: e.target.value })}
+                                    placeholder="Describe the package cover image"
+                                    className="w-full border border-gray-300 rounded-lg px-4 py-2 focus:ring-2 focus:ring-blue-500 outline-none text-sm"
+                                />
+                                <p className="text-xs text-gray-500 mt-1">Used for accessibility and SEO.</p>
                             </div>
 
                         </div>
@@ -1705,7 +1725,7 @@ const AdminPackages = () => {
                                             <div className="flex items-center">
                                                 <div className="h-10 w-10 flex-shrink-0 relative rounded-lg overflow-hidden bg-gray-100">
                                                     {pkg.image ? (
-                                                        <img src={pkg.image} alt={pkg.name} className="w-full h-full object-cover" />
+                                                        <img src={pkg.image} alt={pkg.imageAlt || pkg.name} className="w-full h-full object-cover" />
                                                     ) : (
                                                         <div className="w-full h-full flex items-center justify-center text-gray-400">
                                                             <ImageIcon size={20} />
@@ -1822,7 +1842,7 @@ const AdminPackages = () => {
                             {previewPackage.image ? (
                                 <img
                                     src={previewPackage.image}
-                                    alt={previewPackage.name}
+                                    alt={previewPackage.imageAlt || previewPackage.name}
                                     className="w-full h-full object-cover"
                                 />
                             ) : (

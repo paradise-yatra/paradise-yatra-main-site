@@ -15,6 +15,7 @@ interface HorizontalPackageCardProps {
     price: number;
     priceLabel?: string;
     image: string;
+    imageAlt?: string;
     detailUrl: string;
     isInWishlist: boolean;
     onWishlistToggle: (e: React.MouseEvent, pkgId: string) => void;
@@ -52,6 +53,7 @@ const HorizontalPackageCard: React.FC<HorizontalPackageCardProps> = ({
     price,
     priceLabel = "Starting From",
     image,
+    imageAlt,
     detailUrl,
     isInWishlist,
     onWishlistToggle,
@@ -65,6 +67,7 @@ const HorizontalPackageCard: React.FC<HorizontalPackageCardProps> = ({
         gravity: "auto",
         quality: "good",
     });
+    const altText = imageAlt?.trim() || title || destination || "Package image";
 
     return (
         <div className="group relative bg-white rounded-[6px] border border-[#dfe1df] transition-all duration-300 overflow-hidden h-auto sm:h-64 flex flex-col sm:flex-row">
@@ -73,7 +76,7 @@ const HorizontalPackageCard: React.FC<HorizontalPackageCardProps> = ({
                 {optimizedImageUrl ? (
                     <Image
                         src={optimizedImageUrl}
-                        alt={title}
+                        alt={altText}
                         fill
                         className="object-cover"
                         unoptimized={true}

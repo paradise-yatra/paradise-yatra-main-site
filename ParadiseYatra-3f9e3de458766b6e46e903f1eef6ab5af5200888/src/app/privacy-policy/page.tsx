@@ -1,15 +1,9 @@
-import type { Metadata } from "next";
-import { LazyHeader, LazyFooter } from "@/components/lazy-components";
+import { LazyHeader } from "@/components/lazy-components";
 import Image from "next/image";
 import { Card, CardContent } from "@/components/ui/card";
+import { buildStaticMetadata } from "@/lib/seo";
 
-export const metadata: Metadata = {
-  title: "Privacy Policy | Paradise Yatra",
-  description:
-    "Read Paradise Yatra's Privacy Policy. Learn how we collect, use, share, and protect your data in compliance with India's IT Act (SPDI Rules, 2011) and the DPDP Act, 2023.",
-  robots: { index: true, follow: true },
-  alternates: { canonical: "/privacy-policy" },
-};
+export const metadata = buildStaticMetadata("/privacy-policy");
 
 export default function PrivacyPolicyPage() {
   return (

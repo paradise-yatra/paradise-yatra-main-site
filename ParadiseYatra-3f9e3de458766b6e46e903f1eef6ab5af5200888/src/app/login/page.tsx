@@ -8,6 +8,7 @@ import Link from "next/link";
 import Image from "next/image";
 import { GoogleLogin, CredentialResponse } from "@react-oauth/google";
 import { API_CONFIG } from "@/config/api";
+import GoogleOAuthClientProvider from "@/components/GoogleOAuthClientProvider";
 
 export default function LoginPage() {
     const [showPassword, setShowPassword] = useState(false);
@@ -18,6 +19,7 @@ export default function LoginPage() {
 
     const { login } = useAuth();
     const router = useRouter();
+    const hasGoogleClientId = Boolean(process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID);
 
     const bgImage = "/Login/Image.jpg";
 
@@ -56,7 +58,8 @@ export default function LoginPage() {
     };
 
     return (
-        <div className="h-screen flex bg-slate-50 font-sans text-slate-900 overflow-hidden relative">
+        <GoogleOAuthClientProvider>
+            <div className="h-screen flex bg-slate-50 font-sans text-slate-900 overflow-hidden relative">
             {/* Back to Website Button */}
             <Link
                 href="/"
@@ -180,37 +183,39 @@ export default function LoginPage() {
                         <div className="flex justify-center">
                             <div className="w-full">
                                 <div className="cursor-pointer">
-                                    <GoogleLogin
-                                        onSuccess={async (credentialResponse: CredentialResponse) => {
-                                            if (!credentialResponse.credential) return;
-                                            setLoading(true);
-                                            try {
-                                                const response = await fetch(API_CONFIG.getApiUrl(API_CONFIG.ENDPOINTS.AUTH.GOOGLE_LOGIN), {
-                                                    method: "POST",
-                                                    headers: { "Content-Type": "application/json" },
-                                                    body: JSON.stringify({ idToken: credentialResponse.credential }),
-                                                });
-                                                const data = await response.json();
-                                                if (response.ok) {
-                                                    login(data.token, data.user);
-                                                    router.push("/");
-                                                } else {
-                                                    setError(data.message || "Google Login failed.");
+                                    {hasGoogleClientId ? (
+                                        <GoogleLogin
+                                            onSuccess={async (credentialResponse: CredentialResponse) => {
+                                                if (!credentialResponse.credential) return;
+                                                setLoading(true);
+                                                try {
+                                                    const response = await fetch(API_CONFIG.getApiUrl(API_CONFIG.ENDPOINTS.AUTH.GOOGLE_LOGIN), {
+                                                        method: "POST",
+                                                        headers: { "Content-Type": "application/json" },
+                                                        body: JSON.stringify({ idToken: credentialResponse.credential }),
+                                                    });
+                                                    const data = await response.json();
+                                                    if (response.ok) {
+                                                        login(data.token, data.user);
+                                                        router.push("/");
+                                                    } else {
+                                                        setError(data.message || "Google Login failed.");
+                                                    }
+                                                } catch (err) {
+                                                    setError("Connection error. Please try again.");
+                                                } finally {
+                                                    setLoading(false);
                                                 }
-                                            } catch (err) {
-                                                setError("Connection error. Please try again.");
-                                            } finally {
-                                                setLoading(false);
-                                            }
-                                        }}
-                                        onError={() => setError("Google Login failed.")}
-                                        useOneTap={false}
-                                        theme="outline"
-                                        shape="rectangular"
-                                        text="continue_with"
-                                        width="100%"
-                                        logo_alignment="center"
-                                    />
+                                            }}
+                                            onError={() => setError("Google Login failed.")}
+                                            useOneTap={false}
+                                            theme="outline"
+                                            shape="rectangular"
+                                            text="continue_with"
+                                            width="100%"
+                                            logo_alignment="center"
+                                        />
+                                    ) : null}
                                 </div>
                             </div>
                         </div>
@@ -226,6 +231,7 @@ export default function LoginPage() {
                     </form>
                 </div>
             </div>
-        </div>
+            </div>
+        </GoogleOAuthClientProvider>
     );
 }

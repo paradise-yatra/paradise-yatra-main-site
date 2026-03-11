@@ -8,7 +8,7 @@ import {
   Phone,
   Mail,
 } from "lucide-react";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import Link from "next/link";
 
 interface CompanyInfo {
@@ -108,8 +108,40 @@ const Footer = () => {
   const [footerData, setFooterData] = useState<FooterContent | null>(null);
   const [indiaStates, setIndiaStates] = useState<string[]>([]);
   const [internationalCountries, setInternationalCountries] = useState<string[]>([]);
+  const [shouldLoad, setShouldLoad] = useState(false);
+  const footerRef = useRef<HTMLElement | null>(null);
 
   useEffect(() => {
+    if (shouldLoad) return;
+    if (typeof window === "undefined") {
+      setShouldLoad(true);
+      return;
+    }
+
+    const target = footerRef.current;
+    if (!target) return;
+
+    if (!("IntersectionObserver" in window)) {
+      setShouldLoad(true);
+      return;
+    }
+
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        if (entry.isIntersecting) {
+          setShouldLoad(true);
+          observer.disconnect();
+        }
+      },
+      { rootMargin: "200px" }
+    );
+
+    observer.observe(target);
+    return () => observer.disconnect();
+  }, [shouldLoad]);
+
+  useEffect(() => {
+    if (!shouldLoad) return;
     const fetchFooterData = async () => {
       try {
         const response = await fetch("/api/footer");
@@ -123,9 +155,10 @@ const Footer = () => {
     };
 
     fetchFooterData();
-  }, []);
+  }, [shouldLoad]);
 
   useEffect(() => {
+    if (!shouldLoad) return;
     const fetchLocations = async () => {
       try {
         const indiaResponse = await fetch("/api/all-packages?tourType=india&limit=200&isActive=true", { cache: "no-store" });
@@ -163,7 +196,7 @@ const Footer = () => {
     };
 
     fetchLocations();
-  }, []);
+  }, [shouldLoad]);
 
   const slugify = (value: string) => value.toLowerCase().trim().replace(/\s+/g, "-");
 
@@ -204,7 +237,7 @@ const Footer = () => {
   const whatsappCallHref = `tel:${companyInfo.whatsapp.replace(/[^+\d]/g, "")}`;
 
   return (
-    <footer className="bg-black text-white font-['Plus_Jakarta_Sans',sans-serif] pt-10 pb-10 border-t border-white/10">
+    <footer ref={footerRef} className="bg-black text-white font-['Plus_Jakarta_Sans',sans-serif] pt-10 pb-10 border-t border-white/10">
       <div className="mx-auto max-w-6xl px-4 md:px-6">
 
         {/* Partner Logos */}
@@ -399,7 +432,6 @@ const Footer = () => {
 };
 
 export default Footer;
-
 
 
 

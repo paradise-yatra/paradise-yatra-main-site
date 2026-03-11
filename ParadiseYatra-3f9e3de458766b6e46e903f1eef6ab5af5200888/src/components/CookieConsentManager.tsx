@@ -1,68 +1,26 @@
 "use client";
 
 import Link from "next/link";
+import { usePathname, useSearchParams } from "next/navigation";
 import { useEffect, useState } from "react";
+import { trackPageView } from "@/lib/analytics";
 
 type CookieNoticeState = "acknowledged" | null;
 
 const NOTICE_STORAGE_KEY = "paradise_cookie_notice";
-const GA_MEASUREMENT_ID = "G-99JYJS0FSF";
-
-declare global {
-  interface Window {
-    dataLayer?: unknown[];
-    gtag?: (...args: unknown[]) => void;
-    [key: string]: unknown;
-  }
-}
-
-const loadGoogleAnalytics = () => {
-  if (typeof window === "undefined") return;
-
-  const disableKey = `ga-disable-${GA_MEASUREMENT_ID}`;
-  window[disableKey] = false;
-
-  if (window.gtag) {
-    window.gtag("consent", "update", { analytics_storage: "granted" });
-    return;
-  }
-
-  const existingScript = document.querySelector<HTMLScriptElement>(
-    `script[src="https://www.googletagmanager.com/gtag/js?id=${GA_MEASUREMENT_ID}"]`
-  );
-
-  const initializeGtag = () => {
-    window.dataLayer = window.dataLayer || [];
-    window.gtag = function gtag(...args: unknown[]) {
-      window.dataLayer?.push(args);
-    };
-    window.gtag("js", new Date());
-    window.gtag("consent", "default", { analytics_storage: "granted" });
-    window.gtag("config", GA_MEASUREMENT_ID);
-  };
-
-  if (existingScript) {
-    initializeGtag();
-    return;
-  }
-
-  const script = document.createElement("script");
-  script.async = true;
-  script.src = `https://www.googletagmanager.com/gtag/js?id=${GA_MEASUREMENT_ID}`;
-  script.onload = initializeGtag;
-  document.head.appendChild(script);
-};
-
 export default function CookieConsentManager() {
   const [noticeState, setNoticeState] = useState<CookieNoticeState>(null);
   const [isReady, setIsReady] = useState(false);
+  const [analyticsEnabled, setAnalyticsEnabled] = useState(false);
+  const pathname = usePathname();
+  const searchParams = useSearchParams();
+  const searchQuery = searchParams?.toString() || "";
 
   useEffect(() => {
-    loadGoogleAnalytics();
-
     const storedNotice = localStorage.getItem(NOTICE_STORAGE_KEY) as CookieNoticeState;
     if (storedNotice === "acknowledged") {
       setNoticeState("acknowledged");
+      setAnalyticsEnabled(true);
     } else {
       setNoticeState(null);
     }
@@ -73,7 +31,29 @@ export default function CookieConsentManager() {
   const dismissNotice = () => {
     localStorage.setItem(NOTICE_STORAGE_KEY, "acknowledged");
     setNoticeState("acknowledged");
+    setAnalyticsEnabled(true);
   };
+
+  useEffect(() => {
+    if (!analyticsEnabled) return;
+    if (typeof window === "undefined") return;
+
+    const path = searchQuery ? `${pathname}?${searchQuery}` : pathname;
+
+    const send = () => trackPageView(path);
+
+    if ("requestIdleCallback" in window) {
+      const idleId = (window as Window & { requestIdleCallback: Function }).requestIdleCallback(
+        send,
+        { timeout: 2000 }
+      );
+      return () =>
+        (window as Window & { cancelIdleCallback: Function }).cancelIdleCallback(idleId);
+    }
+
+    const timeoutId = window.setTimeout(send, 600);
+    return () => window.clearTimeout(timeoutId);
+  }, [analyticsEnabled, pathname, searchQuery]);
 
   if (!isReady || noticeState === "acknowledged") return null;
 

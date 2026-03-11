@@ -1,24 +1,19 @@
 User-agent: *
 Allow: /
-
-# Sitemap location
-Sitemap: https://paradiseyatra.com/sitemap.xml
-
-# Disallow admin and private areas
+Disallow: /admin
 Disallow: /admin/
 Disallow: /api/
-Disallow: /_next/
-Disallow: /uploads/
+Disallow: /checkout
+Disallow: /checkout/
+Disallow: /login
+Disallow: /login/
+Disallow: /payment
+Disallow: /payment/
+Disallow: /profile
+Disallow: /profile/
+Disallow: /signup
+Disallow: /signup/
+Disallow: /wishlist
+Disallow: /wishlist/
 
-# Allow important pages
-Allow: /package/
-Allow: /package/india/
-Allow: /package/international/
-Allow: /package/theme/
-Allow: /destinations/
-Allow: /blog/
-Allow: /fixed-departures/
-Allow: /holiday-types/
-
-# Crawl delay for better server performance
-Crawl-delay: 1
+Sitemap: https://paradiseyatra.com/sitemap.xml

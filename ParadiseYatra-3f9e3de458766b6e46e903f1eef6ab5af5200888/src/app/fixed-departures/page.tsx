@@ -1,13 +1,11 @@
 import React from 'react';
 import FixedDeparturesClient from './FixedDeparturesClient';
 import { Departure } from './data';
+import { buildStaticMetadata } from "@/lib/seo";
 
 export const dynamic = 'force-dynamic';
 
-export const metadata = {
-    title: 'Fixed Departures | Paradise Yatra',
-    description: 'Join our curated group journeys designed for the discerning traveler.',
-};
+export const metadata = buildStaticMetadata("/fixed-departures");
 
 async function getFixedDepartures() {
     try {

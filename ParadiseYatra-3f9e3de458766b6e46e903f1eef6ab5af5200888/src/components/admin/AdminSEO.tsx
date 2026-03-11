@@ -49,7 +49,7 @@ const AdminSEO = () => {
       "travel booking",
       "adventure travel"
     ],
-    ogImage: "/hero.jpg",
+    ogImage: "/bannerCTA.jpeg",
     canonical: "/",
     robots: "index,follow"
     },

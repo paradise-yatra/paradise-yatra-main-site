@@ -13,6 +13,7 @@ interface PackageCardProps {
     title: string;
     price: number;
     image: string;
+    imageAlt?: string;
     slug: string;
     hrefPrefix: string;
     themeColor: string; // e.g., "#ff1493" or "#005beb"
@@ -29,6 +30,7 @@ const PackageCard: React.FC<PackageCardProps> = ({
     title,
     price,
     image,
+    imageAlt,
     slug,
     hrefPrefix,
     themeColor,
@@ -45,6 +47,7 @@ const PackageCard: React.FC<PackageCardProps> = ({
             gravity: "auto",
             quality: "good",
         }) || image;
+    const altText = imageAlt?.trim() || title || destination || "Package image";
 
     return (
         <Link href={`${hrefPrefix}/${slug}`} className="block flex-shrink-0">
@@ -58,7 +61,7 @@ const PackageCard: React.FC<PackageCardProps> = ({
                 <div className="relative h-64 w-full overflow-hidden">
                     <Image
                         src={optimizedImage}
-                        alt={destination}
+                        alt={altText}
                         fill
                         className="object-cover transition-transform duration-700"
                     />

@@ -6,12 +6,12 @@ import Link from "next/link";
 import { motion, AnimatePresence } from "framer-motion";
 
 const IMAGES = [
-    "/Home/Why%20Choose%20Us/1.jpeg",
-    "/Home/Why%20Choose%20Us/2.jpeg",
-    "/Home/Why%20Choose%20Us/3.jpeg",
-    "/Home/Why%20Choose%20Us/4.jpeg",
-    "/Home/Why%20Choose%20Us/5.jpeg",
-    "/Home/Why%20Choose%20Us/6.jpeg",
+    "/Home/Why%20Choose%20Us/1.jpg",
+    "/Home/Why%20Choose%20Us/2.jpg",
+    "/Home/Why%20Choose%20Us/3.jpg",
+    "/Home/Why%20Choose%20Us/4.jpg",
+    "/Home/Why%20Choose%20Us/5.jpg",
+    "/Home/Why%20Choose%20Us/6.jpg",
 ];
 
 const WhyChooseParadiseYatra = () => {

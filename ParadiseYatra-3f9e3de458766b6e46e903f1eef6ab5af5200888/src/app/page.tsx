@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { SITE_URL } from "@/lib/seo";
 import HomePageClient from "@/components/HomePageClient";
 
 // Use ISR instead of force-dynamic - regenerate every 60 seconds
@@ -6,6 +7,23 @@ export const revalidate = 60;
 
 // Function to fetch SEO data from API
 async function getSEOMetadata(): Promise<Metadata> {
+  const fallbackTitle =
+    "Paradise Yatra - Your Trusted Travel Partner | Best Travel Agency in Dehradun";
+  const fallbackDescription =
+    "Discover the world with Paradise Yatra, the best travel agency in Dehradun. We offer customized international and domestic tour packages, trekking adventures, and unforgettable travel experiences. 5000+ happy travelers, 25+ countries covered.";
+  const fallbackKeywords = [
+    "travel agency Dehradun",
+    "best travel agency Dehradun",
+    "international tours",
+    "India tour packages",
+    "trekking adventures",
+    "travel packages",
+    "vacation packages",
+    "Paradise Yatra",
+    "travel booking",
+    "adventure travel",
+  ];
+
   try {
     const API_BASE_URL =
       process.env.NEXT_PUBLIC_BACKEND_URL || "http://localhost:5001";
@@ -22,10 +40,15 @@ async function getSEOMetadata(): Promise<Metadata> {
       const data = await response.json();
       if (data.success && data.data) {
         const seoData = data.data;
+        const title = seoData.title?.trim() || fallbackTitle;
+        const description = seoData.description?.trim() || fallbackDescription;
+        const keywords = Array.isArray(seoData.keywords) && seoData.keywords.length > 0
+          ? seoData.keywords
+          : fallbackKeywords;
         return {
-          title: seoData.title,
-          description: seoData.description,
-          keywords: seoData.keywords,
+          title,
+          description,
+          keywords,
           authors: [{ name: "Paradise Yatra" }],
           creator: "Paradise Yatra",
           publisher: "Paradise Yatra",
@@ -34,23 +57,21 @@ async function getSEOMetadata(): Promise<Metadata> {
             address: false,
             telephone: false,
           },
-          metadataBase: new URL(
-            process.env.NEXT_PUBLIC_SITE_URL || "https://paradiseyatra.com"
-          ),
+          metadataBase: new URL(SITE_URL),
           alternates: {
             canonical: seoData.canonical || "/",
           },
           openGraph: {
-            title: seoData.title,
-            description: seoData.description,
+            title,
+            description,
             url: seoData.canonical || "/",
             siteName: "Paradise Yatra",
             images: [
               {
-                url: seoData.ogImage || "/hero.jpg",
+                url: seoData.ogImage || "/bannerCTA.jpeg",
                 width: 1200,
                 height: 630,
-                alt: seoData.title,
+                alt: title,
               },
             ],
             locale: "en_US",
@@ -58,9 +79,9 @@ async function getSEOMetadata(): Promise<Metadata> {
           },
           twitter: {
             card: "summary_large_image",
-            title: seoData.title,
-            description: seoData.description,
-            images: [seoData.ogImage || "/hero.jpg"],
+            title,
+            description,
+            images: [seoData.ogImage || "/bannerCTA.jpeg"],
             creator: "@paradiseyatra",
             site: "@paradiseyatra",
           },
@@ -89,22 +110,9 @@ async function getSEOMetadata(): Promise<Metadata> {
 
   // Fallback metadata if API fails
   return {
-    title:
-      "Paradise Yatra - Your Trusted Travel Partner | Best Travel Agency in Dehradun",
-    description:
-      "Discover the world with Paradise Yatra, the best travel agency in Dehradun. We offer customized international and domestic tour packages, trekking adventures, and unforgettable travel experiences. 5000+ happy travelers, 25+ countries covered.",
-    keywords: [
-      "travel agency Dehradun",
-      "best travel agency Dehradun",
-      "international tours",
-      "India tour packages",
-      "trekking adventures",
-      "travel packages",
-      "vacation packages",
-      "Paradise Yatra",
-      "travel booking",
-      "adventure travel",
-    ],
+    title: fallbackTitle,
+    description: fallbackDescription,
+    keywords: fallbackKeywords,
     authors: [{ name: "Paradise Yatra" }],
     creator: "Paradise Yatra",
     publisher: "Paradise Yatra",
@@ -113,9 +121,7 @@ async function getSEOMetadata(): Promise<Metadata> {
       address: false,
       telephone: false,
     },
-    metadataBase: new URL(
-      process.env.NEXT_PUBLIC_SITE_URL || "https://paradiseyatra.com"
-    ),
+    metadataBase: new URL(SITE_URL),
     alternates: {
       canonical: "/",
     },
@@ -128,7 +134,7 @@ async function getSEOMetadata(): Promise<Metadata> {
       siteName: "Paradise Yatra",
       images: [
         {
-          url: "/hero.jpg",
+          url: "/bannerCTA.jpeg",
           width: 1200,
           height: 630,
           alt: "Paradise Yatra - Your Trusted Travel Partner",
@@ -143,7 +149,7 @@ async function getSEOMetadata(): Promise<Metadata> {
         "Paradise Yatra - Your Trusted Travel Partner | Best Travel Agency in Dehradun",
       description:
         "Discover the world with Paradise Yatra, the best travel agency in Dehradun. We offer customized international and domestic tour packages, trekking adventures, and unforgettable travel experiences. 5000+ happy travelers, 25+ countries covered.",
-      images: ["/hero.jpg"],
+      images: ["/bannerCTA.jpeg"],
       creator: "@paradiseyatra",
       site: "@paradiseyatra",
     },

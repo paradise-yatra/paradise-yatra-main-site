@@ -1,43 +1,40 @@
 ﻿"use client";
 
-import { memo, useEffect, useMemo, useState } from "react";
-import { motion, useReducedMotion, type Transition } from "framer-motion";
+import { memo, useEffect, useState } from "react";
+import dynamic from "next/dynamic";
+import Header from "./Header";
+import HeroSection from "./HeroSection";
 import {
-  LazyHeader,
-  LazyHeroSection,
-  LazyTrendingDestinations,
-  LazyHolidaysSection,
-  LazyDestinationsGrid,
-  LazyPremiumPackages,
-  LazyAdventureEscapes,
-  LazyBlogSection,
-  LazyTestimonialSection,
-  LazyCTASection,
-  LazyFooter,
+  LazyBlogSectionNew,
+  LazyFestivalSection,
+  LazyHoneymoonPackages,
+  LazyIndiaTourPackagesSection,
+  LazyInternationalTourPackagesSection,
+  LazyLuxuryPackagesSection,
+  LazySeasonalPackagesSection,
+  LazySpiritualJourneysSection,
+  LazyTestimonialsSection,
+  LazyTrendingPackagesSection,
+  LazyWhyChooseParadiseYatra,
 } from "@/components/lazy-components";
-import PerformanceMonitor from "@/components/ui/PerformanceMonitor";
-import ShutdownPopup from "@/components/ShutdownPopup";
 
-import HoneymoonPackages from "./HoneymoonPackages";
-import TrendingPackagesSection from "./TrendingPackagesSection";
-import WhyChooseParadiseYatra from "./WhyChooseParadiseYatra";
-import IndiaTourPackagesSection from "./IndiaTourPackagesSection";
-import InternationalTourPackagesSection from "./InternationalTourPackagesSection";
-import LuxuryPackagesSection from "./LuxuryPackagesSection";
-import SpiritualJourneysSection from "./SpiritualJourneysSection";
-import FestivalSection from "./FestivalSection";
-import TestimonialsSection from "./TestimonialsSection";
-import BlogSectionNew from "./BlogSectionNew";
-import RecentlyBookedItineraries from "./RecentlyBookedItineraries";
-import WildlifeTourPackagesSection from "./SeasonalPackagesSection";
-import SeasonalPackagesSection from "./SeasonalPackagesSection";
-import LeadCaptureForm from "./LeadCaptureForm";
+const LeadCaptureForm = dynamic(() => import("./LeadCaptureForm"), {
+  ssr: false,
+});
 
+const ShutdownPopup = dynamic(() => import("@/components/ShutdownPopup"), {
+  ssr: false,
+});
+
+const PerformanceMonitor = dynamic(
+  () => import("@/components/ui/PerformanceMonitor"),
+  { ssr: false }
+);
 
 const HomePageClient = memo(() => {
-  const prefersReducedMotion = useReducedMotion();
   const [showShutdownPopup, setShowShutdownPopup] = useState(false);
   const [showLeadCaptureForm, setShowLeadCaptureForm] = useState(false);
+  const [renderBelowFold, setRenderBelowFold] = useState(false);
 
   useEffect(() => {
     const timer = window.setTimeout(() => {
@@ -47,59 +44,81 @@ const HomePageClient = memo(() => {
     return () => window.clearTimeout(timer);
   }, []);
 
-  // Optimize animations based on user preferences
-  const pageVariants = useMemo(
-    () => ({
-      initial: { opacity: prefersReducedMotion ? 1 : 0 },
-      animate: { opacity: 1 },
-      transition: {
-        duration: prefersReducedMotion ? 0 : 0.5,
-        ease: "easeInOut" as const,
-      } satisfies Transition,
-    }),
-    [prefersReducedMotion]
-  );
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    let cancelled = false;
+
+    const enableBelowFold = () => {
+      if (!cancelled) {
+        setRenderBelowFold(true);
+      }
+    };
+
+    if ("requestIdleCallback" in window) {
+      const id = (window as Window & { requestIdleCallback: Function }).requestIdleCallback(
+        enableBelowFold,
+        { timeout: 1500 }
+      );
+      return () => {
+        cancelled = true;
+        (window as Window & { cancelIdleCallback: Function }).cancelIdleCallback(id);
+      };
+    }
+
+    const timeoutId = window.setTimeout(enableBelowFold, 800);
+    return () => {
+      cancelled = true;
+      window.clearTimeout(timeoutId);
+    };
+  }, []);
 
   return (
-    <motion.div
-      initial={pageVariants.initial}
-      animate={pageVariants.animate}
-      transition={pageVariants.transition}
+    <div
       className="min-h-screen bg-background overflow-x-hidden w-full"
       role="main"
       aria-label="Paradise Yatra - Travel Packages and Destinations"
     >
-      <LazyHeader />
+      <Header />
       {/* <NewHero2 /> */}
       {/* <NewHero /> */}
       {/* <div className="min-h-72 bg-gray-100 w-full"></div> */}
-      <LazyHeroSection />
+      <HeroSection />
       {/* <LazyFixedDepartureCarousel /> */}
       <div className="home-nonhero-radius">
-        <HoneymoonPackages />
-        <TrendingPackagesSection />
-        <WhyChooseParadiseYatra />
-        <IndiaTourPackagesSection />
-        <InternationalTourPackagesSection />
-        <SpiritualJourneysSection />
-        <LuxuryPackagesSection />
+        {renderBelowFold ? (
+          <>
+            <LazyHoneymoonPackages />
+            <LazyTrendingPackagesSection />
+            <LazyWhyChooseParadiseYatra />
+            <LazyIndiaTourPackagesSection />
+            <LazyInternationalTourPackagesSection />
+            <LazySpiritualJourneysSection />
+            <LazyLuxuryPackagesSection />
 
-        <SeasonalPackagesSection />
-        <FestivalSection />
-        <TestimonialsSection />
-        <BlogSectionNew />
+            <LazySeasonalPackagesSection />
+            <LazyFestivalSection />
+            <LazyTestimonialsSection />
+            <LazyBlogSectionNew />
 
-        {/* Performance monitoring - only visible in development */}
-        <PerformanceMonitor showInProduction={false} />
+            {/* Performance monitoring - only visible in development */}
+            {process.env.NODE_ENV !== "production" && (
+              <PerformanceMonitor showInProduction={false} />
+            )}
+          </>
+        ) : (
+          <div className="min-h-[600px]" aria-hidden="true" />
+        )}
       </div>
 
       {/* Shutdown Popup - you can control this with state */}
-      <ShutdownPopup isOpen={showShutdownPopup} />
-      <LeadCaptureForm
-        isOpen={showLeadCaptureForm}
-        onClose={() => setShowLeadCaptureForm(false)}
-      />
-    </motion.div>
+      {showShutdownPopup && <ShutdownPopup isOpen={showShutdownPopup} />}
+      {showLeadCaptureForm && (
+        <LeadCaptureForm
+          isOpen={showLeadCaptureForm}
+          onClose={() => setShowLeadCaptureForm(false)}
+        />
+      )}
+    </div>
   );
 });
 

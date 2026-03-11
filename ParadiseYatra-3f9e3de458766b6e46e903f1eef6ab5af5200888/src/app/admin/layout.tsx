@@ -1,6 +1,8 @@
 import { Roboto } from "next/font/google";
 import { ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
+import { buildStaticMetadata } from "@/lib/seo";
+import "./admin.css";
 
 const roboto = Roboto({
   weight: ["300", "400", "500", "700"],
@@ -8,6 +10,8 @@ const roboto = Roboto({
   variable: "--font-roboto",
   display: "swap",
 });
+
+export const metadata = buildStaticMetadata("/admin");
 
 export default function AdminLayout({
   children,

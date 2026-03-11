@@ -1,19 +1,15 @@
 "use client";
 
-import { motion, AnimatePresence } from "framer-motion";
-import { Loader2, Clock, MapPin, Users, Calendar, Award, Shield, ArrowRight, Plane, Utensils, Camera, Sparkles, Check, AlertCircle, ChevronDown, CreditCard, Glasses, X, User, Phone, Mail, MessageSquare, Plus, Minus } from "lucide-react";
+import { Loader2, Clock, MapPin, Users, Calendar, Award, Shield, ArrowRight, ChevronDown, User, Phone, Mail, MessageSquare, Plus, Minus, Check, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent } from "@/components/ui/card";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 import { useState, useEffect, useRef } from "react";
 import { useRouter } from "next/navigation";
+import dynamic from "next/dynamic";
 import Link from "next/link";
+import Image from "next/image";
 import { toast } from "react-toastify";
-import LeadCaptureForm from "@/components/LeadCaptureForm";
 import Header from "@/components/Header";
-import LoginAlertModal from "@/components/LoginAlertModal";
-import PackageCard from "@/components/ui/PackageCard";
-import WhyParadiseDifference from "@/components/WhyParadiseDifference";
 import CarouselArrows from "@/components/ui/CarouselArrows";
 import { getImageUrl, getPackagePriceLabel, cn } from "@/lib/utils";
 import { format } from "date-fns";
@@ -44,6 +40,7 @@ interface Package {
   destination: string;
   category: string;
   images: string[];
+  imageAlt?: string;
   highlights: string[];
   itinerary: DayItinerary[];
   inclusions: string[];
@@ -72,6 +69,11 @@ interface ItineraryPageClientProps {
   packageData: Package;
   slug: string;
 }
+
+const LeadCaptureForm = dynamic(() => import("@/components/LeadCaptureForm"), { ssr: false });
+const LoginAlertModal = dynamic(() => import("@/components/LoginAlertModal"), { ssr: false });
+const PackageCard = dynamic(() => import("@/components/ui/PackageCard"), { ssr: false });
+const WhyParadiseDifference = dynamic(() => import("@/components/WhyParadiseDifference"), { ssr: false });
 
 const stripHtmlTags = (value: string = "") =>
   value
@@ -247,8 +249,16 @@ const ItineraryPageClient = ({ packageData, slug }: ItineraryPageClientProps) =>
   const [canScrollLeft, setCanScrollLeft] = useState(false);
   const [canScrollRight, setCanScrollRight] = useState(true);
 
+  const heroImageOptions = {
+    width: 1400,
+    height: 788,
+    crop: "fill",
+    gravity: "auto",
+    quality: "good",
+  } as const;
+
   const galleryImages = packageData?.images && packageData.images.length > 0
-    ? packageData.images.map((img: string) => getImageUrl(img, { width: "auto", quality: "auto" }) || img)
+    ? packageData.images.map((img: string) => getImageUrl(img, heroImageOptions) || img)
     : ["https://images.unsplash.com/photo-1488646953014-85cb44e25828?w=1920&q=80"];
 
   const inclusions = Array.isArray(packageData?.inclusions) ? packageData.inclusions : [];
@@ -411,12 +421,7 @@ const ItineraryPageClient = ({ packageData, slug }: ItineraryPageClientProps) =>
     : "Tour details coming soon.";
 
   return (
-    <motion.div
-      initial={{ opacity: 0 }}
-      animate={{ opacity: 1 }}
-      transition={{ duration: 0.1, ease: 'easeOut' }}
-      className="min-h-screen bg-white [&_button]:cursor-pointer [&_a]:cursor-pointer [&_select]:cursor-pointer [&_[role=button]]:cursor-pointer [&_label]:cursor-pointer [&_input:not([type='checkbox']):not([type='radio'])]:cursor-text [&_textarea]:cursor-text"
-    >
+    <div className="min-h-screen bg-white [&_button]:cursor-pointer [&_a]:cursor-pointer [&_select]:cursor-pointer [&_[role=button]]:cursor-pointer [&_label]:cursor-pointer [&_input:not([type='checkbox']):not([type='radio'])]:cursor-text [&_textarea]:cursor-text">
       <Header />
 
       <main className="mx-auto w-full max-w-6xl flex-1 px-4 md:px-6 pt-4 md:pt-6 lg:pt-10 pb-28 lg:pb-10">
@@ -490,11 +495,16 @@ const ItineraryPageClient = ({ packageData, slug }: ItineraryPageClientProps) =>
           <div className="flex flex-col gap-10 lg:col-span-8">
             {/* Hero Image Gallery */}
             <div className="relative overflow-hidden rounded-[6px] shadow-none">
-              <div className="aspect-video w-full overflow-hidden rounded-[6px] bg-slate-200">
-                <img
+              <div className="relative aspect-video w-full overflow-hidden rounded-[6px] bg-slate-200">
+                <Image
                   src={galleryImages[selectedImage]}
-                  alt={packageData.title}
-                  className="h-full w-full object-cover"
+                  alt={packageData.imageAlt || packageData.title || packageData.destination || "Package image"}
+                  fill
+                  className="object-cover"
+                  sizes="(max-width: 768px) 100vw, 800px"
+                  priority={selectedImage === 0}
+                  fetchPriority={selectedImage === 0 ? "high" : "auto"}
+                  quality={70}
                 />
               </div>
               {galleryImages.length > 1 && (
@@ -895,12 +905,7 @@ const ItineraryPageClient = ({ packageData, slug }: ItineraryPageClientProps) =>
 
         {/* Other Packages Section */}
         {otherPackages.length > 0 && (
-          <motion.section
-            initial={{ opacity: 0, y: 20 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
-            className="!bg-white py-12 text-gray-900 relative z-20"
-          >
+          <section className="!bg-white py-12 text-gray-900 relative z-20">
             <div className="mx-auto flex flex-col gap-6 relative z-10">
               <div className="flex flex-col gap-2 md:flex-row md:items-end md:justify-between mb-2">
                 <div className="flex flex-col gap-1">
@@ -938,6 +943,7 @@ const ItineraryPageClient = ({ packageData, slug }: ItineraryPageClientProps) =>
                       title={pkg.name || pkg.title}
                       price={pkg.price || 0}
                       image={getImageUrl(pkg.image || pkg.images?.[0]) || `https://picsum.photos/800/500?random=${index + 50}`}
+                      imageAlt={pkg.imageAlt || pkg.name || pkg.title}
                       slug={pkg.slug || pkg._id}
                       hrefPrefix="/package"
                       themeColor="#005beb"
@@ -958,7 +964,7 @@ const ItineraryPageClient = ({ packageData, slug }: ItineraryPageClientProps) =>
                 </div>
               </div>
             </div>
-          </motion.section>
+          </section>
         )}
       </main>
 
@@ -999,9 +1005,22 @@ const ItineraryPageClient = ({ packageData, slug }: ItineraryPageClientProps) =>
         </div>
       </div>
 
-      <LeadCaptureForm isOpen={isLeadFormOpen} onClose={() => setIsLeadFormOpen(false)} packageTitle={packageData?.title} packagePrice={formatPrice(packageData.price)} />
-      <LoginAlertModal isOpen={isLoginModalOpen} onClose={() => setIsLoginModalOpen(false)} theme="blue" />
-    </motion.div >
+      {isLeadFormOpen && (
+        <LeadCaptureForm
+          isOpen={isLeadFormOpen}
+          onClose={() => setIsLeadFormOpen(false)}
+          packageTitle={packageData?.title}
+          packagePrice={formatPrice(packageData.price)}
+        />
+      )}
+      {isLoginModalOpen && (
+        <LoginAlertModal
+          isOpen={isLoginModalOpen}
+          onClose={() => setIsLoginModalOpen(false)}
+          theme="blue"
+        />
+      )}
+    </div>
   );
 };
 

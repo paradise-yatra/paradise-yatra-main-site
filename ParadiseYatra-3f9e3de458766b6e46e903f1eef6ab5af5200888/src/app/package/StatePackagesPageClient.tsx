@@ -1,10 +1,8 @@
 "use client";
 
-import { Suspense, useState, useEffect, useRef } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
-import { MapPin, Clock, Filter, ChevronDown, Check, ChevronLeft, ChevronRight, X, ArrowRight, Heart, Search, Users, SearchX } from 'lucide-react';
-import Loading from '@/components/ui/loading';
-import Link from 'next/link';
+import { useState, useEffect, useRef } from 'react';
+import { motion } from 'framer-motion';
+import { Filter, Check, ChevronLeft, ChevronRight, SearchX } from 'lucide-react';
 import Image from 'next/image';
 import { getImageUrl, getPackagePriceLabel } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
@@ -15,7 +13,6 @@ import Header from '@/components/Header';
 import PackageCard from '@/components/ui/PackageCard';
 import HorizontalPackageCard from '@/components/ui/HorizontalPackageCard';
 import SearchFilterSidebar from '@/components/ui/SearchFilterSidebar';
-import SearchHeader from '@/components/ui/SearchHeader';
 import { useAuth } from '@/context/AuthContext';
 import LoginAlertModal from '@/components/LoginAlertModal';
 import CarouselArrows from '@/components/ui/CarouselArrows';
@@ -129,19 +126,15 @@ const Pagination = ({ currentPage, totalPages, onPageChange, className = "" }: P
 };
 
 const PackagesLoadingSkeleton = () => (
-    <div className="min-h-screen bg-slate-50">
-        <div className="container mx-auto px-4 py-8">
-            <div className="flex flex-col lg:flex-row gap-8">
-                <aside className="lg:w-80 hidden lg:block">
-                    <div className="bg-white rounded-2xl shadow-sm p-6 sticky top-32 mt-0.5 border border-slate-100 h-[600px] animate-pulse"></div>
-                </aside>
-                <div className="flex-1">
-                    <div className="grid gap-6">
-                        {[1, 2, 3, 4].map((i) => (
-                            <div key={i} className="bg-white rounded-2xl shadow-sm overflow-hidden h-64 animate-pulse border border-slate-100"></div>
-                        ))}
-                    </div>
-                </div>
+    <div className="flex flex-col lg:flex-row gap-0 lg:gap-8">
+        <aside className="hidden lg:block lg:w-80 flex-shrink-0">
+            <div className="bg-white rounded-2xl shadow-sm p-6 sticky top-32 mt-0.5 border border-slate-100 h-[600px] animate-pulse"></div>
+        </aside>
+        <div className="flex-1">
+            <div className="grid gap-6">
+                {[1, 2, 3, 4].map((i) => (
+                    <div key={i} className="bg-white rounded-2xl shadow-sm overflow-hidden h-64 animate-pulse border border-slate-100"></div>
+                ))}
             </div>
         </div>
     </div>
@@ -341,17 +334,6 @@ export default function DedicatedPackagesPageClient({ tourType, state, country }
         }
     };
 
-    if (loading) {
-        return (
-            <div className="min-h-screen bg-slate-50">
-                <Header />
-                <div className="pt-24">
-                    <PackagesLoadingSkeleton />
-                </div>
-            </div>
-        );
-    }
-
     const locationLabel = state || country || 'Travel';
     const formattedLocation = (locationLabel.charAt(0).toUpperCase() + locationLabel.slice(1))
         .replace(/-/g, ' ')
@@ -489,6 +471,9 @@ export default function DedicatedPackagesPageClient({ tourType, state, country }
                             alt={`${formattedLocation} Tourism`}
                             fill
                             className="object-cover"
+                            sizes="(max-width: 768px) 100vw, 100vw"
+                            quality={70}
+                            fetchPriority="high"
                             priority
                         />
                         <div className="absolute inset-0 bg-black/20" />
@@ -542,122 +527,127 @@ export default function DedicatedPackagesPageClient({ tourType, state, country }
                 {/* Main Content Area */}
                 <section className="py-8 md:py-16 px-4 md:px-8 bg-white">
                     <div className="max-w-6xl mx-auto">
-                        <div className="mb-6 text-left">
-                            <h2 className="!text-[24px] md:!text-[36px] !font-bold text-[#000945] mb-2">
-                                Handpicked Curated Journeys
-                            </h2>
-                        </div>
-                        <div className="flex flex-col lg:flex-row gap-0 lg:gap-8">
+                <div className="mb-6 text-left">
+                    <h2 className="!text-[24px] md:!text-[36px] !font-bold text-[#000945] mb-2">
+                        Handpicked Curated Journeys
+                    </h2>
+                </div>
+                {loading ? (
+                    <PackagesLoadingSkeleton />
+                ) : (
+                    <div className="flex flex-col lg:flex-row gap-0 lg:gap-8">
 
-                            {/* Sidebar Filters */}
-                            <aside className="hidden lg:block lg:w-80 flex-shrink-0">
-                                <div className="lg:sticky lg:top-32 lg:mt-0.5">
+                        {/* Sidebar Filters */}
+                        <aside className="hidden lg:block lg:w-80 flex-shrink-0">
+                            <div className="lg:sticky lg:top-32 lg:mt-0.5">
 
-                                    <Card className="hidden lg:block border border-[#dfe1df] shadow-none overflow-hidden p-0 bg-white rounded-[24px]">
-                                        <SearchFilterSidebar
-                                            durationFilter={durationFilter}
-                                            setDurationFilter={setDurationFilter}
-                                            priceFilter={priceFilter}
-                                            setPriceFilter={setPriceFilter}
-                                            onClearFilters={() => {
-                                                setDurationFilter('all');
-                                                setPriceFilter('all');
-                                                setSortBy('recommended');
-                                            }}
-                                        />
-                                    </Card>
-                                </div>
-                            </aside>
-
-                            {/* Package Content */}
-                            <div className="flex-1">
-                                <div className="flex items-center justify-between lg:justify-end gap-3 mb-6 md:mb-8">
-                                    <button
-                                        onClick={() => setIsFiltersOpen(true)}
-                                        className="lg:hidden flex items-center justify-center h-9 rounded-[6px] border border-slate-200 bg-white text-slate-900 font-medium text-xs px-6 shadow-none"
-                                        style={{ boxShadow: 'none' }}
-                                    >
-                                        <Filter className="mr-2 h-3.5 w-3.5 text-slate-500" />
-                                        Filters
-                                    </button>
-
-                                    <div className="flex items-center gap-2 sm:gap-3">
-                                        <span className="hidden sm:inline text-sm font-medium text-slate-500">Sort by:</span>
-                                        <Select
-                                            value={sortBy}
-                                            onValueChange={setSortBy}
-                                        >
-                                            <SelectTrigger
-                                                className="w-[140px] bg-white border-slate-200 font-medium text-slate-900 rounded-[6px] h-9 text-xs px-4 shadow-none !shadow-none"
-                                                style={{ boxShadow: 'none' }}
-                                            >
-                                                <SelectValue placeholder="Recommended" />
-                                            </SelectTrigger>
-                                            <SelectContent className="!rounded-[6px] border-slate-100 shadow-xl">
-                                                <SelectItem value="recommended">Recommended</SelectItem>
-                                                <SelectItem value="price-asc">Price: Low to High</SelectItem>
-                                                <SelectItem value="price-desc">Price: High to Low</SelectItem>
-                                                <SelectItem value="duration-asc">Duration</SelectItem>
-                                            </SelectContent>
-                                        </Select>
-                                    </div>
-                                </div>
-
-                                {filteredItems.length > 0 ? (
-                                    <div className="space-y-6">
-                                        {paginatedItems.map((item) => (
-                                            <HorizontalPackageCard
-                                                key={item._id}
-                                                id={item._id}
-                                                title={item.name}
-                                                destination={item.location}
-                                                duration={item.duration}
-                                                description={item.shortDescription || item.description}
-                                                price={item.price}
-                                                priceLabel={getPackagePriceLabel(item.priceType)}
-                                                image={item.image}
-                                                detailUrl={`/package/${item.slug || item._id}`}
-                                                isInWishlist={isInWishlist(item._id)}
-                                                onWishlistToggle={handleWishlistToggle}
-                                            />
-                                        ))}
-
-                                        {totalPages > 1 && (
-                                            <div className="mt-12">
-                                                <Pagination
-                                                    currentPage={currentPage}
-                                                    totalPages={totalPages}
-                                                    onPageChange={setCurrentPage}
-                                                    className="mt-6"
-                                                />
-                                            </div>
-                                        )}
-                                    </div>
-                                ) : (
-                                    <div className="text-center py-16 bg-white rounded-[6px] border border-[#dfe1df] shadow-none">
-                                        <div className="w-16 h-16 bg-slate-50 rounded-full flex items-center justify-center mx-auto mb-5">
-                                            <SearchX className="w-8 h-8 text-[#000945] opacity-20" />
-                                        </div>
-                                        <h3 className="!text-xl !font-bold text-[#000945] mb-2">No packages found</h3>
-                                        <p className="!text-[#000945]/70 !text-sm font-medium max-w-sm mx-auto mb-8">
-                                            We couldn't find any packages for {formattedLocation} matching your filters.
-                                        </p>
-                                        <Button
-                                            onClick={() => {
-                                                setDurationFilter('all');
-                                                setPriceFilter('all');
-                                                setSortBy('recommended');
-                                            }}
-                                            className="!bg-white !text-[#155dfc] font-bold py-2 px-8 rounded-[6px] h-auto text-sm transition-all !border !border-[#dfe1df] !shadow-none hover:bg-slate-50 !cursor-pointer"
-                                        >
-                                            Clear All Filters
-                                        </Button>
-                                    </div>
-                                )}
+                                <Card className="hidden lg:block border border-[#dfe1df] shadow-none overflow-hidden p-0 bg-white rounded-[24px]">
+                                    <SearchFilterSidebar
+                                        durationFilter={durationFilter}
+                                        setDurationFilter={setDurationFilter}
+                                        priceFilter={priceFilter}
+                                        setPriceFilter={setPriceFilter}
+                                        onClearFilters={() => {
+                                            setDurationFilter('all');
+                                            setPriceFilter('all');
+                                            setSortBy('recommended');
+                                        }}
+                                    />
+                                </Card>
                             </div>
+                        </aside>
+
+                        {/* Package Content */}
+                        <div className="flex-1">
+                            <div className="flex items-center justify-between lg:justify-end gap-3 mb-6 md:mb-8">
+                                <button
+                                    onClick={() => setIsFiltersOpen(true)}
+                                    className="lg:hidden flex items-center justify-center h-9 rounded-[6px] border border-slate-200 bg-white text-slate-900 font-medium text-xs px-6 shadow-none"
+                                    style={{ boxShadow: 'none' }}
+                                >
+                                    <Filter className="mr-2 h-3.5 w-3.5 text-slate-500" />
+                                    Filters
+                                </button>
+
+                                <div className="flex items-center gap-2 sm:gap-3">
+                                    <span className="hidden sm:inline text-sm font-medium text-slate-500">Sort by:</span>
+                                    <Select
+                                        value={sortBy}
+                                        onValueChange={setSortBy}
+                                    >
+                                        <SelectTrigger
+                                            className="w-[140px] bg-white border-slate-200 font-medium text-slate-900 rounded-[6px] h-9 text-xs px-4 shadow-none !shadow-none"
+                                            style={{ boxShadow: 'none' }}
+                                        >
+                                            <SelectValue placeholder="Recommended" />
+                                        </SelectTrigger>
+                                        <SelectContent className="!rounded-[6px] border-slate-100 shadow-xl">
+                                            <SelectItem value="recommended">Recommended</SelectItem>
+                                            <SelectItem value="price-asc">Price: Low to High</SelectItem>
+                                            <SelectItem value="price-desc">Price: High to Low</SelectItem>
+                                            <SelectItem value="duration-asc">Duration</SelectItem>
+                                        </SelectContent>
+                                    </Select>
+                                </div>
+                            </div>
+
+                            {filteredItems.length > 0 ? (
+                                <div className="space-y-6">
+                                    {paginatedItems.map((item) => (
+                                        <HorizontalPackageCard
+                                            key={item._id}
+                                            id={item._id}
+                                            title={item.name}
+                                            destination={item.location}
+                                            duration={item.duration}
+                                            description={item.shortDescription || item.description}
+                                            price={item.price}
+                                            priceLabel={getPackagePriceLabel(item.priceType)}
+                                            image={item.image}
+                                            imageAlt={item.imageAlt || item.name}
+                                            detailUrl={`/package/${item.slug || item._id}`}
+                                            isInWishlist={isInWishlist(item._id)}
+                                            onWishlistToggle={handleWishlistToggle}
+                                        />
+                                    ))}
+
+                                    {totalPages > 1 && (
+                                        <div className="mt-12">
+                                            <Pagination
+                                                currentPage={currentPage}
+                                                totalPages={totalPages}
+                                                onPageChange={setCurrentPage}
+                                                className="mt-6"
+                                            />
+                                        </div>
+                                    )}
+                                </div>
+                            ) : (
+                                <div className="text-center py-16 bg-white rounded-[6px] border border-[#dfe1df] shadow-none">
+                                    <div className="w-16 h-16 bg-slate-50 rounded-full flex items-center justify-center mx-auto mb-5">
+                                        <SearchX className="w-8 h-8 text-[#000945] opacity-20" />
+                                    </div>
+                                    <h3 className="!text-xl !font-bold text-[#000945] mb-2">No packages found</h3>
+                                    <p className="!text-[#000945]/70 !text-sm font-medium max-w-sm mx-auto mb-8">
+                                        We couldn't find any packages for {formattedLocation} matching your filters.
+                                    </p>
+                                    <Button
+                                        onClick={() => {
+                                            setDurationFilter('all');
+                                            setPriceFilter('all');
+                                            setSortBy('recommended');
+                                        }}
+                                        className="!bg-white !text-[#155dfc] font-bold py-2 px-8 rounded-[6px] h-auto text-sm transition-all !border !border-[#dfe1df] !shadow-none hover:bg-slate-50 !cursor-pointer"
+                                    >
+                                        Clear All Filters
+                                    </Button>
+                                </div>
+                            )}
                         </div>
                     </div>
-                </section>
+                )}
+            </div>
+        </section>
 
                 <WhyParadiseDifference />
                 <FAQSection destination={state || country} tourType={tourType} />
@@ -706,6 +696,7 @@ export default function DedicatedPackagesPageClient({ tourType, state, country }
                                             title={pkg.name}
                                             price={pkg.price || 0}
                                             image={getImageUrl(pkg.image) || `https://picsum.photos/800/500?random=${index + 50}`}
+                                            imageAlt={pkg.imageAlt || pkg.name}
                                             slug={pkg.slug || pkg._id}
                                             hrefPrefix="/package"
                                             themeColor="#005beb"
