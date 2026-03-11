@@ -129,10 +129,10 @@ const HeroSection = () => {
       };
     }
 
-    const timeoutId = window.setTimeout(loadVideo, 1200);
+    const timeoutId = setTimeout(loadVideo, 1200);
     return () => {
       cancelled = true;
-      window.clearTimeout(timeoutId);
+      clearTimeout(timeoutId);
     };
   }, [shouldShowVideo]);
 

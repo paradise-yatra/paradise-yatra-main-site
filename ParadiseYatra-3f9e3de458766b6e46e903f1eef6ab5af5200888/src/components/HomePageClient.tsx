@@ -37,11 +37,11 @@ const HomePageClient = memo(() => {
   const [renderBelowFold, setRenderBelowFold] = useState(false);
 
   useEffect(() => {
-    const timer = window.setTimeout(() => {
+    const timer = setTimeout(() => {
       setShowLeadCaptureForm(true);
     }, 10000);
 
-    return () => window.clearTimeout(timer);
+    return () => clearTimeout(timer);
   }, []);
 
   useEffect(() => {
@@ -65,10 +65,10 @@ const HomePageClient = memo(() => {
       };
     }
 
-    const timeoutId = window.setTimeout(enableBelowFold, 800);
+    const timeoutId = setTimeout(enableBelowFold, 800);
     return () => {
       cancelled = true;
-      window.clearTimeout(timeoutId);
+      clearTimeout(timeoutId);
     };
   }, []);
 

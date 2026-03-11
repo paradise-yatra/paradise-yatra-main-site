@@ -1,4 +1,5 @@
 import type { Metadata, Viewport } from "next";
+import { Suspense } from "react";
 import { Playfair_Display, Nunito, Plus_Jakarta_Sans, Unbounded } from "next/font/google";
 import { SITE_URL } from "@/lib/seo";
 import "./globals.css";
@@ -122,7 +123,9 @@ export default function RootLayout({
         <ReduxProvider>
           <AuthProvider>
             {children}
-            <CookieConsentManager />
+            <Suspense fallback={null}>
+              <CookieConsentManager />
+            </Suspense>
             <TalkToAgentButton />
             <FooterWrapper />
             <ToastContainer position="top-right" autoClose={3000} hideProgressBar={false} newestOnTop={false} closeOnClick rtl={false} pauseOnFocusLoss draggable pauseOnHover theme="light" />

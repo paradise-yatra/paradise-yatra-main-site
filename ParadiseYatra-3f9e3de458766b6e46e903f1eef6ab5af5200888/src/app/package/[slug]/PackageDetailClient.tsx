@@ -1,6 +1,6 @@
 "use client";
 
-import { Loader2, Clock, MapPin, Users, Calendar, Award, Shield, ArrowRight, ChevronDown, User, Phone, Mail, MessageSquare, Plus, Minus, Check, X } from "lucide-react";
+import { Loader2, Clock, MapPin, Users, Calendar, Award, Shield, ArrowRight, ChevronDown, User, Phone, Mail, MessageSquare, Plus, Minus, Check, X, Plane, Utensils, Camera } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 import { useState, useEffect, useRef } from "react";
@@ -190,8 +190,8 @@ const ItineraryPageClient = ({ packageData, slug }: ItineraryPageClientProps) =>
 
   useEffect(() => {
     if (!actionMessage) return;
-    const timeout = window.setTimeout(() => setActionMessage(null), 2600);
-    return () => window.clearTimeout(timeout);
+    const timeout = setTimeout(() => setActionMessage(null), 2600);
+    return () => clearTimeout(timeout);
   }, [actionMessage]);
 
   const handleSubmitEnquiry = async () => {

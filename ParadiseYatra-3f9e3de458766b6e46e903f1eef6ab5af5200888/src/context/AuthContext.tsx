@@ -57,8 +57,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
                 (window as Window & { cancelIdleCallback: Function }).cancelIdleCallback(idleId);
         }
 
-        const timeoutId = window.setTimeout(runFetch, 1200);
-        return () => window.clearTimeout(timeoutId);
+        const timeoutId = setTimeout(runFetch, 1200);
+        return () => clearTimeout(timeoutId);
     };
 
     useEffect(() => {

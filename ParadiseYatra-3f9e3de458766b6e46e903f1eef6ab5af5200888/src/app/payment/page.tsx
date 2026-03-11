@@ -96,7 +96,7 @@ export default function PaymentPage() {
     try {
       await navigator.clipboard.writeText(PAYMENT_LINK);
       setCopied(true);
-      window.setTimeout(() => setCopied(false), 1800);
+      setTimeout(() => setCopied(false), 1800);
     } catch {
       setCopied(false);
     }

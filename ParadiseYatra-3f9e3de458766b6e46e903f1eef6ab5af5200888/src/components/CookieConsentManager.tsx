@@ -1,5 +1,7 @@
 "use client";
 
+"use client";
+
 import Link from "next/link";
 import { usePathname, useSearchParams } from "next/navigation";
 import { useEffect, useState } from "react";
@@ -51,8 +53,8 @@ export default function CookieConsentManager() {
         (window as Window & { cancelIdleCallback: Function }).cancelIdleCallback(idleId);
     }
 
-    const timeoutId = window.setTimeout(send, 600);
-    return () => window.clearTimeout(timeoutId);
+    const timeoutId = setTimeout(send, 600);
+    return () => clearTimeout(timeoutId);
   }, [analyticsEnabled, pathname, searchQuery]);
 
   if (!isReady || noticeState === "acknowledged") return null;
