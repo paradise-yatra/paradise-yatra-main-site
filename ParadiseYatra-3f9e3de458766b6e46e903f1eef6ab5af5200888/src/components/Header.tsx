@@ -310,11 +310,34 @@ const Header = ({
   };
 
   useEffect(() => {
-    const handleScroll = () => {
-      setIsScrolled(window.scrollY > 10);
+    let rafId: number | null = null;
+    let lastValue = window.scrollY > 10;
+
+    setIsScrolled(lastValue);
+
+    const updateScrolled = () => {
+      const nextValue = window.scrollY > 10;
+      if (nextValue !== lastValue) {
+        lastValue = nextValue;
+        setIsScrolled(nextValue);
+      }
     };
-    window.addEventListener("scroll", handleScroll);
-    return () => window.removeEventListener("scroll", handleScroll);
+
+    const handleScroll = () => {
+      if (rafId !== null) return;
+      rafId = window.requestAnimationFrame(() => {
+        rafId = null;
+        updateScrolled();
+      });
+    };
+
+    window.addEventListener("scroll", handleScroll, { passive: true });
+    return () => {
+      window.removeEventListener("scroll", handleScroll);
+      if (rafId !== null) {
+        window.cancelAnimationFrame(rafId);
+      }
+    };
   }, []);
 
   // Handle navigation loading state

@@ -14,6 +14,7 @@ interface BlogPost {
   likes: number;
   isPublished: boolean;
   isFeatured: boolean;
+  faqs?: { question: string; answer: string; order?: number }[];
   seoKeywords?: string[];
   seoTitle?: string;
   seoDescription?: string;

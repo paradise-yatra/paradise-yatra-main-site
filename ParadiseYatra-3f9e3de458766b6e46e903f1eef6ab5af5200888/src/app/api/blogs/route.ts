@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { revalidatePath } from "next/cache";
+import { revalidatePath, unstable_noStore as noStore } from "next/cache";
 
 const BACKEND_URL = process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:5001';
 
@@ -9,11 +9,16 @@ export const revalidate = 30;
 export async function GET(request: NextRequest) {
   try {
     const { searchParams } = new URL(request.url);
+    const admin = searchParams.get('admin');
     const featured = searchParams.get('featured');
     const published = searchParams.get('published');
     const category = searchParams.get('category');
     const limit = searchParams.get('limit');
     const page = searchParams.get('page');
+
+    if (admin === 'true') {
+      noStore();
+    }
 
     // Validate featured parameter if provided
     if (featured && !['true', 'false'].includes(featured)) {
@@ -79,7 +84,11 @@ export async function GET(request: NextRequest) {
     }
 
     const data = await response.json();
-    return NextResponse.json(data);
+    const responseData = NextResponse.json(data);
+    if (admin === 'true') {
+      responseData.headers.set('Cache-Control', 'no-store');
+    }
+    return responseData;
   } catch (error) {
     console.error('Blogs API error:', error);
     return NextResponse.json({ message: 'Internal server error' }, { status: 500 });

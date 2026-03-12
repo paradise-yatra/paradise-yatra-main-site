@@ -1,5 +1,22 @@
 const mongoose = require("mongoose");
 
+const faqEntrySchema = new mongoose.Schema({
+  question: {
+    type: String,
+    required: true,
+    trim: true,
+  },
+  answer: {
+    type: String,
+    required: true,
+    trim: true,
+  },
+  order: {
+    type: Number,
+    default: 1,
+  },
+});
+
 const blogSchema = new mongoose.Schema(
   {
     title: {
@@ -73,10 +90,19 @@ const blogSchema = new mongoose.Schema(
       unique: true,
       sparse: true, // Allow nulls for existing entries initially
     },
+    faqs: {
+      type: [faqEntrySchema],
+      default: [],
+      validate: [arrayLimit, "{PATH} exceeds the limit of 5"],
+    },
   },
   {
     timestamps: true,
   }
 );
+
+function arrayLimit(val) {
+  return val.length <= 5;
+}
 
 module.exports = mongoose.model("Blog", blogSchema);

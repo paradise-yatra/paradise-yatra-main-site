@@ -4,9 +4,16 @@ import { useEffect, useRef, useState } from "react";
 import { motion } from "framer-motion";
 import { CalendarDays, Clock3 } from "lucide-react";
 import Header from "@/components/Header";
+import FAQSection from "@/components/FAQSection";
 import Image from "next/image";
 import Link from "next/link";
 import { getImageUrl as getOptimizedImageUrl } from "@/lib/utils";
+
+interface BlogFAQ {
+  question: string;
+  answer: string;
+  order?: number;
+}
 
 interface BlogPost {
   _id: string;
@@ -23,6 +30,7 @@ interface BlogPost {
   isPublished: boolean;
   isFeatured: boolean;
   createdAt: string;
+  faqs?: BlogFAQ[];
 }
 
 interface BlogDetailClientProps {
@@ -51,13 +59,19 @@ const formatDate = (value: string): string =>
     month: "long",
     day: "numeric",
     year: "numeric",
+    timeZone: "Asia/Kolkata",
   });
 
 const BlogDetailClient = ({ post, slug }: BlogDetailClientProps) => {
   const [imageErrors, setImageErrors] = useState<Set<string>>(new Set());
   const [relatedPosts, setRelatedPosts] = useState<BlogPost[]>([]);
-  const [readingProgress, setReadingProgress] = useState(0);
+  const [enableProgress, setEnableProgress] = useState(false);
+  const [hasMounted, setHasMounted] = useState(false);
   const articleContentRef = useRef<HTMLDivElement | null>(null);
+  const progressRafRef = useRef<number | null>(null);
+  const progressLastRef = useRef(0);
+  const progressMetricsRef = useRef({ top: 0, height: 1, viewport: 1 });
+  const progressBarRef = useRef<HTMLDivElement | null>(null);
 
   const handleImageError = (
     postId: string,
@@ -122,35 +136,84 @@ const BlogDetailClient = ({ post, slug }: BlogDetailClientProps) => {
   }, [post._id, post.category]);
 
   useEffect(() => {
-    const updateReadingProgress = () => {
-      const articleElement = articleContentRef.current;
+    setHasMounted(true);
+  }, []);
 
-      if (!articleElement) {
+  useEffect(() => {
+    if (typeof window !== "undefined") {
+      const isMobile = window.matchMedia("(max-width: 768px)").matches;
+      if (isMobile) {
+        setEnableProgress(false);
         return;
       }
+      setEnableProgress(true);
+    }
+
+    const measure = () => {
+      const articleElement = articleContentRef.current;
+      if (!articleElement) return;
 
       const rect = articleElement.getBoundingClientRect();
       const scrollTop = window.scrollY || window.pageYOffset;
-      const articleTop = scrollTop + rect.top;
-      const articleHeight = articleElement.offsetHeight;
-      const viewportHeight = window.innerHeight;
-      const scrollableDistance = Math.max(articleHeight - viewportHeight, 1);
-      const rawProgress = (scrollTop - articleTop) / scrollableDistance;
-      const clampedProgress = Math.min(Math.max(rawProgress, 0), 1);
-
-      setReadingProgress(Math.round(clampedProgress * 100));
+      progressMetricsRef.current = {
+        top: scrollTop + rect.top,
+        height: articleElement.offsetHeight,
+        viewport: window.innerHeight,
+      };
     };
 
+    const updateReadingProgress = () => {
+      if (progressRafRef.current !== null) return;
+      progressRafRef.current = window.requestAnimationFrame(() => {
+        progressRafRef.current = null;
+        const { top, height, viewport } = progressMetricsRef.current;
+        const scrollTop = window.scrollY || window.pageYOffset;
+        const scrollableDistance = Math.max(height - viewport, 1);
+        const rawProgress = (scrollTop - top) / scrollableDistance;
+        const clampedProgress = Math.min(Math.max(rawProgress, 0), 1);
+        const nextValue = Math.round(clampedProgress * 100);
+
+        if (nextValue !== progressLastRef.current) {
+          progressLastRef.current = nextValue;
+          if (progressBarRef.current) {
+            progressBarRef.current.style.width = `${nextValue}%`;
+          }
+        }
+      });
+    };
+
+    const handleResize = () => {
+      measure();
+      updateReadingProgress();
+    };
+
+    measure();
     updateReadingProgress();
 
     window.addEventListener("scroll", updateReadingProgress, { passive: true });
-    window.addEventListener("resize", updateReadingProgress);
+    window.addEventListener("resize", handleResize);
+
+    const measureTimeout = window.setTimeout(measure, 400);
 
     return () => {
       window.removeEventListener("scroll", updateReadingProgress);
-      window.removeEventListener("resize", updateReadingProgress);
+      window.removeEventListener("resize", handleResize);
+      window.clearTimeout(measureTimeout);
+      if (progressRafRef.current !== null) {
+        window.cancelAnimationFrame(progressRafRef.current);
+      }
     };
   }, []);
+
+  const faqItems = (post.faqs || [])
+    .filter((faq) => faq.question && faq.answer)
+    .sort((a, b) => (a.order ?? 0) - (b.order ?? 0))
+    .map((faq) => ({
+      question: faq.question,
+      answer: faq.answer,
+    }));
+  const hasFaqs = faqItems.length > 0;
+  const showProgress = hasMounted && enableProgress;
 
   return (
     <>
@@ -189,15 +252,37 @@ const BlogDetailClient = ({ post, slug }: BlogDetailClientProps) => {
           }),
         }}
       />
+      {hasFaqs && (
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{
+            __html: JSON.stringify({
+              "@context": "https://schema.org",
+              "@type": "FAQPage",
+              mainEntity: faqItems.map((faq) => ({
+                "@type": "Question",
+                name: faq.question,
+                acceptedAnswer: {
+                  "@type": "Answer",
+                  text: faq.answer,
+                },
+              })),
+            }),
+          }}
+        />
+      )}
 
       <div className="min-h-screen bg-white">
         <Header />
-        <div className="pointer-events-none fixed left-0 right-0 top-[84px] z-[59] h-[3px] bg-transparent">
-          <div
-            className="h-full bg-[#155dfc] transition-[width] duration-150 ease-out"
-            style={{ width: `${readingProgress}%` }}
-          />
-        </div>
+        {showProgress && (
+          <div className="pointer-events-none fixed left-0 right-0 top-[84px] z-[59] h-[3px] bg-transparent">
+            <div
+              ref={progressBarRef}
+              className="h-full bg-[#155dfc] transition-[width] duration-150 ease-out will-change-[width]"
+              style={{ width: "0%" }}
+            />
+          </div>
+        )}
 
         <main className="bg-white px-5 pb-14 pt-6 md:px-8 md:pb-20 md:pt-8">
           <motion.article
@@ -208,7 +293,7 @@ const BlogDetailClient = ({ post, slug }: BlogDetailClientProps) => {
           >
             <div ref={articleContentRef}>
               <header className="mx-auto max-w-[860px]">
-                <h1 className="w-full !text-[28px] !font-bold !leading-[1.02] tracking-[-0.05em] text-[#000945] md:!text-[52px]">
+                <h1 className="w-full !text-[28px] !font-[900] !leading-[1.02] tracking-[-0.05em] text-[#000945] md:!text-[52px]">
                   {post.title}
                 </h1>
 
@@ -248,7 +333,7 @@ const BlogDetailClient = ({ post, slug }: BlogDetailClientProps) => {
                 </div>
               </header>
 
-              <div className="mt-2 overflow-hidden rounded-[6px]">
+              <div className="mt-2 overflow-hidden rounded-[18px]">
                 <div className="relative h-[260px] md:h-[520px]">
                   <Image
                     src={getSafeImageUrl(post.image, post._id)}
@@ -264,11 +349,18 @@ const BlogDetailClient = ({ post, slug }: BlogDetailClientProps) => {
 
               <div className="mx-auto mt-10 max-w-[860px]">
                 <div
-                  className="overflow-x-auto !text-[#000945] [&_h1]:!mb-5 [&_h1]:!mt-12 [&_h1]:!text-[34px] [&_h1]:!font-semibold [&_h1]:!leading-[1.08] [&_h1]:tracking-[-0.04em] [&_h1]:!text-[#000945] [&_h2]:!mb-5 [&_h2]:!mt-12 [&_h2]:!text-[30px] [&_h2]:!font-semibold [&_h2]:!leading-[1.1] [&_h2]:tracking-[-0.04em] [&_h2]:!text-[#000945] [&_h3]:!mb-4 [&_h3]:!mt-10 [&_h3]:!text-[24px] [&_h3]:!font-semibold [&_h3]:!leading-[1.16] [&_h3]:!text-[#000945] [&_h4]:!mb-3 [&_h4]:!mt-8 [&_h4]:!text-[20px] [&_h4]:!font-semibold [&_h4]:!text-[#000945] [&_p]:!mb-6 [&_p]:!text-[15px] [&_p]:!leading-[1.9] [&_p]:!text-[#000945] [&_ul]:!mb-6 [&_ul]:!list-disc [&_ul]:!space-y-2 [&_ul]:!pl-6 [&_ol]:!mb-6 [&_ol]:!list-decimal [&_ol]:!space-y-2 [&_ol]:!pl-6 [&_li]:!text-[15px] [&_li]:!leading-[1.85] [&_li]:!text-[#000945] [&_strong]:!text-[#000945] [&_em]:!text-[#000945] [&_span]:!text-[#000945] [&_blockquote]:!my-10 [&_blockquote]:!border-l-[3px] [&_blockquote]:!border-[#000945] [&_blockquote]:!pl-6 [&_blockquote]:!text-[24px] [&_blockquote]:!font-medium [&_blockquote]:!italic [&_blockquote]:!leading-[1.5] [&_blockquote]:!text-[#000945] [&_a]:!text-[#000945] [&_a]:!underline [&_img]:!my-8 [&_img]:!rounded-[18px] [&_table]:!my-8 [&_table]:!w-full [&_table]:!border-collapse [&_th]:!border-b [&_th]:!border-[#dfdfdf] [&_th]:!px-4 [&_th]:!py-3 [&_th]:!text-left [&_th]:!text-sm [&_th]:!font-semibold [&_th]:!text-[#000945] [&_td]:!border-b [&_td]:!border-[#ececec] [&_td]:!px-4 [&_td]:!py-3 [&_td]:!text-sm [&_td]:!text-[#000945]"
+                  suppressHydrationWarning
+                  className="blog-content overflow-x-auto !text-[#000945] [&_h1]:!mb-5 [&_h1]:!mt-12 [&_h1]:!text-[34px] [&_h1]:!font-semibold [&_h1]:!leading-[1.08] [&_h1]:tracking-[-0.04em] [&_h1]:!text-[#000945] [&_h2]:!mb-5 [&_h2]:!mt-12 [&_h2]:!text-[30px] [&_h2]:!font-bold [&_h2]:!leading-[1.1] [&_h2]:tracking-[-0.04em] [&_h2]:!text-[#000945] [&_h3]:!mb-4 [&_h3]:!mt-10 [&_h3]:!text-[24px] [&_h3]:!font-bold [&_h3]:!leading-[1.16] [&_h3]:!text-[#000945] [&_h4]:!mb-3 [&_h4]:!mt-8 [&_h4]:!text-[20px] [&_h4]:!font-semibold [&_h4]:!text-[#000945] [&_p]:!mb-6 [&_p]:!text-[15px] [&_p]:!leading-[1.9] [&_p]:!text-[#000945] [&_ul]:!mb-6 [&_ul]:!list-disc [&_ul]:!space-y-2 [&_ul]:!pl-6 [&_ol]:!mb-6 [&_ol]:!list-decimal [&_ol]:!space-y-2 [&_ol]:!pl-6 [&_li]:!text-[15px] [&_li]:!leading-[1.85] [&_li]:!text-[#000945] [&_strong]:!text-[#000945] [&_em]:!text-[#000945] [&_span]:!text-[#000945] [&_blockquote]:!my-10 [&_blockquote]:!border-l-[3px] [&_blockquote]:!border-[#000945] [&_blockquote]:!pl-6 [&_blockquote]:!text-[24px] [&_blockquote]:!font-medium [&_blockquote]:!italic [&_blockquote]:!leading-[1.5] [&_blockquote]:!text-[#000945] [&_a]:!text-[#000945] [&_a]:!underline [&_img]:!my-0 [&_img]:!rounded-[18px] [&_table]:!my-8 [&_table]:!w-full [&_table]:!border-collapse [&_th]:!border-b [&_th]:!border-[#dfdfdf] [&_th]:!px-4 [&_th]:!py-3 [&_th]:!text-left [&_th]:!text-sm [&_th]:!font-semibold [&_th]:!text-[#000945] [&_td]:!border-b [&_td]:!border-[#ececec] [&_td]:!px-4 [&_td]:!py-3 [&_td]:!text-sm [&_td]:!text-[#000945]"
                   dangerouslySetInnerHTML={{ __html: post.content }}
                 />
               </div>
             </div>
+
+            {hasFaqs && (
+              <div className="mt-16">
+                <FAQSection faqs={faqItems} />
+              </div>
+            )}
 
             {relatedPosts.length > 0 && (
               <section className="mx-auto mt-16 max-w-[980px] border-t border-[#e6e6e6] pt-10">

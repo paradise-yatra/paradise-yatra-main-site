@@ -527,6 +527,44 @@ h3 {
   font-weight: 300;
 }
 
+/* Blog content heading weights */
+.blog-content h2 {
+  font-size: 30px !important;
+  font-weight: 700 !important;
+}
+
+.blog-content h3 {
+  font-size: 24px !important;
+  font-weight: 700 !important;
+}
+
+.blog-content h2 strong,
+.blog-content h2 b,
+.blog-content h3 strong,
+.blog-content h3 b {
+  font-weight: inherit !important;
+}
+
+.ProseMirror h2 strong,
+.ProseMirror h2 b,
+.ProseMirror h3 strong,
+.ProseMirror h3 b {
+  font-weight: inherit !important;
+}
+
+.blog-content img,
+.ProseMirror img {
+  display: block;
+  margin-top: 0 !important;
+  margin-bottom: 0 !important;
+}
+
+.blog-content p:has(> img),
+.ProseMirror p:has(> img) {
+  margin-top: 0 !important;
+  margin-bottom: 0 !important;
+}
+
 p {
   line-height: 1.7;
   color: var(--muted-foreground);

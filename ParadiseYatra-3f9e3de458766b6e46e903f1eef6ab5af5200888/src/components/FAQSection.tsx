@@ -51,6 +51,7 @@ const FAQItem = ({ question, answer, isOpen, onClick }: FAQItemProps) => {
 interface FAQSectionProps {
     destination?: string;
     tourType?: string;
+    faqs?: { question: string; answer: string }[];
 }
 
 const defaultFaqs = [
@@ -76,19 +77,27 @@ const defaultFaqs = [
     }
 ];
 
-export default function FAQSection({ destination, tourType }: FAQSectionProps) {
+export default function FAQSection({ destination, tourType, faqs: faqsOverride }: FAQSectionProps) {
     const [openIndex, setOpenIndex] = useState<number | null>(null);
     const [faqs, setFaqs] = useState(defaultFaqs);
     const [loaded, setLoaded] = useState(false);
 
     useEffect(() => {
+        if (faqsOverride && faqsOverride.length > 0) {
+            setFaqs(faqsOverride);
+            setOpenIndex(null);
+            setLoaded(true);
+            return;
+        }
+
         if (destination && tourType) {
             fetchDestinationFAQs();
         } else {
             setFaqs(defaultFaqs);
+            setOpenIndex(null);
             setLoaded(true);
         }
-    }, [destination, tourType]);
+    }, [destination, tourType, faqsOverride]);
 
     const fetchDestinationFAQs = async () => {
         try {

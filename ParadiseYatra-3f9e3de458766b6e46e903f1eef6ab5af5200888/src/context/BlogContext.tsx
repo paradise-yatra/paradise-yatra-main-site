@@ -14,6 +14,7 @@ export interface BlogPost {
   image: string;
   slug: string;
   status: "published" | "draft";
+  faqs?: { question: string; answer: string; order?: number }[];
 }
 
 interface BlogContextType {

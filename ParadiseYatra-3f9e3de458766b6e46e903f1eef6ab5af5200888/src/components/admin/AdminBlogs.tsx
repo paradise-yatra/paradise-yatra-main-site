@@ -7,7 +7,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { RichTextEditor } from "@/components/ui/rich-text-editor";
-import { Edit, Save, X, Plus, Trash2 } from "lucide-react";
+import { Edit, Save, X, Plus, Trash2, ChevronUp, ChevronDown } from "lucide-react";
 import { toast } from "react-toastify";
 import ImageUpload from "@/components/ui/image-upload";
 import ConfirmationDialog from "@/components/ui/confirmation-dialog";
@@ -27,6 +27,7 @@ interface BlogPost {
   slug: string;
   status: "published" | "draft";
   isActive: boolean;
+  faqs?: BlogFAQ[];
   // SEO fields
   seoTitle?: string;
   seoDescription?: string;
@@ -51,6 +52,12 @@ interface BlogPost {
   updatedAt?: string;
 }
 
+interface BlogFAQ {
+  question: string;
+  answer: string;
+  order: number;
+}
+
 interface AdminBlogsProps {
   initialAction?: string | null;
   onActionComplete?: () => void;
@@ -63,6 +70,30 @@ const AdminBlogs = ({ initialAction, onActionComplete }: AdminBlogsProps) => {
       .map((item) => item.trim())
       .filter((item) => item.length > 0);
 
+  const sanitizeSlug = (value: string) =>
+    value
+      .toLowerCase()
+      .trim()
+      .replace(/\s+/g, "-")
+      .replace(/[^\w-]+/g, "")
+      .replace(/--+/g, "-")
+      .replace(/^-+/, "")
+      .replace(/-+$/, "");
+
+  const MAX_FAQS = 5;
+
+  const normalizeFaqs = (faqs: BlogFAQ[] = []): BlogFAQ[] => {
+    return faqs
+      .map((faq, index) => ({
+        question: (faq.question || "").trim(),
+        answer: (faq.answer || "").trim(),
+        order: Number.isFinite(Number(faq.order)) ? Number(faq.order) : index + 1,
+      }))
+      .filter((faq) => faq.question && faq.answer)
+      .slice(0, MAX_FAQS)
+      .map((faq, index) => ({ ...faq, order: index + 1 }));
+  };
+
   const [blogs, setBlogs] = useState<BlogPost[]>([]);
   const [allBlogs, setAllBlogs] = useState<BlogPost[]>([]); // Store all blogs
   const [loading, setLoading] = useState(true);
@@ -73,6 +104,9 @@ const AdminBlogs = ({ initialAction, onActionComplete }: AdminBlogsProps) => {
   const [totalPages, setTotalPages] = useState(1);
   const [totalBlogs, setTotalBlogs] = useState(0);
   const blogsPerPage = 10; // Show 10 blogs per page
+  const [faqQuestion, setFaqQuestion] = useState("");
+  const [faqAnswer, setFaqAnswer] = useState("");
+  const [editingFaqIndex, setEditingFaqIndex] = useState<number | null>(null);
   const [deleteDialog, setDeleteDialog] = useState<{
     isOpen: boolean;
     blogId: string | null;
@@ -105,6 +139,7 @@ const AdminBlogs = ({ initialAction, onActionComplete }: AdminBlogsProps) => {
     slug: "",
     publishDate: "",
     isActive: true,
+    faqs: [],
     seoTitle: "",
     seoDescription: "",
     seoKeywords: [],
@@ -154,7 +189,9 @@ const AdminBlogs = ({ initialAction, onActionComplete }: AdminBlogsProps) => {
     try {
       setLoading(true);
       // Fetch all blogs for admin (use high limit to get all)
-      const response = await fetch(`/api/blogs?limit=1000`);
+      const response = await fetch(`/api/blogs?limit=1000&admin=true`, {
+        cache: "no-store",
+      });
       const data = await response.json();
 
       if (response.ok) {
@@ -270,6 +307,9 @@ const AdminBlogs = ({ initialAction, onActionComplete }: AdminBlogsProps) => {
       }
 
       // Transform formData to match backend expectations
+      const sanitizedSlug = sanitizeSlug(formData.slug || "");
+      const fallbackSlug = sanitizeSlug(formData.title);
+
       const backendData = {
         title: formData.title.trim(),
         content: formData.content.trim(),
@@ -278,10 +318,11 @@ const AdminBlogs = ({ initialAction, onActionComplete }: AdminBlogsProps) => {
         category: formData.category.trim(),
         image: formData.image.trim(),
         imageAlt: formData.imageAlt?.trim() || "",
-        slug: formData.slug?.trim() || formData.title.toLowerCase().replace(/\s+/g, "-"),
+        slug: sanitizedSlug || fallbackSlug,
         readTime: parseInt(formData.readTime) || 5,
         isPublished: formData.status === "published",
         isFeatured: formData.status === "published", // Auto-mark published blogs as featured
+        faqs: normalizeFaqs(formData.faqs || []),
         // SEO fields
         seoTitle: formData.seoTitle?.trim() || "",
         seoDescription: formData.seoDescription?.trim() || "",
@@ -467,6 +508,88 @@ const AdminBlogs = ({ initialAction, onActionComplete }: AdminBlogsProps) => {
     }
   };
 
+  const resetFaqForm = () => {
+    setFaqQuestion("");
+    setFaqAnswer("");
+    setEditingFaqIndex(null);
+  };
+
+  const handleSaveFaq = () => {
+    if (!faqQuestion.trim() || !faqAnswer.trim()) {
+      toast.error("Please enter both a question and an answer");
+      return;
+    }
+
+    const currentFaqs = normalizeFaqs(formData.faqs || []);
+    if (editingFaqIndex === null && currentFaqs.length >= MAX_FAQS) {
+      toast.error(`Maximum ${MAX_FAQS} FAQs allowed per blog post`);
+      return;
+    }
+
+    const nextFaqs = [...currentFaqs];
+    const faqPayload: BlogFAQ = {
+      question: faqQuestion.trim(),
+      answer: faqAnswer.trim(),
+      order: editingFaqIndex !== null ? editingFaqIndex + 1 : nextFaqs.length + 1,
+    };
+
+    if (editingFaqIndex !== null) {
+      nextFaqs[editingFaqIndex] = faqPayload;
+    } else {
+      nextFaqs.push(faqPayload);
+    }
+
+    setFormData((prev) => ({
+      ...prev,
+      faqs: normalizeFaqs(nextFaqs),
+    }));
+    resetFaqForm();
+  };
+
+  const handleEditFaq = (index: number) => {
+    const currentFaqs = normalizeFaqs(formData.faqs || []);
+    const faq = currentFaqs[index];
+    if (!faq) return;
+    setFaqQuestion(faq.question);
+    setFaqAnswer(faq.answer);
+    setEditingFaqIndex(index);
+  };
+
+  const handleDeleteFaq = (index: number) => {
+    const currentFaqs = normalizeFaqs(formData.faqs || []);
+    const nextFaqs = currentFaqs.filter((_, idx) => idx !== index);
+    setFormData((prev) => ({
+      ...prev,
+      faqs: normalizeFaqs(nextFaqs),
+    }));
+
+    if (editingFaqIndex === index) {
+      resetFaqForm();
+    } else if (editingFaqIndex !== null && index < editingFaqIndex) {
+      setEditingFaqIndex(editingFaqIndex - 1);
+    }
+  };
+
+  const handleMoveFaq = (index: number, direction: -1 | 1) => {
+    const currentFaqs = normalizeFaqs(formData.faqs || []);
+    const swapIndex = index + direction;
+    if (swapIndex < 0 || swapIndex >= currentFaqs.length) return;
+
+    const nextFaqs = [...currentFaqs];
+    [nextFaqs[index], nextFaqs[swapIndex]] = [nextFaqs[swapIndex], nextFaqs[index]];
+
+    setFormData((prev) => ({
+      ...prev,
+      faqs: normalizeFaqs(nextFaqs),
+    }));
+
+    if (editingFaqIndex === index) {
+      setEditingFaqIndex(swapIndex);
+    } else if (editingFaqIndex === swapIndex) {
+      setEditingFaqIndex(index);
+    }
+  };
+
   const handleEdit = (blog: BlogPost) => {
     setEditing(blog._id || "");
     // Transform backend data to frontend format
@@ -478,10 +601,12 @@ const AdminBlogs = ({ initialAction, onActionComplete }: AdminBlogsProps) => {
       publishDate: blog.publishDate || "",
       isActive: blog.isActive !== undefined ? blog.isActive : true,
       slug: blog.slug || "", // Ensure slug is never undefined/null
+      faqs: normalizeFaqs(blog.faqs || []),
     };
     setFormData(frontendData);
     setSeoKeywordsInput((frontendData.seoKeywords || []).join(", "));
     setSeoArticleTagsInput((frontendData.seoArticleTags || []).join(", "));
+    resetFaqForm();
     setActiveTab("create");
   };
 
@@ -543,6 +668,7 @@ const AdminBlogs = ({ initialAction, onActionComplete }: AdminBlogsProps) => {
     setEditing(null);
     setActiveTab("all");
     resetForm();
+    resetFaqForm();
   };
 
   const resetForm = () => {
@@ -559,6 +685,7 @@ const AdminBlogs = ({ initialAction, onActionComplete }: AdminBlogsProps) => {
       slug: "",
       publishDate: "",
       isActive: true,
+      faqs: [],
       seoTitle: "",
       seoDescription: "",
       seoKeywords: [],
@@ -578,6 +705,7 @@ const AdminBlogs = ({ initialAction, onActionComplete }: AdminBlogsProps) => {
     });
     setSeoKeywordsInput("");
     setSeoArticleTagsInput("");
+    resetFaqForm();
   };
 
   const handleAddNew = () => {
@@ -768,6 +896,135 @@ const AdminBlogs = ({ initialAction, onActionComplete }: AdminBlogsProps) => {
               />
             </div>
 
+            <div className="border border-slate-100 rounded-lg p-4 bg-slate-50">
+              <div className="flex flex-col gap-2 md:flex-row md:items-center md:justify-between mb-3">
+                <div>
+                  <h3 className="text-sm font-semibold text-gray-900">Blog FAQs</h3>
+                  <p className="text-xs text-gray-500">
+                    Add up to {MAX_FAQS} FAQs for this blog post.
+                  </p>
+                </div>
+                <Badge variant="secondary" className="w-fit">
+                  {(formData.faqs?.length || 0)}/{MAX_FAQS}
+                </Badge>
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Question
+                  </label>
+                  <Input
+                    value={faqQuestion}
+                    onChange={(e) => setFaqQuestion(e.target.value)}
+                    placeholder="Enter the FAQ question"
+                    className="bg-white border-gray-300 text-gray-900 placeholder-gray-500"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Answer
+                  </label>
+                  <Textarea
+                    value={faqAnswer}
+                    onChange={(e) => setFaqAnswer(e.target.value)}
+                    placeholder="Enter the FAQ answer"
+                    rows={2}
+                    className="bg-white border-gray-300 text-gray-900 placeholder-gray-500"
+                  />
+                </div>
+              </div>
+
+              <div className="flex flex-wrap items-center gap-3 mt-3">
+                <Button
+                  type="button"
+                  onClick={handleSaveFaq}
+                  variant="admin-primary"
+                  className="flex items-center gap-2"
+                >
+                  <Plus className="w-4 h-4" />
+                  {editingFaqIndex !== null ? "Update FAQ" : "Add FAQ"}
+                </Button>
+                {editingFaqIndex !== null && (
+                  <Button
+                    type="button"
+                    onClick={resetFaqForm}
+                    variant="admin-outline"
+                    className="flex items-center gap-2"
+                  >
+                    <X className="w-4 h-4" />
+                    Cancel Edit
+                  </Button>
+                )}
+              </div>
+
+              <div className="mt-4 space-y-3">
+                {(formData.faqs || []).length === 0 ? (
+                  <p className="text-xs text-gray-500">
+                    No FAQs added yet.
+                  </p>
+                ) : (
+                  (formData.faqs || []).map((faq, index) => (
+                    <div
+                      key={`${faq.question}-${index}`}
+                      className="flex flex-col gap-3 md:flex-row md:items-start md:justify-between bg-white border border-gray-200 rounded-md p-3"
+                    >
+                      <div className="flex-1 md:pr-4">
+                        <div className="flex items-center gap-2 mb-1">
+                          <span className="text-xs font-mono text-gray-400">
+                            #{index + 1}
+                          </span>
+                          <h4 className="text-sm font-semibold text-gray-900">
+                            {faq.question}
+                          </h4>
+                        </div>
+                        <p className="text-xs text-gray-600 whitespace-pre-wrap">
+                          {faq.answer}
+                        </p>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <Button
+                          type="button"
+                          size="sm"
+                          variant="admin-outline"
+                          onClick={() => handleMoveFaq(index, -1)}
+                          disabled={index === 0}
+                        >
+                          <ChevronUp className="w-4 h-4" />
+                        </Button>
+                        <Button
+                          type="button"
+                          size="sm"
+                          variant="admin-outline"
+                          onClick={() => handleMoveFaq(index, 1)}
+                          disabled={index === (formData.faqs?.length || 0) - 1}
+                        >
+                          <ChevronDown className="w-4 h-4" />
+                        </Button>
+                        <Button
+                          type="button"
+                          size="sm"
+                          variant="admin-primary"
+                          onClick={() => handleEditFaq(index)}
+                        >
+                          <Edit className="w-4 h-4" />
+                        </Button>
+                        <Button
+                          type="button"
+                          size="sm"
+                          variant="admin-secondary"
+                          className="bg-red-600 text-white hover:cursor-pointer"
+                          onClick={() => handleDeleteFaq(index)}
+                        >
+                          <Trash2 className="w-4 h-4" />
+                        </Button>
+                      </div>
+                    </div>
+                  ))
+                )}
+              </div>
+            </div>
+
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
                 <div className="flex items-center justify-between mb-2">
@@ -784,12 +1041,7 @@ const AdminBlogs = ({ initialAction, onActionComplete }: AdminBlogsProps) => {
                         toast.error("Please enter a title first");
                         return;
                       }
-                      const generatedSlug = formData.title
-                        .toLowerCase()
-                        .trim()
-                        .replace(/[^\w\s-]/g, "") // Remove special chars
-                        .replace(/\s+/g, "-") // Replace spaces with hyphens
-                        .replace(/-+/g, "-"); // Prevent multiple hyphens
+                      const generatedSlug = sanitizeSlug(formData.title);
                       setFormData((prev) => ({ ...prev, slug: generatedSlug }));
                       toast.success("Slug generated from title!");
                     }}
@@ -801,8 +1053,7 @@ const AdminBlogs = ({ initialAction, onActionComplete }: AdminBlogsProps) => {
                   <Input
                     value={formData.slug}
                     onChange={(e) => {
-                      // Allow custom input but sanitize slightly (no spaces ideally)
-                      const val = e.target.value.toLowerCase().replace(/\s+/g, "-");
+                      const val = sanitizeSlug(e.target.value);
                       setFormData((prev) => ({ ...prev, slug: val }));
                     }}
                     placeholder="blog-post-slug"

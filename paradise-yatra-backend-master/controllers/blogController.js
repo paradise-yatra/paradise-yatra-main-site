@@ -12,6 +12,30 @@ const transformBlogImageUrl = (blog) => {
   return blog;
 };
 
+const getNormalizedSlug = (slugValue, titleValue) => {
+  const source =
+    typeof slugValue === "string" && slugValue.trim()
+      ? slugValue
+      : typeof titleValue === "string"
+        ? titleValue
+        : "";
+  return source ? slugify(source) : "";
+};
+
+const normalizeFaqs = (faqs) => {
+  if (!Array.isArray(faqs)) return [];
+
+  return faqs
+    .map((faq, index) => ({
+      question: String(faq?.question || "").trim(),
+      answer: String(faq?.answer || "").trim(),
+      order: Number.isFinite(Number(faq?.order)) ? Number(faq.order) : index + 1,
+    }))
+    .filter((faq) => faq.question && faq.answer)
+    .slice(0, 5)
+    .map((faq, index) => ({ ...faq, order: index + 1 }));
+};
+
 // Get all blogs
 const getAllBlogs = async (req, res) => {
   try {
@@ -152,9 +176,15 @@ const createBlog = async (req, res) => {
 
     console.log('💾 Saving blog to database...');
     // Generate slug from title
-    if (!req.body.slug) {
-      req.body.slug = slugify(req.body.title);
+    const normalizedSlug = getNormalizedSlug(req.body.slug, req.body.title);
+    if (normalizedSlug) {
+      const existingSlug = await Blog.findOne({ slug: normalizedSlug });
+      if (existingSlug) {
+        return res.status(400).json({ message: "Slug already exists." });
+      }
+      req.body.slug = normalizedSlug;
     }
+    req.body.faqs = normalizeFaqs(req.body.faqs);
 
     const blog = new Blog(req.body);
     await blog.save();
@@ -241,9 +271,39 @@ const updateBlog = async (req, res) => {
       }
     }
 
-    // Generate slug from title if title is updated and slug is not provided
-    if (req.body.title && !req.body.slug) {
-      req.body.slug = slugify(req.body.title);
+    let normalizedSlug = "";
+    if (req.body.slug !== undefined) {
+      normalizedSlug = getNormalizedSlug(
+        req.body.slug,
+        req.body.title || existingBlog.title
+      );
+      if (normalizedSlug) {
+        const conflict = await Blog.findOne({
+          slug: normalizedSlug,
+          _id: { $ne: req.params.id },
+        });
+        if (conflict) {
+          return res.status(400).json({ message: "Slug already exists." });
+        }
+        req.body.slug = normalizedSlug;
+      } else {
+        delete req.body.slug;
+      }
+    } else if (req.body.title) {
+      normalizedSlug = getNormalizedSlug("", req.body.title);
+      if (normalizedSlug) {
+        const conflict = await Blog.findOne({
+          slug: normalizedSlug,
+          _id: { $ne: req.params.id },
+        });
+        if (conflict) {
+          return res.status(400).json({ message: "Slug already exists." });
+        }
+        req.body.slug = normalizedSlug;
+      }
+    }
+    if (req.body.faqs !== undefined) {
+      req.body.faqs = normalizeFaqs(req.body.faqs);
     }
 
     const blog = await Blog.findByIdAndUpdate(req.params.id, req.body, {
