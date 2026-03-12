@@ -383,7 +383,7 @@ const Header = ({
 
 
         {/* PROMO STRIP START */}
-        <AnimatePresence>
+        <AnimatePresence initial={false}>
           {shouldShowPromoBar && (
             <motion.div
               initial={{ height: 0, opacity: 0 }}

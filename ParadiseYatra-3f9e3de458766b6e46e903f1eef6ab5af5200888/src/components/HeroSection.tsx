@@ -10,10 +10,25 @@ const SearchSuggestions = dynamic(() => import("./SearchSuggestions"), {
   ssr: false,
 });
 
+const HERO_PLACEHOLDER_TEXTS = [
+  "Where do you want to go?",
+  "Explore Bali...",
+  "Discover Europe...",
+  "Visit Himachal Pradesh...",
+  "Adventure in Ladakh...",
+  "Relax in Goa...",
+  "Experience Kerala...",
+  "Journey to Kashmir...",
+  "Trek to Manali...",
+  "Escape to Maldives...",
+  "Wander in Switzerland...",
+  "Road trip to Spiti Valley..."
+];
+
 const HeroSection = () => {
   const [searchQuery, setSearchQuery] = useState("");
   const [isSearchOpen, setIsSearchOpen] = useState(false);
-  const [typingText, setTypingText] = useState("");
+  const [typingText, setTypingText] = useState(HERO_PLACEHOLDER_TEXTS[0]);
   const [currentTextIndex, setCurrentTextIndex] = useState(0);
   const [isDeleting, setIsDeleting] = useState(false);
   const [shouldShowVideo, setShouldShowVideo] = useState(false);
@@ -21,31 +36,16 @@ const HeroSection = () => {
   const [animatePlaceholder, setAnimatePlaceholder] = useState(true);
   const router = useRouter();
 
-  const placeholderTexts = [
-    "Where do you want to go?",
-    "Explore Bali...",
-    "Discover Europe...",
-    "Visit Himachal Pradesh...",
-    "Adventure in Ladakh...",
-    "Relax in Goa...",
-    "Experience Kerala...",
-    "Journey to Kashmir...",
-    "Trek to Manali...",
-    "Escape to Maldives...",
-    "Wander in Switzerland...",
-    "Road trip to Spiti Valley..."
-  ];
-
   // Typing animation effect
   useEffect(() => {
     if (!animatePlaceholder) {
-      if (typingText !== placeholderTexts[0]) {
-        setTypingText(placeholderTexts[0]);
+      if (typingText !== HERO_PLACEHOLDER_TEXTS[0]) {
+        setTypingText(HERO_PLACEHOLDER_TEXTS[0]);
       }
       return;
     }
 
-    const currentText = placeholderTexts[currentTextIndex];
+    const currentText = HERO_PLACEHOLDER_TEXTS[currentTextIndex];
     const typingSpeed = isDeleting ? 50 : 100;
     const pauseTime = isDeleting ? 500 : 2000;
 
@@ -56,7 +56,7 @@ const HeroSection = () => {
       } else if (isDeleting && typingText === "") {
         // Finished deleting, move to next text
         setIsDeleting(false);
-        setCurrentTextIndex((prev) => (prev + 1) % placeholderTexts.length);
+        setCurrentTextIndex((prev) => (prev + 1) % HERO_PLACEHOLDER_TEXTS.length);
       } else if (isDeleting) {
         // Delete one character
         setTypingText(currentText.substring(0, typingText.length - 1));
@@ -67,17 +67,19 @@ const HeroSection = () => {
     }, typingSpeed);
 
     return () => clearTimeout(timer);
-  }, [typingText, currentTextIndex, isDeleting, placeholderTexts, animatePlaceholder]);
+  }, [typingText, currentTextIndex, isDeleting, animatePlaceholder]);
 
   useEffect(() => {
     if (typeof window === "undefined") return;
     const motionQuery = window.matchMedia("(prefers-reduced-motion: reduce)");
+    const mobileQuery = window.matchMedia("(max-width: 640px)");
     const connection = (navigator as Navigator & { connection?: { saveData?: boolean } })
       .connection;
 
     const update = () => {
-      const allowVideo = !motionQuery.matches && !connection?.saveData;
-      const allowTyping = !motionQuery.matches && !connection?.saveData;
+      const isMobile = mobileQuery.matches;
+      const allowVideo = !motionQuery.matches && !connection?.saveData && !isMobile;
+      const allowTyping = !motionQuery.matches && !connection?.saveData && !isMobile;
       setShouldShowVideo(allowVideo);
       setAnimatePlaceholder(allowTyping);
     };
@@ -99,9 +101,11 @@ const HeroSection = () => {
     };
 
     addListener(motionQuery, update);
+    addListener(mobileQuery, update);
 
     return () => {
       removeListener(motionQuery, update);
+      removeListener(mobileQuery, update);
     };
   }, []);
 
@@ -200,13 +204,13 @@ const HeroSection = () => {
           <div className="relative z-20 mx-auto max-w-3xl px-6">
             <button
               onClick={() => setIsSearchOpen(true)}
-              className="w-full flex items-center gap-3 rounded-full bg-white px-6 py-3 text-gray-800 border-4 border-blue-500/90 shadow-[0_0_40px_10px_rgba(59,130,246,0.45)] hover:shadow-[0_0_50px_15px_rgba(59,130,246,0.55)] transition-all duration-300 group cursor-pointer"
+              className="w-full min-h-[52px] flex items-center gap-3 rounded-full bg-white px-6 py-3 text-gray-800 border-4 border-blue-500/90 shadow-[0_0_40px_10px_rgba(59,130,246,0.45)] hover:shadow-[0_0_50px_15px_rgba(59,130,246,0.55)] transition-all duration-300 group cursor-pointer"
             >
               <Search className="w-6 h-6 text-[#212B40] group-hover:scale-110 transition-transform duration-300" />
-              <div className="flex-1 text-left">
-                <span className="!text-sm text-[#212B40] font-semibold opacity-80">
+              <div className="flex-1 text-left min-h-[1.25rem]">
+                <span className="block truncate !text-sm text-[#212B40] font-semibold opacity-80">
                   {typingText}
-                  <span className="animate-pulse">|</span>
+                  {animatePlaceholder && <span className="animate-pulse">|</span>}
                 </span>
               </div>
               <div className="hidden md:flex items-center gap-2 px-4 py-1.5 bg-blue-50 rounded-full">
@@ -237,6 +241,8 @@ const HeroSection = () => {
               fill
               sizes="100vw"
               quality={70}
+              priority
+              fetchPriority="high"
               className="object-cover object-center"
             />
             <div className="relative z-10 mx-auto max-w-6xl">
