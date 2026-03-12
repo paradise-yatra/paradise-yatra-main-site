@@ -78,7 +78,7 @@ const HeroSection = () => {
 
     const update = () => {
       const isMobile = mobileQuery.matches;
-      const allowVideo = !motionQuery.matches && !connection?.saveData && !isMobile;
+      const allowVideo = !motionQuery.matches && !connection?.saveData;
       const allowTyping = !motionQuery.matches && !connection?.saveData && !isMobile;
       setShouldShowVideo(allowVideo);
       setAnimatePlaceholder(allowTyping);
