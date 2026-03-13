@@ -8,6 +8,7 @@ import Link from "next/link";
 import Image from "next/image";
 import Loading from "@/components/ui/loading";
 import BlogLandingHero from "@/components/blog/BlogLandingHero";
+import { BLOG_CARD_IMAGE_OPTIONS, BLOG_HERO_IMAGE_OPTIONS } from "@/lib/blogImageOptions";
 import { getImageUrl as getOptimizedImageUrl } from "@/lib/utils";
 
 interface BlogPost {
@@ -52,8 +53,16 @@ const getPostSlug = (post: BlogPost): string => {
   return post.slug || generateSlug(post.title);
 };
 
-const getImageUrl = (image: string | undefined): string =>
-  getOptimizedImageUrl(image || null) || HERO_FALLBACK_IMAGE;
+type BlogImageVariant = "hero" | "card";
+
+const getImageUrl = (
+  image: string | undefined,
+  variant: BlogImageVariant = "card"
+): string =>
+  getOptimizedImageUrl(
+    image || null,
+    variant === "hero" ? BLOG_HERO_IMAGE_OPTIONS : BLOG_CARD_IMAGE_OPTIONS
+  ) || HERO_FALLBACK_IMAGE;
 
 const stripHtml = (value: string): string => value.replace(/<[^>]*>/g, " ");
 
@@ -93,7 +102,10 @@ const BlogPage = () => {
     target.src = HERO_FALLBACK_IMAGE;
   };
 
-  const getSafeImageUrl = (post: BlogPost | null): string => {
+  const getSafeImageUrl = (
+    post: BlogPost | null,
+    variant: BlogImageVariant = "card"
+  ): string => {
     if (!post) {
       return HERO_FALLBACK_IMAGE;
     }
@@ -102,7 +114,7 @@ const BlogPage = () => {
       return HERO_FALLBACK_IMAGE;
     }
 
-    return getImageUrl(post.image);
+    return getImageUrl(post.image, variant);
   };
 
   useEffect(() => {
@@ -271,7 +283,7 @@ const BlogPage = () => {
                     <Link href={`/blog/${getPostSlug(popularLeadPost)}`} prefetch>
                       <div className="relative mb-5 h-[260px] overflow-hidden rounded-[6px] bg-[#e5e5e5] md:h-[300px] lg:h-[420px]">
                         <Image
-                          src={getSafeImageUrl(popularLeadPost)}
+                          src={getSafeImageUrl(popularLeadPost, "hero")}
                           alt={popularLeadPost.title}
                           fill
                           className="object-cover"

@@ -9,6 +9,7 @@ export async function GET(
 ) {
   try {
     const { id } = await params;
+    const { searchParams } = new URL(request.url);
 
     // Add timeout to prevent hanging requests
     const controller = new AbortController();
@@ -16,7 +17,7 @@ export async function GET(
 
     let response;
     try {
-      response = await fetch(`${BACKEND_URL}/api/blogs/${id}`, {
+      response = await fetch(`${BACKEND_URL}/api/blogs/${id}${searchParams.toString() ? `?${searchParams.toString()}` : ""}`, {
         signal: controller.signal,
         cache: 'no-store',
       });
@@ -62,6 +63,7 @@ export async function PUT(
 ) {
   try {
     const { id } = await params;
+    const { searchParams } = new URL(request.url);
 
     // Check Content-Type to determine how to parse the request
     const contentType = request.headers.get('content-type') || '';
@@ -72,7 +74,7 @@ export async function PUT(
       // Handle FormData requests (file uploads)
       const formData = await request.formData();
 
-      response = await fetch(`${BACKEND_URL}/api/blogs/${id}`, {
+      response = await fetch(`${BACKEND_URL}/api/blogs/${id}${searchParams.toString() ? `?${searchParams.toString()}` : ""}`, {
         method: 'PUT',
         headers: {
           'Authorization': request.headers.get('Authorization') || '',
@@ -84,7 +86,7 @@ export async function PUT(
       // Handle JSON requests
       const body = await request.json();
 
-      response = await fetch(`${BACKEND_URL}/api/blogs/${id}`, {
+      response = await fetch(`${BACKEND_URL}/api/blogs/${id}${searchParams.toString() ? `?${searchParams.toString()}` : ""}`, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
@@ -96,7 +98,8 @@ export async function PUT(
 
     const data = await response.json();
     revalidatePath("/blog");
-    revalidatePath(`/blog/${id}`);
+    const updatedBlogSlug = data?.blog?.slug || id;
+    revalidatePath(`/blog/${updatedBlogSlug}`);
 
     if (!response.ok) {
       return NextResponse.json(
@@ -121,7 +124,8 @@ export async function DELETE(
 ) {
   try {
     const { id } = await params;
-    const response = await fetch(`${BACKEND_URL}/api/blogs/${id}`, {
+    const { searchParams } = new URL(request.url);
+    const response = await fetch(`${BACKEND_URL}/api/blogs/${id}${searchParams.toString() ? `?${searchParams.toString()}` : ""}`, {
       method: 'DELETE',
       headers: {
         'Authorization': request.headers.get('Authorization') || '',

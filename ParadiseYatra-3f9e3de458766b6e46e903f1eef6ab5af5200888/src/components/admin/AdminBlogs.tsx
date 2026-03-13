@@ -94,6 +94,43 @@ const AdminBlogs = ({ initialAction, onActionComplete }: AdminBlogsProps) => {
       .map((faq, index) => ({ ...faq, order: index + 1 }));
   };
 
+  const getBlogTimestamp = (blog: Partial<BlogPost>) => {
+    return new Date(
+      blog.publishDate || blog.createdAt || blog.updatedAt || 0
+    ).getTime();
+  };
+
+  const sortBlogsByLatest = (blogsToSort: BlogPost[]) => {
+    return [...blogsToSort].sort(
+      (a, b) => getBlogTimestamp(b) - getBlogTimestamp(a)
+    );
+  };
+
+  const normalizeBlogForAdmin = (blog: BlogPost): BlogPost => ({
+    ...blog,
+    status:
+      blog.isPublished !== undefined
+        ? blog.isPublished
+          ? "published"
+          : "draft"
+        : blog.status || "draft",
+    readTime: blog.readTime?.toString() || "5",
+    publishDate: blog.publishDate || blog.createdAt || "",
+    isActive: blog.isActive !== undefined ? blog.isActive : true,
+    slug: blog.slug || "",
+    faqs: normalizeFaqs(blog.faqs || []),
+  });
+
+  const applyBlogsState = (blogsToApply: BlogPost[]) => {
+    const normalizedBlogs = sortBlogsByLatest(
+      blogsToApply.map(normalizeBlogForAdmin)
+    );
+
+    setAllBlogs(normalizedBlogs);
+    setTotalBlogs(normalizedBlogs.length);
+    setTotalPages(Math.max(1, Math.ceil(normalizedBlogs.length / blogsPerPage)));
+  };
+
   const [blogs, setBlogs] = useState<BlogPost[]>([]);
   const [allBlogs, setAllBlogs] = useState<BlogPost[]>([]); // Store all blogs
   const [loading, setLoading] = useState(true);
@@ -182,6 +219,7 @@ const AdminBlogs = ({ initialAction, onActionComplete }: AdminBlogsProps) => {
       }
     } else {
       setBlogs([]);
+      setTotalPages(1);
     }
   }, [currentPage, allBlogs, blogsPerPage]);
 
@@ -207,29 +245,10 @@ const AdminBlogs = ({ initialAction, onActionComplete }: AdminBlogsProps) => {
           blogsArray = [];
         }
 
-        // Sort by createdAt (latest first) - backend should already do this, but ensure it
-        blogsArray.sort((a, b) => {
-          const dateA = new Date(
-            (a as BlogPost).publishDate ||
-            (a as BlogPost).createdAt ||
-            (a as BlogPost).updatedAt ||
-            0
-          ).getTime();
-          const dateB = new Date(
-            (b as BlogPost).publishDate ||
-            (b as BlogPost).createdAt ||
-            (b as BlogPost).updatedAt ||
-            0
-          ).getTime();
-          return dateB - dateA; // Latest first
-        });
+        applyBlogsState(blogsArray);
 
-        setAllBlogs(blogsArray);
-        setTotalBlogs(blogsArray.length);
-
-        // Calculate pagination
         const total = blogsArray.length;
-        const totalPagesCount = Math.ceil(total / blogsPerPage);
+        const totalPagesCount = Math.max(1, Math.ceil(total / blogsPerPage));
         setTotalPages(totalPagesCount);
 
         // Reset to page 1 if current page is out of bounds
@@ -487,7 +506,22 @@ const AdminBlogs = ({ initialAction, onActionComplete }: AdminBlogsProps) => {
 
       if (data.message || data.blog) {
         console.log("✅ Blog saved successfully!");
-        await fetchBlogs(); // Refresh all blogs
+        if (data.blog) {
+          const savedBlogId = data.blog._id || data.blog.id;
+          const nextBlogs = savedBlogId
+            ? [
+                data.blog,
+                ...allBlogs.filter(
+                  (blog) => (blog._id || blog.id) !== savedBlogId
+                ),
+              ]
+            : [data.blog, ...allBlogs];
+
+          applyBlogsState(nextBlogs);
+        } else {
+          await fetchBlogs();
+        }
+
         setCurrentPage(1); // Reset to first page
         setEditing(null);
         setActiveTab("all");
@@ -590,19 +624,33 @@ const AdminBlogs = ({ initialAction, onActionComplete }: AdminBlogsProps) => {
     }
   };
 
-  const handleEdit = (blog: BlogPost) => {
-    setEditing(blog._id || "");
-    // Transform backend data to frontend format
-    const status = blog.isPublished ? "published" : "draft";
-    const frontendData: BlogPost = {
-      ...blog,
-      status,
-      readTime: blog.readTime?.toString() || "5",
-      publishDate: blog.publishDate || "",
-      isActive: blog.isActive !== undefined ? blog.isActive : true,
-      slug: blog.slug || "", // Ensure slug is never undefined/null
-      faqs: normalizeFaqs(blog.faqs || []),
-    };
+  const handleEdit = async (blog: BlogPost) => {
+    const blogId = blog._id || blog.id || "";
+    setEditing(blogId);
+
+    let blogForEdit = blog;
+
+    if (blogId) {
+      try {
+        const response = await fetch(`/api/blogs/${blogId}?admin=true`, {
+          cache: "no-store",
+        });
+
+        if (response.ok) {
+          const latestBlog = await response.json();
+          if (latestBlog) {
+            blogForEdit = latestBlog;
+          }
+        } else {
+          const errorData = await response.json().catch(() => null);
+          console.error("Failed to fetch full blog for editing:", errorData);
+        }
+      } catch (error) {
+        console.error("Error fetching full blog for editing:", error);
+      }
+    }
+
+    const frontendData = normalizeBlogForAdmin(blogForEdit);
     setFormData(frontendData);
     setSeoKeywordsInput((frontendData.seoKeywords || []).join(", "));
     setSeoArticleTagsInput((frontendData.seoArticleTags || []).join(", "));

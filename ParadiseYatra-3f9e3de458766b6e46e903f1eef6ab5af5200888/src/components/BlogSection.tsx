@@ -20,7 +20,8 @@ import Skeleton from "@/components/ui/skeleton";
 import Link from "next/link";
 import Image from "next/image";
 import TruncatedText from "@/components/ui/truncated-text";
-import { getImageUrl } from "@/lib/utils";
+import { BLOG_CARD_IMAGE_OPTIONS } from "@/lib/blogImageOptions";
+import { getImageUrl as getOptimizedImageUrl } from "@/lib/utils";
 
 interface BlogPost {
   _id: string;
@@ -52,6 +53,9 @@ const generateSlug = (title: string): string => {
 const getPostSlug = (post: BlogPost): string => {
   return post.slug || generateSlug(post.title);
 };
+
+const getImageUrl = (image: string | undefined) =>
+  getOptimizedImageUrl(image || null, BLOG_CARD_IMAGE_OPTIONS);
 
 const BlogSection = () => {
   const [blogPosts, setBlogPosts] = useState<BlogPost[]>([]);

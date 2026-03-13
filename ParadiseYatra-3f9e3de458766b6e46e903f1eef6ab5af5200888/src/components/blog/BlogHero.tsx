@@ -4,6 +4,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { Calendar, ArrowRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { BLOG_HERO_IMAGE_OPTIONS } from "@/lib/blogImageOptions";
 import { getImageUrl as getOptimizedImageUrl } from "@/lib/utils";
 
 interface BlogPost {
@@ -37,7 +38,8 @@ const getPostSlug = (post: BlogPost): string => {
   return post.slug || generateSlug(post.title);
 };
 
-const getImageUrl = (image: string | undefined): string => getOptimizedImageUrl(image || null) || "/fallback.jpg";
+const getImageUrl = (image: string | undefined): string =>
+  getOptimizedImageUrl(image || null, BLOG_HERO_IMAGE_OPTIONS) || "/fallback.jpg";
 
 export default function BlogHero({ post }: BlogHeroProps) {
   const displayDate = new Date(

@@ -529,13 +529,23 @@ h3 {
 
 /* Blog content heading weights */
 .blog-content h2 {
-  font-size: 30px !important;
+  font-size: 24px !important;
   font-weight: 700 !important;
 }
 
 .blog-content h3 {
-  font-size: 24px !important;
+  font-size: 20px !important;
   font-weight: 700 !important;
+}
+
+@media (min-width: 768px) {
+  .blog-content h2 {
+    font-size: 30px !important;
+  }
+
+  .blog-content h3 {
+    font-size: 24px !important;
+  }
 }
 
 .blog-content h2 strong,
@@ -550,6 +560,17 @@ h3 {
 .ProseMirror h3 strong,
 .ProseMirror h3 b {
   font-weight: inherit !important;
+}
+
+.blog-content a,
+.blog-content a:visited,
+.blog-content a:hover,
+.blog-content a:active,
+.blog-content a span,
+.blog-content a strong,
+.blog-content a em,
+.blog-content a u {
+  color: #155dfc !important;
 }
 
 .blog-content img,

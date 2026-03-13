@@ -1,5 +1,7 @@
 import { Metadata } from "next";
 import BlogDetailClient from "./BlogDetailClient";
+import { BLOG_HERO_IMAGE_OPTIONS } from "@/lib/blogImageOptions";
+import { getImageUrl } from "@/lib/utils";
 
 interface BlogPost {
   _id: string;
@@ -101,6 +103,8 @@ export async function generateMetadata({
   const publishedDate = new Date(post.createdAt).toISOString();
   const modifiedDate = new Date(post.updatedAt || post.createdAt).toISOString();
   const seoTitle = post.seoTitle || post.title;
+  const metadataImage =
+    getImageUrl(post.image || null, BLOG_HERO_IMAGE_OPTIONS) || "/banner.jpeg";
 
   return {
     title: `${seoTitle} | Paradise Yatra Travel Blog`,
@@ -138,7 +142,7 @@ export async function generateMetadata({
       siteName: "Paradise Yatra",
       images: [
         {
-          url: post.image || "/banner.jpeg",
+          url: metadataImage,
           width: 1200,
           height: 630,
           alt: post.imageAlt || seoTitle,
@@ -159,7 +163,7 @@ export async function generateMetadata({
       card: "summary_large_image",
       title: seoTitle,
       description: description,
-      images: [post.image || "/banner.jpeg"],
+      images: [metadataImage],
       creator: "@paradiseyatra",
       site: "@paradiseyatra",
     },

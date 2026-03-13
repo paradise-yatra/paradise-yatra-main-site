@@ -16,7 +16,9 @@ export async function GET(request: NextRequest) {
     const limit = searchParams.get('limit');
     const page = searchParams.get('page');
 
-    if (admin === 'true') {
+    const isAdminRequest = admin === 'true';
+
+    if (isAdminRequest) {
       noStore();
     }
 
@@ -54,10 +56,18 @@ export async function GET(request: NextRequest) {
 
     let response;
     try {
-      response = await fetch(url, {
-        signal: controller.signal,
-        next: { revalidate: 30 }, // Cache for 30 seconds
-      });
+      response = await fetch(
+        url,
+        isAdminRequest
+          ? {
+              signal: controller.signal,
+              cache: 'no-store',
+            }
+          : {
+              signal: controller.signal,
+              next: { revalidate: 30 },
+            }
+      );
       clearTimeout(timeoutId);
     } catch (fetchError) {
       clearTimeout(timeoutId);
@@ -85,8 +95,8 @@ export async function GET(request: NextRequest) {
 
     const data = await response.json();
     const responseData = NextResponse.json(data);
-    if (admin === 'true') {
-      responseData.headers.set('Cache-Control', 'no-store');
+    if (isAdminRequest) {
+      responseData.headers.set('Cache-Control', 'no-store, no-cache, must-revalidate');
     }
     return responseData;
   } catch (error) {
@@ -138,8 +148,9 @@ export async function POST(request: NextRequest) {
     }
 
     revalidatePath("/blog");
-    if (data?.slug) {
-      revalidatePath(`/blog/${data.slug}`);
+    const createdBlogSlug = data?.blog?.slug || data?.slug;
+    if (createdBlogSlug) {
+      revalidatePath(`/blog/${createdBlogSlug}`);
     }
 
     return NextResponse.json(data, { status: 201 });

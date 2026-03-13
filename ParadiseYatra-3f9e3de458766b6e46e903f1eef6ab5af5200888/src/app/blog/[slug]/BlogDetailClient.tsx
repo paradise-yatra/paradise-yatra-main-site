@@ -7,7 +7,9 @@ import Header from "@/components/Header";
 import FAQSection from "@/components/FAQSection";
 import Image from "next/image";
 import Link from "next/link";
+import { BLOG_CARD_IMAGE_OPTIONS, BLOG_HERO_IMAGE_OPTIONS } from "@/lib/blogImageOptions";
 import { getImageUrl as getOptimizedImageUrl } from "@/lib/utils";
+import { preserveRichTextSpacing } from "@/lib/richText";
 
 interface BlogFAQ {
   question: string;
@@ -51,8 +53,16 @@ const getPostSlug = (post: BlogPost): string => {
   return post.slug || generateSlug(post.title);
 };
 
-const getImageUrl = (image: string | undefined): string =>
-  getOptimizedImageUrl(image || null) || "/images/placeholder-travel.jpg";
+type BlogImageVariant = "hero" | "card";
+
+const getImageUrl = (
+  image: string | undefined,
+  variant: BlogImageVariant = "card"
+): string =>
+  getOptimizedImageUrl(
+    image || null,
+    variant === "hero" ? BLOG_HERO_IMAGE_OPTIONS : BLOG_CARD_IMAGE_OPTIONS
+  ) || "/images/placeholder-travel.jpg";
 
 const formatDate = (value: string): string =>
   new Date(value).toLocaleDateString("en-US", {
@@ -82,12 +92,16 @@ const BlogDetailClient = ({ post, slug }: BlogDetailClientProps) => {
     setImageErrors((prev) => new Set(prev).add(postId));
   };
 
-  const getSafeImageUrl = (image: string, postId: string): string => {
+  const getSafeImageUrl = (
+    image: string,
+    postId: string,
+    variant: BlogImageVariant = "card"
+  ): string => {
     if (imageErrors.has(postId)) {
       return "/images/placeholder-travel.jpg";
     }
 
-    return getImageUrl(image);
+    return getImageUrl(image, variant);
   };
 
   useEffect(() => {
@@ -225,7 +239,7 @@ const BlogDetailClient = ({ post, slug }: BlogDetailClientProps) => {
             "@type": "BlogPosting",
             headline: post.title,
             description: post.excerpt || post.content.substring(0, 160),
-            image: getImageUrl(post.image),
+            image: getImageUrl(post.image, "hero"),
             author: {
               "@type": "Person",
               name: post.author,
@@ -333,15 +347,15 @@ const BlogDetailClient = ({ post, slug }: BlogDetailClientProps) => {
                 </div>
               </header>
 
-              <div className="mt-2 overflow-hidden rounded-[18px]">
-                <div className="relative h-[260px] md:h-[520px]">
+              <div className="mt-2 -mx-5 w-[calc(100%+2.5rem)] overflow-hidden rounded-none md:mx-0 md:w-full md:rounded-[18px]">
+                <div className="relative aspect-video w-full">
                   <Image
-                    src={getSafeImageUrl(post.image, post._id)}
+                    src={getSafeImageUrl(post.image, post._id, "hero")}
                     alt={post.title}
                     fill
                     priority
                     className="object-cover"
-                    sizes="(max-width: 1024px) 100vw, 980px"
+                    sizes="100vw"
                     onError={(event) => handleImageError(post._id, event)}
                   />
                 </div>
@@ -350,8 +364,8 @@ const BlogDetailClient = ({ post, slug }: BlogDetailClientProps) => {
               <div className="mx-auto mt-10 max-w-[860px]">
                 <div
                   suppressHydrationWarning
-                  className="blog-content overflow-x-auto !text-[#000945] [&_h1]:!mb-5 [&_h1]:!mt-12 [&_h1]:!text-[34px] [&_h1]:!font-semibold [&_h1]:!leading-[1.08] [&_h1]:tracking-[-0.04em] [&_h1]:!text-[#000945] [&_h2]:!mb-5 [&_h2]:!mt-12 [&_h2]:!text-[30px] [&_h2]:!font-bold [&_h2]:!leading-[1.1] [&_h2]:tracking-[-0.04em] [&_h2]:!text-[#000945] [&_h3]:!mb-4 [&_h3]:!mt-10 [&_h3]:!text-[24px] [&_h3]:!font-bold [&_h3]:!leading-[1.16] [&_h3]:!text-[#000945] [&_h4]:!mb-3 [&_h4]:!mt-8 [&_h4]:!text-[20px] [&_h4]:!font-semibold [&_h4]:!text-[#000945] [&_p]:!mb-6 [&_p]:!text-[15px] [&_p]:!leading-[1.9] [&_p]:!text-[#000945] [&_ul]:!mb-6 [&_ul]:!list-disc [&_ul]:!space-y-2 [&_ul]:!pl-6 [&_ol]:!mb-6 [&_ol]:!list-decimal [&_ol]:!space-y-2 [&_ol]:!pl-6 [&_li]:!text-[15px] [&_li]:!leading-[1.85] [&_li]:!text-[#000945] [&_strong]:!text-[#000945] [&_em]:!text-[#000945] [&_span]:!text-[#000945] [&_blockquote]:!my-10 [&_blockquote]:!border-l-[3px] [&_blockquote]:!border-[#000945] [&_blockquote]:!pl-6 [&_blockquote]:!text-[24px] [&_blockquote]:!font-medium [&_blockquote]:!italic [&_blockquote]:!leading-[1.5] [&_blockquote]:!text-[#000945] [&_a]:!text-[#000945] [&_a]:!underline [&_img]:!my-0 [&_img]:!rounded-[18px] [&_table]:!my-8 [&_table]:!w-full [&_table]:!border-collapse [&_th]:!border-b [&_th]:!border-[#dfdfdf] [&_th]:!px-4 [&_th]:!py-3 [&_th]:!text-left [&_th]:!text-sm [&_th]:!font-semibold [&_th]:!text-[#000945] [&_td]:!border-b [&_td]:!border-[#ececec] [&_td]:!px-4 [&_td]:!py-3 [&_td]:!text-sm [&_td]:!text-[#000945]"
-                  dangerouslySetInnerHTML={{ __html: post.content }}
+                  className="blog-content overflow-x-auto !text-[#000945] [&_h1]:!m-0 [&_h1]:!text-[34px] [&_h1]:!font-semibold [&_h1]:!leading-[1.08] [&_h1]:tracking-[-0.04em] [&_h1]:!text-[#000945] [&_h2]:!m-0 [&_h2]:!text-[24px] md:[&_h2]:!text-[30px] [&_h2]:!font-bold [&_h2]:!leading-[1.1] [&_h2]:tracking-[-0.04em] [&_h2]:!text-[#000945] [&_h3]:!m-0 [&_h3]:!text-[20px] md:[&_h3]:!text-[24px] [&_h3]:!font-bold [&_h3]:!leading-[1.16] [&_h3]:!text-[#000945] [&_h4]:!m-0 [&_h4]:!text-[20px] [&_h4]:!font-semibold [&_h4]:!text-[#000945] [&_p]:!m-0 [&_p]:!text-[15px] [&_p]:!leading-[1.9] [&_p]:!text-[#000945] [&_ul]:!m-0 [&_ul]:!list-disc [&_ul]:!pl-6 [&_ol]:!m-0 [&_ol]:!list-decimal [&_ol]:!pl-6 [&_li]:!m-0 [&_li]:!text-[15px] [&_li]:!leading-[1.85] [&_li]:!text-[#000945] [&_li_p]:!m-0 [&_strong]:!text-[#000945] [&_em]:!text-[#000945] [&_span]:!text-[#000945] [&_blockquote]:!m-0 [&_blockquote]:!border-l-[3px] [&_blockquote]:!border-[#000945] [&_blockquote]:!pl-6 [&_blockquote]:!text-[24px] [&_blockquote]:!font-medium [&_blockquote]:!italic [&_blockquote]:!leading-[1.5] [&_blockquote]:!text-[#000945] [&_a]:!text-[#155dfc] [&_a]:!underline [&_img]:!my-0 [&_img]:!rounded-[18px] [&_table]:!m-0 [&_table]:!w-full [&_table]:!border-collapse [&_th]:!border-b [&_th]:!border-[#dfdfdf] [&_th]:!px-4 [&_th]:!py-3 [&_th]:!text-left [&_th]:!text-sm [&_th]:!font-semibold [&_th]:!text-[#000945] [&_td]:!border-b [&_td]:!border-[#ececec] [&_td]:!px-4 [&_td]:!py-3 [&_td]:!text-sm [&_td]:!text-[#000945]"
+                  dangerouslySetInnerHTML={{ __html: preserveRichTextSpacing(post.content) }}
                 />
               </div>
             </div>
@@ -365,10 +379,13 @@ const BlogDetailClient = ({ post, slug }: BlogDetailClientProps) => {
             {relatedPosts.length > 0 && (
               <section className="mx-auto mt-16 max-w-[980px] border-t border-[#e6e6e6] pt-10">
                 <h2 className="!text-[28px] !font-bold !leading-none text-[#111111] md:!text-[36px]">
-                  Similar Articles
+                  You Might Like
                 </h2>
+                <p className="mt-3 !text-[14px] !leading-[1.7] !text-[#666666] md:!text-[15px]">
+                  More {post.category} reads from the Paradise Yatra blog.
+                </p>
 
-                <div className="mt-6 grid gap-5 md:grid-cols-3">
+                <div className="mt-6 grid gap-x-4 gap-y-8 md:grid-cols-2 lg:grid-cols-3">
                   {relatedPosts.map((relatedPost, index) => (
                     <motion.article
                       key={relatedPost._id}
@@ -376,37 +393,38 @@ const BlogDetailClient = ({ post, slug }: BlogDetailClientProps) => {
                       whileInView={{ opacity: 1, y: 0 }}
                       viewport={{ once: true, amount: 0.2 }}
                       transition={{ duration: 0.35, delay: index * 0.06 }}
+                      className="w-full"
                     >
-                      <Link href={`/blog/${getPostSlug(relatedPost)}`} prefetch>
-                        <div className="overflow-hidden rounded-[6px] bg-[#ececec]">
-                          <div className="relative aspect-[1.24/1]">
-                            <Image
-                              src={getSafeImageUrl(
-                                relatedPost.image,
-                                relatedPost._id
-                              )}
-                              alt={relatedPost.title}
-                              fill
-                              className="object-cover"
-                              sizes="(max-width: 768px) 100vw, 33vw"
-                              onError={(event) =>
-                                handleImageError(relatedPost._id, event)
-                              }
-                            />
-                          </div>
+                      <Link href={`/blog/${getPostSlug(relatedPost)}`} prefetch className="block h-full">
+                        <div className="relative mb-4 aspect-[1/0.82] overflow-hidden rounded-[6px] bg-[#e5e5e5]">
+                          <Image
+                            src={getSafeImageUrl(
+                              relatedPost.image,
+                              relatedPost._id
+                            )}
+                            alt={relatedPost.title}
+                            fill
+                            className="object-cover"
+                            sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
+                            onError={(event) =>
+                              handleImageError(relatedPost._id, event)
+                            }
+                          />
                         </div>
 
-                        <div className="mt-3 flex flex-wrap items-center gap-2 text-[11px] text-[#7a7a7a]">
-                          <span>{relatedPost.category}</span>
-                          <span>.</span>
-                          <span>{formatDate(relatedPost.createdAt)}</span>
-                          <span>.</span>
-                          <span>{relatedPost.readTime || 5} min read</span>
-                        </div>
-
-                        <h3 className="mt-2 max-w-[260px] !text-[18px] !font-semibold !leading-[1.2] text-[#111111]">
+                        <h3 className="line-clamp-2 !text-[18px] !font-semibold !leading-[1.16] tracking-[-0.03em] !text-[#000945] md:!text-[22px]">
                           {relatedPost.title}
                         </h3>
+
+                        <div className="mt-3">
+                          <span className="inline-flex rounded-full border border-[#d6d6d6] bg-white px-3 py-1 text-[11px] font-medium text-[#000945]">
+                            {new Date(relatedPost.createdAt).toLocaleDateString("en-US", {
+                              month: "short",
+                              day: "numeric",
+                              year: "numeric",
+                            })}
+                          </span>
+                        </div>
                       </Link>
                     </motion.article>
                   ))}

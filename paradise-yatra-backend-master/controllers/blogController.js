@@ -105,9 +105,12 @@ const getBlog = async (req, res) => {
       return res.status(404).json({ message: "Blog not found." });
     }
 
-    // Increment views
-    blog.views += 1;
-    await blog.save();
+    const isAdminPreview = req.query.admin === "true";
+
+    if (!isAdminPreview) {
+      blog.views += 1;
+      await blog.save();
+    }
 
     // Transform image URL
     const transformedBlog = transformBlogImageUrl(blog);

@@ -22,6 +22,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/context/AuthContext";
+import { preserveRichTextSpacing } from "@/lib/richText";
 
 interface ItineraryItem {
   day: number;
@@ -198,8 +199,8 @@ export default function FixedDepartureDetailClient({ departure }: FixedDeparture
             >
               {containsHtml(shortDescription) ? (
                 <div
-                  className="!text-md !text-slate-500 font-medium max-w-2xl leading-relaxed [&_p]:!mb-2 [&_p]:!text-slate-500 [&_h1]:!text-lg [&_h1]:!font-bold [&_h2]:!text-base [&_h2]:!font-bold [&_h3]:!text-sm [&_h3]:!font-semibold [&_ul]:!list-disc [&_ul]:!pl-5 [&_ol]:!list-decimal [&_ol]:!pl-5 [&_li]:!mb-1 [&_ul_li::marker]:!text-blue-500 [&_ol_li::marker]:!text-blue-500 [&_a]:!text-blue-600 [&_a]:!underline"
-                  dangerouslySetInnerHTML={{ __html: shortDescription }}
+                  className="!text-md !text-slate-500 font-medium max-w-2xl leading-relaxed [&_p]:!m-0 [&_p]:!text-slate-500 [&_h1]:!m-0 [&_h1]:!text-lg [&_h1]:!font-bold [&_h2]:!m-0 [&_h2]:!text-base [&_h2]:!font-bold [&_h3]:!m-0 [&_h3]:!text-sm [&_h3]:!font-semibold [&_ul]:!m-0 [&_ul]:!list-disc [&_ul]:!pl-5 [&_ol]:!m-0 [&_ol]:!list-decimal [&_ol]:!pl-5 [&_li]:!m-0 [&_li_p]:!m-0 [&_ul_li::marker]:!text-blue-500 [&_ol_li::marker]:!text-blue-500 [&_a]:!text-blue-600 [&_a]:!underline"
+                  dangerouslySetInnerHTML={{ __html: preserveRichTextSpacing(shortDescription) }}
                 />
               ) : (
                 <p className="!text-md !text-slate-500 font-medium max-w-2xl leading-relaxed">
@@ -242,8 +243,8 @@ export default function FixedDepartureDetailClient({ departure }: FixedDeparture
               <h2 className="!text-2xl !font-bold text-slate-900 mb-4">Trip Overview</h2>
               {containsHtml(departure.longDescription || "") ? (
                 <div
-                  className="!text-slate-700 !leading-relaxed overflow-x-auto [&_p]:!mb-3 [&_ul]:!list-disc [&_ul]:!pl-5 [&_ol]:!list-decimal [&_ol]:!pl-5"
-                  dangerouslySetInnerHTML={{ __html: departure.longDescription || "" }}
+                  className="!text-slate-700 !leading-relaxed overflow-x-auto [&_p]:!m-0 [&_ul]:!m-0 [&_ul]:!list-disc [&_ul]:!pl-5 [&_ol]:!m-0 [&_ol]:!list-decimal [&_ol]:!pl-5 [&_li]:!m-0 [&_li_p]:!m-0"
+                  dangerouslySetInnerHTML={{ __html: preserveRichTextSpacing(departure.longDescription || "") }}
                 />
               ) : (
                 <p className="!text-slate-700 !leading-relaxed">{departure.longDescription}</p>
@@ -306,8 +307,8 @@ export default function FixedDepartureDetailClient({ departure }: FixedDeparture
                             <div className="p-5 pt-4 border-t border-slate-100 space-y-3">
                               {containsHtml(day.description || "") ? (
                                 <div
-                                  className="!text-slate-700 overflow-x-auto [&_p]:!mb-2 [&_ul]:!list-disc [&_ul]:!pl-5 [&_ol]:!list-decimal [&_ol]:!pl-5"
-                                  dangerouslySetInnerHTML={{ __html: day.description || "" }}
+                                  className="!text-slate-700 overflow-x-auto [&_p]:!m-0 [&_ul]:!m-0 [&_ul]:!list-disc [&_ul]:!pl-5 [&_ol]:!m-0 [&_ol]:!list-decimal [&_ol]:!pl-5 [&_li]:!m-0 [&_li_p]:!m-0"
+                                  dangerouslySetInnerHTML={{ __html: preserveRichTextSpacing(day.description || "") }}
                                 />
                               ) : (
                                 <p className="!text-slate-700 leading-relaxed">{day.description}</p>

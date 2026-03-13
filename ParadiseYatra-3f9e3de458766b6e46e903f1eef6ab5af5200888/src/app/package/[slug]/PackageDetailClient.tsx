@@ -8,6 +8,7 @@ import { useRouter } from "next/navigation";
 import dynamic from "next/dynamic";
 import Link from "next/link";
 import Image from "next/image";
+import { preserveRichTextSpacing } from "@/lib/richText";
 import { toast } from "react-toastify";
 import Header from "@/components/Header";
 import CarouselArrows from "@/components/ui/CarouselArrows";
@@ -571,8 +572,8 @@ const ItineraryPageClient = ({ packageData, slug }: ItineraryPageClientProps) =>
 
               {packageData.description && (
                 <div
-                  className="mt-6 text-base leading-relaxed text-[#000945] overflow-x-auto [&_h1]:!text-2xl [&_h1]:!font-extrabold [&_h1]:!text-[#000945] [&_h1]:!mt-8 [&_h1]:!mb-4 [&_h2]:!text-xl [&_h2]:!font-bold [&_h2]:!text-[#000945] [&_h2]:!mt-8 [&_h2]:!mb-4 [&_h3]:!text-lg [&_h3]:!font-bold [&_h3]:!text-[#000945] [&_h3]:!mt-6 [&_h3]:!mb-3 [&_p]:!mb-4 [&_p]:!text-base [&_p]:!text-[#000945] [&_ul]:!list-disc [&_ul]:!pl-6 [&_ul]:!space-y-2 [&_ol]:!list-decimal [&_ol]:!pl-6 [&_ol]:!space-y-2 [&_li]:!mb-2 [&_li]:!text-[#000945] [&_ul_li::marker]:!text-blue-500 [&_ol_li::marker]:!text-blue-500 [&_a]:!text-blue-600 [&_a]:!underline"
-                  dangerouslySetInnerHTML={{ __html: packageData.description }}
+                  className="mt-6 text-base leading-relaxed text-[#000945] overflow-x-auto [&_h1]:!m-0 [&_h1]:!text-2xl [&_h1]:!font-extrabold [&_h1]:!text-[#000945] [&_h2]:!m-0 [&_h2]:!text-xl [&_h2]:!font-bold [&_h2]:!text-[#000945] [&_h3]:!m-0 [&_h3]:!text-lg [&_h3]:!font-bold [&_h3]:!text-[#000945] [&_p]:!m-0 [&_p]:!text-base [&_p]:!text-[#000945] [&_ul]:!m-0 [&_ul]:!list-disc [&_ul]:!pl-6 [&_ol]:!m-0 [&_ol]:!list-decimal [&_ol]:!pl-6 [&_li]:!m-0 [&_li]:!text-[#000945] [&_li_p]:!m-0 [&_ul_li::marker]:!text-blue-500 [&_ol_li::marker]:!text-blue-500 [&_a]:!text-blue-600 [&_a]:!underline"
+                  dangerouslySetInnerHTML={{ __html: preserveRichTextSpacing(packageData.description) }}
                 />
               )}
             </section>
@@ -619,8 +620,8 @@ const ItineraryPageClient = ({ packageData, slug }: ItineraryPageClientProps) =>
                           containsHtml(activity) ? (
                             <div
                               key={actIndex}
-                              className="!text-[#000945] text-sm [&_p]:!mb-1 [&_*]:!text-[#000945] [&_p]:!text-[#000945]"
-                              dangerouslySetInnerHTML={{ __html: activity }}
+                              className="!text-[#000945] text-sm [&_p]:!m-0 [&_*]:!text-[#000945] [&_p]:!text-[#000945]"
+                              dangerouslySetInnerHTML={{ __html: preserveRichTextSpacing(activity) }}
                             />
                           ) : (
                             <p key={actIndex} className="!text-[#000945] text-[15px] leading-relaxed">

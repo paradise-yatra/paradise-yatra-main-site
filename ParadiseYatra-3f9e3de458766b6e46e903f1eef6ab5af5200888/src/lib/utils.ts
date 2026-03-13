@@ -208,9 +208,9 @@ export function getImageUrl(
     return optimizeCloudinaryUrl(imageUrl, "image", options);
   }
 
-  // If it's a relative URL, construct the full production URL
+  // If it's a backend upload path, proxy it through Next.js so SSR and CSR match
   if (imageUrl.startsWith('/uploads/')) {
-    return `${API_CONFIG.BACKEND_URL}${imageUrl}`;
+    return `/api/uploaded-images${imageUrl}`;
   }
 
   return imageUrl;
