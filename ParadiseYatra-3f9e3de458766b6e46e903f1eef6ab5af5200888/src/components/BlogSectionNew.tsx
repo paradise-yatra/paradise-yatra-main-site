@@ -3,8 +3,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { ArrowRight } from "lucide-react";
 import CarouselArrows from "./ui/CarouselArrows";
-import { BLOG_CARD_IMAGE_OPTIONS } from "@/lib/blogImageOptions";
-import { getImageUrl as getOptimizedImageUrl } from "@/lib/utils";
+import { getImageUrl } from "@/lib/utils";
 
 interface BlogPost {
     _id: string;
@@ -36,9 +35,6 @@ const generateSlug = (title: string): string => {
 const getPostSlug = (post: BlogPost): string => {
     return post.slug || generateSlug(post.title);
 };
-
-const getImageUrl = (image: string | undefined) =>
-    getOptimizedImageUrl(image || null, BLOG_CARD_IMAGE_OPTIONS);
 
 const BlogSectionNew = () => {
     const carouselRef = useRef<HTMLDivElement>(null);
@@ -118,7 +114,10 @@ const BlogSectionNew = () => {
                     setAllPosts(posts);
                     setBlogPosts(posts.slice(0, 6));
 
-                    const categories = Array.from(new Set(posts.map((post) => post.category).filter(Boolean)));
+                    // Extract unique categories
+                    const categories = Array.from(
+                        new Set(posts.map((post) => post.category).filter(Boolean))
+                    );
                     const newFilters = [
                         { id: "all", label: "All Posts" },
                         ...categories.map((cat) => ({ id: cat, label: cat })),
@@ -143,6 +142,7 @@ const BlogSectionNew = () => {
         };
     }, []);
 
+    // Handle filtering
     useEffect(() => {
         if (activeFilter === "all") {
             setBlogPosts(allPosts.slice(0, 6));
@@ -155,7 +155,7 @@ const BlogSectionNew = () => {
     const scrollByStep = (direction: number) => {
         if (carouselRef.current) {
             const card = carouselRef.current.firstElementChild;
-            const gap = 8;
+            const gap = 8; // gap-2 = 8px
             const cardWidth = card ? card.getBoundingClientRect().width : 340;
             const step = cardWidth + gap;
 
@@ -174,7 +174,10 @@ const BlogSectionNew = () => {
                         <div className="h-10 w-64 rounded bg-slate-200"></div>
                         <div className="flex gap-6 overflow-hidden">
                             {[1, 2, 3].map((i) => (
-                                <div key={i} className="h-[400px] w-[480px] flex-shrink-0 rounded-lg bg-slate-100"></div>
+                                <div
+                                    key={i}
+                                    className="h-[400px] w-[480px] flex-shrink-0 rounded-lg bg-slate-100"
+                                ></div>
                             ))}
                         </div>
                     </div>
@@ -188,6 +191,7 @@ const BlogSectionNew = () => {
     return (
         <section className="bg-white px-4 py-14 text-gray-900 md:px-8">
             <div className="mx-auto max-w-6xl">
+                {/* Header */}
                 <div className="mb-8 flex flex-col justify-between gap-6 md:flex-row md:items-end">
                     <div className="space-y-4">
                         <span className="flex items-center gap-2 text-xs uppercase tracking-wider text-[#005beb] !font-black">
@@ -198,16 +202,32 @@ const BlogSectionNew = () => {
                             Journeys, Stories & Tips
                         </h3>
                     </div>
-
-                    <Link
-                        href="/blog"
-                        className="group flex items-center gap-2 text-[14px] font-bold text-[#005beb] transition-all hover:opacity-80"
-                    >
-                        View All Articles
-                        <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-1" />
-                    </Link>
+                    <div className="flex flex-wrap items-center gap-3">
+                        <div className="flex flex-wrap gap-2">
+                            {filters.map((filter) => (
+                                <button
+                                    key={filter.id}
+                                    onClick={() => setActiveFilter(filter.id)}
+                                    className={`cursor-pointer rounded-full px-4 py-1.5 text-[11px] font-bold uppercase tracking-wider transition-all ${
+                                        activeFilter === filter.id
+                                            ? "bg-[#0b1220] text-white shadow-md"
+                                            : "bg-slate-100 text-slate-700 hover:bg-slate-200"
+                                    }`}
+                                >
+                                    {filter.label}
+                                </button>
+                            ))}
+                        </div>
+                        <Link
+                            href="/blog"
+                            className="ml-2 text-xs font-black uppercase tracking-widest text-[#005beb] transition-opacity hover:opacity-70"
+                        >
+                            View all
+                        </Link>
+                    </div>
                 </div>
 
+                {/* Carousel */}
                 <div className="relative group/carousel">
                     <CarouselArrows
                         onPrevious={() => scrollByStep(-1)}
@@ -226,34 +246,68 @@ const BlogSectionNew = () => {
                                 key={post._id}
                                 className="w-[280px] flex-shrink-0 snap-start md:w-[calc(50%-4px)] lg:w-[calc(25%-6px)]"
                             >
-                                <Link href={`/blog/${getPostSlug(post)}`} className="block h-full">
-                                    <div className="relative mb-4 aspect-[1/0.82] overflow-hidden rounded-[6px] bg-[#e5e5e5]">
+                                <Link
+                                    href={`/blog/${getPostSlug(post)}`}
+                                    className="group/card block h-full overflow-hidden rounded-[6px] border border-[#d6dbe6] bg-white transition-all duration-300 hover:border-blue-200 hover:shadow-md"
+                                >
+                                    <div className="relative h-[190px] w-full overflow-hidden">
+                                        <div className="pointer-events-none absolute inset-0 z-30 bg-white/10 opacity-10 transition-opacity duration-300 group-hover/card:opacity-100"></div>
+
                                         {post.image ? (
                                             <Image
                                                 src={getImageUrl(post.image) || ""}
                                                 alt={post.title}
                                                 fill
-                                                className="object-cover"
+                                                className="object-cover transition-transform duration-700"
                                             />
                                         ) : (
                                             <div className="flex h-full w-full items-center justify-center bg-slate-200 text-4xl">
-                                                ?
+                                                📝
                                             </div>
                                         )}
+                                        <div className="absolute inset-x-0 bottom-0 h-1/2 bg-gradient-to-t from-black/60 via-transparent to-transparent opacity-0 transition-opacity duration-500 group-hover/card:opacity-100"></div>
                                     </div>
-
-                                    <h4 className="line-clamp-2 !text-[18px] !font-semibold !leading-[1.16] tracking-[-0.03em] !text-[#000945] md:!text-[22px]">
-                                        {post.title}
-                                    </h4>
-
-                                    <div className="mt-3">
-                                        <span className="inline-flex rounded-full border border-[#d6d6d6] bg-white px-3 py-1 text-[11px] font-medium text-[#000945]">
-                                            {new Date(post.createdAt).toLocaleDateString("en-US", {
-                                                month: "short",
-                                                day: "numeric",
-                                                year: "numeric",
-                                            })}
-                                        </span>
+                                    <div className="space-y-3 p-4">
+                                        <div className="flex items-center gap-2 text-[10px] font-bold uppercase tracking-wider text-slate-500">
+                                            <span className="rounded-full bg-blue-50 px-2.5 py-1 text-[10px] font-black text-blue-600">
+                                                {post.category || "Travel"}
+                                            </span>
+                                            <span className="h-1 w-1 rounded-full bg-slate-300"></span>
+                                            <span>
+                                                {new Date(post.createdAt).toLocaleDateString("en-US", {
+                                                    month: "short",
+                                                    day: "numeric",
+                                                    year: "numeric",
+                                                })}
+                                            </span>
+                                        </div>
+                                        <h4
+                                            className="text-[15px] !font-bold text-slate-900 transition-colors group-hover/card:text-blue-600 overflow-hidden"
+                                            style={{
+                                                display: "-webkit-box",
+                                                WebkitLineClamp: 2,
+                                                WebkitBoxOrient: "vertical",
+                                                lineHeight: "1.2",
+                                                maxHeight: "2.4em",
+                                            }}
+                                        >
+                                            {post.title}
+                                        </h4>
+                                        <p className="line-clamp-2 !text-slate-700 text-xs leading-relaxed">
+                                            {post.excerpt ||
+                                                `${post.content
+                                                    .substring(0, 80)
+                                                    .replace(/<[^>]*>?/gm, "")}...`}
+                                        </p>
+                                        <div className="flex items-center justify-between border-t border-dashed border-gray-300 pt-3">
+                                            <span className="max-w-[120px] truncate text-[11px] font-bold text-slate-700">
+                                                {post.author || "Paradise Yatra"}
+                                            </span>
+                                            <span className="inline-flex items-center gap-1.5 text-[11px] font-black uppercase text-slate-900 transition-colors group-hover/card:text-blue-600">
+                                                Read
+                                                <ArrowRight className="h-3 w-3 transition-transform group-hover/card:translate-x-1" />
+                                            </span>
+                                        </div>
                                     </div>
                                 </Link>
                             </div>

@@ -196,14 +196,14 @@ const LuxuryPackagesSection = () => {
                             style={{ fontFamily: "'Orange Avenue', serif" }}
                         >
                             <span className="h-px w-8 bg-amber-400"></span>
-                            Luxury Special
+                            Journeys of Royal Indulgence
                         </span>
 
                         <h3
                             className="!text-2xl !font-black text-white md:text-3xl"
                             style={{ fontFamily: "'Orange Avenue', serif" }}
                         >
-                            Journeys of Royal Indulgence
+                            Luxury Tour Packages
                         </h3>
                         <p
                             className="!text-sm !text-white md:!text-md font-bold"

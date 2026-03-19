@@ -70,7 +70,7 @@ const fallbackIndiaStates = [
 const themedDestinations: FooterNavLink[][] = [
   [
     { name: "Trending Packages", href: "/package/theme/trending" },
-    { name: "Honeymoon Packages", href: "/package/theme/honeymoon" },
+    { name: "Where Love Takes You", href: "/package/theme/honeymoon" },
     { name: "Char Dham Yatra", href: "/package/theme/char-dham-yatra" }
   ],
   [
@@ -240,18 +240,20 @@ const Footer = () => {
     <footer ref={footerRef} className="bg-black text-white font-['Plus_Jakarta_Sans',sans-serif] pt-10 pb-10 border-t border-white/10">
       <div className="mx-auto max-w-6xl px-4 md:px-6">
 
-        {/* Partner Logos */}
-        <div className="mb-10 flex items-center justify-center gap-8">
-          <img
-            src="/Footer/Make%20My%20Trip%20Logo.svg"
-            alt="Make My Trip"
-            className="h-12 w-auto grayscale opacity-70 hover:grayscale-0 hover:opacity-100 transition-all duration-300"
-          />
-          <img
-            src="/Footer/Uttarakhand%20Tourism%20Logo.png"
-            alt="Uttarakhand Tourism"
-            className="h-20 w-auto grayscale opacity-70 hover:grayscale-0 hover:opacity-100 transition-all duration-300"
-          />
+        {/* Partner Logos + Registrations */}
+        <div className="mb-10 grid gap-6 md:grid-cols-2 md:items-center">
+          <div className="flex items-center justify-center md:justify-start">
+            <div
+              className="footer-partner-logo"
+              role="img"
+              aria-label="Uttarakhand Tourism"
+            />
+          </div>
+          <div className="footer-registration space-y-[10px] text-left md:text-right text-white">
+            <span className="block text-[14px] text-white font-normal">GSTIN: 05IYCPS1101L2ZG</span>
+            <span className="block text-[14px] text-white font-normal">Udhyam: UDYAM-UK-05-0046271</span>
+            <span className="block text-[14px] text-white font-normal">Uttarakhand Tourism: UTTR/DEHRADUN/08-2021/004728</span>
+          </div>
         </div>
 
         {/* Section 1 */}
@@ -432,6 +434,4 @@ const Footer = () => {
 };
 
 export default Footer;
-
-
 

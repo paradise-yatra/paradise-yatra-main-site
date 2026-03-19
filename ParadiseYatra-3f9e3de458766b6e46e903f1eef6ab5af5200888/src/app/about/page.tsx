@@ -1,11 +1,16 @@
 "use client";
 
 import { memo, useEffect, useMemo, useRef, useState } from "react";
+import dynamic from "next/dynamic";
 import { motion, useReducedMotion, type Transition } from "framer-motion";
 import { LazyHeader } from "@/components/lazy-components";
 import { ChevronRight, Phone, Mail } from "lucide-react";
 import Image from "next/image";
 import PerformanceMonitor from "@/components/ui/PerformanceMonitor";
+
+const LeadCaptureForm = dynamic(() => import("@/components/LeadCaptureForm"), {
+  ssr: false,
+});
 
 const missionStates = [
   {
@@ -96,6 +101,7 @@ const AboutPage = memo(() => {
   const prefersReducedMotion = useReducedMotion();
   const [activeMissionIndex, setActiveMissionIndex] = useState(1);
   const activeMission = missionStates[activeMissionIndex];
+  const [showLeadCaptureForm, setShowLeadCaptureForm] = useState(false);
   const lifeSectionRef = useRef<HTMLElement | null>(null);
   const [playLifeVideos, setPlayLifeVideos] = useState(false);
   const [loadLifeVideos, setLoadLifeVideos] = useState(false);
@@ -179,6 +185,7 @@ const AboutPage = memo(() => {
               </p>
               <button
                 type="button"
+                onClick={() => setShowLeadCaptureForm(true)}
                 className="mt-6 inline-flex cursor-pointer items-center gap-2 rounded-[6px] bg-[#155dfc] px-6 py-2 text-sm font-semibold text-white transition-colors hover:bg-[#0f4de0]"
               >
                 Start Planning Your Journey
@@ -551,9 +558,6 @@ const AboutPage = memo(() => {
                       "Our goal is simple: make every journey meaningful, and every traveler feel taken care of from
                       the first call to the final memory."
                     </p>
-                    <p className="mt-3 text-sm font-medium !text-white/90" style={{ color: "rgba(255,255,255,0.9)" }}>
-                      Dikshant Sharma, Founder - Paradise Yatra
-                    </p>
                   </div>
                 </div>
 
@@ -673,6 +677,13 @@ const AboutPage = memo(() => {
       </section>
 
       <PerformanceMonitor showInProduction={false} />
+
+      {showLeadCaptureForm && (
+        <LeadCaptureForm
+          isOpen={showLeadCaptureForm}
+          onClose={() => setShowLeadCaptureForm(false)}
+        />
+      )}
     </motion.div>
   );
 });

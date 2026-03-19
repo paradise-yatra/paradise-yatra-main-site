@@ -1092,6 +1092,271 @@ p {
   border-radius: 6px !important;
 }
 
+/* Package phone input */
+.package-phone-input {
+  position: relative;
+  z-index: 10;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+/* When dropdown is open, elevate the entire phone row above siblings */
+.package-phone-input:has(.flag-dropdown.open) {
+  z-index: 9999;
+}
+
+/* Keep dial code visible above the open flag-dropdown */
+.package-phone-input:has(.flag-dropdown.open)::after {
+  z-index: 10000;
+}
+
+.package-phone-input::after {
+  content: attr(data-dial-code);
+  position: absolute;
+  left: 36px;
+  top: 50%;
+  transform: translateY(-50%);
+  font-size: 13px;
+  font-weight: 600;
+  color: #000945;
+  letter-spacing: 0.02em;
+  pointer-events: none;
+  z-index: 2;
+}
+
+.package-phone-input .react-tel-input {
+  width: 82px !important;
+  height: 32px;
+  flex-shrink: 0;
+  font-family: inherit;
+  border: 1px solid #dfe1df;
+  border-radius: 6px;
+  background: #ffffff;
+}
+
+/* Lead capture popup phone input sizing + keep selector visible */
+.lead-phone-input.package-phone-input .react-tel-input {
+  display: block;
+  min-width: 88px;
+  height: 40px;
+}
+
+.lead-phone-input.package-phone-input .phone-number-input {
+  height: 40px;
+}
+
+.package-phone-input .phone-number-input {
+  display: block;
+  flex: 1;
+  width: 0;
+  height: 32px;
+  min-width: 0;
+  padding: 0 12px;
+  border: 1px solid #dfe1df;
+  border-radius: 6px;
+  background-color: #ffffff;
+  color: #000945;
+  font-size: 14px;
+  line-height: 1.2;
+  box-shadow: none;
+  outline: none;
+  box-sizing: border-box;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+.package-phone-input .react-tel-input:hover,
+.package-phone-input .phone-number-input:hover {
+  border-color: #c0c4c0;
+}
+
+.package-phone-input .phone-number-input::placeholder {
+  color: #94a3b8;
+}
+
+.package-phone-input .phone-number-input:focus {
+  border-color: #155dfc;
+  box-shadow: 0 0 0 1px #155dfc;
+}
+
+.package-phone-input .react-tel-input .flag-dropdown {
+  width: 100%;
+  height: 100%;
+  background: transparent;
+  border: none;
+  border-radius: 6px;
+  position: absolute;
+  top: 0;
+  left: 0;
+}
+
+.package-phone-input .react-tel-input .flag-dropdown.open {
+  z-index: 9999;
+  overflow: visible;
+}
+
+.package-phone-input .react-tel-input .flag-dropdown.open .selected-flag {
+  border-radius: 6px;
+  background: #ffffff;
+}
+
+.package-phone-input .react-tel-input .selected-flag {
+  width: 100%;
+  padding: 0 !important;
+  border-radius: 6px;
+}
+
+.package-phone-input .react-tel-input .selected-flag .flag {
+  position: absolute !important;
+  top: 50% !important;
+  left: 10px !important;
+  transform: translateY(-50%) !important;
+  margin: 0 !important;
+}
+
+/* Hide the arrow completely */
+.package-phone-input .react-tel-input .selected-flag .arrow,
+.package-phone-input .react-tel-input .selected-flag .arrow.up {
+  display: none !important;
+}
+
+/* Dropdown animation keyframes */
+@keyframes countryDropdownIn {
+  from {
+    opacity: 0;
+    transform: translateY(-8px) scale(0.98);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+.package-phone-input .react-tel-input .country-list {
+  position: absolute !important;
+  top: 100% !important;
+  left: 0 !important;
+  right: auto !important;
+  margin: 6px 0 0 0 !important;
+  width: 220px !important;
+  max-width: calc(100vw - 48px) !important;
+  max-height: 260px;
+  border-radius: 10px;
+  border: 1px solid #e2e8f0;
+  box-shadow: 0 12px 28px rgba(0, 9, 69, 0.14), 0 4px 10px rgba(0, 0, 0, 0.06);
+  overflow-y: auto;
+  overflow-x: hidden;
+  background: #ffffff;
+  animation: countryDropdownIn 0.22s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+  z-index: 9999 !important;
+  scrollbar-width: thin;
+  scrollbar-color: #d1d5db transparent;
+}
+
+.package-phone-input .react-tel-input .country-list::-webkit-scrollbar {
+  width: 5px;
+}
+
+.package-phone-input .react-tel-input .country-list::-webkit-scrollbar-track {
+  background: transparent;
+  border-radius: 10px;
+}
+
+.package-phone-input .react-tel-input .country-list::-webkit-scrollbar-thumb {
+  background: #d1d5db;
+  border-radius: 10px;
+}
+
+.package-phone-input .react-tel-input .country-list::-webkit-scrollbar-thumb:hover {
+  background: #9ca3af;
+}
+
+.package-phone-input .react-tel-input .country-list .divider {
+  border-bottom: 1px solid #f1f5f9;
+  margin: 2px 0;
+}
+
+.package-phone-input .react-tel-input .country-list .country {
+  padding: 8px 12px;
+  font-size: 13px;
+  color: #000945;
+  border-radius: 6px;
+  margin: 1px 4px;
+  transition: background-color 0.15s ease;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.package-phone-input .react-tel-input .country-list .country:hover,
+.package-phone-input .react-tel-input .country-list .country.highlight {
+  background-color: #f0f5ff;
+}
+
+.package-phone-input .react-tel-input .country-list .dial-code {
+  color: #6b7280;
+  font-weight: 500;
+  font-size: 12px;
+}
+
+.package-phone-input .react-tel-input .country-list .search {
+  display: none;
+}
+
+/* Package detail headings + itinerary open state */
+.package-section-heading {
+  font-size: 24px !important;
+  font-weight: 700 !important;
+  color: #000945 !important;
+}
+
+@media (min-width: 768px) {
+  .package-section-heading {
+    font-size: 36px !important;
+  }
+}
+
+.package-itinerary [data-state="open"] .day-badge {
+  background: #155dfc !important;
+}
+
+.package-itinerary [data-state="open"] .day-title {
+  color: #155dfc !important;
+}
+
+/* Footer registration styling (match footer option links) */
+.footer-registration span {
+  font-size: 14px !important;
+  font-weight: 400 !important;
+  color: #ffffff !important;
+  line-height: 1.6;
+}
+
+.footer-partner-logo {
+  width: 220px;
+  height: 140px;
+  background-color: #ffffff;
+  -webkit-mask: url("/Footer/Uttarakhand%20Tourism%20Logo.png") center / contain no-repeat;
+  mask: url("/Footer/Uttarakhand%20Tourism%20Logo.png") center / contain no-repeat;
+}
+
+@media (min-width: 768px) {
+  .footer-partner-logo {
+    width: 260px;
+    height: 160px;
+  }
+}
+
+/* Ensure legacy MakeMyTrip footer logo is hidden if any stale markup remains */
+footer img[alt*="Make My Trip"],
+footer img[alt*="MakeMyTrip"],
+footer img[src*="Make%20My%20Trip"],
+footer img[src*="Make-My-Trip"],
+footer img[src*="makemytrip"] {
+  display: none !important;
+}
+
 @layer base {
   * {
     @apply border-border outline-ring/50;

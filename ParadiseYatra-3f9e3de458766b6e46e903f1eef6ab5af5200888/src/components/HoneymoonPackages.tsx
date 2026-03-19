@@ -63,7 +63,7 @@ const HoneymoonPackages = () => {
                 const response = await fetch("/api/tags/slug/honeymoon", { cache: 'no-store' });
 
                 if (!response.ok) {
-                    throw new Error("Failed to fetch honeymoon packages");
+                    throw new Error("Failed to fetch Where Love Takes You");
                 }
 
                 const json = await response.json();
@@ -90,7 +90,7 @@ const HoneymoonPackages = () => {
 
                 setPackages(mappedPackages);
             } catch (error) {
-                console.error("Error fetching honeymoon packages:", error);
+                console.error("Error fetching Where Love Takes You:", error);
                 setPackages([]);
             } finally {
                 setLoading(false);
@@ -167,10 +167,10 @@ const HoneymoonPackages = () => {
                     <div className="flex flex-col gap-1">
                         <span className="text-[#ff1493] font-black tracking-wider text-xs uppercase flex items-center gap-2">
                             <span className="h-px w-8 bg-[#ff1493]"></span>
-                            Honeymoon Packages
+                            Where Love Takes You
                         </span>
                         <h3 className="!text-2xl md:text-3xl !font-bold text-slate-900 leading-tight flex items-center gap-3 flex-wrap">
-                            Where Love Takes You
+                            Honeymoon Packages
                         </h3>
 
                         <p className="!text-sm !text-slate-600 md:text-base max-w-2xl font-semibold">

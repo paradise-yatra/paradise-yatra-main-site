@@ -19,6 +19,8 @@ import Link from "next/link";
 import { format } from "date-fns";
 import { Calendar as CalendarComponent } from "@/components/ui/calendar";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import PhoneInput from "react-phone-input-international";
+import "react-phone-input-international/lib/style.css";
 
 interface LeadCaptureFormProps {
   isOpen: boolean;
@@ -48,10 +50,10 @@ interface FormErrors {
 }
 
 const inputClass =
-  "w-full rounded-[6px] border border-slate-300 bg-white py-2.5 sm:py-3 pl-10 sm:pl-11 pr-3 text-[13px] sm:text-sm text-[#000945] outline-none transition focus:border-[#000945] focus:ring-0 placeholder:text-slate-400";
+  "w-full h-10 rounded-[6px] border border-slate-300 bg-white py-2.5 sm:py-3 pl-10 sm:pl-11 pr-3 text-[13px] sm:text-sm text-[#000945] outline-none transition focus:border-[#155dfc] focus:ring-0 placeholder:text-slate-400";
 
 const textAreaClass =
-  "w-full min-h-[60px] sm:min-h-[72px] rounded-[6px] border border-slate-300 bg-white py-2.5 sm:py-3 pl-10 sm:pl-11 pr-3 text-[13px] sm:text-sm text-[#000945] outline-none transition focus:border-[#000945] focus:ring-0 placeholder:text-slate-400 resize-none";
+  "w-full min-h-[60px] sm:min-h-[72px] rounded-[6px] border border-slate-300 bg-white py-2.5 sm:py-3 pl-10 sm:pl-11 pr-3 text-[13px] sm:text-sm text-[#000945] outline-none transition focus:border-[#155dfc] focus:ring-0 placeholder:text-slate-400 resize-none";
 
 function FieldError({ message }: { message?: string }) {
   if (!message) return null;
@@ -96,6 +98,7 @@ export default function LeadCaptureForm({
   const [submitStatus, setSubmitStatus] = useState<"idle" | "success" | "error">(
     "idle"
   );
+  const [phoneDialCode, setPhoneDialCode] = useState("+91");
 
   useEffect(() => {
     if (!isOpen) return;
@@ -174,6 +177,7 @@ export default function LeadCaptureForm({
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           ...formData,
+          phone: `${phoneDialCode.replace(/\D/g, "")}${formData.phone}`,
           message: enhancedMessage,
           travelDate: formData.travelDate?.toISOString(),
           packageTitle,
@@ -247,7 +251,7 @@ export default function LeadCaptureForm({
                   target="_blank"
                   rel="noopener noreferrer"
                 >
-                    <Image
+                  <Image
                     src="/Home/Pop Up Form/Image.jpg"
                     alt="Travel planning"
                     fill
@@ -339,39 +343,64 @@ export default function LeadCaptureForm({
 
                         <div className="relative">
                           <label className="mb-1 block text-xs font-semibold text-[#000945]">
-                            Phone
+                            Email
                           </label>
                           <div className="relative">
-                            <Phone className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-[#000945]" />
+                            <Mail className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-[#000945]" />
                             <input
-                              type="tel"
-                              value={formData.phone}
-                              onChange={(e) => handleInputChange("phone", e.target.value)}
-                              className={`${inputClass} ${errors.phone ? "border-red-500" : ""}`}
-                              placeholder="Phone number"
+                              type="email"
+                              value={formData.email}
+                              onChange={(e) => handleInputChange("email", e.target.value)}
+                              className={`${inputClass} ${errors.email ? "border-red-500" : ""}`}
+                              placeholder="you@example.com"
                               disabled={isSubmitting}
                             />
                           </div>
-                          <FieldError message={errors.phone} />
+                          <FieldError message={errors.email} />
                         </div>
                       </div>
 
                       <div className="relative">
                         <label className="mb-1 block text-xs font-semibold text-[#000945]">
-                          Email
+                          Phone
                         </label>
-                        <div className="relative">
-                          <Mail className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-[#000945]" />
-                          <input
-                            type="email"
-                            value={formData.email}
-                            onChange={(e) => handleInputChange("email", e.target.value)}
-                            className={`${inputClass} ${errors.email ? "border-red-500" : ""}`}
-                            placeholder="you@example.com"
-                            disabled={isSubmitting}
+                        <div className="package-phone-input lead-phone-input flex gap-2" data-dial-code={phoneDialCode}>
+                          <PhoneInput
+                            country="in"
+                            containerStyle={{ width: 88, height: 40, flexShrink: 0 }}
+                            onChange={(value, data) => {
+                              if (data && typeof data === "object" && "dialCode" in data) {
+                                const dialCode = (data as { dialCode?: string }).dialCode;
+                                if (dialCode) setPhoneDialCode(`+${dialCode}`);
+                              }
+                            }}
+                            preferredCountries={["in", "ae", "us", "gb"]}
+                            enableSearch={false}
+                            disableSearchIcon
+                            inputStyle={{ display: 'none' }}
+                            buttonStyle={{
+                              position: 'relative',
+                              border: 'none',
+                              background: 'transparent',
+                              width: '100%',
+                              height: '100%',
+                              padding: 0
+                            }}
                           />
+                          <div className="relative flex-1">
+                            <Phone className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-[#000945] z-10" />
+                            <input
+                              type="tel"
+                              value={formData.phone}
+                              onChange={(e) => handleInputChange("phone", e.target.value)}
+                              className={`phone-number-input !pl-10 ${errors.phone ? "border-red-500" : ""}`}
+                              style={{ width: '100%' }}
+                              placeholder="Phone number"
+                              disabled={isSubmitting}
+                            />
+                          </div>
                         </div>
-                        <FieldError message={errors.email} />
+                        <FieldError message={errors.phone} />
                       </div>
 
                       <div className="grid grid-cols-1 gap-2 sm:gap-3 sm:grid-cols-2">
@@ -401,7 +430,7 @@ export default function LeadCaptureForm({
                             <PopoverTrigger asChild>
                               <button
                                 type="button"
-                                className="w-full rounded-[6px] border !border-[#dfe1df] bg-white px-3 py-2.5 sm:py-3 text-left text-[13px] sm:text-sm text-[#000945] outline-none transition focus:!border-[#dfe1df] active:!border-[#dfe1df] hover:!border-[#dfe1df] focus:ring-0 flex items-center gap-2 cursor-pointer"
+                                className="w-full h-10 rounded-[6px] border !border-[#dfe1df] bg-white px-3 py-0 text-left text-[13px] sm:text-sm text-[#000945] outline-none transition focus:!border-[#155dfc] active:!border-[#dfe1df] hover:!border-[#dfe1df] focus:ring-0 flex items-center gap-2 cursor-pointer"
                                 style={{ borderColor: "#dfe1df", borderWidth: "1px" }}
                               >
                                 <Calendar className="h-4 w-4 text-[#000945]" />

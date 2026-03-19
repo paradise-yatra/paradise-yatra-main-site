@@ -163,16 +163,16 @@ const NewFooter = () => {
   const socialLinks = footerData?.socialMedia?.filter(
     (social) => social.isActive
   ) || [
-    { platform: "facebook", url: "#", isActive: true },
-    { platform: "twitter", url: "#", isActive: true },
-    { platform: "instagram", url: "#", isActive: true },
-    { platform: "youtube", url: "#", isActive: true },
-    { platform: "linkedin", url: "#", isActive: true },
-  ];
+      { platform: "facebook", url: "#", isActive: true },
+      { platform: "twitter", url: "#", isActive: true },
+      { platform: "instagram", url: "#", isActive: true },
+      { platform: "youtube", url: "#", isActive: true },
+      { platform: "linkedin", url: "#", isActive: true },
+    ];
 
   if (isLoading) {
     return (
-      <footer className="bg-gray-900 text-white relative pt-16 pb-12 md:pt-24 md:pb-16">
+      <footer className="bg-black text-white relative pt-16 pb-12 md:pt-24 md:pb-16">
         <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-blue-500 via-green-500 to-purple-500"></div>
         <div className="container mx-auto px-4">
           <div className="flex items-center justify-center h-32">
@@ -184,16 +184,40 @@ const NewFooter = () => {
   }
 
   return (
-    <footer className="bg-slate-900 text-white">
+    <footer className="bg-black text-white">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+        {/* Top section: Logo + Registration Info */}
+        <div className="flex flex-col md:flex-row justify-between items-center md:items-start mb-12 gap-6">
+          {/* Uttarakhand Simply Heaven Logo */}
+          <div className="flex-shrink-0">
+            <Image
+              src="/Footer/Uttarakhand Tourism Logo.png"
+              alt="Uttarakhand Simply Heaven"
+              width={200}
+              height={120}
+              className="h-auto w-[160px] md:w-[200px] brightness-0 invert"
+            />
+          </div>
+
+          {/* Registration Details */}
+          <div className="text-right space-y-1">
+            <p className="text-sm text-gray-300">
+              GSTIN: 05IYCPS1101L2ZG
+            </p>
+            <p className="text-sm text-gray-300">
+              Udhyam: UDYAM-UK-05-0046271
+            </p>
+            <p className="text-sm text-gray-300">
+              Uttarakhand Tourism: UTIR/DEHRADUN/08-2021/004728
+            </p>
+          </div>
+        </div>
+
         {/* Main footer content */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-6 gap-8 mb-12">
           {/* Company info */}
           <div className="lg:col-span-2 space-y-4 lg:max-w-[350px]">
             <div className="flex items-center space-x-2">
-              {/* <div className="bg-gradient-to-r from-blue-500 to-indigo-600 p-2 rounded-lg">
-                <MapPin className="h-5 w-5 text-white" />
-              </div> */}
               <Image
                 src="/footerLogo.png"
                 alt="logo"
@@ -373,7 +397,7 @@ const NewFooter = () => {
                 <a
                   href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(
                     footerData?.companyInfo?.address ||
-                      "123 Travel Street Adventure City, AC 12345"
+                    "123 Travel Street Adventure City, AC 12345"
                   )}`}
                   target="_blank"
                   rel="noopener noreferrer"
@@ -386,10 +410,9 @@ const NewFooter = () => {
               <div className="flex items-center space-x-3">
                 <Phone className="h-5 w-5 text-blue-400 flex-shrink-0" />
                 <a
-                  href={`tel:${
-                    footerData?.companyInfo?.phone?.replace(/\s/g, "") ||
+                  href={`tel:${footerData?.companyInfo?.phone?.replace(/\s/g, "") ||
                     "+15551234567"
-                  }`}
+                    }`}
                   className="text-slate-300 text-sm"
                 >
                   {footerData?.companyInfo?.phone || "+1 (555) 123-4567"}
@@ -398,9 +421,8 @@ const NewFooter = () => {
               <div className="flex items-center space-x-3">
                 <Mail className="h-5 w-5 text-blue-400 flex-shrink-0" />
                 <a
-                  href={`mailto:${
-                    footerData?.companyInfo?.email || "info@wanderlust.com"
-                  }`}
+                  href={`mailto:${footerData?.companyInfo?.email || "info@wanderlust.com"
+                    }`}
                   className="text-slate-300 text-sm"
                 >
                   {footerData?.companyInfo?.email || "info@wanderlust.com"}

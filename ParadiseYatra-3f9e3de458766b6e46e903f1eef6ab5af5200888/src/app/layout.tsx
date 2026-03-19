@@ -3,6 +3,7 @@ import { Suspense } from "react";
 import { Playfair_Display, Nunito, Plus_Jakarta_Sans, Unbounded } from "next/font/google";
 import { SITE_URL } from "@/lib/seo";
 import "./globals.css";
+import "react-phone-input-international/lib/style.css";
 import FooterWrapper from "@/components/FooterWrapper";
 import { AuthProvider } from "@/context/AuthContext";
 import Script from "next/script";

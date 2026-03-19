@@ -548,11 +548,11 @@ export default function DestinationPage({ params }: DestinationPageProps) {
                           onClick={() => setOpenDay(openDay === index ? null : index)}
                           className="w-full flex items-center gap-4 p-3 sm:p-4 text-left bg-slate-50/50 hover:bg-slate-50 transition-colors"
                         >
-                          <div className={`flex-shrink-0 w-10 h-10 sm:w-12 sm:h-12 rounded-xl flex items-center justify-center font-bold !text-sm sm:!text-lg transition-colors border ${openDay === index ? 'bg-blue-600 text-white border-blue-600 shadow-lg shadow-blue-200' : 'bg-white border-slate-200 text-slate-500'}`}>
+                          <div className={`flex-shrink-0 w-10 h-10 sm:w-12 sm:h-12 rounded-xl flex items-center justify-center font-bold !text-sm sm:!text-lg transition-colors border ${openDay === index ? 'bg-[#155dfc] text-white border-[#155dfc] shadow-lg shadow-blue-200' : 'bg-white border-slate-200 text-slate-500'}`}>
                             D{day.day}
                           </div>
                           <div className="flex-grow">
-                            <h3 className={`!text-base sm:!text-lg !font-semibold transition-colors ${openDay === index ? 'text-blue-700' : 'text-slate-800'}`}>{day.title}</h3>
+                            <h3 className={`!text-base sm:!text-lg !font-semibold transition-colors ${openDay === index ? 'text-[#155dfc]' : 'text-slate-800'}`}>{day.title}</h3>
                           </div>
                           <div className={`flex-shrink-0 transition-transform duration-300 ${openDay === index ? 'rotate-180' : ''}`}>
                             <ChevronDown className={`w-5 h-5 ${openDay === index ? 'text-blue-600' : 'text-slate-400'}`} />

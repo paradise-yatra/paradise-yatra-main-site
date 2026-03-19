@@ -8,7 +8,7 @@ import { useRouter } from "next/navigation";
 import dynamic from "next/dynamic";
 import Link from "next/link";
 import Image from "next/image";
-import { preserveRichTextSpacing } from "@/lib/richText";
+import { normalizeRichTextHtml, preserveRichTextSpacing } from "@/lib/richText";
 import { toast } from "react-toastify";
 import Header from "@/components/Header";
 import CarouselArrows from "@/components/ui/CarouselArrows";
@@ -17,6 +17,7 @@ import { format } from "date-fns";
 import { Calendar as CalendarComponent } from "@/components/ui/calendar";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { useAuth } from "@/context/AuthContext";
+import PhoneInput from "react-phone-input-international";
 
 interface DayItinerary {
   day: number;
@@ -141,6 +142,7 @@ const ItineraryPageClient = ({ packageData, slug }: ItineraryPageClientProps) =>
   const [fullName, setFullName] = useState('');
   const [email, setEmail] = useState('');
   const [phoneNumber, setPhoneNumber] = useState('');
+  const [phoneDialCode, setPhoneDialCode] = useState('+91');
   const [adults, setAdults] = useState<number>(2);
   const [children, setChildren] = useState<number>(0);
   const [message, setMessage] = useState('');
@@ -148,6 +150,7 @@ const ItineraryPageClient = ({ packageData, slug }: ItineraryPageClientProps) =>
   const [isHighlightsExpanded, setIsHighlightsExpanded] = useState(false);
   const [actionMessage, setActionMessage] = useState<{ type: "success" | "error"; text: string } | null>(null);
   const [breadcrumbSource, setBreadcrumbSource] = useState<BreadcrumbSource>(() => getFallbackBreadcrumb(packageData));
+  const [stickyTop, setStickyTop] = useState(120);
   const router = useRouter();
   const { user, toggleWishlist, isInWishlist } = useAuth();
   const isPackageSaved = isInWishlist(packageData._id);
@@ -195,6 +198,30 @@ const ItineraryPageClient = ({ packageData, slug }: ItineraryPageClientProps) =>
     return () => clearTimeout(timeout);
   }, [actionMessage]);
 
+  useEffect(() => {
+    const header = document.querySelector("header");
+    if (!header) return;
+
+    const updateStickyTop = () => {
+      const height = header.getBoundingClientRect().height || 0;
+      setStickyTop(Math.round(height + 16));
+    };
+
+    updateStickyTop();
+
+    let resizeObserver: ResizeObserver | null = null;
+    if (typeof ResizeObserver !== "undefined") {
+      resizeObserver = new ResizeObserver(updateStickyTop);
+      resizeObserver.observe(header);
+    }
+
+    window.addEventListener("resize", updateStickyTop);
+    return () => {
+      window.removeEventListener("resize", updateStickyTop);
+      if (resizeObserver) resizeObserver.disconnect();
+    };
+  }, []);
+
   const handleSubmitEnquiry = async () => {
     if (!fullName || !email || !phoneNumber || !message) {
       toast.error('Please fill in your name, email, phone number, and message.');
@@ -205,6 +232,8 @@ const ItineraryPageClient = ({ packageData, slug }: ItineraryPageClientProps) =>
 
     const travelDateStr = date ? format(date, "MMM dd, yyyy") : "Not specified";
     const enhancedMessage = `Travel Date: ${travelDateStr}\nTravelers: ${adults} Adults, ${children} Children\n\nMessage:\n${message}`;
+    const dialCodeDigits = phoneDialCode.replace(/\D/g, "");
+    const formattedPhone = dialCodeDigits ? `${dialCodeDigits}${phoneNumber}` : phoneNumber;
 
     try {
       const response = await fetch("/api/lead-capture", {
@@ -215,7 +244,7 @@ const ItineraryPageClient = ({ packageData, slug }: ItineraryPageClientProps) =>
         body: JSON.stringify({
           fullName,
           email,
-          phone: phoneNumber,
+          phone: formattedPhone,
           destination: packageData.destination?.split(',')[0].trim() || "Not specified",
           budget: packageData.price ? formatPrice(packageData.price) : "Not specified",
           message: enhancedMessage,
@@ -231,6 +260,7 @@ const ItineraryPageClient = ({ packageData, slug }: ItineraryPageClientProps) =>
         setFullName('');
         setEmail('');
         setPhoneNumber('');
+        setPhoneDialCode('+91');
         setMessage('');
         setDate(undefined);
         setAdults(2);
@@ -425,7 +455,7 @@ const ItineraryPageClient = ({ packageData, slug }: ItineraryPageClientProps) =>
     <div className="min-h-screen bg-white [&_button]:cursor-pointer [&_a]:cursor-pointer [&_select]:cursor-pointer [&_[role=button]]:cursor-pointer [&_label]:cursor-pointer [&_input:not([type='checkbox']):not([type='radio'])]:cursor-text [&_textarea]:cursor-text">
       <Header />
 
-      <main className="mx-auto w-full max-w-6xl flex-1 px-4 md:px-6 pt-4 md:pt-6 lg:pt-10 pb-28 lg:pb-10">
+      <main className="mx-auto w-full max-w-7xl flex-1 px-4 md:px-6 pt-4 md:pt-6 lg:pt-10 pb-28 lg:pb-10">
         {/* Breadcrumbs */}
         <div className="mb-4 flex flex-wrap items-center gap-1.5 text-[12px] text-[#000945]">
           <Link href="/" className="hover:underline transition-all">Home</Link>
@@ -476,11 +506,10 @@ const ItineraryPageClient = ({ packageData, slug }: ItineraryPageClientProps) =>
                   </Button>
                 </div>
                 <div
-                  className={`min-h-[18px] text-[12px] font-medium transition-all duration-300 ${
-                    actionMessage
-                      ? "opacity-100 translate-y-0"
-                      : "opacity-0 -translate-y-1 pointer-events-none"
-                  } text-[#16a34a]`}
+                  className={`min-h-[18px] text-[12px] font-medium transition-all duration-300 ${actionMessage
+                    ? "opacity-100 translate-y-0"
+                    : "opacity-0 -translate-y-1 pointer-events-none"
+                    } text-[#16a34a]`}
                   style={{ color: "#16a34a", fontWeight: 500 }}
                 >
                   {actionMessage?.text || ""}
@@ -532,7 +561,7 @@ const ItineraryPageClient = ({ packageData, slug }: ItineraryPageClientProps) =>
                   !isHighlightsExpanded && (packageData.highlights?.length || 0) > 5 ? "max-h-[140px] md:max-h-none" : "max-h-[1500px]"
                 )}
               >
-                <div className="flex flex-wrap gap-2.5 mb-8">
+                <div className="flex flex-wrap gap-2.5">
                   {packageData.highlights?.map((highlight, index) => (
                     <div key={index} className="flex items-center gap-2 rounded-full border border-[#dfe1df] bg-slate-50 px-3.5 py-1.5 shadow-none">
                       <div className="flex h-4 w-4 shrink-0 items-center justify-center rounded-full bg-[#000945]">
@@ -571,15 +600,19 @@ const ItineraryPageClient = ({ packageData, slug }: ItineraryPageClientProps) =>
               )}
 
               {packageData.description && (
-                <div
-                  className="mt-6 text-base leading-relaxed text-[#000945] overflow-x-auto [&_h1]:!m-0 [&_h1]:!text-2xl [&_h1]:!font-extrabold [&_h1]:!text-[#000945] [&_h2]:!m-0 [&_h2]:!text-xl [&_h2]:!font-bold [&_h2]:!text-[#000945] [&_h3]:!m-0 [&_h3]:!text-lg [&_h3]:!font-bold [&_h3]:!text-[#000945] [&_p]:!m-0 [&_p]:!text-base [&_p]:!text-[#000945] [&_ul]:!m-0 [&_ul]:!list-disc [&_ul]:!pl-6 [&_ol]:!m-0 [&_ol]:!list-decimal [&_ol]:!pl-6 [&_li]:!m-0 [&_li]:!text-[#000945] [&_li_p]:!m-0 [&_ul_li::marker]:!text-blue-500 [&_ol_li::marker]:!text-blue-500 [&_a]:!text-blue-600 [&_a]:!underline"
-                  dangerouslySetInnerHTML={{ __html: preserveRichTextSpacing(packageData.description) }}
-                />
+                <div className="mt-6 text-justify">
+                  <h3 style={{ fontWeight: 700 }} className="package-section-heading mb-4">Overview</h3>
+                  <div
+                    suppressHydrationWarning
+                    className="text-base leading-relaxed text-[#000945] overflow-x-auto [&_h1]:!m-0 [&_h1]:!text-2xl [&_h1]:!font-extrabold [&_h1]:!text-[#000945] [&_h2]:!m-0 [&_h2]:!text-xl [&_h2]:!font-bold [&_h2]:!text-[#000945] [&_h3]:!m-0 [&_h3]:!text-lg [&_h3]:!font-bold [&_h3]:!text-[#000945] [&_p]:!m-0 [&_p]:!text-base [&_p]:!text-[#000945] [&_ul]:!m-0 [&_ul]:!list-disc [&_ul]:!pl-6 [&_ol]:!m-0 [&_ol]:!list-decimal [&_ol]:!pl-6 [&_li]:!m-0 [&_li]:!text-[#000945] [&_li_p]:!m-0 [&_ul_li::marker]:!text-blue-500 [&_ol_li::marker]:!text-blue-500 [&_a]:!text-blue-600 [&_a]:!underline"
+                    dangerouslySetInnerHTML={{ __html: normalizeRichTextHtml(packageData.description) }}
+                  />
+                </div>
               )}
             </section>
 
             {/* Itinerary */}
-            <section>
+            <section className="package-itinerary">
               <div className="flex flex-wrap items-center justify-between gap-6 md:gap-8 mb-10 pb-8 border-b border-[#dfe1df]">
                 {[
                   { icon: Plane, title: "All Transfers" },
@@ -588,28 +621,28 @@ const ItineraryPageClient = ({ packageData, slug }: ItineraryPageClientProps) =>
                   { icon: Shield, title: "24/7 Support" },
                 ].map((item, i) => (
                   <div key={i} className="flex flex-1 flex-col items-center justify-center gap-3 min-w-[120px]">
-                    <item.icon className="h-7 w-7 text-[#000945]" strokeWidth={1.5} />
-                    <span className="text-[15px] font-bold text-[#000945]">{item.title}</span>
+                    <item.icon className="h-7 w-7 text-[#155dfc]" strokeWidth={1.5} />
+                    <span className="text-[15px] font-bold text-[#155dfc]">{item.title}</span>
                   </div>
                 ))}
               </div>
 
               <div className="mb-6">
-                <h3 style={{ fontWeight: 700 }} className="!text-[24px] md:!text-[36px] text-[#000945]">Detailed Itinerary</h3>
+                <h3 style={{ fontWeight: 700 }} className="package-section-heading">Detailed Itinerary</h3>
               </div>
 
-              <Accordion type="multiple" defaultValue={["day-0"]} className="space-y-3">
+              <Accordion type="multiple" className="space-y-3">
                 {packageData.itinerary?.map((day, index) => (
                   <AccordionItem key={index} value={`day-${index}`} className="!border border-[#dfe1df] rounded-[6px] bg-white overflow-hidden shadow-none focus-within:ring-0 focus-within:outline-none">
-                    <AccordionTrigger className="!p-5 !bg-white hover:!bg-slate-50 transition-colors !no-underline focus:!outline-none focus-visible:!outline-none focus:!ring-0">
+                    <AccordionTrigger className="!p-5 !bg-white hover:!bg-slate-50 transition-colors !no-underline focus:!outline-none focus-visible:!outline-none focus:!ring-0 data-[state=open]:[&_.day-badge]:bg-[#155dfc] data-[state=open]:[&_.day-title]:text-[#155dfc]">
                       <div className="flex items-center gap-3 overflow-hidden text-left">
                         <span
                           style={{ fontWeight: 700 }}
-                          className="text-[11px] md:text-xs shrink-0 text-white bg-[#000945] px-2.5 md:px-3 py-1 rounded-[4px] uppercase tracking-wider"
+                          className="day-badge text-[11px] md:text-xs shrink-0 text-white bg-[#000945] px-2.5 md:px-3 py-1 rounded-[4px] uppercase tracking-wider"
                         >
                           Day {day.day}
                         </span>
-                        <span style={{ fontWeight: 600 }} className="text-[16px] md:text-[18px] text-[#000945] truncate">
+                        <span style={{ fontWeight: 600 }} className="day-title text-[16px] md:text-[18px] text-[#000945] truncate">
                           {day.title}
                         </span>
                       </div>
@@ -708,10 +741,13 @@ const ItineraryPageClient = ({ packageData, slug }: ItineraryPageClientProps) =>
           </div>
 
           {/* Right Column (Sticky Sidebar) */}
-          <div className="lg:col-span-4">
-            <div className="sticky top-[140px] flex flex-col gap-6">
-              {/* Pricing Card */}
-              <div id="booking-sidebar" className="overflow-hidden scroll-mt-[100px] rounded-[6px] border border-[#dfe1df] bg-white shadow-none">
+          <div className="lg:col-span-4 flex flex-col gap-6">
+            {/* Pricing Card */}
+            <div
+              id="booking-sidebar"
+              className="lg:sticky w-full overflow-hidden scroll-mt-[100px] rounded-[6px] border border-[#dfe1df] bg-white shadow-none"
+              style={{ top: stickyTop }}
+            >
                 <div className="bg-[#000945] p-4 text-center">
                   <span className="text-sm font-medium text-white">Package Starting From</span>
                 </div>
@@ -761,14 +797,38 @@ const ItineraryPageClient = ({ packageData, slug }: ItineraryPageClientProps) =>
                         <Phone className="h-5 w-5 text-blue-600 shrink-0" />
                         <div className="flex-1">
                           <p className="text-[14px] font-bold !text-[#000945] tracking-wider mb-1">Phone Number</p>
-                          <input
-                            type="tel"
-                            placeholder="+91 Enter your number"
-                            value={phoneNumber}
-                            onChange={(e) => setPhoneNumber(e.target.value.replace(/[^0-9+\s-]/g, ''))}
-                            maxLength={15}
-                            className="w-full bg-white border border-[#dfe1df] rounded-[6px] h-8 px-2 py-1 text-sm text-[#000945] shadow-none outline-none focus:ring-1 focus:ring-[#155dfc] placeholder:text-slate-400"
-                          />
+                          <div className="package-phone-input flex gap-2" data-dial-code={phoneDialCode}>
+                            <PhoneInput
+                              country="in"
+                              onChange={(value, data) => {
+                                if (data && typeof data === "object" && "dialCode" in data) {
+                                  const dialCode = (data as { dialCode?: string }).dialCode;
+                                  if (dialCode) setPhoneDialCode(`+${dialCode}`);
+                                }
+                              }}
+                              preferredCountries={["in", "ae", "us", "gb"]}
+                              enableSearch={false}
+                              disableSearchIcon
+                              inputStyle={{ display: 'none' }}
+                              buttonStyle={{
+                                position: 'relative',
+                                border: 'none',
+                                background: 'transparent',
+                                width: '100%',
+                                height: '100%',
+                                padding: 0
+                              }}
+                            />
+                            <input
+                              type="tel"
+                              value={phoneNumber}
+                              onChange={(e) => setPhoneNumber(e.target.value)}
+                              placeholder="Enter your number"
+                              className="phone-number-input"
+                              required
+                              autoComplete="tel"
+                            />
+                          </div>
                         </div>
                       </div>
 
@@ -863,35 +923,34 @@ const ItineraryPageClient = ({ packageData, slug }: ItineraryPageClientProps) =>
                 </div>
               </div>
 
-              {/* Trust Indicators */}
-              <div className="rounded-[6px] border border-[#dfe1df] bg-white p-6 shadow-none">
-                <div className="flex flex-col gap-5">
-                  <div className="flex items-start gap-4">
-                    <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-blue-50 text-blue-600">
-                      <Shield className="h-5 w-5" />
-                    </div>
-                    <div className="flex flex-col">
-                      <span className="text-sm font-bold text-[#000945]">Best Price Guaranteed</span>
-                      <span className="text-xs text-slate-500">Unbeatable value for your journey.</span>
-                    </div>
+            {/* Trust Indicators */}
+            <div className="rounded-[6px] border border-[#dfe1df] bg-white p-6 shadow-none">
+              <div className="flex flex-col gap-5">
+                <div className="flex items-start gap-4">
+                  <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-blue-50 text-blue-600">
+                    <Shield className="h-5 w-5" />
                   </div>
-                  <div className="flex items-start gap-4">
-                    <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-blue-50 text-blue-600">
-                      <Users className="h-5 w-5" />
-                    </div>
-                    <div className="flex flex-col">
-                      <span className="text-sm font-bold text-[#000945]">24/7 Expert Support</span>
-                      <span className="text-xs text-slate-500">Live assistance during your trip.</span>
-                    </div>
+                  <div className="flex flex-col">
+                    <span className="text-sm font-bold text-[#000945]">Best Price Guaranteed</span>
+                    <span className="text-xs text-slate-500">Unbeatable value for your journey.</span>
                   </div>
-                  <div className="flex items-start gap-4">
-                    <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-blue-50 text-blue-600">
-                      <Award className="h-5 w-5" />
-                    </div>
-                    <div className="flex flex-col">
-                      <span className="text-sm font-bold text-[#000945]">Verified Reviews</span>
-                      <span className="text-xs text-slate-500">4.4/5 based on 160+ reviews.</span>
-                    </div>
+                </div>
+                <div className="flex items-start gap-4">
+                  <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-blue-50 text-blue-600">
+                    <Users className="h-5 w-5" />
+                  </div>
+                  <div className="flex flex-col">
+                    <span className="text-sm font-bold text-[#000945]">24/7 Expert Support</span>
+                    <span className="text-xs text-slate-500">Live assistance during your trip.</span>
+                  </div>
+                </div>
+                <div className="flex items-start gap-4">
+                  <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-blue-50 text-blue-600">
+                    <Award className="h-5 w-5" />
+                  </div>
+                  <div className="flex flex-col">
+                    <span className="text-sm font-bold text-[#000945]">Verified Reviews</span>
+                    <span className="text-xs text-slate-500">4.4/5 based on 160+ reviews.</span>
                   </div>
                 </div>
               </div>
@@ -950,6 +1009,7 @@ const ItineraryPageClient = ({ packageData, slug }: ItineraryPageClientProps) =>
                       themeColor="#005beb"
                       priceLabel={getPackagePriceLabel(pkg.priceType)}
                       isInWishlist={isInWishlist(pkg._id)}
+                      showDestination={false}
                       // Handle wishlist toggle gracefully
                       onWishlistToggle={(e) => {
                         e.preventDefault();

@@ -22,3 +22,25 @@ export const preserveRichTextSpacing = (html?: string | null): string => {
     return `<p${nextAttributes}><br /></p>`;
   });
 };
+
+const BLOCK_TAGS =
+  "(?:ul|ol|h[1-6]|div|table|thead|tbody|tfoot|tr|td|th|figure|blockquote|section|article)";
+
+const BLOCK_OPEN_RE = new RegExp(
+  `<p[^>]*>\\s*(<${BLOCK_TAGS}\\b[^>]*>)`,
+  "gi"
+);
+const BLOCK_CLOSE_RE = new RegExp(`</(${BLOCK_TAGS})>\\s*</p>`, "gi");
+const IMG_WRAPPED_RE = /<p[^>]*>\s*(<img\b[^>]*>)\s*<\/p>/gi;
+
+export const normalizeRichTextHtml = (html?: string | null): string => {
+  if (!html) {
+    return "";
+  }
+
+  const withSpacing = preserveRichTextSpacing(html);
+  return withSpacing
+    .replace(BLOCK_OPEN_RE, "$1")
+    .replace(BLOCK_CLOSE_RE, "</$1>")
+    .replace(IMG_WRAPPED_RE, "$1");
+};
