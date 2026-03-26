@@ -79,7 +79,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en" className={`${plusJakartaSans.variable} ${playfairDisplay.variable} ${nunito.variable} ${unbounded.variable}`}>
+    <html lang="en" suppressHydrationWarning className={`${plusJakartaSans.variable} ${playfairDisplay.variable} ${nunito.variable} ${unbounded.variable}`}>
       <head>
         <Script id="smooth-scroll" strategy="afterInteractive">
           {`
@@ -120,7 +120,7 @@ export default function RootLayout({
           `}
         </Script>
       </head>
-      <body className={`${plusJakartaSans.className} antialiased`}>
+      <body suppressHydrationWarning className={`${plusJakartaSans.className} antialiased`}>
         <ReduxProvider>
           <AuthProvider>
             {children}

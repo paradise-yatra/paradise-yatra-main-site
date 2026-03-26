@@ -436,7 +436,7 @@ const AboutPage = memo(() => {
                   transition={{ duration: 4.2, repeat: Infinity, ease: "linear" }}
                 />
                 <div className="relative z-10 flex h-full items-center">
-                  <p className="font-unbounded text-[20px] leading-[1.28] !text-white md:text-[28px]" style={{ color: "#ffffff" }}>
+                  <p className="font-unbounded text-[18px] leading-[1.4] !text-white md:text-[22px]" style={{ color: "#ffffff" }}>
                     Every frame here is a glimpse of the energy, creativity, and teamwork behind Paradise Yatra.
                   </p>
                 </div>

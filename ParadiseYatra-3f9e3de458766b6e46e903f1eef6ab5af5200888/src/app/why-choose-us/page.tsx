@@ -1,38 +1,28 @@
 import Header from "@/components/Header";
-import CertificationsSection from "@/components/why-choose-use/CertificationsSection";
+import CertificationsSection from "@/components/why-choose-us/CertificationsSection";
 
-import CultureSection from "@/components/why-choose-use/CultureSection";
-import { HeroSection } from "@/components/why-choose-use/HeroSection";
-import { InstagramFeed } from "@/components/why-choose-use/InstagramFeed";
-import { LatestReviews } from "@/components/why-choose-use/LatestReviews";
-import { StatsDashboard } from "@/components/why-choose-use/StatsDashboard";
-import SupportAndFAQ from "@/components/why-choose-use/SupportAndFAQ";
-import { TestimonialsGrid } from "@/components/why-choose-use/TestimonialsGrid";
-import YouTubeSection from "@/components/why-choose-use/YouTubeSection";
+import CultureSection from "@/components/why-choose-us/CultureSection";
+import { HeroSection } from "@/components/why-choose-us/HeroSection";
+import { LatestReviews } from "@/components/why-choose-us/LatestReviews";
+import SupportAndFAQ from "@/components/why-choose-us/SupportAndFAQ";
+import SocialJourneySection from "@/components/SocialJourneySection";
 import { buildStaticMetadata } from "@/lib/seo";
 
 export const metadata = buildStaticMetadata("/why-choose-us");
 
-
 export default function WhyChooseUs() {
   return (
     <>
-      <Header />
-      <div className="min-h-screen bg-gray-50 text-slate-900 font-sans pt-16">
+      <Header disableOffset={true} />
+      <div className="min-h-screen bg-white text-slate-900 font-sans">
         {/* pt-16 adds padding-top equal to header height (h-16) */}
         <main className="w-full flex-grow">
-      <HeroSection/>
-          <StatsDashboard/>
-          <TestimonialsGrid/>
-          <CertificationsSection/>
-          <LatestReviews/>
-           <CultureSection/>
-          <InstagramFeed/>
-          <YouTubeSection/>
-          <SupportAndFAQ/>
-        
-
-         
+          <HeroSection />
+          <CertificationsSection />
+          <LatestReviews />
+          <CultureSection />
+          <SocialJourneySection />
+          <SupportAndFAQ />
         </main>
       </div>
     </>
