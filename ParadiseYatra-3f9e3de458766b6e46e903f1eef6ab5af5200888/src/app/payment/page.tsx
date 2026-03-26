@@ -173,7 +173,7 @@ export default function PaymentPage() {
                 href={PAYMENT_LINK}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="flex w-full items-center justify-center gap-2 rounded-[6px] bg-[#000945] px-4 py-3 text-[15px] font-bold text-white transition-colors hover:bg-[#111d5f]"
+                className="flex w-full items-center justify-center gap-2 rounded-[6px] bg-[#155dfc] px-4 py-3 text-[15px] font-bold text-white transition-colors hover:bg-[#0f4bce]"
               >
                 Pay Securely with Razorpay
                 <ArrowUpRight className="h-4 w-4" />

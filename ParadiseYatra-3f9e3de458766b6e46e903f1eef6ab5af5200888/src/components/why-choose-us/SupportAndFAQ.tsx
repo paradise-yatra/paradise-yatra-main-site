@@ -36,49 +36,7 @@ export default function SupportAndFAQ() {
   };
 
   return (
-    <div className="w-full bg-white border-t border-slate-100 min-h-screen py-12">
-      {/* Support Section */}
-      <section className="px-4 lg:px-6 py-8 md:py-16 mb-4 max-w-6xl mx-auto">
-        <div className="bg-[#08213d] rounded-[6px] p-6 sm:p-10 lg:p-16 flex flex-col lg:flex-row items-center gap-10 lg:gap-24 !shadow-none !border-none">
-          
-          <div className="w-full lg:w-[55%] flex flex-col items-start gap-5 lg:gap-6">
-            <h2 className="text-white tracking-tight text-[34px] md:text-[48px]" style={{ fontWeight: '900', lineHeight: '1.1' }}>
-              Ready to get <br className="hidden md:inline" /> started ?
-            </h2>
-            <div className="text-white/90 text-[15px] lg:text-[17px] leading-relaxed mt-1">
-              No chatbots, no automated menus. <br />
-              Have doubts? <a href="https://share.google/S4dPaG2OsWTy0N1YJ" target="_blank" rel="noopener noreferrer" className="underline underline-offset-4 decoration-white/60 hover:decoration-white font-medium transition-colors">Read 150+ reviews here.</a>
-            </div>
-            
-            <a 
-              href="https://wa.me/918979269388" 
-              target="_blank"
-              rel="noopener noreferrer"
-              className="mt-3 inline-flex items-center justify-center gap-2 bg-[#155dfc] hover:bg-[#0f4bce] text-white font-bold text-[14px] px-5 py-2.5 rounded-full !shadow-none transition-colors"
-              style={{ boxShadow: 'none' }}
-            >
-              Chat with Support
-            </a>
-          </div>
-
-          <div className="w-full lg:w-[45%] flex flex-col gap-4 lg:gap-6">
-            {[
-              "24/7 dedicated on-trip support",
-              "Direct access to travel experts",
-              "Quick and reliable issue resolution"
-            ].map((text, i) => (
-              <div key={i} className="flex items-start lg:items-center gap-3 lg:gap-4">
-                <svg className="w-[18px] h-[18px] text-white mt-1 lg:mt-0 flex-shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
-                  <polyline points="20 6 9 17 4 12"></polyline>
-                </svg>
-                <span className="text-white font-medium text-[15px] lg:text-[16px] leading-snug tracking-wide">{text}</span>
-              </div>
-            ))}
-          </div>
-
-        </div>
-      </section>
-
+    <div className="w-full bg-white min-h-screen py-12">
       {/* FAQ Section - Replicating State Page Design */}
       <section className="bg-white py-12 md:py-20 px-4 md:px-8">
         <div className="max-w-6xl mx-auto flex flex-col lg:flex-row gap-10 lg:gap-16 items-center">
@@ -139,6 +97,48 @@ export default function SupportAndFAQ() {
             />
             <div className="absolute inset-0 bg-transparent" />
           </div>
+        </div>
+      </section>
+
+      {/* Support Section */}
+      <section className="px-4 lg:px-6 py-8 md:py-16 mb-4 max-w-6xl mx-auto">
+        <div className="bg-[#08213d] rounded-[6px] p-6 sm:p-10 lg:p-16 flex flex-col lg:flex-row items-center gap-10 lg:gap-24 !shadow-none !border-none">
+          
+          <div className="w-full lg:w-[55%] flex flex-col items-start gap-5 lg:gap-6">
+            <h2 className="text-white tracking-tight text-[34px] md:text-[48px]" style={{ fontWeight: '900', lineHeight: '1.1' }}>
+              Ready to get <br className="hidden md:inline" /> started ?
+            </h2>
+            <div className="text-white/90 text-[15px] lg:text-[17px] leading-relaxed mt-1">
+              No chatbots, no automated menus. <br />
+              Have doubts? <a href="https://share.google/S4dPaG2OsWTy0N1YJ" target="_blank" rel="noopener noreferrer" className="underline underline-offset-4 decoration-white/60 hover:decoration-white font-medium transition-colors">Read 150+ reviews here.</a>
+            </div>
+            
+            <a 
+              href="https://wa.me/918979269388" 
+              target="_blank"
+              rel="noopener noreferrer"
+              className="mt-3 inline-flex items-center justify-center gap-2 bg-[#155dfc] hover:bg-[#0f4bce] text-white font-bold text-[14px] px-5 py-2.5 rounded-full !shadow-none transition-colors"
+              style={{ boxShadow: 'none' }}
+            >
+              Chat with Support
+            </a>
+          </div>
+
+          <div className="w-full lg:w-[45%] flex flex-col gap-4 lg:gap-6">
+            {[
+              "24/7 dedicated on-trip support",
+              "Direct access to travel experts",
+              "Quick and reliable issue resolution"
+            ].map((text, i) => (
+              <div key={i} className="flex items-start lg:items-center gap-3 lg:gap-4">
+                <svg className="w-[18px] h-[18px] text-white mt-1 lg:mt-0 flex-shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
+                  <polyline points="20 6 9 17 4 12"></polyline>
+                </svg>
+                <span className="text-white font-medium text-[15px] lg:text-[16px] leading-snug tracking-wide">{text}</span>
+              </div>
+            ))}
+          </div>
+
         </div>
       </section>
 

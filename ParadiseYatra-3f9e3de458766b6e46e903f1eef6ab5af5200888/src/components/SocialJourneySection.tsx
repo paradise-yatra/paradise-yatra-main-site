@@ -213,8 +213,8 @@ const SocialJourneySection = () => {
 
         <div className="mt-14 text-center">
           <h3
-            className="mb-2 text-3xl md:text-4xl !font-bold font-unbounded text-[#161b2f]"
-            style={{ fontWeight: 700 }}
+            className="mb-2 text-3xl md:text-4xl !font-bold font-unbounded !text-[#000945]"
+            style={{ fontWeight: 700, color: "#000945" }}
           >
             Join the Community
           </h3>
@@ -269,9 +269,7 @@ const SocialJourneySection = () => {
             </a>
           </div>
           <div className="mt-7 flex items-center justify-center gap-3 !text-[#000945]" style={{ color: "#000945" }}>
-            <span className="h-px w-10 bg-slate-300"></span>
             <span className="text-xs font-semibold tracking-[0.18em] !text-[#000945]" style={{ color: "#000945" }}>@PARADISEYATRA</span>
-            <span className="h-px w-10 bg-slate-300"></span>
           </div>
         </div>
 
