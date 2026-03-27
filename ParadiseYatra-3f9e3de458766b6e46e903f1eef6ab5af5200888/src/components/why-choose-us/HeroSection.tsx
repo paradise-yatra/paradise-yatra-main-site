@@ -47,6 +47,8 @@ const TestimonialVideoCard = memo(({ src }: { src: string }) => {
   );
 });
 
+TestimonialVideoCard.displayName = "TestimonialVideoCard";
+
 const CustomVideoPlayer = ({ src }: { src: string }) => {
   const videoRef = useRef<HTMLVideoElement>(null);
   const [isPlaying, setIsPlaying] = useState(true);
@@ -246,9 +248,9 @@ export function HeroSection() {
     }
   }, [heroIndex, heroItems.length]);
 
-  // 82 Real testimonial assets (64 Images + 18 Videos)
-  const OPT = "f_auto,q_auto:eco,w_400,dpr_auto";
-  const V_OPT = "q_auto:eco,f_auto,w_400";
+  // Real testimonial assets (64 images + 17 videos)
+  const OPT = "f_auto,q_auto:eco,w_400,dpr_auto,c_limit";
+  const V_OPT = "q_auto:eco,f_auto,vc_auto,w_400";
   const allCards = [
     { type: "image", src: `https://res.cloudinary.com/dop1mi4lg/image/upload/${OPT}/v1774508040/Image_Testimonial_25_uxj3li.jpg` },
     { type: "image", src: `https://res.cloudinary.com/dop1mi4lg/image/upload/${OPT}/v1774508052/Image_Testimonial_55_qibijw.jpg` },
@@ -256,7 +258,7 @@ export function HeroSection() {
     { type: "video", src: `https://res.cloudinary.com/dop1mi4lg/video/upload/${V_OPT}/v1774508076/Video_Testimonial_18_vtmkd1.mp4` },
     { type: "image", src: `https://res.cloudinary.com/dop1mi4lg/image/upload/${OPT}/v1774508047/Image_Testimonial_41_dw1let.jpg` },
     { type: "image", src: `https://res.cloudinary.com/dop1mi4lg/image/upload/${OPT}/v1774508064/Image_Testimonial_6_muovpc.jpg` },
-    { type: "video", src: `https://res.cloudinary.com/dop1mi4lg/video/upload/${V_OPT},c_fill,ar_9:16/v1774508074/Video_Testimonial_1_ducwll.mp4` },
+    { type: "video", src: `https://res.cloudinary.com/dop1mi4lg/video/upload/${V_OPT},c_fill,g_auto,ar_9:16/v1774508074/Video_Testimonial_1_ducwll.mp4` },
     { type: "image", src: `https://res.cloudinary.com/dop1mi4lg/image/upload/${OPT}/v1774508038/Image_Testimonial_19_yzl92p.jpg` },
     { type: "image", src: `https://res.cloudinary.com/dop1mi4lg/image/upload/${OPT}/v1774508041/Image_Testimonial_36_xgta9u.jpg` },
     { type: "video", src: `https://res.cloudinary.com/dop1mi4lg/video/upload/${V_OPT}/v1774508074/Video_Testimonial_15_ey8nyr.mp4` },
@@ -332,15 +334,39 @@ export function HeroSection() {
     { type: "image", src: `https://res.cloudinary.com/dop1mi4lg/image/upload/${OPT}/v1774508047/Image_Testimonial_39_atkpxk.jpg` },
     { type: "image", src: `https://res.cloudinary.com/dop1mi4lg/image/upload/${OPT}/v1774508052/Image_Testimonial_58_nhy2i1.jpg` },
   ];
+  const visibleCards = allCards.slice(0, visibleCount);
   const [maxHeight, setMaxHeight] = useState(850);
   const containerRef = useRef<HTMLDivElement>(null);
   const [totalHeight, setTotalHeight] = useState(0);
+  const canLoadMore = visibleCount < allCards.length || maxHeight < totalHeight;
 
   useEffect(() => {
-    if (mounted && containerRef.current) {
-      setTotalHeight(containerRef.current.scrollHeight);
-    }
-  }, [mounted, allCards.length]); // Check height on mount
+    if (!mounted || !containerRef.current) return;
+
+    const container = containerRef.current;
+    const updateHeight = () => setTotalHeight(container.scrollHeight);
+
+    updateHeight();
+
+    if (typeof ResizeObserver === "undefined") return;
+
+    const observer = new ResizeObserver(updateHeight);
+    observer.observe(container);
+
+    return () => observer.disconnect();
+  }, [mounted, visibleCards.length]);
+
+  const handleLoadMore = () => {
+    const step =
+      mounted && window.innerWidth < 640
+        ? 6
+        : mounted && window.innerWidth < 1024
+          ? 8
+          : 10;
+
+    setVisibleCount((prev) => Math.min(prev + step, allCards.length));
+    setMaxHeight((prev) => prev + 1000);
+  };
 
   return (
     <section className="relative overflow-hidden bg-white">
@@ -430,7 +456,7 @@ export function HeroSection() {
               className="relative overflow-hidden"
             >
               <div ref={containerRef} className="columns-2 gap-4 sm:columns-3 lg:columns-5">
-                {allCards.map((card, index) => (
+                {visibleCards.map((card, index) => (
                   <div
                     key={`${card.type}-${index}`}
                     className="mb-4 break-inside-avoid cursor-pointer group"
@@ -453,6 +479,8 @@ export function HeroSection() {
                           alt="Happy travelers"
                           className="w-full h-auto object-cover block"
                           loading="lazy"
+                          decoding="async"
+                          fetchPriority="low"
                         />
                         <div className="absolute inset-0 bg-gradient-to-t from-black/20 via-transparent to-transparent pointer-events-none" />
                         <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-300 bg-black/20 pointer-events-none" />
@@ -463,10 +491,10 @@ export function HeroSection() {
               </div>
 
               {/* Fading view more CTA */}
-              {maxHeight < (totalHeight || 5000) && (
+              {canLoadMore && (
                 <div className="absolute inset-x-0 bottom-0 z-30 flex items-center justify-center pt-32 pb-4 bg-gradient-to-t from-white via-white/90 to-transparent pointer-events-none">
                   <button
-                    onClick={() => setMaxHeight(prev => prev + 1000)}
+                    onClick={handleLoadMore}
                     className="pointer-events-auto cursor-pointer rounded-full border border-gray-300 bg-gray-100 px-6 py-2.5 text-xs font-bold text-gray-600 transition-all duration-300 hover:border-gray-400 hover:bg-gray-200"
                   >
                     View More

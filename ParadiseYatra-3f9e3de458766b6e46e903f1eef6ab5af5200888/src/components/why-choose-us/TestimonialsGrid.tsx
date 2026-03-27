@@ -197,6 +197,9 @@ export function TestimonialsGrid() {
                   alt={item.title}
                   className="w-full h-full object-cover opacity-90 group-hover:scale-105 transition-all duration-500"
                   src={item.thumbnail}
+                  loading="lazy"
+                  decoding="async"
+                  fetchPriority="low"
                 />
                 <div className="absolute inset-0 flex items-center justify-center">
                   <div className="size-14 rounded-full bg-blue-600 text-white flex items-center justify-center group-hover:scale-110 transition-transform">
@@ -205,7 +208,7 @@ export function TestimonialsGrid() {
                 </div>
               </div>
             ) : (
-              <video className="w-full h-full object-cover" src={item.url} autoPlay loop muted playsInline />
+              <video className="w-full h-full object-cover" src={item.url} autoPlay loop muted playsInline preload="none" />
             )}
 
             <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/20 to-transparent pointer-events-none" />
@@ -456,26 +459,26 @@ function PhotoCard({
   isMobile: boolean;
 }) {
   const photos: Record<number, any> = {
-    1: { location: "Kerala, India", img: "https://res.cloudinary.com/dwuwpxu0y/image/upload/f_auto,q_auto:good,w_auto,dpr_auto,c_limit/v1767778704/Photo_Testimonial_4_ojrqb3.webp" },
-    2: { location: "Jammu & Kashmir, India", img: "https://res.cloudinary.com/dwuwpxu0y/image/upload/f_auto,q_auto:good,w_auto,dpr_auto,c_limit/v1767778704/Photo_Testimonial_2_qll0zb.webp" },
-    3: { location: "Manali, Himachal Pradesh", img: "https://res.cloudinary.com/dwuwpxu0y/image/upload/f_auto,q_auto:good,w_auto,dpr_auto,c_limit/v1767778704/Photo_Testimonial_3_el3rrl.webp" },
-    4: { location: "Kerala, India", img: "https://res.cloudinary.com/dwuwpxu0y/image/upload/f_auto,q_auto:good,w_auto,dpr_auto,c_limit/v1767779423/Photo_Testimonial_6_zlvdfl.webp" },
-    5: { location: "Himachal Pradesh, India", img: "https://res.cloudinary.com/dwuwpxu0y/image/upload/f_auto,q_auto:good,w_auto,dpr_auto,c_limit/v1767778705/Photo_Testimonial_5_gkvahk.webp" },
-    6: { location: "Sikkim, India", img: "https://res.cloudinary.com/dwuwpxu0y/image/upload/f_auto,q_auto:good,w_auto,dpr_auto,c_limit/v1767778704/Photo_Testimonial_1_tqhr0g.webp" },
-    7: { location: "Sikkim, India", img: "https://res.cloudinary.com/dwuwpxu0y/image/upload/f_auto,q_auto:good,w_auto,dpr_auto,c_limit/v1767782192/Photo_Testimonial_17_jsiqkn.webp" },
-    8: { location: "Sikkim, India", img: "https://res.cloudinary.com/dwuwpxu0y/image/upload/f_auto,q_auto:good,w_auto,dpr_auto,c_limit/v1767781996/Photo_Testimonial_16_blmyx4.webp" },
-    9: { location: "Jammu & Kashmir, India", img: "https://res.cloudinary.com/dwuwpxu0y/image/upload/f_auto,q_auto:good,w_auto,dpr_auto,c_limit/v1767781899/Photo_Testimonial_14_trlwjc.webp" },
-    10: { location: "Himachal Pradesh, India", img: "https://res.cloudinary.com/dwuwpxu0y/image/upload/f_auto,q_auto:good,w_auto,dpr_auto,c_limit/v1767783178/Photo_Testimonial_19_j2t8xl.webp" },
-    11: { location: "Himachal Pradesh, India", img: "https://res.cloudinary.com/dwuwpxu0y/image/upload/f_auto,q_auto:good,w_auto,dpr_auto,c_limit/v1767783167/Photo_Testimonial_18_v9agyj.webp" },
-    12: { location: "Sikkim, India", img: "https://res.cloudinary.com/dwuwpxu0y/image/upload/f_auto,q_auto:good,w_auto,dpr_auto,c_limit/v1767781907/Photo_Testimonial_15_i6w6d4.webp" },
-    13: { location: "Sikkim, India", img: "https://res.cloudinary.com/dwuwpxu0y/image/upload/f_auto,q_auto:good,w_auto,dpr_auto,c_limit/v1767781494/Photo_Testimonial_12_hqwgyc.webp" },
-    14: { location: "Sikkim, India", img: "https://res.cloudinary.com/dwuwpxu0y/image/upload/f_auto,q_auto:good,w_auto,dpr_auto,c_limit/v1767781685/Photo_Testimonial_13_kc5eml.webp" },
-    15: { location: "Jammu & Kashmir, India", img: "https://res.cloudinary.com/dwuwpxu0y/image/upload/f_auto,q_auto:good,w_auto,dpr_auto,c_limit/v1767781489/Photo_Testimonial_11_fvdexw.webp" },
-    16: { location: "Kerala, India", img: "https://res.cloudinary.com/dwuwpxu0y/image/upload/f_auto,q_auto:good,w_auto,dpr_auto,c_limit/v1767780194/Photo_Testimonial_7_uhgy3c.webp" },
-    17: { location: "Kerala, India", img: "https://res.cloudinary.com/dwuwpxu0y/image/upload/f_auto,q_auto:good,w_auto,dpr_auto,c_limit/v1767780927/Photo_Testimonial_8_bfgbd9.webp" },
-    18: { location: "Sikkim, India", img: "https://res.cloudinary.com/dwuwpxu0y/image/upload/f_auto,q_auto:good,w_auto,dpr_auto,c_limit/v1767781049/Photo_Testimonial_9_ey6bqc.webp" },
-    19: { location: "Sikkim, India", img: "https://res.cloudinary.com/dwuwpxu0y/image/upload/f_auto,q_auto:good,w_auto,dpr_auto,c_limit/v1767781353/Photo_Testimonial_10_zlwfla.webp" },
-    20: { location: "Kerala, India", img: "https://res.cloudinary.com/dwuwpxu0y/image/upload/f_auto,q_auto:good,w_auto,dpr_auto,c_limit/v1767783344/Photo_Testimonial_20_sqvytb.webp" },
+    1: { location: "Kerala, India", img: "https://res.cloudinary.com/dwuwpxu0y/image/upload/f_auto,q_auto:eco,w_auto,dpr_auto,c_limit/v1767778704/Photo_Testimonial_4_ojrqb3.webp" },
+    2: { location: "Jammu & Kashmir, India", img: "https://res.cloudinary.com/dwuwpxu0y/image/upload/f_auto,q_auto:eco,w_auto,dpr_auto,c_limit/v1767778704/Photo_Testimonial_2_qll0zb.webp" },
+    3: { location: "Manali, Himachal Pradesh", img: "https://res.cloudinary.com/dwuwpxu0y/image/upload/f_auto,q_auto:eco,w_auto,dpr_auto,c_limit/v1767778704/Photo_Testimonial_3_el3rrl.webp" },
+    4: { location: "Kerala, India", img: "https://res.cloudinary.com/dwuwpxu0y/image/upload/f_auto,q_auto:eco,w_auto,dpr_auto,c_limit/v1767779423/Photo_Testimonial_6_zlvdfl.webp" },
+    5: { location: "Himachal Pradesh, India", img: "https://res.cloudinary.com/dwuwpxu0y/image/upload/f_auto,q_auto:eco,w_auto,dpr_auto,c_limit/v1767778705/Photo_Testimonial_5_gkvahk.webp" },
+    6: { location: "Sikkim, India", img: "https://res.cloudinary.com/dwuwpxu0y/image/upload/f_auto,q_auto:eco,w_auto,dpr_auto,c_limit/v1767778704/Photo_Testimonial_1_tqhr0g.webp" },
+    7: { location: "Sikkim, India", img: "https://res.cloudinary.com/dwuwpxu0y/image/upload/f_auto,q_auto:eco,w_auto,dpr_auto,c_limit/v1767782192/Photo_Testimonial_17_jsiqkn.webp" },
+    8: { location: "Sikkim, India", img: "https://res.cloudinary.com/dwuwpxu0y/image/upload/f_auto,q_auto:eco,w_auto,dpr_auto,c_limit/v1767781996/Photo_Testimonial_16_blmyx4.webp" },
+    9: { location: "Jammu & Kashmir, India", img: "https://res.cloudinary.com/dwuwpxu0y/image/upload/f_auto,q_auto:eco,w_auto,dpr_auto,c_limit/v1767781899/Photo_Testimonial_14_trlwjc.webp" },
+    10: { location: "Himachal Pradesh, India", img: "https://res.cloudinary.com/dwuwpxu0y/image/upload/f_auto,q_auto:eco,w_auto,dpr_auto,c_limit/v1767783178/Photo_Testimonial_19_j2t8xl.webp" },
+    11: { location: "Himachal Pradesh, India", img: "https://res.cloudinary.com/dwuwpxu0y/image/upload/f_auto,q_auto:eco,w_auto,dpr_auto,c_limit/v1767783167/Photo_Testimonial_18_v9agyj.webp" },
+    12: { location: "Sikkim, India", img: "https://res.cloudinary.com/dwuwpxu0y/image/upload/f_auto,q_auto:eco,w_auto,dpr_auto,c_limit/v1767781907/Photo_Testimonial_15_i6w6d4.webp" },
+    13: { location: "Sikkim, India", img: "https://res.cloudinary.com/dwuwpxu0y/image/upload/f_auto,q_auto:eco,w_auto,dpr_auto,c_limit/v1767781494/Photo_Testimonial_12_hqwgyc.webp" },
+    14: { location: "Sikkim, India", img: "https://res.cloudinary.com/dwuwpxu0y/image/upload/f_auto,q_auto:eco,w_auto,dpr_auto,c_limit/v1767781685/Photo_Testimonial_13_kc5eml.webp" },
+    15: { location: "Jammu & Kashmir, India", img: "https://res.cloudinary.com/dwuwpxu0y/image/upload/f_auto,q_auto:eco,w_auto,dpr_auto,c_limit/v1767781489/Photo_Testimonial_11_fvdexw.webp" },
+    16: { location: "Kerala, India", img: "https://res.cloudinary.com/dwuwpxu0y/image/upload/f_auto,q_auto:eco,w_auto,dpr_auto,c_limit/v1767780194/Photo_Testimonial_7_uhgy3c.webp" },
+    17: { location: "Kerala, India", img: "https://res.cloudinary.com/dwuwpxu0y/image/upload/f_auto,q_auto:eco,w_auto,dpr_auto,c_limit/v1767780927/Photo_Testimonial_8_bfgbd9.webp" },
+    18: { location: "Sikkim, India", img: "https://res.cloudinary.com/dwuwpxu0y/image/upload/f_auto,q_auto:eco,w_auto,dpr_auto,c_limit/v1767781049/Photo_Testimonial_9_ey6bqc.webp" },
+    19: { location: "Sikkim, India", img: "https://res.cloudinary.com/dwuwpxu0y/image/upload/f_auto,q_auto:eco,w_auto,dpr_auto,c_limit/v1767781353/Photo_Testimonial_10_zlwfla.webp" },
+    20: { location: "Kerala, India", img: "https://res.cloudinary.com/dwuwpxu0y/image/upload/f_auto,q_auto:eco,w_auto,dpr_auto,c_limit/v1767783344/Photo_Testimonial_20_sqvytb.webp" },
 
   };
   const p = photos[id] || photos[1];
@@ -494,6 +497,9 @@ function PhotoCard({
           alt={p.location}
           className="w-full h-auto object-cover group-hover:scale-110 transition-transform duration-700"
           src={p.img}
+          loading="lazy"
+          decoding="async"
+          fetchPriority="low"
         />
         {/* Zoom overlay hint */}
         <div className="absolute inset-0 bg-black/0 group-hover:bg-black/20 transition-colors duration-300 flex items-center justify-center">
@@ -551,6 +557,9 @@ function WhatsAppChat({ avatar, name, messages, isNewItem }: WhatsAppChatProps &
             alt={name}
             className="size-11 rounded-full object-cover border-2 border-white"
             src={avatar}
+            loading="lazy"
+            decoding="async"
+            fetchPriority="low"
           />
           <div className="absolute -bottom-0.5 -right-0.5 size-3.5 bg-green-400 rounded-full border-2 border-white"></div>
         </div>
@@ -566,7 +575,7 @@ function WhatsAppChat({ avatar, name, messages, isNewItem }: WhatsAppChatProps &
       <div
         className="p-5 min-h-[220px] bg-[#e5ddd5]"
         style={{
-          backgroundImage: `url("https://res.cloudinary.com/dwuwpxu0y/image/upload/f_auto,q_auto:good,w_auto,dpr_auto,c_limit/v1767608109/Whatsapp_Chat_Background_l6ocjd.webp")`,
+      backgroundImage: `url("https://res.cloudinary.com/dwuwpxu0y/image/upload/f_auto,q_auto:eco,w_auto,dpr_auto,c_limit/v1767608109/Whatsapp_Chat_Background_l6ocjd.webp")`,
           backgroundSize: 'cover'
         }}
       >
