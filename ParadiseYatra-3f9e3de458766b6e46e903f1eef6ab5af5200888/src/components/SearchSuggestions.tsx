@@ -45,6 +45,14 @@ interface SearchSuggestionsProps {
     isOpen: boolean;
     onClose: () => void;
     variant?: 'default' | 'hero';
+    featuredDestinations?: FeaturedDestinationCard[];
+}
+
+interface FeaturedDestinationCard {
+    name: string;
+    image: string | null;
+    size: 'normal' | 'tall';
+    href: string;
 }
 
 const formatPrice = (price: number) => {
@@ -66,16 +74,109 @@ const getCategoryColor = (category: string) => {
     return colors[category] || 'bg-gradient-to-r from-gray-500 to-gray-600';
 };
 
-// Featured destination cards for when there's no query
-const FEATURED_DESTINATIONS = [
-    { name: 'Switzerland', label: 'Alpine Views', image: 'https://images.unsplash.com/photo-1531366936337-7c912a4589a7?w=400&q=80&auto=format&fit=crop', size: 'tall' },
-    { name: 'Japan', label: 'Land of Rising Sun', image: 'https://images.unsplash.com/photo-1545569341-9eb8b30979d9?w=400&q=80&auto=format&fit=crop', size: 'normal' },
-    { name: 'Dubai', label: 'The City of Life', image: 'https://images.unsplash.com/photo-1512453979798-5ea266f8880c?w=400&q=80&auto=format&fit=crop', size: 'normal' },
-    { name: 'Singapore', label: 'The Lion City', image: 'https://images.unsplash.com/photo-1525625293386-3f8f99389edd?w=400&q=80&auto=format&fit=crop', size: 'tall' },
-    { name: 'Vietnam', label: 'Land of Ascending Dragon', image: 'https://images.unsplash.com/photo-1559592413-7cec4d0cae2b?w=400&q=80&auto=format&fit=crop', size: 'normal' },
-    { name: 'Maldives', label: 'Create Minds', image: 'https://images.unsplash.com/photo-1506905925346-21bda4d32df4?w=400&q=80&auto=format&fit=crop', size: 'normal' },
-    { name: 'Iceland', label: 'Northern Lights', image: 'https://images.unsplash.com/photo-1531366936337-7c912a4589a7?w=400&q=80&auto=format&fit=crop', size: 'normal' },
-    { name: 'Greece', label: 'Ancient Ruins', image: 'https://images.unsplash.com/photo-1530841377377-3ff06c0ca713?w=400&q=80&auto=format&fit=crop', size: 'normal' },
+const slugifyLocation = (value: string) => value.toLowerCase().replace(/\s+/g, '-');
+
+const TRAVEL_NOTES = [
+    "Did you know that Tuesday and Wednesday are often the cheapest days to fly on many routes.",
+    "Always carry a reusable water bottle while travelling in hilly areas.",
+    "Did you know that your sense of taste can change slightly at high altitude during flights.",
+    "Keep one set of clothes and your essentials in cabin baggage in case checked luggage is delayed.",
+    "Did you know that some airports are larger than small towns and require long walking times.",
+    "Download offline maps before entering a region with patchy mobile coverage.",
+    "Did you know that sunlight exposure in the morning helps your body adjust to a new time zone faster.",
+    "Always keep digital and printed copies of your ID, tickets, and hotel confirmations.",
+    "Did you know that window seats usually feel colder than aisle seats on long flights.",
+    "Use packing cubes to separate outfits, cables, medicines, and laundry.",
+    "Did you know that train stations in Europe often sit much closer to city centers than airports.",
+    "Carry a light snack when travelling through remote roads where food stops may be limited.",
+    "Did you know that many museums around the world offer one free entry day each month.",
+    "Keep a small amount of local cash for taxis, tips, and small shops.",
+    "Did you know that your phone battery drains faster in cold mountain destinations.",
+    "Always check road conditions before leaving for a hill station during the rainy season.",
+    "Did you know that some countries require six months of passport validity even for short trips.",
+    "Use hotel business cards or a saved location pin to avoid getting lost late at night.",
+    "Did you know that red-eye flights can save hotel costs but may affect your first day badly.",
+    "Carry a basic medicine pouch with motion-sickness, fever, and stomach-relief tablets.",
+    "Did you know that local SIM cards are often cheaper than international roaming plans.",
+    "Always keep one power bank fully charged before a sightseeing day starts.",
+    "Did you know that desert destinations can become surprisingly cold after sunset.",
+    "Wear layers instead of one thick jacket when travelling between different elevations.",
+    "Did you know that some countries fine travelers for carrying certain fresh fruits or seeds.",
+    "Book major attractions in advance during peak season to avoid long queues.",
+    "Did you know that your body loses more moisture during flights than you may notice.",
+    "Always label your luggage clearly inside and outside with your contact details.",
+    "Did you know that many historic city centers are best explored on foot rather than by car.",
+    "Keep a lightweight rain cover for your backpack during monsoon or mountain travel.",
+    "Did you know that sunrise views are usually clearer than sunset views in many mountain regions.",
+    "Use a cross-body or anti-theft bag in busy markets and transit hubs.",
+    "Did you know that some hotels provide adapters only on request, not by default.",
+    "Always inform your bank before an international trip if your cards are strict on fraud alerts.",
+    "Did you know that temple, monastery, and church dress codes are stricter in many tourist areas than expected.",
+    "Carry tissues and sanitizer because not every stop will have full restroom supplies.",
+    "Did you know that a short layover can become stressful if your arrival gate is far from departure.",
+    "Store your emergency contacts in both your phone and a small paper note.",
+    "Did you know that trains often allow more luggage flexibility than budget airlines.",
+    "Always check hotel check-in times before booking very early flights.",
+    "Did you know that local buses can give you a better feel of a destination than taxis.",
+    "Keep your first day itinerary light so travel delays do not ruin the trip mood.",
+    "Did you know that sea-facing rooms may also mean higher humidity for your luggage and clothes.",
+    "Use sunscreen even on cloudy days in snowy or high-altitude destinations.",
+    "Did you know that some countries charge a city tax at the hotel even after prepaid booking.",
+    "Always carry one universal adapter when travelling across multiple countries.",
+    "Did you know that food tastes stronger after a long day outdoors because your body needs more energy.",
+    "Keep a tiny day bag ready so you do not keep unpacking your main suitcase.",
+    "Did you know that local sunrise and sunset times shift faster in mountain regions than many travelers expect.",
+    "Always verify ferry and cable-car timings because weather can stop them without much notice.",
+    "Did you know that narrow heritage streets often block car access during festival weeks.",
+    "Save your hotel address in the local language if you are travelling somewhere with a different script.",
+    "Did you know that mountain roads may look short on maps but take much longer in real driving time.",
+    "Keep some snacks handy if you are travelling with children on long transfer days.",
+    "Did you know that ear pressure changes can feel stronger during mountain drives than on flat highways.",
+    "Always wear comfortable shoes on airport days because terminals can involve far more walking than expected.",
+    "Did you know that many countries have eSIM options that activate within minutes after landing.",
+    "Use hotel laundry services strategically on longer trips instead of overpacking.",
+    "Did you know that early morning safari drives are not only cooler but often better for wildlife sightings.",
+    "Carry one empty zip pouch for tickets, receipts, and small travel papers.",
+    "Did you know that some viewpoints are best visited right after rain because the air gets clearer.",
+    "Always double-check baggage weight limits on budget carriers before leaving for the airport.",
+    "Did you know that old city areas can have weak GPS signals because of dense architecture.",
+    "Keep your camera or phone in a warm pocket in cold weather to protect battery life.",
+    "Did you know that many beach destinations have stronger sun reflection from sand than travelers expect.",
+    "Use a neck pillow only if it supports your natural posture rather than pushing your head forward.",
+    "Did you know that some monuments look their best in the first hour after opening because crowds are lower.",
+    "Always keep buffer time when a trip includes mountain roads, ferries, or weather-dependent transport.",
+    "Did you know that local breakfast timings can be much earlier in trekking towns than in cities.",
+    "Pack one foldable tote bag for shopping, laundry, or unexpected extra items.",
+    "Did you know that carrying fewer things often makes you move through airports and stations much faster.",
+    "Always check if your hotel offers airport transfers before booking a last-minute taxi.",
+    "Did you know that waterfalls and rivers become riskier during monsoon even if the weather seems calm.",
+    "Use cloud backup for photos so you do not lose memories if a device gets damaged.",
+    "Did you know that famous landmarks often have a quieter side entrance or alternate viewing point.",
+    "Keep your daily essentials in the same pocket every day to avoid frantic searches.",
+    "Did you know that local street food is often busiest at times when it is freshest.",
+    "Always read weather forecasts for both day and night temperatures in desert and mountain regions.",
+    "Did you know that many domestic flights close boarding gates earlier than international travelers expect.",
+    "Use compression bags only for soft clothing, not for items you need quick access to.",
+    "Did you know that staying near a transit station can save more time than staying near a landmark.",
+    "Always charge your devices whenever you see a reliable power outlet during long transit days.",
+    "Did you know that some travel insurance plans exclude adventure activities unless you add them separately.",
+    "Keep a separate pouch for wet items after swimming, rafting, or beach visits.",
+    "Did you know that moonlit nights can make certain desert and beach destinations feel completely different.",
+    "Always ask about local scams or common tourist traps when you check into a hotel.",
+    "Did you know that booking a place with breakfast can reduce morning decision fatigue on packed itineraries.",
+    "Use lightweight neutral clothing pieces so more outfits can be built from fewer items.",
+    "Did you know that many heritage structures look warmer and richer in color near golden hour.",
+    "Always keep enough room in your itinerary for one unplanned stop or spontaneous local recommendation.",
+    "Did you know that walking tours often reveal food spots and shortcuts you will not find online.",
+    "Carry a small garbage bag or zip pouch to keep your backpack clean on road trips.",
+    "Did you know that train platform numbers can change last minute in busy stations.",
+    "Always keep your heaviest items at the bottom of your backpack for better balance.",
+    "Did you know that some islands have stricter plastic rules and limited ATM access.",
+    "Use a simple daily budget note so small expenses do not quietly pile up.",
+    "Did you know that some destinations feel crowded only at one peak hour and calm the rest of the day.",
+    "Always check whether your destination accepts UPI, cards, cash, or a mix before you arrive.",
+    "Did you know that the best souvenir is often a small useful local item rather than something bulky.",
+    "Use a calm first-night routine after arrival so you sleep better in a new place."
 ];
 
 const SearchSuggestions = ({
@@ -84,32 +185,39 @@ const SearchSuggestions = ({
     onSelect,
     isOpen,
     onClose,
-    variant = 'default'
+    variant = 'default',
+    featuredDestinations: featuredDestinationsProp = []
 }: SearchSuggestionsProps) => {
     const [suggestions, setSuggestions] = useState<PackageSuggestion[]>([]);
     const [isLoading, setIsLoading] = useState(false);
     const [selectedIndex, setSelectedIndex] = useState(-1);
     const [error, setError] = useState<string | null>(null);
     const [isFocused, setIsFocused] = useState(false);
+    const [showFeaturedFadeLeft, setShowFeaturedFadeLeft] = useState(false);
+    const [showFeaturedFadeRight, setShowFeaturedFadeRight] = useState(false);
+    const [travelNoteIndex, setTravelNoteIndex] = useState(0);
+    const heroBackgroundUrl = '/Home/Seach Lightbox/Background.jpg';
     const [dropdownPosition, setDropdownPosition] = useState({ top: 0, left: 0, width: 0 });
     const [currentPlaceholder, setCurrentPlaceholder] = useState(0);
+    const [typedPlaceholder, setTypedPlaceholder] = useState('');
+    const [typingTargetIndex, setTypingTargetIndex] = useState(0);
+    const [isDeletingPlaceholder, setIsDeletingPlaceholder] = useState(false);
     const timeoutRef = useRef<NodeJS.Timeout | null>(null);
     const scrollTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+    const activeQueryRef = useRef('');
     const containerRef = useRef<HTMLDivElement>(null);
     const inputRef = useRef<HTMLInputElement>(null);
     const keepFocusedRef = useRef(false);
     const resultsContainerRef = useRef<HTMLDivElement>(null);
+    const featuredScrollRef = useRef<HTMLDivElement>(null);
 
     const placeholderTexts = variant === 'hero'
         ? [
             "Pick your destination...",
-            "Explore Bali...",
-            "Discover Europe...",
-            "Visit Himachal Pradesh...",
-            "Adventure in Ladakh...",
-            "Relax in Goa...",
-            "Experience Kerala...",
-            "Journey to Kashmir...",
+            "Explore Ladakh...",
+            "Visit Kerala...",
+            "Discover Kashmir...",
+            "Journey to Himachal Pradesh...",
         ]
         : [
             "Search destinations, packages...",
@@ -120,22 +228,54 @@ const SearchSuggestions = ({
 
     // Rotating placeholder effect
     useEffect(() => {
-        if (!isFocused && !query.trim()) {
+        if (variant !== 'hero' && !isFocused && !query.trim()) {
             const interval = setInterval(() => {
                 setCurrentPlaceholder((prev) => (prev + 1) % placeholderTexts.length);
             }, 3000);
             return () => clearInterval(interval);
         }
-    }, [isFocused, query, placeholderTexts.length]);
+    }, [variant, isFocused, query, placeholderTexts.length]);
 
-    // Focus input when hero modal opens
+    const heroTypingTargets = featuredDestinationsProp.length > 0
+        ? featuredDestinationsProp.map((destination) => destination.name)
+        : placeholderTexts.map((text) => text.replace(/\.\.\.$/, '').replace(/^(Pick|Explore|Visit|Discover|Journey to)\s+/i, ''));
+
     useEffect(() => {
-        if (variant === 'hero' && isOpen && inputRef.current) {
-            const focusTimer = setTimeout(() => {
-                inputRef.current?.focus();
-                setIsFocused(true);
-            }, 200);
-            return () => clearTimeout(focusTimer);
+        if (variant !== 'hero' || !isOpen || query.trim()) return;
+        if (heroTypingTargets.length === 0) return;
+
+        const currentTarget = heroTypingTargets[typingTargetIndex % heroTypingTargets.length];
+        const nextText = currentTarget;
+
+        let timer: number;
+
+        if (!isDeletingPlaceholder && typedPlaceholder.length < nextText.length) {
+            timer = window.setTimeout(() => {
+                setTypedPlaceholder(nextText.slice(0, typedPlaceholder.length + 1));
+            }, 58);
+        } else if (!isDeletingPlaceholder && typedPlaceholder.length === nextText.length) {
+            timer = window.setTimeout(() => {
+                setIsDeletingPlaceholder(true);
+            }, 700);
+        } else if (isDeletingPlaceholder && typedPlaceholder.length > 0) {
+            timer = window.setTimeout(() => {
+                setTypedPlaceholder(nextText.slice(0, typedPlaceholder.length - 1));
+            }, 26);
+        } else {
+            timer = window.setTimeout(() => {
+                setIsDeletingPlaceholder(false);
+                setTypingTargetIndex((prev) => (prev + 1) % heroTypingTargets.length);
+            }, 24);
+        }
+
+        return () => window.clearTimeout(timer);
+    }, [variant, isOpen, query, heroTypingTargets, typingTargetIndex, typedPlaceholder, isDeletingPlaceholder]);
+
+    // Keep hero input unfocused on open
+    useEffect(() => {
+        if (variant === 'hero' && isOpen) {
+            setIsFocused(false);
+            inputRef.current?.blur();
         }
     }, [variant, isOpen]);
 
@@ -148,6 +288,66 @@ const SearchSuggestions = ({
         window.addEventListener('keydown', handleKeyDown);
         return () => window.removeEventListener('keydown', handleKeyDown);
     }, [variant, isOpen, onClose]);
+
+    useEffect(() => {
+        if (variant !== 'hero' || !isOpen) return;
+
+        const previousBodyOverflow = document.body.style.overflow;
+        const previousHtmlOverflow = document.documentElement.style.overflow;
+
+        document.body.style.overflow = 'hidden';
+        document.documentElement.style.overflow = 'hidden';
+
+        return () => {
+            document.body.style.overflow = previousBodyOverflow;
+            document.documentElement.style.overflow = previousHtmlOverflow;
+        };
+    }, [variant, isOpen]);
+
+    useEffect(() => {
+        if (variant !== 'hero' || !isOpen || TRAVEL_NOTES.length <= 1) return;
+
+        const interval = window.setInterval(() => {
+            setTravelNoteIndex((prev) => (prev + 1) % TRAVEL_NOTES.length);
+        }, 5000);
+
+        return () => window.clearInterval(interval);
+    }, [variant, isOpen]);
+
+    useEffect(() => {
+        if (variant !== 'hero') return;
+        if (!isOpen || query.trim()) {
+            setTypedPlaceholder('');
+            setIsDeletingPlaceholder(false);
+            setTypingTargetIndex(0);
+        }
+    }, [variant, isOpen, query]);
+
+    useEffect(() => {
+        if (variant !== 'hero' || !isOpen || query.trim() || featuredDestinationsProp.length === 0) return;
+
+        const updateFeaturedFadeState = () => {
+            const container = featuredScrollRef.current;
+            if (!container) return;
+
+            const { scrollLeft, scrollWidth, clientWidth } = container;
+            setShowFeaturedFadeLeft(scrollLeft > 4);
+            setShowFeaturedFadeRight(scrollLeft + clientWidth < scrollWidth - 4);
+        };
+
+        updateFeaturedFadeState();
+
+        const container = featuredScrollRef.current;
+        if (!container) return;
+
+        container.addEventListener('scroll', updateFeaturedFadeState, { passive: true });
+        window.addEventListener('resize', updateFeaturedFadeState);
+
+        return () => {
+            container.removeEventListener('scroll', updateFeaturedFadeState);
+            window.removeEventListener('resize', updateFeaturedFadeState);
+        };
+    }, [variant, isOpen, query, featuredDestinationsProp]);
 
     const calculateDropdownPosition = useCallback(() => {
         if (!containerRef.current) return;
@@ -170,6 +370,7 @@ const SearchSuggestions = ({
             setSuggestions([]);
             return;
         }
+        activeQueryRef.current = searchQuery.trim();
         setIsLoading(true);
         setError(null);
         try {
@@ -205,13 +406,21 @@ const SearchSuggestions = ({
                 category: 'fixed-departure'
             }));
             const allSuggestions = [...mappedPackages, ...mappedFixed].slice(0, 15);
+            if (activeQueryRef.current !== searchQuery.trim()) {
+                return;
+            }
             setSuggestions(allSuggestions);
         } catch (err) {
             console.error('Error fetching suggestions:', err);
+            if (activeQueryRef.current !== searchQuery.trim()) {
+                return;
+            }
             setError('Failed to load suggestions');
             setSuggestions([]);
         } finally {
-            setIsLoading(false);
+            if (activeQueryRef.current === searchQuery.trim()) {
+                setIsLoading(false);
+            }
         }
     }, []);
 
@@ -220,7 +429,10 @@ const SearchSuggestions = ({
         if (query.trim()) {
             timeoutRef.current = setTimeout(() => fetchSuggestions(query), 300);
         } else {
+            activeQueryRef.current = '';
             setSuggestions([]);
+            setIsLoading(false);
+            setError(null);
         }
         return () => { if (timeoutRef.current) clearTimeout(timeoutRef.current); };
     }, [query, fetchSuggestions]);
@@ -343,7 +555,7 @@ const SearchSuggestions = ({
 
     const getInputClasses = () => {
         if (variant === 'hero') {
-            return "w-full pl-12 pr-4 py-3.5 text-base bg-white/10 backdrop-blur-sm rounded-lg border border-[#4ade80] text-white placeholder-white/60 focus:outline-none focus:ring-2 focus:ring-[#4ade80]/50 transition-all duration-200";
+            return "w-full min-h-[52px] rounded-full bg-white pl-14 pr-4 md:pr-44 py-3 text-base text-[#212B40] placeholder:text-[#212B40]/55 focus:outline-none";
         }
         return "w-full pl-11 pr-4 py-3.5 sm:py-3 bg-gray-50 border-2 border-gray-200 rounded-xl text-base sm:text-sm focus:outline-none focus:ring-2 focus:ring-orange-500/20 focus:border-orange-400 transition-all duration-200";
     };
@@ -380,15 +592,14 @@ const SearchSuggestions = ({
                                 exit={{ opacity: 0 }}
                                 transition={{ duration: 0.25 }}
                                 className="fixed inset-0 z-[99999] overflow-hidden flex flex-col"
-                                style={{ background: 'linear-gradient(135deg, #0f172a 0%, #1e1b4b 40%, #0f172a 100%)' }}
+                                style={{
+                                    backgroundColor: '#08101f',
+                                    backgroundImage: `url("${heroBackgroundUrl}")`,
+                                    backgroundSize: 'cover',
+                                    backgroundPosition: 'center',
+                                    backgroundRepeat: 'no-repeat'
+                                }}
                             >
-                                {/* Subtle map/topography texture overlay */}
-                                <div className="absolute inset-0 opacity-[0.03] pointer-events-none"
-                                    style={{
-                                        backgroundImage: `url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23ffffff' fill-opacity='1'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E")`
-                                    }}
-                                />
-
                                 {/* Close Button */}
                                 <button
                                     onClick={onClose}
@@ -399,65 +610,114 @@ const SearchSuggestions = ({
                                 </button>
 
                                 {/* ── Main Content ── */}
-                                <div className="flex-1 flex flex-col items-center px-4 sm:px-6 pt-14 sm:pt-16 pb-4 overflow-hidden">
-                                    {/* Headline */}
-                                    <motion.h1
-                                        initial={{ opacity: 0, y: -16 }}
-                                        animate={{ opacity: 1, y: 0 }}
-                                        transition={{ delay: 0.05, duration: 0.3 }}
-                                        className="!text-2xl sm:!text-3xl md:!text-4xl !font-bold text-white text-center mb-6 sm:mb-8"
-                                    >
-                                        Your Next Adventure Awaits
-                                    </motion.h1>
+                                <div className="flex-1 flex items-center justify-center px-4 sm:px-6 pt-24 sm:pt-28 pb-8 overflow-hidden">
+                                    <div className="w-full max-w-5xl">
+                                        {/* Headline */}
+                                        <motion.h1
+                                            initial={{ opacity: 0, y: -16 }}
+                                            animate={{ opacity: 1, y: 0 }}
+                                            transition={{ delay: 0.05, duration: 0.3 }}
+                                            className="!font-unbounded !text-3xl sm:!text-4xl md:!text-[3.35rem] !font-bold text-white text-center mb-7 sm:mb-9"
+                                        >
+                                            This one won’t be basic.
+                                        </motion.h1>
 
-                                    {/* Search Input */}
-                                    <motion.div
-                                        initial={{ opacity: 0, y: 10 }}
-                                        animate={{ opacity: 1, y: 0 }}
-                                        transition={{ delay: 0.1, duration: 0.3 }}
-                                        className="relative w-full max-w-2xl mb-6 sm:mb-8"
-                                    >
-                                        <div className="absolute inset-y-0 left-4 flex items-center pointer-events-none">
-                                            <Search className="w-5 h-5 text-[#4ade80]" />
-                                        </div>
-                                        <input
-                                            ref={inputRef}
-                                            type="text"
-                                            placeholder={placeholderTexts[currentPlaceholder]}
-                                            value={query}
-                                            onChange={(e) => onQueryChange(e.target.value)}
-                                            onKeyDown={handleKeyDown}
-                                            onFocus={() => setIsFocused(true)}
-                                            onBlur={handleInputBlur}
-                                            className={getInputClasses()}
-                                        />
-                                    </motion.div>
-
-                                    {/* ── Results or Featured Grid ── */}
-                                    <motion.div
-                                        initial={{ opacity: 0, y: 12 }}
-                                        animate={{ opacity: 1, y: 0 }}
-                                        transition={{ delay: 0.15, duration: 0.3 }}
-                                        className="w-full max-w-5xl flex-1 overflow-y-auto scrollbar-hide"
-                                    >
-                                        {/* Loading */}
-                                        {isLoading && (
-                                            <div className="flex flex-col items-center justify-center py-16">
-                                                <motion.div
-                                                    animate={{ rotate: 360 }}
-                                                    transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
-                                                    className="w-10 h-10 rounded-full border-4 border-white/20 border-t-[#4ade80]"
-                                                />
-                                                <p className="mt-4 text-sm text-white/60 font-medium">Searching amazing destinations...</p>
+                                        {/* Search Input */}
+                                        <motion.div
+                                            initial={{ opacity: 0, y: 10 }}
+                                            animate={{ opacity: 1, y: 0 }}
+                                            transition={{ delay: 0.1, duration: 0.3 }}
+                                            className="relative w-full max-w-3xl mx-auto mb-7 sm:mb-9"
+                                        >
+                                            <div className="absolute inset-y-0 left-4 flex items-center pointer-events-none">
+                                                <Search className="w-6 h-6 text-[#212B40]" />
                                             </div>
+                                            <input
+                                                ref={inputRef}
+                                                type="text"
+                                                placeholder={variant === 'hero' ? '' : placeholderTexts[currentPlaceholder]}
+                                                value={query}
+                                                onChange={(e) => onQueryChange(e.target.value)}
+                                                onKeyDown={handleKeyDown}
+                                                onFocus={() => setIsFocused(true)}
+                                                onBlur={handleInputBlur}
+                                                className={getInputClasses()}
+                                            />
+                                            {variant === 'hero' && !query && !isFocused && (
+                                                <div className="pointer-events-none absolute inset-y-0 left-14 right-24 hidden items-center overflow-hidden md:flex">
+                                                    <div className="flex items-center text-[clamp(0.95rem,1.3vw,1.1rem)] text-[#6b7280]">
+                                                        <span>{typedPlaceholder}</span>
+                                                        <motion.span
+                                                            animate={{ opacity: [1, 0, 1] }}
+                                                            transition={{ duration: 0.9, repeat: Infinity, ease: "easeInOut" }}
+                                                            className="ml-0.5 inline-block h-6 w-[2px] rounded-full bg-[#374151]"
+                                                        />
+                                                    </div>
+                                                </div>
+                                            )}
+                                            {variant === 'hero' && !query && !isFocused && (
+                                                <div className="pointer-events-none absolute inset-y-0 left-14 right-4 flex items-center overflow-hidden md:hidden">
+                                                    <div className="flex items-center text-base text-[#6b7280]">
+                                                        <span>{typedPlaceholder}</span>
+                                                        <motion.span
+                                                            animate={{ opacity: [1, 0, 1] }}
+                                                            transition={{ duration: 0.9, repeat: Infinity, ease: "easeInOut" }}
+                                                            className="ml-0.5 inline-block h-5 w-[2px] rounded-full bg-[#374151]"
+                                                        />
+                                                    </div>
+                                                </div>
+                                            )}
+                                            <div className="pointer-events-none absolute inset-y-0 right-4 hidden md:flex items-center">
+                                                <div className="flex items-center gap-2 rounded-full bg-blue-50 px-4 py-1.5">
+                                                    <span className="text-xs font-bold text-blue-600">Search Destinations</span>
+                                                </div>
+                                            </div>
+                                        </motion.div>
+
+                                        {/* ── Results or Featured Grid ── */}
+                                        {!isLoading && !error && suggestions.length > 0 && (
+                                            <p className="text-base sm:text-lg font-semibold !text-white mb-4">
+                                                This Is What We Have For You.
+                                            </p>
                                         )}
 
+                                        <motion.div
+                                            initial={{ opacity: 0, y: 12 }}
+                                            animate={{ opacity: 1, y: 0 }}
+                                            transition={{ delay: 0.15, duration: 0.3 }}
+                                            className="relative w-full max-h-[42vh]"
+                                        >
+                                            <div
+                                                ref={resultsContainerRef}
+                                                className="max-h-[42vh] overflow-y-auto scrollbar-hide"
+                                            >
+                                            {/* Loading */}
+                                            {isLoading && (
+                                                <div className="flex justify-center py-16">
+                                                    <div className="min-w-[250px] rounded-[18px] border border-white/25 bg-white/12 px-6 py-5 backdrop-blur-md">
+                                                        <div className="flex items-center justify-center gap-3">
+                                                            <div className="flex items-center gap-2">
+                                                                {[0, 1, 2].map((dot) => (
+                                                                    <motion.span
+                                                                        key={dot}
+                                                                        animate={{ opacity: [0.35, 1, 0.35], y: [0, -4, 0] }}
+                                                                        transition={{ duration: 1.1, repeat: Infinity, delay: dot * 0.14, ease: "easeInOut" }}
+                                                                        className="h-2.5 w-2.5 rounded-full bg-white"
+                                                                    />
+                                                                ))}
+                                                            </div>
+                                                            <span className="text-sm font-semibold text-white">Finding your next escape...</span>
+                                                        </div>
+                                                        <p className="mt-3 text-center text-xs tracking-[0.18em] text-white/65 uppercase">
+                                                            Curating destinations
+                                                        </p>
+                                                    </div>
+                                                </div>
+                                            )}
+
                                         {/* Search Results */}
-                                        {!isLoading && !error && suggestions.length > 0 && (
-                                            <div>
-                                                <p className="text-[10px] font-semibold uppercase tracking-widest text-white/40 mb-3">
-                                                    Suggested Destinations
-                                                </p>
+                                            {!isLoading && !error && suggestions.length > 0 && (
+                                                <div className="pb-6">
                                                 <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3">
                                                     {suggestions.map((suggestion, index) => (
                                                         <motion.div
@@ -465,7 +725,7 @@ const SearchSuggestions = ({
                                                             initial={{ opacity: 0, scale: 0.95 }}
                                                             animate={{ opacity: 1, scale: 1 }}
                                                             transition={{ delay: index * 0.04 }}
-                                                            className="relative rounded-xl overflow-hidden cursor-pointer group"
+                                                            className="relative rounded-[6px] overflow-hidden cursor-pointer group"
                                                             style={{ height: '140px' }}
                                                             onClick={() => handleSuggestionClick(suggestion)}
                                                         >
@@ -473,89 +733,103 @@ const SearchSuggestions = ({
                                                                 <img
                                                                     src={suggestion.image}
                                                                     alt={suggestion.title}
-                                                                    className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
+                                                                    className="w-full h-full object-cover"
                                                                 />
                                                             ) : (
                                                                 <div className="w-full h-full bg-gradient-to-br from-blue-600 to-purple-700 flex items-center justify-center">
                                                                     <MapPin className="w-8 h-8 text-white/70" />
                                                                 </div>
                                                             )}
-                                                            {/* Dark overlay */}
-                                                            <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent" />
+                                                            {/* Bottom gradient */}
+                                                            <div className="absolute inset-x-0 bottom-0 h-[72%] bg-gradient-to-t from-black/92 via-black/52 via-45% to-transparent" />
+                                                            <div className="absolute inset-0 bg-white/0 transition-colors duration-200 group-hover:bg-white/10" />
                                                             {/* Text */}
                                                             <div className="absolute bottom-0 left-0 right-0 p-3">
-                                                                <p className="text-white text-xs font-semibold leading-tight line-clamp-2">{suggestion.title}</p>
+                                                                <p className="!text-white text-xs font-semibold leading-tight line-clamp-2">{suggestion.title}</p>
                                                                 {suggestion.price > 0 && (
                                                                     <p className="text-[#4ade80] text-[10px] font-bold mt-0.5">{formatPrice(suggestion.price)}</p>
                                                                 )}
                                                             </div>
-                                                            {/* Hover border */}
-                                                            <div className="absolute inset-0 border-2 border-transparent group-hover:border-[#4ade80]/60 rounded-xl transition-colors duration-300" />
                                                         </motion.div>
                                                     ))}
                                                 </div>
-                                            </div>
-                                        )}
+                                                </div>
+                                            )}
 
                                         {/* No Results */}
-                                        {!isLoading && !error && suggestions.length === 0 && query.trim() && (
-                                            <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="text-center py-16">
+                                            {!isLoading && !error && suggestions.length === 0 && query.trim() && (
+                                                <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="text-center py-16">
                                                 <div className="w-14 h-14 mx-auto rounded-full bg-white/10 flex items-center justify-center mb-4">
                                                     <Search className="w-7 h-7 text-white/50" />
                                                 </div>
                                                 <p className="text-white/80 font-semibold mb-1.5">No results for "{query}"</p>
                                                 <p className="text-white/40 text-sm">Try different keywords or explore below</p>
-                                            </motion.div>
-                                        )}
+                                                </motion.div>
+                                            )}
 
                                         {/* Featured Destinations Grid (when no query) */}
-                                        {!isLoading && !query.trim() && (
-                                            <div>
-                                                <p className="text-[10px] font-semibold uppercase tracking-widest text-white/40 mb-4">
-                                                    Popular Destinations
+                                            {!isLoading && !query.trim() && (
+                                                <div>
+                                                <p className="text-base sm:text-lg font-semibold !text-white mb-4">
+                                                    Can't Decide ? We Got You.
                                                 </p>
                                                 {/* Masonry-style horizontal scroll layout */}
-                                                <div className="flex gap-3 overflow-x-auto scrollbar-hide pb-2">
-                                                    {FEATURED_DESTINATIONS.map((dest, index) => (
-                                                        <motion.div
-                                                            key={dest.name}
-                                                            initial={{ opacity: 0, y: 16 }}
-                                                            animate={{ opacity: 1, y: 0 }}
-                                                            transition={{ delay: index * 0.05 }}
-                                                            className="relative flex-shrink-0 rounded-2xl overflow-hidden cursor-pointer group"
-                                                            style={{
-                                                                width: dest.size === 'tall' ? '160px' : '140px',
-                                                                height: dest.size === 'tall' ? '200px' : '170px',
-                                                            }}
-                                                            onClick={() => {
-                                                                onQueryChange(dest.name);
-                                                            }}
-                                                        >
-                                                            <img
-                                                                src={dest.image}
-                                                                alt={dest.name}
-                                                                className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
-                                                            />
-                                                            {/* Gradient overlay */}
-                                                            <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/10 to-transparent" />
-                                                            {/* Label at top */}
-                                                            <div className="absolute top-3 left-3 right-3">
-                                                                <p className="text-white/70 text-[9px] uppercase tracking-wider font-semibold leading-tight">
-                                                                    {dest.label}
-                                                                </p>
-                                                            </div>
-                                                            {/* Name at bottom */}
-                                                            <div className="absolute bottom-3 left-3 right-3">
-                                                                <p className="text-white text-base font-bold leading-tight">{dest.name}</p>
-                                                            </div>
-                                                            {/* Hover ring */}
-                                                            <div className="absolute inset-0 border-2 border-transparent group-hover:border-[#4ade80]/50 rounded-2xl transition-colors duration-300" />
-                                                        </motion.div>
-                                                    ))}
+                                                <div className="relative">
+                                                    <div
+                                                        ref={featuredScrollRef}
+                                                        className="flex gap-3 overflow-x-auto scrollbar-hide pb-2"
+                                                    >
+                                                        {featuredDestinationsProp.map((dest, index) => (
+                                                            <motion.div
+                                                                key={dest.name}
+                                                                initial={{ opacity: 0, y: 16 }}
+                                                                animate={{ opacity: 1, y: 0 }}
+                                                                transition={{ delay: index * 0.05 }}
+                                                                className="relative flex-shrink-0 rounded-[6px] overflow-hidden cursor-pointer group"
+                                                                style={{
+                                                                    width: dest.size === 'tall' ? '160px' : '140px',
+                                                                    height: dest.size === 'tall' ? '200px' : '170px',
+                                                                }}
+                                                                onClick={() => {
+                                                                    window.location.href = dest.href;
+                                                                }}
+                                                            >
+                                                                {dest.image ? (
+                                                                    <img
+                                                                        src={dest.image}
+                                                                        alt={dest.name}
+                                                                        className="w-full h-full object-cover"
+                                                                    />
+                                                                ) : (
+                                                                    <div className="w-full h-full bg-gradient-to-br from-slate-700 to-slate-900 flex items-center justify-center">
+                                                                        <MapPin className="w-8 h-8 text-white/70" />
+                                                                    </div>
+                                                                )}
+                                                                {/* Gradient overlay */}
+                                                                <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/10 to-transparent" />
+                                                                <div className="absolute inset-0 bg-white/0 transition-colors duration-200 group-hover:bg-white/10" />
+                                                                {/* Name at bottom */}
+                                                                <div className="absolute bottom-3 left-3 right-3">
+                                                                    <p className="!text-white text-base font-bold leading-tight">{dest.name}</p>
+                                                                </div>
+                                                            </motion.div>
+                                                        ))}
+                                                    </div>
+
+                                                    {showFeaturedFadeLeft && (
+                                                        <div className="pointer-events-none absolute inset-y-0 left-0 w-12 bg-gradient-to-r from-[#577791] via-[#577791]/40 to-transparent" />
+                                                    )}
+
+                                                    {showFeaturedFadeRight && (
+                                                        <div className="pointer-events-none absolute inset-y-0 right-0 w-12 bg-gradient-to-l from-[#577791] via-[#577791]/40 to-transparent" />
+                                                    )}
                                                 </div>
+                                                </div>
+                                            )}
                                             </div>
-                                        )}
+
                                     </motion.div>
+                                    </div>
                                 </div>
 
                                 {/* ── Bottom Rating Bar ── */}
@@ -565,23 +839,30 @@ const SearchSuggestions = ({
                                     transition={{ delay: 0.3 }}
                                     className="flex items-center justify-between px-5 sm:px-8 py-3 border-t border-white/10"
                                 >
-                                    <div className="flex items-center gap-3">
-                                        <div className="w-8 h-8 rounded-full bg-gradient-to-br from-orange-400 to-pink-500 flex items-center justify-center text-white text-xs font-bold">
-                                            PY
+                                    <div className="flex min-w-0 flex-1 items-center justify-center">
+                                        <div className="min-w-0 flex-1 overflow-hidden">
+                                            <AnimatePresence mode="wait">
+                                                <motion.p
+                                                    key={travelNoteIndex}
+                                                    initial={{ opacity: 0, scale: 0.82 }}
+                                                    animate={{ opacity: 1, scale: 1 }}
+                                                    exit={{ opacity: 0, scale: 1.06 }}
+                                                    transition={{ duration: 0.16, ease: [0.22, 1, 0.36, 1] }}
+                                                    className="min-h-[2.75rem] px-2 text-center !text-white text-xs leading-relaxed sm:min-h-0 sm:px-0 sm:text-left sm:truncate"
+                                                >
+                                                    {TRAVEL_NOTES[travelNoteIndex]}
+                                                </motion.p>
+                                            </AnimatePresence>
                                         </div>
-                                        <p className="text-white/50 text-xs hidden sm:block">
-                                            We recently completed a 7-day trip for Thailand through Paradise Yatra...
-                                        </p>
-                                        <p className="text-white/50 text-xs sm:hidden">Trusted by thousands of travelers</p>
                                     </div>
-                                    <div className="flex items-center gap-1.5 flex-shrink-0">
+                                    <div className="hidden sm:flex items-center gap-1.5 flex-shrink-0">
                                         <div className="flex">
                                             {[1, 2, 3, 4, 5].map(i => (
                                                 <Star key={i} className={`w-3.5 h-3.5 ${i <= 4 ? 'text-yellow-400 fill-yellow-400' : 'text-yellow-400/40'}`} />
                                             ))}
                                         </div>
-                                        <span className="text-white font-bold text-sm">4.6</span>
-                                        <span className="text-white/40 text-xs">/ 5 · 8400+ reviews</span>
+                                        <span className="text-white font-bold text-sm">4.4</span>
+                                        <span className="text-white text-xs">160+ reviews</span>
                                     </div>
                                 </motion.div>
                             </motion.div>,
@@ -636,10 +917,17 @@ const SearchSuggestions = ({
 
                                 {isLoading && (
                                     <div className="p-6 sm:p-8 text-center">
-                                        <motion.div animate={{ rotate: 360 }} transition={{ duration: 1, repeat: Infinity, ease: "linear" }} className="inline-block">
-                                            <div className="w-8 h-8 sm:w-10 sm:h-10 rounded-full border-4 border-orange-200 border-t-orange-600"></div>
-                                        </motion.div>
-                                        <p className="mt-3 text-xs sm:text-sm text-gray-600 font-medium">Searching amazing destinations...</p>
+                                        <div className="inline-flex items-center gap-2 rounded-full bg-gray-100 px-4 py-2.5">
+                                            {[0, 1, 2].map((dot) => (
+                                                <motion.span
+                                                    key={dot}
+                                                    animate={{ opacity: [0.35, 1, 0.35], y: [0, -3, 0] }}
+                                                    transition={{ duration: 1, repeat: Infinity, delay: dot * 0.12, ease: "easeInOut" }}
+                                                    className="h-2 w-2 rounded-full bg-orange-500"
+                                                />
+                                            ))}
+                                            <span className="text-xs sm:text-sm font-medium text-gray-700">Searching destinations...</span>
+                                        </div>
                                     </div>
                                 )}
 

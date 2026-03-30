@@ -3,71 +3,30 @@
 import { Search, Mountain, Sparkles, Compass } from "lucide-react";
 import React, { useState, useEffect } from "react";
 import Image from "next/image";
-import dynamic from "next/dynamic";
 import { useRouter } from "next/navigation";
+import { getDestinationWebp } from "@/lib/utils";
+import SearchSuggestions from "./SearchSuggestions";
 
-const SearchSuggestions = dynamic(() => import("./SearchSuggestions"), {
-  ssr: false,
-});
+interface FeaturedDestinationCard {
+  name: string;
+  image: string | null;
+  size: "normal" | "tall";
+  href: string;
+}
 
-const HERO_PLACEHOLDER_TEXTS = [
-  "Where do you want to go?",
-  "Explore Bali...",
-  "Discover Europe...",
-  "Visit Himachal Pradesh...",
-  "Adventure in Ladakh...",
-  "Relax in Goa...",
-  "Experience Kerala...",
-  "Journey to Kashmir...",
-  "Trek to Manali...",
-  "Escape to Maldives...",
-  "Wander in Switzerland...",
-  "Road trip to Spiti Valley..."
-];
+const slugifyLocation = (value: string) => value.toLowerCase().replace(/\s+/g, "-");
 
 const HeroSection = () => {
   const [searchQuery, setSearchQuery] = useState("");
   const [isSearchOpen, setIsSearchOpen] = useState(false);
-  const [typingText, setTypingText] = useState(HERO_PLACEHOLDER_TEXTS[0]);
+  const [typingText, setTypingText] = useState("");
   const [currentTextIndex, setCurrentTextIndex] = useState(0);
   const [isDeleting, setIsDeleting] = useState(false);
   const [shouldShowVideo, setShouldShowVideo] = useState(false);
   const [videoSrc, setVideoSrc] = useState<string | null>(null);
   const [animatePlaceholder, setAnimatePlaceholder] = useState(true);
+  const [featuredDestinations, setFeaturedDestinations] = useState<FeaturedDestinationCard[]>([]);
   const router = useRouter();
-
-  // Typing animation effect
-  useEffect(() => {
-    if (!animatePlaceholder) {
-      if (typingText !== HERO_PLACEHOLDER_TEXTS[0]) {
-        setTypingText(HERO_PLACEHOLDER_TEXTS[0]);
-      }
-      return;
-    }
-
-    const currentText = HERO_PLACEHOLDER_TEXTS[currentTextIndex];
-    const typingSpeed = isDeleting ? 50 : 100;
-    const pauseTime = isDeleting ? 500 : 2000;
-
-    const timer = setTimeout(() => {
-      if (!isDeleting && typingText === currentText) {
-        // Finished typing, pause then start deleting
-        setTimeout(() => setIsDeleting(true), pauseTime);
-      } else if (isDeleting && typingText === "") {
-        // Finished deleting, move to next text
-        setIsDeleting(false);
-        setCurrentTextIndex((prev) => (prev + 1) % HERO_PLACEHOLDER_TEXTS.length);
-      } else if (isDeleting) {
-        // Delete one character
-        setTypingText(currentText.substring(0, typingText.length - 1));
-      } else {
-        // Type one character
-        setTypingText(currentText.substring(0, typingText.length + 1));
-      }
-    }, typingSpeed);
-
-    return () => clearTimeout(timer);
-  }, [typingText, currentTextIndex, isDeleting, animatePlaceholder]);
 
   useEffect(() => {
     if (typeof window === "undefined") return;
@@ -79,7 +38,7 @@ const HeroSection = () => {
     const update = () => {
       const isMobile = mobileQuery.matches;
       const allowVideo = !motionQuery.matches && !connection?.saveData;
-      const allowTyping = !motionQuery.matches && !connection?.saveData && !isMobile;
+      const allowTyping = !motionQuery.matches && !connection?.saveData;
       setShouldShowVideo(allowVideo);
       setAnimatePlaceholder(allowTyping);
     };
@@ -139,6 +98,120 @@ const HeroSection = () => {
       clearTimeout(timeoutId);
     };
   }, [shouldShowVideo]);
+
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+
+    const backgroundImage = new window.Image();
+    backgroundImage.src = "/Home/Seach Lightbox/Background.jpg";
+  }, []);
+
+  useEffect(() => {
+    let isMounted = true;
+
+    const buildFeaturedDestinations = async () => {
+      try {
+        const [indiaResponse, internationalResponse] = await Promise.all([
+          fetch("/api/all-packages?tourType=india&limit=200&isActive=true", { cache: "no-store" }),
+          fetch("/api/all-packages?tourType=international&limit=200&isActive=true", { cache: "no-store" }),
+        ]);
+
+        const indiaPackages = indiaResponse.ok ? ((await indiaResponse.json()).packages || []) : [];
+        const internationalPackages = internationalResponse.ok ? ((await internationalResponse.json()).packages || []) : [];
+
+        const mapPackagesToCards = (
+          packages: any[],
+          key: "state" | "country",
+          tourType: "india" | "international"
+        ) => {
+          const uniqueCards = new Map<string, FeaturedDestinationCard>();
+
+          packages.forEach((pkg: any) => {
+            const locationName = typeof pkg[key] === "string" ? pkg[key].trim() : "";
+            if (!locationName || uniqueCards.has(locationName)) return;
+
+            const image = getDestinationWebp(locationName);
+            if (!image) return;
+
+            uniqueCards.set(locationName, {
+              name: locationName,
+              image,
+              size: "normal",
+              href: `/package/${tourType}/${slugifyLocation(locationName)}`,
+            });
+          });
+
+          return Array.from(uniqueCards.values());
+        };
+
+        const indiaCards = mapPackagesToCards(indiaPackages, "state", "india");
+        const internationalCards = mapPackagesToCards(internationalPackages, "country", "international");
+
+        const mixedCards: FeaturedDestinationCard[] = [];
+        const maxCards = Math.min(10, indiaCards.length + internationalCards.length);
+
+        for (let i = 0; mixedCards.length < maxCards; i += 1) {
+          if (i < indiaCards.length) mixedCards.push(indiaCards[i]);
+          if (mixedCards.length >= maxCards) break;
+          if (i < internationalCards.length) mixedCards.push(internationalCards[i]);
+        }
+
+        const sizedCards = mixedCards.map((card) => ({
+          ...card,
+          size: "normal" as const,
+        }));
+
+        if (isMounted) {
+          setFeaturedDestinations(sizedCards);
+        }
+      } catch (error) {
+        console.error("Error preloading featured destinations:", error);
+      }
+    };
+
+    buildFeaturedDestinations();
+
+    return () => {
+      isMounted = false;
+    };
+  }, []);
+
+  const heroTypingTargets = featuredDestinations.length > 0
+    ? featuredDestinations.map((destination) => destination.name)
+    : ["Ladakh", "Kerala", "Kashmir", "Himachal Pradesh"];
+
+  useEffect(() => {
+    if (!animatePlaceholder || searchQuery.trim() || heroTypingTargets.length === 0) {
+      setTypingText("");
+      setIsDeleting(false);
+      setCurrentTextIndex(0);
+      return;
+    }
+
+    const currentText = heroTypingTargets[currentTextIndex % heroTypingTargets.length];
+    let timer: number;
+
+    if (!isDeleting && typingText.length < currentText.length) {
+      timer = window.setTimeout(() => {
+        setTypingText(currentText.slice(0, typingText.length + 1));
+      }, 58);
+    } else if (!isDeleting && typingText.length === currentText.length) {
+      timer = window.setTimeout(() => {
+        setIsDeleting(true);
+      }, 700);
+    } else if (isDeleting && typingText.length > 0) {
+      timer = window.setTimeout(() => {
+        setTypingText(currentText.slice(0, typingText.length - 1));
+      }, 26);
+    } else {
+      timer = window.setTimeout(() => {
+        setIsDeleting(false);
+        setCurrentTextIndex((prev) => (prev + 1) % heroTypingTargets.length);
+      }, 24);
+    }
+
+    return () => window.clearTimeout(timer);
+  }, [animatePlaceholder, searchQuery, heroTypingTargets, currentTextIndex, isDeleting, typingText]);
 
   const handleSearchSelect = (suggestion: {
     slug: string;
@@ -208,9 +281,11 @@ const HeroSection = () => {
             >
               <Search className="w-6 h-6 text-[#212B40] group-hover:scale-110 transition-transform duration-300" />
               <div className="flex-1 text-left min-h-[1.25rem]">
-                <span className="block truncate !text-sm text-[#212B40] font-semibold opacity-80">
-                  {typingText}
-                  {animatePlaceholder && <span className="animate-pulse">|</span>}
+                <span className="flex items-center truncate !text-sm text-[#212B40] font-semibold opacity-80">
+                  <span className="truncate">{typingText}</span>
+                  {animatePlaceholder && !searchQuery && (
+                    <span className="ml-0.5 inline-block h-4 w-[2px] animate-pulse rounded-full bg-[#212B40]" />
+                  )}
                 </span>
               </div>
               <div className="hidden md:flex items-center gap-2 px-4 py-1.5 bg-blue-50 rounded-full">
@@ -226,6 +301,7 @@ const HeroSection = () => {
                 isOpen={isSearchOpen}
                 onClose={handleSearchClose}
                 variant="hero"
+                featuredDestinations={featuredDestinations}
               />
             )}
           </div>
